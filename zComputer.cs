@@ -177,7 +177,7 @@ namespace Zombified_Initiative
                 Zi.log.LogInfo($"{this.myself.PlayerName} action {action.GetIl2CppType().Name} was cancelled");
             }
             actionsToRemove.Clear();
-        } // update
+        } // slowUpdate
 
         public void PreventManualActions()
         {

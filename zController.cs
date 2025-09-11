@@ -373,6 +373,7 @@ namespace Zombified_Initiative
             if (Time.time > lastupdatetime + 1f)
             {
                 Zi.slowUpdate();
+                zActionSub.update();
                 lastupdatetime = Time.time;
             }
         }

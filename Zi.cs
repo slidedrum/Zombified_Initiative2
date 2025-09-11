@@ -13,6 +13,7 @@ using Player;
 using SNetwork;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using ZombieTweak2;
 
@@ -85,78 +86,17 @@ public class Zi : BasePlugin
         LG_Factory.add_OnFactoryBuildDone((Action)ZombieController.OnFactoryBuildDone);
         EventAPI.OnExpeditionStarted += ZombieController.Initialize;
         log = Log;
+        zActionSub.addOnRemoved((Action<PlayerAIBot, PlayerBotActionBase>)onActionRemoved);
+    }
+    public static void onActionRemoved(PlayerAIBot bot , PlayerBotActionBase action)
+    {
+        string typeName = action.GetIl2CppType().Name;
+        if (typeName != "PlayerBotActionCollectItem") return;
+        log.LogInfo($"{bot.Agent.PlayerName} completed collect item task with status: {action.DescBase.Status}");
     }
     public static void slowUpdate()
     {
-        var toRemove = new List<botAction>();
-        //clone bot actions just in case list gets modified while iterating
-        var actionsClone = new List<botAction>(botActions);
-        foreach (var task in actionsClone)
-        {
-            PlayerBotActionBase found = null;
-            foreach (var action in task.Bot.Actions)
-            {
-                PlayerBotActionCollectItem.Descriptor descriptor = null;
-                try
-                {
-                    descriptor = action.DescBase.Cast<PlayerBotActionCollectItem.Descriptor>();
-                }
-                catch (InvalidCastException)
-                {
-                    continue;
-                }
-                if (descriptor.TargetItem == task.TargetItem && action.GetIl2CppType().Name == "PlayerBotActionCollectItem")
-                {
-                    found = action;
-                    break;
-                }
-            }
-            if (found == null)// && task.TargetItem.gameObject.activeInHierarchy)
-            {
-                toRemove.Add(task);
-                //task.incrementDepth();
-                //ExecuteBotAction(task.Bot, new PlayerBotActionCollectItem.Descriptor(task.Bot)
-                //{
-                //    TargetItem = task.TargetItem,
-                //    TargetContainer = task.TargetContainer,
-                //    TargetPosition = task.TargetPosition,
-                //    Prio = task.Prio,
-                //    Haste = task.Haste,
-                //}, "Added another collect item action to " + task.Bot.Agent.PlayerName, 3, task.Bot.m_playerAgent.PlayerSlotIndex, task.Itemtype, task.Itemserial, 0);
-            }
-            //else
-            //{
-            //    toRemove.Add(task);
-            //}
-        }
-        foreach (var rem in toRemove)
-        {
-            log.LogInfo($"Action removed with status: {rem.descriptor.Status}");
-            botActions.Remove(rem);
-            //if (rem.TargetItem.gameObject.activeInHierarchy)
-            //{
-            //    log.LogInfo("Item still there adding again to botactions list, total before " + botActions.Count);
-            //    var gobject = rem.TargetItem.gameObject;
-            //    //move gobject to the bot location so bot can find it
-            //    //gobject.transform.position = rem.Bot.transform.position + new Vector3(0, 2f, 0);
-            //    ExecuteBotAction(rem.Bot, new PlayerBotActionCollectItem.Descriptor(rem.Bot)
-            //    {
-            //        TargetItem = rem.TargetItem,
-            //        TargetContainer = rem.TargetContainer,
-            //        TargetPosition = rem.TargetPosition,
-            //        Prio = rem.Prio,
-            //        Haste = rem.Haste,
-            //    }, "Added yet another collect item action to " + rem.Bot.Agent.PlayerName, 3, rem.Bot.m_playerAgent.PlayerSlotIndex, rem.Itemtype, rem.Itemserial, 0);
-            //    if (rem.Depth > 2)
-            //        gobject.SetActive(false);
-            //    rem.incrementDepth();
-            //}
-            //else
-            //{
-            //    log.LogInfo("removing from botactions list, total before " + botActions.Count);
-            //    botActions.Remove(rem);
-            //}
-        }
+        
     }
     public static void sendChatMessage(string message,PlayerAgent sender = null, PlayerAgent reciver = null)
     {
