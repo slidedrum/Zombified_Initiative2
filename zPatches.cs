@@ -136,6 +136,34 @@ public class ZombifiedPatches
         }
     }
 
+    [HarmonyPatch(typeof(PlayerBotActionCollectItem), nameof(PlayerBotActionCollectItem.OnTravelActionEvent))]
+    [HarmonyPrefix]
+    public static bool PlayerBotActionCollectItemPatch(PlayerBotActionCollectItem __instance, PlayerBotActionBase.Descriptor descBase)
+    {
+        if (descBase != __instance.m_travelAction)
+        {
+            __instance.PrintError("Rogue action.");
+        }
+        if (descBase.IsTerminated())
+        {
+            __instance.m_travelAction = null;
+            if (descBase.Status == PlayerBotActionBase.Descriptor.StatusType.Successful)
+            {
+                __instance.StartTransfer();
+                return false;
+            }
+            if (__instance.VerifyCurrentPosition())
+            {
+                log.LogWarning("VerifyCurrentPosition - travel event failed, but within range anyway!");
+                __instance.StartTransfer();
+                return false;
+            }
+            log.LogWarning("VerifyCurrentPosition - travel event failed");
+            __instance.m_desc.SetCompletionStatus(PlayerBotActionBase.Descriptor.StatusType.Failed);
+        }
+        return false;
+    }
+
     [HarmonyPatch(typeof(CommunicationMenu), nameof(CommunicationMenu.PlayConfirmSound))]
     [HarmonyPrefix]
 

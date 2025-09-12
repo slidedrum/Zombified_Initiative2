@@ -294,6 +294,7 @@ namespace Zombified_Initiative
 
         private void Update()
         {
+            zActionSub.update();
             bool ready = (FocusStateManager.CurrentState == eFocusState.FPS || FocusStateManager.CurrentState == eFocusState.Dead);
             if (ready)
             {
@@ -373,9 +374,10 @@ namespace Zombified_Initiative
             if (Time.time > lastupdatetime + 1f)
             {
                 Zi.slowUpdate();
-                zActionSub.update();
+                
                 lastupdatetime = Time.time;
             }
+            
         }
 
         public static void AddZombifiedMenu()

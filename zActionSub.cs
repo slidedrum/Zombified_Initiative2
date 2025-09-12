@@ -1,13 +1,7 @@
-﻿using Il2CppSystem.Security.Cryptography;
-using Player;
+﻿using Player;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
-using UnityEngine.UIElements;
-using Zombified_Initiative;
 
 namespace ZombieTweak2
 {

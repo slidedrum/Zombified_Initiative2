@@ -8,6 +8,7 @@ using GTFO.API;
 using HarmonyLib;
 using Il2CppInterop.Runtime.Injection;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
+using Il2CppSystem.Security.Cryptography;
 using LevelGeneration;
 using Player;
 using SNetwork;
@@ -87,12 +88,21 @@ public class Zi : BasePlugin
         EventAPI.OnExpeditionStarted += ZombieController.Initialize;
         log = Log;
         zActionSub.addOnRemoved((Action<PlayerAIBot, PlayerBotActionBase>)onActionRemoved);
+        zActionSub.addOnAdded((Action<PlayerAIBot, PlayerBotActionBase>)onActionAdded);
     }
+
+    private void onActionAdded(PlayerAIBot bot, PlayerBotActionBase action)
+    {
+
+    }
+
     public static void onActionRemoved(PlayerAIBot bot , PlayerBotActionBase action)
     {
         string typeName = action.GetIl2CppType().Name;
         if (typeName != "PlayerBotActionCollectItem") return;
-        log.LogInfo($"{bot.Agent.PlayerName} completed collect item task with status: {action.DescBase.Status}");
+        var descriptor = action.DescBase.Cast<PlayerBotActionCollectItem.Descriptor>();
+        log.LogInfo($"{bot.Agent.PlayerName} completed collect {descriptor.TargetItem.PublicName} task with status: {action.DescBase.Status}  access layers {descriptor.m_accessLayers}");
+        sendChatMessage($"Collected item {descriptor.TargetItem.PublicName} with status: {action.DescBase.Status} access layers {descriptor.m_accessLayers}", bot.Agent);
     }
     public static void slowUpdate()
     {
