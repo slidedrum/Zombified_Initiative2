@@ -6,8 +6,10 @@ using Enemies;
 using Gear;
 using GTFO.API;
 using HarmonyLib;
+using Il2CppInterop.Runtime;
 using Il2CppInterop.Runtime.Injection;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
+using Il2CppInterop.Runtime.Runtime;
 using Il2CppSystem.Security.Cryptography;
 using LevelGeneration;
 using Player;
@@ -15,6 +17,8 @@ using SNetwork;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.Security.Cryptography;
 using UnityEngine;
 using ZombieTweak2;
 
@@ -95,14 +99,80 @@ public class Zi : BasePlugin
     {
 
     }
+    public static bool isManualAction(PlayerBotActionBase action)
+    {
+        string typeName = action.GetIl2CppType().Name;
+        float hast = 0f;
+        float prio = 0f;
+        if (typeName == "PlayerBotActionCollectItem")
+        {
+            var descriptor = action.DescBase.Cast<PlayerBotActionCollectItem.Descriptor>();
+            hast = descriptor.Haste;
+            prio = descriptor.Prio;
+        }
+        if (typeName == "PlayerBotActionShareResourcePack")
+        {
+            var descriptor = action.DescBase.Cast<PlayerBotActionShareResourcePack.Descriptor>();
+            hast = descriptor.Haste;
+            prio = descriptor.Prio;
+        }
+        if (typeName == "PlayerBotActionAttack")
+        {
+            var descriptor = action.DescBase.Cast<PlayerBotActionAttack.Descriptor>();
+            hast = descriptor.Haste;
+            prio = descriptor.Prio;
+        }
+        if (hast == _manualActionsHaste && prio == _manualActionsPriority) return true;
+        return false;
+    }
 
     public static void onActionRemoved(PlayerAIBot bot , PlayerBotActionBase action)
     {
         string typeName = action.GetIl2CppType().Name;
-        if (typeName != "PlayerBotActionCollectItem") return;
-        var descriptor = action.DescBase.Cast<PlayerBotActionCollectItem.Descriptor>();
-        log.LogInfo($"{bot.Agent.PlayerName} completed collect {descriptor.TargetItem.PublicName} task with status: {action.DescBase.Status}  access layers {descriptor.m_accessLayers}");
-        sendChatMessage($"Collected item {descriptor.TargetItem.PublicName} with status: {action.DescBase.Status} access layers {descriptor.m_accessLayers}", bot.Agent);
+        bool manualAction = isManualAction(action);
+        log.LogInfo($"action removed {typeName} manual {manualAction}");
+        if (typeName == "PlayerBotActionCollectItem")
+        {
+            var descriptor = action.DescBase.Cast<PlayerBotActionCollectItem.Descriptor>();
+            log.LogInfo($"{bot.Agent.PlayerName} completed collect {descriptor.TargetItem.PublicName} task with status: {action.DescBase.Status}  access layers {descriptor.m_accessLayers}");
+            string article = manualAction ? "the" : "a";
+            if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Successful)
+            {
+                float ammoLeft = bot.Backpack.AmmoStorage.GetAmmoInPack(AmmoType.ResourcePackRel);
+                sendChatMessage($"I collected {article} {descriptor.TargetItem.PublicName} ({ammoLeft}).", bot.Agent);
+            }
+            else if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Failed)
+                sendChatMessage($"I coul't get {article} {descriptor.TargetItem.PublicName}.", bot.Agent);
+            else if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Interrupted)
+                sendChatMessage($"I can't get {article} {descriptor.TargetItem.PublicName} right now.", bot.Agent);
+            else if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Aborted)
+                sendChatMessage($"I can't get {article} {descriptor.TargetItem.PublicName} right now.", bot.Agent);
+            else if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Stopped)
+                sendChatMessage($"I can't get {article} {descriptor.TargetItem.PublicName} right now.", bot.Agent);
+            else
+                sendChatMessage($"I can't get {article} {descriptor.TargetItem.PublicName} status {action.DescBase.Status}.", bot.Agent);
+        }
+        if (typeName == "PlayerBotActionShareResourcePack")
+        {
+            var descriptor = action.DescBase.Cast<PlayerBotActionShareResourcePack.Descriptor>();
+            bot.Backpack.TryGetBackpackItem(InventorySlot.ResourcePack, out BackpackItem pack);
+            float ammoLeft = bot.Backpack.AmmoStorage.GetAmmoInPack(AmmoType.ResourcePackRel);
+            log.LogInfo($"{bot.Agent.PlayerName} completed share {descriptor.Item.PublicName} task with status: {action.DescBase.Status}  access layers {descriptor.m_accessLayers}");
+            string article = manualAction ? "the" : "a";
+            string receverOrMyslef = descriptor.Receiver == bot.Agent ? "myself" : descriptor.Receiver.PlayerName;
+            if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Successful)
+                sendChatMessage($"I gave {receverOrMyslef} {article} {descriptor.Item.PublicName}({ammoLeft}%).", bot.Agent);
+            else if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Failed)
+                sendChatMessage($"I coul't give {receverOrMyslef} {article} {pack.Name}({ammoLeft}%).", bot.Agent);
+            else if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Interrupted)
+                sendChatMessage($"I can't give {receverOrMyslef} {article} {pack.Name}({ammoLeft}%) right now.", bot.Agent);
+            else if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Aborted)
+                sendChatMessage($"I can't give {receverOrMyslef} {article} {pack.Name}({ammoLeft}%) right now.", bot.Agent);
+            else if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Stopped)
+                sendChatMessage($"I can't give {receverOrMyslef} {article} {pack.Name}({ammoLeft}%) right now.", bot.Agent);
+            else
+                sendChatMessage($"I can't give {receverOrMyslef} {article} {pack.Name}({ammoLeft}%) status {action.DescBase.Status}.", bot.Agent);
+        }
     }
     public static void slowUpdate()
     {

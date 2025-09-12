@@ -107,37 +107,20 @@ namespace ZombieTweak2
             GameObject agentImLookingAt = zSearch.GetClosestInLookDirection(cameraTransform, agentGameObjects, 30f);
             GameObject enemyImLookingAt = zSearch.GetClosestInLookDirection(cameraTransform, zSearch.GetGameObjectsWithLookDirection<EnemyAgent>(cameraTransform));
             GameObject itemImLookingAt = zSearch.GetClosestInLookDirection(cameraTransform, zSearch.GetGameObjectsWithLookDirection<ItemInLevel>(cameraTransform), 180f);
-            GameObject lookingAt = zSearch.GetClosestInLookDirection(cameraTransform, new List<GameObject>() { agentImLookingAt, enemyImLookingAt, itemImLookingAt, selection.getItem(), selection.getEnemy() , selection.getBot() } );
+            GameObject lookingAt = zSearch.GetClosestInLookDirection(cameraTransform, new List<GameObject>() { agentImLookingAt, enemyImLookingAt, itemImLookingAt } );
             switch (lookingAt)
             {
                 case null:
                     {
-                        Zi.log.LogInfo("Looking at nothing");
-                        break;
-                    }
-                case var go when go == selection.getItem():
-                    {
-                        Zi.log.LogInfo($"Looking at selected item {lookingAt.name}");
-                        if (selection.getBot() != null) {
-                            PlayerAgent bot = selection.getBot().GetComponent<PlayerAgent>();
-                            ItemInLevel pickup = lookingAt.GetComponent<ItemInLevel>();
-                            Zi.sendChatMessage("Picking up item: " + pickup.PublicName, bot, localPlayer);
-                            Zi.SendBotToPickupItem(bot.PlayerName, pickup);
-                            selection.setBot(null);
+                        if (Vector3.Angle(cameraTransform.forward, Vector3.down) < 15f)
+                        {
+                            PlayerAgent agent = selection.getBot().GetComponent<PlayerAgent>();
+                            Zi.SendBotToShareResourcePack(agent.PlayerName, lookingAt.GetComponent<PlayerAgent>());
                         }
-                        break;
-                    }
-                case var go when go == selection.getEnemy():
-                    {
-                        Zi.log.LogInfo($"Looking at selected enemy {lookingAt.name}");
-                        break;
-                    }
-                case var go when go == selection.getBot():
-                    {
-                        Zi.log.LogInfo($"Looking at selected bot {lookingAt.name}");
-                        PlayerAgent agent = selection.getBot().GetComponent<PlayerAgent>();
-                        Zi.SendBotToShareResourcePack(agent.PlayerName, lookingAt.GetComponent<PlayerAgent>());
-                        selection.setBot(null);
+                        else
+                        {
+                            Zi.log.LogInfo("Looking at nothing");
+                        }
                         break;
                     }
                 case var go when go == agentImLookingAt:
@@ -147,7 +130,6 @@ namespace ZombieTweak2
                         {
                             PlayerAgent agent = selection.getBot().GetComponent<PlayerAgent>();
                             Zi.SendBotToShareResourcePack(agent.PlayerName, lookingAt.GetComponent<PlayerAgent>());
-                            selection.setBot(null);
                         }
                         break;
                     }
@@ -159,7 +141,6 @@ namespace ZombieTweak2
                             PlayerAgent bot = selection.getBot().GetComponent<PlayerAgent>();
                             Zi.sendChatMessage("Attacking enemy", bot, localPlayer);
                             Zi.SendBotToKillEnemy(bot.PlayerName, lookingAt.GetComponent<EnemyAgent>());
-                            selection.setBot(null);
                         }
                         break;
                     }
@@ -172,7 +153,6 @@ namespace ZombieTweak2
                             ItemInLevel pickup = lookingAt.GetComponent<ItemInLevel>();
                             Zi.sendChatMessage("Picking up item: " + pickup.PublicName, bot, localPlayer);
                             Zi.SendBotToPickupItem(bot.PlayerName, pickup);
-                            selection.setBot(null);
                         }
                         break;
                     }
@@ -194,8 +174,8 @@ namespace ZombieTweak2
                 selection.setBot(botImLookingAt);
                 interactable = false;
             }
-            //if looking within 15 degrees of straight down deselect agent
-            else if (Vector3.Angle(cameraTransform.forward, Vector3.down) < 15f)
+            //if looking within 15 degrees of straight up deselect agent
+            else if (Vector3.Angle(cameraTransform.forward, Vector3.up) < 15f)
             {
                 Zi.sendChatMessage("Nevermind.", selection.getBot().GetComponent<PlayerAgent>(), localPlayer);
                 selection.setBot(null);
