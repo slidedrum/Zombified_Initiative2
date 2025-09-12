@@ -138,7 +138,9 @@ public class Zi : BasePlugin
             string article = manualAction ? "the" : "a";
             if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Successful)
             {
-                float ammoLeft = bot.Backpack.AmmoStorage.GetAmmoInPack(AmmoType.ResourcePackRel);
+                InventorySlot slot = descriptor.TargetItem.ItemDataBlock.inventorySlot;
+                AmmoType ammoType = slot == InventorySlot.Consumable ? AmmoType.CurrentConsumable : slot == InventorySlot.ResourcePack ? AmmoType.ResourcePackRel : AmmoType.None;
+                float ammoLeft = bot.Backpack.AmmoStorage.GetAmmoInPack(ammoType);
                 sendChatMessage($"I collected {article} {descriptor.TargetItem.PublicName} ({ammoLeft}).", bot.Agent);
             }
             else if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Failed)
@@ -155,7 +157,6 @@ public class Zi : BasePlugin
         if (typeName == "PlayerBotActionShareResourcePack")
         {
             var descriptor = action.DescBase.Cast<PlayerBotActionShareResourcePack.Descriptor>();
-            bot.Backpack.TryGetBackpackItem(InventorySlot.ResourcePack, out BackpackItem pack);
             float ammoLeft = bot.Backpack.AmmoStorage.GetAmmoInPack(AmmoType.ResourcePackRel);
             log.LogInfo($"{bot.Agent.PlayerName} completed share {descriptor.Item.PublicName} task with status: {action.DescBase.Status}  access layers {descriptor.m_accessLayers}");
             string article = manualAction ? "the" : "a";
@@ -163,15 +164,15 @@ public class Zi : BasePlugin
             if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Successful)
                 sendChatMessage($"I gave {receverOrMyslef} {article} {descriptor.Item.PublicName}({ammoLeft}%).", bot.Agent);
             else if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Failed)
-                sendChatMessage($"I coul't give {receverOrMyslef} {article} {pack.Name}({ammoLeft}%).", bot.Agent);
+                sendChatMessage($"I coul't give {receverOrMyslef} {article} {descriptor.Item.PublicName}({ammoLeft}%).", bot.Agent);
             else if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Interrupted)
-                sendChatMessage($"I can't give {receverOrMyslef} {article} {pack.Name}({ammoLeft}%) right now.", bot.Agent);
+                sendChatMessage($"I can't give {receverOrMyslef} {article} {descriptor.Item.PublicName}({ammoLeft}%) right now.", bot.Agent);
             else if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Aborted)
-                sendChatMessage($"I can't give {receverOrMyslef} {article} {pack.Name}({ammoLeft}%) right now.", bot.Agent);
+                sendChatMessage($"I can't give {receverOrMyslef} {article} {descriptor.Item.PublicName}({ammoLeft}%) right now.", bot.Agent);
             else if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Stopped)
-                sendChatMessage($"I can't give {receverOrMyslef} {article} {pack.Name}({ammoLeft}%) right now.", bot.Agent);
+                sendChatMessage($"I can't give {receverOrMyslef} {article} {descriptor.Item.PublicName}({ammoLeft}%) right now.", bot.Agent);
             else
-                sendChatMessage($"I can't give {receverOrMyslef} {article} {pack.Name}({ammoLeft}%) status {action.DescBase.Status}.", bot.Agent);
+                sendChatMessage($"I can't give {receverOrMyslef} {article} {descriptor.Item.PublicName}({ammoLeft}%) status {action.DescBase.Status}.", bot.Agent);
         }
     }
     public static void slowUpdate()
