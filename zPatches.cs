@@ -11,11 +11,12 @@ using static Zombified_Initiative.Zi;
 namespace Zombified_Initiative;
 
 //todo fix pickup action failing sometimes  -- Done?  
-//todo change cancel to look up
-//todo make look down select yourself
+//todo change cancel to look up -- done
+//todo make look down select yourself -- done
 //todo make "i need health/ammo" quck action overide share permission
 //todo make smart select pick up turrets
 //todo fix bot extra data only updating when you look away
+//todo track down KeyNotFoundException: The given key was not present in the dictionary.
 
 //todo refactor PlayConfirmSound hook to not be so dumb
 
