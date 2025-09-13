@@ -249,7 +249,6 @@ namespace Zombified_Initiative
                 Zi.rootmenusetup = true;
                 _menuadded = true;
             }
-
         }
 
 
@@ -295,9 +294,11 @@ namespace Zombified_Initiative
         private void Update()
         {
             zActionSub.update();
+            ZMenuManger.Update();
             bool ready = (FocusStateManager.CurrentState == eFocusState.FPS || FocusStateManager.CurrentState == eFocusState.Dead);
             if (ready)
             {
+                zMenus.setupRadialMenus();
                 zSmartSelect.update();
                 if (Input.GetKeyDown(KeyCode.L))
                     SwitchDebug();

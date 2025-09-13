@@ -10,9 +10,8 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UIElements;
-using Zombified_Initiative;
 
-namespace ZombieTweak2
+namespace Zombified_Initiative
 {
     public class Selection
     {

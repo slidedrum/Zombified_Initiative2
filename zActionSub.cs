@@ -2,9 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Zombified_Initiative;
 
-namespace ZombieTweak2
+namespace Zombified_Initiative
 {
     public static class zActionSub
     {

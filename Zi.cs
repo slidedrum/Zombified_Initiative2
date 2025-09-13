@@ -86,11 +86,13 @@ public class Zi : BasePlugin
         Harmony m_Harmony = new Harmony("ZombieController");
         m_Harmony.PatchAll();
         ClassInjector.RegisterTypeInIl2Cpp<zComputer>();
+        ClassInjector.RegisterTypeInIl2Cpp<ZMenuNode>();
         var ZombieController = AddComponent<zController>();
         NetworkAPI.RegisterEvent<ZINetInfo>(ZINetInfo.NetworkIdentity, zController.ReceiveZINetInfo);
         LG_Factory.add_OnFactoryBuildDone((Action)ZombieController.OnFactoryBuildDone);
         EventAPI.OnExpeditionStarted += ZombieController.Initialize;
         log = Log;
+        
         zActionSub.addOnRemoved((Action<PlayerAIBot, PlayerBotActionBase>)onActionRemoved);
         zActionSub.addOnAdded((Action<PlayerAIBot, PlayerBotActionBase>)onActionAdded);
     }
@@ -269,7 +271,6 @@ public class Zi : BasePlugin
         log.LogInfo("added to botactions list, total " + botActions.Count);
         ExecuteBotAction(bot, descriptor,
             "Added collect item action to " + bot.Agent.PlayerName, 3, bot.m_playerAgent.PlayerSlotIndex, itemtype, itemserial, 0);
-
     }
 
     public static void SendBotToShareResourcePack(String chosenBot, PlayerAgent human, PlayerAgent sender = null)

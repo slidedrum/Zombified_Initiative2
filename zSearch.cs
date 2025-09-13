@@ -9,9 +9,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
-using Zombified_Initiative;
 
-namespace ZombieTweak2
+namespace Zombified_Initiative
 {
     public static class zSearch
     {
@@ -84,34 +83,36 @@ namespace ZombieTweak2
 
             return null;
         }
-        public static GameObject GetClosestInLookDirection(Transform baseTransform,List<GameObject> candidates,float maxAngle = 180f)
+        public static GameObject GetClosestInLookDirection(Transform baseTransform,List<GameObject> candidates,float maxAngle = 180f, Vector3? candidateOffset = null, Vector3? baseOffset = null)
         {
+            candidateOffset = candidateOffset ?? Vector3.zero;
+            baseOffset = baseOffset ?? Vector3.zero;
             if (baseTransform == null || candidates == null || candidates.Count == 0)
                 return null;
 
-            Vector3 basePos = baseTransform.position;
-            Vector3 lookDir = baseTransform.forward;
+            Vector3 basePosition = (Vector3)(baseTransform.position + baseOffset);
+            Vector3 lookDirection = baseTransform.forward;
 
-            GameObject best = null;
-            float bestAngle = float.MaxValue;
+            GameObject bestCanidate = null;
+            float bestAngle = maxAngle;
 
-            foreach (var obj in candidates)
+            foreach (GameObject candidate in candidates)
             {
-                if (obj == null) continue;
+                if (candidate == null) continue;
+                Vector3 candidatePosition = (Vector3)(candidate.transform.position + candidateOffset);
+                Vector3 targetDirection = (candidatePosition - basePosition).normalized;
+                float canidateAngle = Vector3.Angle(lookDirection, targetDirection);
 
-                Vector3 toTarget = (obj.transform.position - basePos).normalized;
-                float angle = Vector3.Angle(lookDir, toTarget);
-
-                if (angle < bestAngle)
+                if (canidateAngle < bestAngle)
                 {
-                    bestAngle = angle;
-                    best = obj;
+                    bestAngle = canidateAngle;
+                    bestCanidate = candidate;
                 }
             }
 
-            // enforce angle cutoff
-            if (best != null && bestAngle <= maxAngle)
-                return best;
+            // enforce canidateAngle cutoff
+            if (bestCanidate != null && bestAngle <= maxAngle)
+                return bestCanidate;
 
             return null;
         }
