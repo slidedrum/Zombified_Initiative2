@@ -232,7 +232,25 @@ public class Zi : BasePlugin
         log.LogInfo($"bot " + bot + " attack");
         SendBotToKillEnemy(bot, monster, PlayerBotActionAttack.StanceEnum.All, PlayerBotActionAttack.AttackMeansEnum.All, PlayerBotActionWalk.Descriptor.PostureEnum.Stand);
     }
-
+    public static void setPickupPermission(string bot, bool allowed) //todo figure out network stuff and refactor this. Right now I'm a little scared to touch this because I can't test it.
+    {
+        foreach (KeyValuePair<String, PlayerAIBot> iBotTable in Zi.BotTable)
+        {
+            string botName = iBotTable.Key;
+            PlayerAIBot playerAIBot = iBotTable.Value;
+            if (bot == botName)
+            {
+                log.LogInfo($"{botName} pickup perm set to {allowed}");
+                if (!SNet.IsMaster) NetworkAPI.InvokeEvent<Zi.ZINetInfo>("ZINetInfo", new Zi.ZINetInfo(2, playerAIBot.m_playerAgent.PlayerSlotIndex, 0, 0, 0));
+                if (SNet.IsMaster)
+                {
+                    zComputer botComp = playerAIBot.GetComponent<zComputer>();
+                    if (botComp.pickupaction != null) botComp.pickupaction.DescBase.SetCompletionStatus(PlayerBotActionBase.Descriptor.StatusType.Failed);
+                    botComp.allowedpickups = allowed;
+                }
+            }
+        }
+    }
     public static void togglePickupPermission(string bot, bool everyone = false)
     {
         foreach (KeyValuePair<String, PlayerAIBot> iBotTable in Zi.BotTable)
