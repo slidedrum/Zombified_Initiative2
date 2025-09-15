@@ -13,6 +13,7 @@ using Il2CppInterop.Runtime.Runtime;
 using Il2CppSystem.Security.Cryptography;
 using LevelGeneration;
 using Player;
+using PlayFab.ClientModels;
 using SNetwork;
 using System;
 using System.Collections.Generic;
@@ -334,5 +335,21 @@ public class Zi : BasePlugin
             log.LogInfo(message);
         }
         if (!SNet.IsMaster) NetworkAPI.InvokeEvent<Zi.ZINetInfo>("ZINetInfo", new Zi.ZINetInfo(func, slot, itemtype, itemserial, agentid));
+    }
+    public static List<PlayerAIBot> GetBotList()
+    {
+        #region badness
+        List<PlayerAIBot> playerAiBots = new();
+        var playerAgentsInLevel = PlayerManager.PlayerAgentsInLevel;
+        foreach (var agent in playerAgentsInLevel)
+        {
+            var aiBot = agent.gameObject.GetComponent<PlayerAIBot>();
+            if (aiBot != null)
+            {
+                playerAiBots.Add(aiBot);
+            }
+        }
+        return playerAiBots;
+        #endregion
     }
 } // plugin

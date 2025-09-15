@@ -13,18 +13,7 @@ namespace Zombified_Initiative
         public static void update()
         {
             //there's got to be a better way to get all bots.
-            #region badness
-            List<PlayerAIBot> playerAiBots = new();
-            var playerAgentsInLevel = PlayerManager.PlayerAgentsInLevel;
-            foreach (var agent in playerAgentsInLevel)
-            {
-                var aiBot = agent.gameObject.GetComponent<PlayerAIBot>();
-                if (aiBot != null)
-                {
-                    playerAiBots.Add(aiBot);
-                }
-            }
-            #endregion
+            List<PlayerAIBot> playerAiBots = Zi.GetBotList();
             var comparer = new Il2CppActionComparer();
             foreach (var bot in playerAiBots)
             {
