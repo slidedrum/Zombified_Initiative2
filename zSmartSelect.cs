@@ -89,7 +89,7 @@ namespace Zombified_Initiative
             //if smoothTime held is larger than threshold and less than last deltatime
             if (heldDuration > holdThreshold && heldDuration - Time.deltaTime <= holdThreshold)
             {
-                Zi.log.LogInfo("held duration: " + heldDuration);
+                ZiMain.log.LogInfo("held duration: " + heldDuration);
                 onKeyHeld();
             }
         }
@@ -114,50 +114,50 @@ namespace Zombified_Initiative
                         if (Vector3.Angle(cameraTransform.forward, Vector3.down) < 15f)
                         {
                             PlayerAgent agent = selection.getBot().GetComponent<PlayerAgent>();
-                            Zi.SendBotToShareResourcePack(agent.PlayerName, lookingAt.GetComponent<PlayerAgent>());
+                            ZiMain.SendBotToShareResourcePack(agent.PlayerName, lookingAt.GetComponent<PlayerAgent>());
                         }
                         else
                         {
-                            Zi.log.LogInfo("Looking at nothing");
+                            ZiMain.log.LogInfo("Looking at nothing");
                         }
                         break;
                     }
                 case var go when go == agentImLookingAt:
                     {
-                        Zi.log.LogInfo($"Looking at new agent {lookingAt.name}");
+                        ZiMain.log.LogInfo($"Looking at new agent {lookingAt.name}");
                         if (selection.getBot() != null)
                         {
                             PlayerAgent agent = selection.getBot().GetComponent<PlayerAgent>();
-                            Zi.SendBotToShareResourcePack(agent.PlayerName, lookingAt.GetComponent<PlayerAgent>());
+                            ZiMain.SendBotToShareResourcePack(agent.PlayerName, lookingAt.GetComponent<PlayerAgent>());
                         }
                         break;
                     }
                 case var go when go == enemyImLookingAt:
                     {
-                        Zi.log.LogInfo($"Looking at new enemy {lookingAt.name}");
+                        ZiMain.log.LogInfo($"Looking at new enemy {lookingAt.name}");
                         if (selection.getBot() != null)
                         {
                             PlayerAgent bot = selection.getBot().GetComponent<PlayerAgent>();
-                            Zi.sendChatMessage("Attacking enemy", bot, localPlayer);
-                            Zi.SendBotToKillEnemy(bot.PlayerName, lookingAt.GetComponent<EnemyAgent>());
+                            ZiMain.sendChatMessage("Attacking enemy", bot, localPlayer);
+                            ZiMain.SendBotToKillEnemy(bot.PlayerName, lookingAt.GetComponent<EnemyAgent>());
                         }
                         break;
                     }
                 case var go when go == itemImLookingAt:
                     {
-                        Zi.log.LogInfo($"Looking at new item {lookingAt.name}");
+                        ZiMain.log.LogInfo($"Looking at new item {lookingAt.name}");
                         if (selection.getBot() != null)
                         {
                             PlayerAgent bot = selection.getBot().GetComponent<PlayerAgent>();
                             ItemInLevel pickup = lookingAt.GetComponent<ItemInLevel>();
-                            Zi.sendChatMessage("Picking up item: " + pickup.PublicName, bot, localPlayer);
-                            Zi.SendBotToPickupItem(bot.PlayerName, pickup);
+                            ZiMain.sendChatMessage("Picking up item: " + pickup.PublicName, bot, localPlayer);
+                            ZiMain.SendBotToPickupItem(bot.PlayerName, pickup);
                         }
                         break;
                     }
                 default:
                     { 
-                        Zi.log.LogError($"Looking at something weird {lookingAt.name} at {lookingAt.transform.position}");
+                        ZiMain.log.LogError($"Looking at something weird {lookingAt.name} at {lookingAt.transform.position}");
                         break; 
                     }
             }
@@ -166,28 +166,28 @@ namespace Zombified_Initiative
         {
             var localPlayer = PlayerManager.GetLocalPlayerAgent();
             var cameraTransform = localPlayer.FPSCamera.transform;
-            GameObject botImLookingAt = zSearch.GetClosestInLookDirection(cameraTransform, Zi.BotTable.Values.Select(b => b.gameObject).ToList(), 30f);
+            GameObject botImLookingAt = zSearch.GetClosestInLookDirection(cameraTransform, ZiMain.BotTable.Values.Select(b => b.gameObject).ToList(), 30f);
             if (botImLookingAt != null)
             {
-                Zi.sendChatMessage("I'm ready", botImLookingAt.GetComponent<PlayerAgent>(), localPlayer);
+                ZiMain.sendChatMessage("I'm ready", botImLookingAt.GetComponent<PlayerAgent>(), localPlayer);
                 selection.setBot(botImLookingAt);
                 interactable = false;
             }
             //if looking within 15 degrees of straight up deselect agent
             else if (Vector3.Angle(cameraTransform.forward, Vector3.up) < 15f)
             {
-                Zi.sendChatMessage("Nevermind.", selection.getBot().GetComponent<PlayerAgent>(), localPlayer);
+                ZiMain.sendChatMessage("Nevermind.", selection.getBot().GetComponent<PlayerAgent>(), localPlayer);
                 selection.setBot(null);
                 interactable = false;
             }
-            Zi.log.LogInfo("looking for items...");
+            ZiMain.log.LogInfo("looking for items...");
             var items = zSearch.GetGameObjectsWithLookDirection<ItemInLevel>(cameraTransform, 3);
-            Zi.log.LogInfo("found " + items.Count + " items");
+            ZiMain.log.LogInfo("found " + items.Count + " items");
             if (items.Count > 0)
             {
                 selection.setItem(zSearch.GetClosestInLookDirection(cameraTransform, items, 180f));
                 if (selection.getItem() != null)
-                    Zi.log.LogInfo("closest item: " + selection.getItem().name);
+                    ZiMain.log.LogInfo("closest item: " + selection.getItem().name);
             }
         }
     }

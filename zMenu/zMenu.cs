@@ -253,7 +253,7 @@ namespace ZombieTweak2.zMenu
         public zMenu Open()
         {
             if (!zMenuManager.menues.Contains(this))
-                Zi.log.LogWarning($"Unregestered menu opened! ({name}) It may not clsoe properly.");
+                ZiMain.log.LogWarning($"Unregestered menu opened! ({name}) It may not clsoe properly.");
             setVisiblity(true);
             FaceCamera();
             ArrangeNodes();

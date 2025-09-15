@@ -60,7 +60,7 @@ namespace Zombified_Initiative
         
 
 
-        public static void ReceiveZINetInfo(ulong sender, Zi.ZINetInfo netInfo)
+        public static void ReceiveZINetInfo(ulong sender, ZiMain.ZINetInfo netInfo)
         {
             // funktio attack 0
             // funktio toggleshare 1
@@ -90,7 +90,7 @@ namespace Zombified_Initiative
             if (senderindex == 9) return; // sender not found
 
             PlayerAgent senderAgent = PlayerManager.PlayerAgentsInLevel[senderindex];
-            Zi.log.LogInfo($"player {senderAgent.PlayerName} is sender {senderAgent.Sync.Replicator.OwningPlayer.Lookup} in slot {senderAgent.PlayerSlotIndex}");
+            ZiMain.log.LogInfo($"player {senderAgent.PlayerName} is sender {senderAgent.Sync.Replicator.OwningPlayer.Lookup} in slot {senderAgent.PlayerSlotIndex}");
             // get agent by repkey
             if (netInfo.AGENTID > 0)
             {
@@ -122,7 +122,7 @@ namespace Zombified_Initiative
             // get bot by slot id
             if (netInfo.SLOT < 8)
             {
-                foreach (PlayerAIBot bot in Zi.BotTable.Values) 
+                foreach (PlayerAIBot bot in ZiMain.BotTable.Values) 
                     if (bot.Agent.PlayerSlotIndex == netInfo.SLOT)
                     {
                         zombie = bot.GetComponent<zComputer>();
@@ -136,14 +136,14 @@ namespace Zombified_Initiative
                 if (enemy == null) return;
                 if (netInfo.SLOT == 8)//all bots
                 {
-                    foreach (KeyValuePair<String, PlayerAIBot> bt in Zi.BotTable)
+                    foreach (KeyValuePair<String, PlayerAIBot> bt in ZiMain.BotTable)
                     {
-                        Zi.SendBotToKillEnemy(bt.Key, enemy, PlayerBotActionAttack.StanceEnum.All, PlayerBotActionAttack.AttackMeansEnum.All, PlayerBotActionWalk.Descriptor.PostureEnum.Stand);
+                        ZiMain.SendBotToKillEnemy(bt.Key, enemy, PlayerBotActionAttack.StanceEnum.All, PlayerBotActionAttack.AttackMeansEnum.All, PlayerBotActionWalk.Descriptor.PostureEnum.Stand);
                     }
                 }
                 else if (netInfo.SLOT < 8) //one bot
                 {
-                    Zi.SendBotToKillEnemy(botname, enemy, PlayerBotActionAttack.StanceEnum.All, PlayerBotActionAttack.AttackMeansEnum.All, PlayerBotActionWalk.Descriptor.PostureEnum.Stand);
+                    ZiMain.SendBotToKillEnemy(botname, enemy, PlayerBotActionAttack.StanceEnum.All, PlayerBotActionAttack.AttackMeansEnum.All, PlayerBotActionWalk.Descriptor.PostureEnum.Stand);
                 }
             }
 
@@ -152,7 +152,7 @@ namespace Zombified_Initiative
             {
                 if (netInfo.SLOT == 8)//all bots
                 {
-                    foreach (PlayerAIBot iBot in Zi.BotTable.Values)
+                    foreach (PlayerAIBot iBot in ZiMain.BotTable.Values)
                     {
                         iBot.GetComponent<zComputer>().toggleSharePermission();
                     }
@@ -166,7 +166,7 @@ namespace Zombified_Initiative
             {
                 if (netInfo.SLOT == 8)//all bots
                 {
-                    foreach (PlayerAIBot iBot in Zi.BotTable.Values)
+                    foreach (PlayerAIBot iBot in ZiMain.BotTable.Values)
                     {
                         iBot.GetComponent<zComputer>().togglePickupPermission();
                     }
@@ -178,7 +178,7 @@ namespace Zombified_Initiative
             }
             if (netInfo.FUNC == 3) //pickup pack
             {
-                Zi.SendBotToPickupItem(botname, item);
+                ZiMain.SendBotToPickupItem(botname, item);
     //            Zi.ExecuteBotAction(zombie.GetComponent<PlayerAIBot>(), new PlayerBotActionCollectItem.Descriptor(zombie.GetComponent<PlayerAIBot>())
     //            {
     //                TargetItem = item,
@@ -192,7 +192,7 @@ namespace Zombified_Initiative
 
             if (netInfo.FUNC == 4) //share pack
             {
-                Zi.SendBotToShareResourcePack(botname, agent.TryCast<PlayerAgent>(), senderAgent);
+                ZiMain.SendBotToShareResourcePack(botname, agent.TryCast<PlayerAgent>(), senderAgent);
     //            PlayerAgent human = agent.TryCast<PlayerAgent>();
     //            if (human == null) return;
 
@@ -220,7 +220,7 @@ namespace Zombified_Initiative
             {
                 if (netInfo.SLOT == 8)//all bots
                 {
-                    foreach (PlayerAIBot iBot in Zi.BotTable.Values)
+                    foreach (PlayerAIBot iBot in ZiMain.BotTable.Values)
                     {
                         iBot.GetComponent<zComputer>().PreventManualActions();
                     }
@@ -234,19 +234,19 @@ namespace Zombified_Initiative
 
         public void Awake()
         {
-            Zi.BotTable.Clear();
+            ZiMain.BotTable.Clear();
         }
 
         public void OnFactoryBuildDone()
         {
-            Zi.BotTable.Clear();
-            foreach (var p in PlayerManager.PlayerAgentsInLevel) if (p.Owner.IsBot) Zi.BotTable.Add(p.PlayerName, p.GetComponent<PlayerAIBot>());
-            Zi._menu = FindObjectOfType<PUI_CommunicationMenu>();
+            ZiMain.BotTable.Clear();
+            foreach (var p in PlayerManager.PlayerAgentsInLevel) if (p.Owner.IsBot) ZiMain.BotTable.Add(p.PlayerName, p.GetComponent<PlayerAIBot>());
+            ZiMain._menu = FindObjectOfType<PUI_CommunicationMenu>();
             if (!_menuadded)
             {
                 AddZombifiedText();
                 AddZombifiedMenu();
-                Zi.rootmenusetup = true;
+                ZiMain.rootmenusetup = true;
                 _menuadded = true;
             }
         }
@@ -284,7 +284,7 @@ namespace Zombified_Initiative
 
         public void Initialize()
         {
-            if (!SNet.IsMaster) foreach (KeyValuePair<String, PlayerAIBot> bt in Zi.BotTable)
+            if (!SNet.IsMaster) foreach (KeyValuePair<String, PlayerAIBot> bt in ZiMain.BotTable)
                 {
                     var tmpcomp = bt.Value.gameObject.AddComponent<zComputer>();
                     tmpcomp.Initialize();
@@ -309,14 +309,14 @@ namespace Zombified_Initiative
                 {
                     if (SNet.IsMaster)
                     {
-                        foreach (KeyValuePair<string, PlayerAIBot> bt in Zi.BotTable)
+                        foreach (KeyValuePair<string, PlayerAIBot> bt in ZiMain.BotTable)
                         {
                             zComputer zombie = bt.Value.GetComponent<zComputer>();
                             zombie.allowedpickups = !zombie.allowedpickups;
                             zombie.updateExtraInfo();
                         }
                     }
-                    if (!SNet.IsMaster) NetworkAPI.InvokeEvent<Zi.ZINetInfo>("ZINetInfo", new Zi.ZINetInfo(2, 8, 0, 0, 0));
+                    if (!SNet.IsMaster) NetworkAPI.InvokeEvent<ZiMain.ZINetInfo>("ZINetInfo", new ZiMain.ZINetInfo(2, 8, 0, 0, 0));
                     Print("Automatic resource pickups toggled for all bots");
                 }
 
@@ -324,14 +324,14 @@ namespace Zombified_Initiative
                 {
                     if (SNet.IsMaster)
                     {
-                        foreach (KeyValuePair<string, PlayerAIBot> bt in Zi.BotTable)
+                        foreach (KeyValuePair<string, PlayerAIBot> bt in ZiMain.BotTable)
                         {
                             zComputer zombie = bt.Value.GetComponent<zComputer>();
                             zombie.allowedshare = !zombie.allowedshare;
                             zombie.updateExtraInfo();
                         }
                     }
-                    if (!SNet.IsMaster) NetworkAPI.InvokeEvent<Zi.ZINetInfo>("ZINetInfo", new Zi.ZINetInfo(1, 8, 0, 0, 0));
+                    if (!SNet.IsMaster) NetworkAPI.InvokeEvent<ZiMain.ZINetInfo>("ZINetInfo", new ZiMain.ZINetInfo(1, 8, 0, 0, 0));
                     Print("Automatic resource uses toggled for all bots");
                 }
 
@@ -354,7 +354,7 @@ namespace Zombified_Initiative
                     var monster = zSearch.GetMonsterUnderPlayerAim();
                     if (monster != null)
                     {
-                        Zi.SendBotToKillEnemy(bot, monster,
+                        ZiMain.SendBotToKillEnemy(bot, monster,
                             PlayerBotActionAttack.StanceEnum.All,
                             PlayerBotActionAttack.AttackMeansEnum.All,
                             PlayerBotActionWalk.Descriptor.PostureEnum.Stand);
@@ -365,15 +365,15 @@ namespace Zombified_Initiative
                 {
                     var item = zSearch.GetItemUnderPlayerAim();
                     if (item != null)
-                        Zi.SendBotToPickupItem(bot, item);
+                        ZiMain.SendBotToPickupItem(bot, item);
                 }
 
                 if (Input.GetKeyDown(KeyCode.I) && ready)
-                    Zi.SendBotToShareResourcePack(bot, zSearch.GetHumanUnderPlayerAim());
+                    ZiMain.SendBotToShareResourcePack(bot, zSearch.GetHumanUnderPlayerAim());
             }
             if (Time.time > lastupdatetime + 1f)
             {
-                Zi.slowUpdate();
+                ZiMain.slowUpdate();
                 
                 lastupdatetime = Time.time;
             }
@@ -410,7 +410,7 @@ namespace Zombified_Initiative
             zombmenu.TextId = zombtb1;
             zombmenu.m_ChildNodes.Add(allmenu);
 
-            Zi._menu.m_menu.CurrentNode.ChildNodes[5].m_ChildNodes.Add(zombmenu);
+            ZiMain._menu.m_menu.CurrentNode.ChildNodes[5].m_ChildNodes.Add(zombmenu);
         }
 
 
@@ -437,7 +437,7 @@ namespace Zombified_Initiative
         public static void Print(string text, bool forced = false)
         {
             if (_debug || forced)
-                Zi.log.LogInfo(text);
+                ZiMain.log.LogInfo(text);
         } // print
     } // ZombieController mono
 }

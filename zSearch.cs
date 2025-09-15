@@ -45,7 +45,7 @@ namespace Zombified_Initiative
                 return otherPlayerAgent;
 
             var localPlayerAgent = PlayerManager.GetLocalPlayerAgent();
-            Zi.log.LogInfo("Found local player: " + localPlayerAgent.PlayerName);
+            ZiMain.log.LogInfo("Found local player: " + localPlayerAgent.PlayerName);
             return localPlayerAgent;
         }
         public static EnemyAgent GetMonsterUnderPlayerAim()
@@ -63,7 +63,7 @@ namespace Zombified_Initiative
                     if (component == null)
                         continue;
 
-                    Zi.log.LogInfo(message(component));
+                    ZiMain.log.LogInfo(message(component));
                     return component;
                 }
             }
@@ -76,7 +76,7 @@ namespace Zombified_Initiative
                     if (component == null)
                         return null;
 
-                    Zi.log.LogInfo(message(component));
+                    ZiMain.log.LogInfo(message(component));
                     return component;
                 }
             }

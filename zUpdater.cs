@@ -24,7 +24,7 @@ namespace ZombieTweak2
             if (Instance != null && Instance != this)
             {
                 Destroy(this);
-                Zi.log.LogWarning("Multiple updater instances created");
+                ZiMain.log.LogWarning("Multiple updater instances created");
                 return;
             }
             Instance = this;

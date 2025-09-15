@@ -6,7 +6,7 @@ using SNetwork;
 using System;
 using System.Collections.Generic;
 using ZombieTweak2;
-using static Zombified_Initiative.Zi;
+using static Zombified_Initiative.ZiMain;
 
 namespace Zombified_Initiative;
 
@@ -135,7 +135,7 @@ public class ZombifiedPatches
             string instanceType = __instance != null ? __instance.GetIl2CppType().Name : "INSTANCE IS NULL";
             string actionType = (desc != null && desc.ActionBase != null) ? desc.ActionBase.GetIl2CppType().Name : "desc.ActionBase is NULL";
             if (instanceType == "INSTANCE IS NULL" || instanceType == "PlayerBotActionCollectItem")
-                Zi.log.LogWarning($"Action collision! botName={botName}, instanceType={instanceType}, actionType={actionType}");
+                ZiMain.log.LogWarning($"Action collision! botName={botName}, instanceType={instanceType}, actionType={actionType}");
 
         }
     }
@@ -174,7 +174,7 @@ public class ZombifiedPatches
     public static void PlayConfirmSound(CommunicationMenu __instance)
     {
         zComputer whocomp = null;
-        CommunicationNode node = Zi._menu.m_menu.CurrentNode;
+        CommunicationNode node = ZiMain._menu.m_menu.CurrentNode;
         if (node.IsLastNode)
         {
             String jee = TextDataBlock.GetBlock(node.TextId).English;
@@ -185,16 +185,16 @@ public class ZombifiedPatches
             if (wha == "attack my target")
             {
                 bool everyone = who == "AllBots";
-                Zi.attackMyTarget(who, everyone);
+                ZiMain.attackMyTarget(who, everyone);
             }
             if (wha.Contains("pickup permission"))
             {
-                foreach (KeyValuePair<String, PlayerAIBot> bt in Zi.BotTable)
+                foreach (KeyValuePair<String, PlayerAIBot> bt in ZiMain.BotTable)
                 {
                     if (who == "AllBots" || who == bt.Key)
                     {
                         log.LogInfo($"{bt.Key} toggle resource pickups");
-                        if (!SNet.IsMaster) NetworkAPI.InvokeEvent<Zi.ZINetInfo>("ZINetInfo", new Zi.ZINetInfo(2, bt.Value.m_playerAgent.PlayerSlotIndex, 0, 0, 0));
+                        if (!SNet.IsMaster) NetworkAPI.InvokeEvent<ZiMain.ZINetInfo>("ZINetInfo", new ZiMain.ZINetInfo(2, bt.Value.m_playerAgent.PlayerSlotIndex, 0, 0, 0));
                         if (SNet.IsMaster)
                         {
                             whocomp = bt.Value.GetComponent<zComputer>();
@@ -207,12 +207,12 @@ public class ZombifiedPatches
 
             if (wha.Contains("share permission"))
             {
-                foreach (KeyValuePair<String, PlayerAIBot> bt in Zi.BotTable)
+                foreach (KeyValuePair<String, PlayerAIBot> bt in ZiMain.BotTable)
                 {
                     if (who == "AllBots" || who == bt.Key)
                     {
                         log.LogInfo($"{bt.Key} toggle resource use");
-                        if (!SNet.IsMaster) NetworkAPI.InvokeEvent<Zi.ZINetInfo>("ZINetInfo", new Zi.ZINetInfo(1, bt.Value.m_playerAgent.PlayerSlotIndex, 0, 0, 0));
+                        if (!SNet.IsMaster) NetworkAPI.InvokeEvent<ZiMain.ZINetInfo>("ZINetInfo", new ZiMain.ZINetInfo(1, bt.Value.m_playerAgent.PlayerSlotIndex, 0, 0, 0));
                         if (SNet.IsMaster)
                         {
                             whocomp = bt.Value.GetComponent<zComputer>();
@@ -225,12 +225,12 @@ public class ZombifiedPatches
 
             if (wha == "clear command queue")
             {
-                foreach (KeyValuePair<String, PlayerAIBot> bt in Zi.BotTable)
+                foreach (KeyValuePair<String, PlayerAIBot> bt in ZiMain.BotTable)
                 {
                     if (who == "AllBots" || who == bt.Key)
                     {
                         log.LogInfo($"{bt.Key} stop action");
-                        if (!SNet.IsMaster) NetworkAPI.InvokeEvent<Zi.ZINetInfo>("ZINetInfo", new Zi.ZINetInfo(5, bt.Value.m_playerAgent.PlayerSlotIndex, 0, 0, 0));
+                        if (!SNet.IsMaster) NetworkAPI.InvokeEvent<ZiMain.ZINetInfo>("ZINetInfo", new ZiMain.ZINetInfo(5, bt.Value.m_playerAgent.PlayerSlotIndex, 0, 0, 0));
                         if (SNet.IsMaster)
                         {
                             whocomp = bt.Value.GetComponent<zComputer>();
@@ -251,7 +251,7 @@ public class ZombifiedPatches
             if (wha == "supply resource (aimed or me)")
             {
                 log.LogInfo($"bot " + who + " share resource");
-                Zi.SendBotToShareResourcePack(who, zSearch.GetHumanUnderPlayerAim());
+                ZiMain.SendBotToShareResourcePack(who, zSearch.GetHumanUnderPlayerAim());
             }
 
             if (wha.Contains("sentry mode"))
@@ -259,7 +259,7 @@ public class ZombifiedPatches
                 if (who == "AllBots")
                 {
                     log.LogInfo("all bots sentry mode");
-                    foreach (KeyValuePair<String, PlayerAIBot> bt in Zi.BotTable)
+                    foreach (KeyValuePair<String, PlayerAIBot> bt in ZiMain.BotTable)
                     {
                         var zombie = bt.Value.GetComponent<zComputer>();
                         zombie.allowedmove = !zombie.allowedmove;

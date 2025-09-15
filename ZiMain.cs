@@ -30,7 +30,7 @@ namespace Zombified_Initiative;
 
 [BepInDependency("dev.gtfomodding.gtfo-api")]
 [BepInPlugin("com.hirnukuono.zombified_initiative", "Zombified Initiative", "0.9.6")]
-public class Zi : BasePlugin
+public class ZiMain : BasePlugin
 {
     public static ManualLogSource log;
 
@@ -217,7 +217,7 @@ public class Zi : BasePlugin
         if (everyone)
         {
             log.LogInfo("all bots attack");
-            foreach (var iBot in Zi.BotTable.Keys)
+            foreach (var iBot in ZiMain.BotTable.Keys)
             {
                 attackMonster(iBot, monster);
             }
@@ -234,14 +234,14 @@ public class Zi : BasePlugin
     }
     public static void setPickupPermission(string bot, bool allowed) //todo figure out network stuff and refactor this. Right now I'm a little scared to touch this because I can't test it.
     {
-        foreach (KeyValuePair<String, PlayerAIBot> iBotTable in Zi.BotTable)
+        foreach (KeyValuePair<String, PlayerAIBot> iBotTable in ZiMain.BotTable)
         {
             string botName = iBotTable.Key;
             PlayerAIBot playerAIBot = iBotTable.Value;
             if (bot == botName)
             {
                 log.LogInfo($"{botName} pickup perm set to {allowed}");
-                if (!SNet.IsMaster) NetworkAPI.InvokeEvent<Zi.ZINetInfo>("ZINetInfo", new Zi.ZINetInfo(2, playerAIBot.m_playerAgent.PlayerSlotIndex, 0, 0, 0));
+                if (!SNet.IsMaster) NetworkAPI.InvokeEvent<ZiMain.ZINetInfo>("ZINetInfo", new ZiMain.ZINetInfo(2, playerAIBot.m_playerAgent.PlayerSlotIndex, 0, 0, 0));
                 if (SNet.IsMaster)
                 {
                     zComputer botComp = playerAIBot.GetComponent<zComputer>();
@@ -253,14 +253,14 @@ public class Zi : BasePlugin
     }
     public static void togglePickupPermission(string bot, bool everyone = false)
     {
-        foreach (KeyValuePair<String, PlayerAIBot> iBotTable in Zi.BotTable)
+        foreach (KeyValuePair<String, PlayerAIBot> iBotTable in ZiMain.BotTable)
         {
             string botName = iBotTable.Key;
             PlayerAIBot playerAIBot = iBotTable.Value;
             if (everyone || bot == botName)
             {
                 log.LogInfo($"{botName} toggle resource pickups");
-                if (!SNet.IsMaster) NetworkAPI.InvokeEvent<Zi.ZINetInfo>("ZINetInfo", new Zi.ZINetInfo(2, playerAIBot.m_playerAgent.PlayerSlotIndex, 0, 0, 0));
+                if (!SNet.IsMaster) NetworkAPI.InvokeEvent<ZiMain.ZINetInfo>("ZINetInfo", new ZiMain.ZINetInfo(2, playerAIBot.m_playerAgent.PlayerSlotIndex, 0, 0, 0));
                 if (SNet.IsMaster)
                 {
                     zComputer botComp = playerAIBot.GetComponent<zComputer>();
@@ -272,7 +272,7 @@ public class Zi : BasePlugin
     }
     public static void SendBotToKillEnemy(String chosenBot, Agent enemy, PlayerBotActionAttack.StanceEnum stance = PlayerBotActionAttack.StanceEnum.All, PlayerBotActionAttack.AttackMeansEnum means = PlayerBotActionAttack.AttackMeansEnum.All, PlayerBotActionWalk.Descriptor.PostureEnum posture = PlayerBotActionWalk.Descriptor.PostureEnum.Stand)
     {
-        var bot = Zi.BotTable[chosenBot];
+        var bot = ZiMain.BotTable[chosenBot];
         if (bot == null)
             return;
 
@@ -291,7 +291,7 @@ public class Zi : BasePlugin
     {
         int itemtype = 0;
         int itemserial = 0;
-        var bot = Zi.BotTable[chosenBot];
+        var bot = ZiMain.BotTable[chosenBot];
         if (bot == null)
             return;
 
@@ -318,7 +318,7 @@ public class Zi : BasePlugin
 
     public static void SendBotToShareResourcePack(String chosenBot, PlayerAgent human, PlayerAgent sender = null)
     {
-        var bot = Zi.BotTable[chosenBot];
+        var bot = ZiMain.BotTable[chosenBot];
         PlayerAgent agent = bot.m_playerAgent;
         if (bot == null)
             return;
@@ -326,7 +326,7 @@ public class Zi : BasePlugin
         {
             return;
         }
-        Zi.sendChatMessage($"Sharing {pack.Name} with: " + human.PlayerName, agent, sender != null ? sender : PlayerManager.GetLocalPlayerAgent());
+        ZiMain.sendChatMessage($"Sharing {pack.Name} with: " + human.PlayerName, agent, sender != null ? sender : PlayerManager.GetLocalPlayerAgent());
         BackpackItem backpackItem = null;
         var gotBackpackItem = bot.Backpack.HasBackpackItem(InventorySlot.ResourcePack) &&
                               bot.Backpack.TryGetBackpackItem(InventorySlot.ResourcePack, out backpackItem);
@@ -336,7 +336,7 @@ public class Zi : BasePlugin
         var resourcePack = backpackItem.Instance.Cast<ItemEquippable>();
         bot.Inventory.DoEquipItem(resourcePack);
 
-        Zi.ExecuteBotAction(bot, new PlayerBotActionShareResourcePack.Descriptor(bot)
+        ZiMain.ExecuteBotAction(bot, new PlayerBotActionShareResourcePack.Descriptor(bot)
         {
             Receiver = human,
             Item = resourcePack,
@@ -352,7 +352,7 @@ public class Zi : BasePlugin
             bot.StartAction(descriptor);
             log.LogInfo(message);
         }
-        if (!SNet.IsMaster) NetworkAPI.InvokeEvent<Zi.ZINetInfo>("ZINetInfo", new Zi.ZINetInfo(func, slot, itemtype, itemserial, agentid));
+        if (!SNet.IsMaster) NetworkAPI.InvokeEvent<ZiMain.ZINetInfo>("ZINetInfo", new ZiMain.ZINetInfo(func, slot, itemtype, itemserial, agentid));
     }
     public static List<PlayerAIBot> GetBotList()
     {

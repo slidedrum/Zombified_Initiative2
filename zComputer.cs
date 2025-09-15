@@ -40,7 +40,7 @@ namespace Zombified_Initiative
             if (this.myself == null) return;
             if (!this.myself.Owner.IsBot) { Destroy(this); return; }
             this.myAI = this.gameObject.GetComponent<PlayerAIBot>();
-            Zi.log.LogInfo($"initializing zombified comp on {myself.PlayerName} slot {myself.PlayerSlotIndex}..");
+            ZiMain.log.LogInfo($"initializing zombified comp on {myself.PlayerName} slot {myself.PlayerSlotIndex}..");
             var localizationService = Text.TextLocalizationService.TryCast<GameDataTextLocalizationService>();
             try
             {
@@ -88,43 +88,43 @@ namespace Zombified_Initiative
 
             }
             catch { }
-            if (Zi.BotTable.Count == 0) Zi.BotTable.Add(myself.PlayerName, myAI);
-            if (!Zi.BotTable.ContainsKey(myself.PlayerName)) Zi.BotTable.Add(myself.PlayerName, myAI);
+            if (ZiMain.BotTable.Count == 0) ZiMain.BotTable.Add(myself.PlayerName, myAI);
+            if (!ZiMain.BotTable.ContainsKey(myself.PlayerName)) ZiMain.BotTable.Add(myself.PlayerName, myAI);
             this.started = true;
         }
 
         public void OnDestroy()
         {
-            if (Zi.BotTable.ContainsKey(myself.PlayerName)) Zi.BotTable.Remove(myself.PlayerName);
+            if (ZiMain.BotTable.ContainsKey(myself.PlayerName)) ZiMain.BotTable.Remove(myself.PlayerName);
             mymenu.IsLastNode = true;
         }
 
         void Update()
         {
             if (!this.started) return;
-            if (!this.menusetup && Zi.rootmenusetup)
+            if (!this.menusetup && ZiMain.rootmenusetup)
             {
                 int menunumber = 0;
                 bool flag = false;
                 // get index of zombified
-                for (int num = 0; num < Zi._menu.m_menu.CurrentNode.ChildNodes[5].m_ChildNodes.Count; num++)
-                    if (TextDataBlock.GetBlock(Zi._menu.m_menu.CurrentNode.ChildNodes[5].m_ChildNodes[num].TextId).English == "Zombified Initiative")
+                for (int num = 0; num < ZiMain._menu.m_menu.CurrentNode.ChildNodes[5].m_ChildNodes.Count; num++)
+                    if (TextDataBlock.GetBlock(ZiMain._menu.m_menu.CurrentNode.ChildNodes[5].m_ChildNodes[num].TextId).English == "Zombified Initiative")
                         menunumber = num;
 
                 // not readding bot if its already somehow in
-                for (int num = 0; num < Zi._menu.m_menu.CurrentNode.ChildNodes[5].m_ChildNodes[menunumber].m_ChildNodes.Count; num++)
-                    if (TextDataBlock.GetBlock(Zi._menu.m_menu.CurrentNode.ChildNodes[5].m_ChildNodes[menunumber].m_ChildNodes[num].TextId).English == myself.PlayerName)
+                for (int num = 0; num < ZiMain._menu.m_menu.CurrentNode.ChildNodes[5].m_ChildNodes[menunumber].m_ChildNodes.Count; num++)
+                    if (TextDataBlock.GetBlock(ZiMain._menu.m_menu.CurrentNode.ChildNodes[5].m_ChildNodes[menunumber].m_ChildNodes[num].TextId).English == myself.PlayerName)
                     {
                         flag = true;
-                        Zi._menu.m_menu.CurrentNode.ChildNodes[5].m_ChildNodes[menunumber].m_ChildNodes[num].IsLastNode = false;
+                        ZiMain._menu.m_menu.CurrentNode.ChildNodes[5].m_ChildNodes[menunumber].m_ChildNodes[num].IsLastNode = false;
                     }
 
                 if (!flag)
                 {
-                    Zi._menu.m_menu.CurrentNode.ChildNodes[5].m_ChildNodes[menunumber].m_ChildNodes.Add(mymenu);
-                    for (int num = 0; num < Zi._menu.m_menu.CurrentNode.ChildNodes[5].m_ChildNodes[menunumber].m_ChildNodes.Count; num++)
-                        if (TextDataBlock.GetBlock(Zi._menu.m_menu.CurrentNode.ChildNodes[5].m_ChildNodes[menunumber].m_ChildNodes[num].TextId).English == myself.PlayerName)
-                            Zi._menu.m_menu.CurrentNode.ChildNodes[5].m_ChildNodes[menunumber].m_ChildNodes[num].IsLastNode = false;
+                    ZiMain._menu.m_menu.CurrentNode.ChildNodes[5].m_ChildNodes[menunumber].m_ChildNodes.Add(mymenu);
+                    for (int num = 0; num < ZiMain._menu.m_menu.CurrentNode.ChildNodes[5].m_ChildNodes[menunumber].m_ChildNodes.Count; num++)
+                        if (TextDataBlock.GetBlock(ZiMain._menu.m_menu.CurrentNode.ChildNodes[5].m_ChildNodes[menunumber].m_ChildNodes[num].TextId).English == myself.PlayerName)
+                            ZiMain._menu.m_menu.CurrentNode.ChildNodes[5].m_ChildNodes[menunumber].m_ChildNodes[num].IsLastNode = false;
                 }
                 this.menusetup = true;
             }
@@ -151,7 +151,7 @@ namespace Zombified_Initiative
                     var itemIsToolRefillPack = descriptor.TargetItem.PublicName == "Tool Refill Pack";
 
                     var itemIsPack = itemIsToolRefillPack || itemIsAmmoPack || itemIsMediPack || itemIsDesinfectionPack;
-                    if (descriptor.Haste < Zi._manualActionsHaste && itemIsPack)
+                    if (descriptor.Haste < ZiMain._manualActionsHaste && itemIsPack)
                     {
                         pickupaction = action;
                         actionsToRemove.Add(action);
@@ -162,7 +162,7 @@ namespace Zombified_Initiative
                 if (!allowedshare && action.GetIl2CppType().Name == "PlayerBotActionShareResourcePack")
                 {
                     var descriptor = action.DescBase.Cast<PlayerBotActionShareResourcePack.Descriptor>();
-                    if (descriptor.Haste < Zi._manualActionsHaste)
+                    if (descriptor.Haste < ZiMain._manualActionsHaste)
                     {
                         shareaction = action;
                         actionsToRemove.Add(action);
@@ -174,7 +174,7 @@ namespace Zombified_Initiative
             foreach (var action in actionsToRemove)
             {
                 this.myAI.Actions.Remove(action);
-                Zi.log.LogInfo($"{this.myself.PlayerName} action {action.GetIl2CppType().Name} was cancelled");
+                ZiMain.log.LogInfo($"{this.myself.PlayerName} action {action.GetIl2CppType().Name} was cancelled");
             }
             actionsToRemove.Clear();
         } // slowUpdate
@@ -189,7 +189,7 @@ namespace Zombified_Initiative
             this.shareaction = null;
 
             var actionsToRemove = new List<PlayerBotActionBase>();
-            var haste = Zi._manualActionsHaste - 0.01f;
+            var haste = ZiMain._manualActionsHaste - 0.01f;
 
             foreach (var action in this.myAI.Actions)
             {
@@ -227,7 +227,7 @@ namespace Zombified_Initiative
             {
                 myAI.Actions.Remove(action); // Queued stop
                 // this.myAI.StopAction(action.DescBase); // Instant stop
-                Zi.log.LogInfo($"{this.myself.PlayerName}'s manual actions were cancelled");
+                ZiMain.log.LogInfo($"{this.myself.PlayerName}'s manual actions were cancelled");
             }
             actionsToRemove.Clear();
         } // preventmanual
@@ -260,7 +260,7 @@ namespace Zombified_Initiative
         public void ExecuteBotAction(PlayerBotActionBase.Descriptor descriptor, string message)
         {
             this.myAI.StartAction(descriptor);
-            Zi.log.LogInfo(message);
+            ZiMain.log.LogInfo(message);
         }
     }
 }

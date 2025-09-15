@@ -27,7 +27,7 @@ namespace ZombieTweak2.zMenu
 
             selectionMenu.AddNode("Toggle all", SelectionToggleAllBots);
             selectionMenu.AddNode("Flip all", SelectionFlipAllBots);
-            List<PlayerAIBot> playerAiBots = Zi.GetBotList();
+            List<PlayerAIBot> playerAiBots = ZiMain.GetBotList();
             foreach (PlayerAIBot bot in playerAiBots)
             {
                 string botName = bot.m_playerAgent.PlayerName;
@@ -69,7 +69,7 @@ namespace ZombieTweak2.zMenu
             List<PlayerAIBot> SelectedBots = getSelectedBots();
             foreach (PlayerAIBot bot in SelectedBots) 
             {
-                Zi.togglePickupPermission(bot.m_playerAgent.PlayerName);
+                ZiMain.togglePickupPermission(bot.m_playerAgent.PlayerName);
             }
         }
         private static void setPickupPermissionForSelected(bool allowed)
@@ -77,7 +77,7 @@ namespace ZombieTweak2.zMenu
             List<PlayerAIBot> SelectedBots = getSelectedBots();
             foreach (PlayerAIBot bot in SelectedBots)
             {
-                Zi.setPickupPermission(bot.m_playerAgent.PlayerName, allowed);
+                ZiMain.setPickupPermission(bot.m_playerAgent.PlayerName, allowed);
             }
         }
         public static zMenu.zMenuNode updateColorBaesdOnSelection(zMenu.zMenuNode node, PlayerAIBot bot)
@@ -100,7 +100,7 @@ namespace ZombieTweak2.zMenu
         public static List<PlayerAIBot> getSelectedBots()
         {
             List<PlayerAIBot> selectedBots = new();
-            var allBots = Zi.GetBotList();
+            var allBots = ZiMain.GetBotList();
             foreach (PlayerAIBot bot in allBots)
             {
                 bool botSelected = botSelections[bot.GetInstanceID()];
@@ -122,7 +122,7 @@ namespace ZombieTweak2.zMenu
         {
             if (bot == null)
             {
-                Zi.log.LogError("Can't toggle bot selection of null!  This should not happen.");
+                ZiMain.log.LogError("Can't toggle bot selection of null!  This should not happen.");
                 return true;
             }
             if (!botSelections.ContainsKey(bot.GetInstanceID()))
@@ -135,7 +135,7 @@ namespace ZombieTweak2.zMenu
         }
         private static void SelectionFlipAllBots()
         {
-            foreach (var bot in Zi.GetBotList())
+            foreach (var bot in ZiMain.GetBotList())
             {
                 toggleBotSelection(bot);
                 updateColorBaesdOnSelection(selectionBotNodes[bot.GetInstanceID()], bot);
@@ -146,7 +146,7 @@ namespace ZombieTweak2.zMenu
             int selectedCount = botSelections.Values.Count(value => value);
             int unselectedCount = botSelections.Values.Count() - selectedCount;
             bool majority = selectedCount > unselectedCount;
-            foreach (var bot in Zi.GetBotList())
+            foreach (var bot in ZiMain.GetBotList())
             {
                 setBotSelection(bot,!majority);
                 updateColorBaesdOnSelection(selectionBotNodes[bot.GetInstanceID()], bot);

@@ -13,7 +13,7 @@ namespace Zombified_Initiative
         public static void update()
         {
             //there's got to be a better way to get all bots.
-            List<PlayerAIBot> playerAiBots = Zi.GetBotList();
+            List<PlayerAIBot> playerAiBots = ZiMain.GetBotList();
             var comparer = new Il2CppActionComparer();
             foreach (var bot in playerAiBots)
             {
