@@ -41,7 +41,7 @@ namespace ZombieTweak2.zMenu
             }
 
             zMenu pickupPermMenu = zMenuManager.createMenu("Pickups", permissionMenu);
-            pickupPermMenu.AddNode("Toggle",);
+            pickupPermMenu.AddNode("Toggle");
             pickupPermMenu.AddNode("On");
             pickupPermMenu.AddNode("Off");
             zMenu sharePermMenu = zMenuManager.createMenu("Share", permissionMenu);
