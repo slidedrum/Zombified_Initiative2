@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GTFO.API;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,12 +18,25 @@ namespace ZombieTweak2.zMenu
         public  static zMenu mainMenu { get; private set; }
         public static zMenu currentMenu { get; internal set; }
         private static zMenu.zMenuNode selectedNode;
+
+        public static Color defaultColor { get; private set; } = new Color(0.25f, 0.25f, 0.25f, 1f);
         public enum nodeEvent
         {
             OnPressed,
             WhilePressed,
             OnUnpressed,
             WhileUnpressed,
+            OnSelected,
+            WhileSelected,
+            OnDeselected,
+            WhileDeselected,
+        }
+        public enum menuEvent
+        {
+            OnOpened,
+            WhileOpened,
+            OnClosed,
+            WhileClosed,
             OnSelected,
             WhileSelected,
             OnDeselected,
@@ -38,6 +52,10 @@ namespace ZombieTweak2.zMenu
             {
                 newMenu.centerNode.ClearListeners(zMenuManager.nodeEvent.OnPressed);
                 newMenu.centerNode.AddListener(zMenuManager.nodeEvent.OnPressed, CloseAllMenues);
+            }
+            else
+            {
+                parrentMenu.AddNode(newMenu);
             }
             registerMenu(newMenu);
             return newMenu;
@@ -157,11 +175,24 @@ namespace ZombieTweak2.zMenu
         private Canvas canvas;
         private RectTransform rectTransform;
         private Vector3 RelativePosition = Vector3.zero;
+
+        private Dictionary<zMenuManager.menuEvent, FlexibleEvent> eventMap;
+
+        private FlexibleEvent OnOpened = new();
+        private FlexibleEvent WhileOpened = new();
+        private FlexibleEvent OnClosed = new();
+        private FlexibleEvent WhileClosed = new();
+        private FlexibleEvent OnSelected = new();
+        private FlexibleEvent WhileSelected = new();
+        private FlexibleEvent OnDeselected = new();
+        private FlexibleEvent WhileDeselected = new();
+
         //settings
         private Vector2 canvasSize = new Vector2(1000, 1000);
         private Vector3 canvasScale = new Vector3(0.002f, 0.002f, 0.002f);
         private float radius = 125f;
-        private Color textColor = new Color(0.25f, 0.25f, 0.25f, 1f);
+        private Color textColor = zMenuManager.defaultColor;
+        private zMenuNode selectedNode;
 
         public zMenu(string arg_Name, zMenu arg_ParrentMenu = null)
         {
@@ -178,12 +209,45 @@ namespace ZombieTweak2.zMenu
             centerNode = new zMenuNode(arg_ParrentMenu != null ? arg_ParrentMenu.name : "Close", this, onClose).SetTitle(name);
             parrentMenu = arg_ParrentMenu;
             Close();
+            eventMap = new Dictionary<zMenuManager.menuEvent, FlexibleEvent>(){ //I think all invokes are covered?  Might be missing one.
+                    { zMenuManager.menuEvent.OnOpened, OnOpened },
+                    { zMenuManager.menuEvent.WhileOpened, WhileOpened },
+                    { zMenuManager.menuEvent.OnClosed, OnClosed },
+                    { zMenuManager.menuEvent.WhileClosed, WhileClosed },
+                    { zMenuManager.menuEvent.OnSelected, OnSelected },
+                    { zMenuManager.menuEvent.WhileSelected, WhileSelected },
+                    { zMenuManager.menuEvent.OnDeselected, OnDeselected },
+                    { zMenuManager.menuEvent.WhileDeselected, WhileDeselected }};
+        }
+        public void Update()
+        {
+            Vector3 newpos = Camera.main.transform.position - RelativePosition;
+            setPosition(newpos);
+            FaceCamera();
+            if (gameObject.activeInHierarchy)
+                WhileOpened.Invoke();
+            else
+                WhileClosed.Invoke();
+            selectedNode = null;
+            foreach (var node in allNodes)
+            {
+                node.Update();
+            }
+            if (selectedNode != null)
+                WhileSelected.Invoke();
+            else
+                WhileDeselected.Invoke();
+        }
+        public void Lateupdate()
+        {
+
         }
         public zMenu Close()
         {
             setVisiblity(false);
             if (zMenuManager.currentMenu == this)
                 zMenuManager.currentMenu = null;
+            OnClosed.Invoke();
             return this; 
         }
         public zMenu Open()
@@ -200,7 +264,7 @@ namespace ZombieTweak2.zMenu
             zMenuManager.currentMenu = this;
             if (oldMenu != null && oldMenu != this)
                 oldMenu.Close();
-            
+            OnOpened.Invoke();
             return this;
         }
         public zMenu ResetRelativePosition()
@@ -323,6 +387,47 @@ namespace ZombieTweak2.zMenu
             gameObject.transform.rotation = rot;
             return this;
         }
+        public zMenu AddListener(zMenuManager.menuEvent arg_event, Action arg_method)
+        {
+            return AddListener(arg_event, (FlexibleMethodDefinition)arg_method);
+        }
+        public zMenu AddListener(zMenuManager.menuEvent arg_event, Delegate method, params object[] args)
+        {
+            var flex = new FlexibleMethodDefinition(method, args);
+            return AddListener(arg_event, flex);
+        }
+        public zMenu AddListener(zMenuManager.menuEvent arg_event, FlexibleMethodDefinition arg_method)
+        {
+            if (eventMap.TryGetValue(arg_event, out var flexEvent))
+            {
+                flexEvent.Listen(arg_method);
+            }
+            return this;
+        }
+        public zMenu RemoveListener(zMenuManager.menuEvent arg_event, Action arg_method)
+        {
+            if (eventMap.TryGetValue(arg_event, out var flexEvent))
+            {
+                flexEvent.Unlisten(arg_method);
+            }
+            return this;
+        }
+        public zMenu RemoveListener(zMenuManager.menuEvent arg_event, FlexibleMethodDefinition arg_method)
+        {
+            if (eventMap.TryGetValue(arg_event, out var flexEvent))
+            {
+                flexEvent.Unlisten(arg_method);
+            }
+            return this;
+        }
+        public zMenu ClearListeners(zMenuManager.menuEvent arg_event)
+        {
+            if (eventMap.TryGetValue(arg_event, out var flexEvent))
+            {
+                flexEvent.ClearListeners();
+            }
+            return this;
+        }
         public zMenuNode AddNode(zMenu menu)
         {
             FlexibleMethodDefinition callback = new FlexibleMethodDefinition(menu.Open);
@@ -350,7 +455,6 @@ namespace ZombieTweak2.zMenu
             RegisterNode(node);
             return node;
         }
-
         public zMenu RegisterNode(zMenuNode node)
         {
             nodes.Add(node);
@@ -361,21 +465,6 @@ namespace ZombieTweak2.zMenu
             gameObject.SetActive(visible);
             return this;
         }
-        public void Update()
-        {
-            Vector3 newpos = Camera.main.transform.position - RelativePosition;
-            setPosition(newpos);
-            FaceCamera();
-            foreach (var node in allNodes)
-            {
-                node.Update();
-            }
-        }
-        public void Lateupdate()
-        {
-
-        }
-
         public Color getTextColor()
         {
             return textColor;

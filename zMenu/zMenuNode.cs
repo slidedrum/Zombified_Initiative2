@@ -1,5 +1,8 @@
-﻿using System;
+﻿//using Il2CppSystem.Collections.Generic;
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -151,7 +154,10 @@ namespace ZombieTweak2.zMenu
             public zMenuNode Update()
             {
                 if (selected)
+                {
                     WhileSelected.Invoke();
+                    parrentMenu.selectedNode = this;
+                }
                 else
                     WhileDeselected.Invoke();
                 if (pressed)
@@ -217,18 +223,20 @@ namespace ZombieTweak2.zMenu
                 gameObject.transform.rotation = rot;
                 return this;
             }
-            public zMenuNode Deselect()
-            {
-                selected = false;
-                SetSize(1f);
-                OnDeselected.Invoke();
-                return this;
-            }
             public zMenuNode Select()
             {
                 selected = true;
                 SetSize(1.5f);
                 OnSelected.Invoke();
+                parrentMenu.OnSelected.Invoke();
+                return this;
+            }
+            public zMenuNode Deselect()
+            {
+                selected = false;
+                SetSize(1f);
+                OnDeselected.Invoke();
+                parrentMenu.OnDeselected.Invoke();
                 return this;
             }
             public zMenuNode Press()
@@ -258,7 +266,8 @@ namespace ZombieTweak2.zMenu
             }
             public zMenuNode AddListener(zMenuManager.nodeEvent arg_event, Delegate method, params object[] args)
             {
-                return AddListener(arg_event, (FlexibleMethodDefinition)method);
+                var flex = new FlexibleMethodDefinition(method, args);
+                return AddListener(arg_event, flex);
             }
             public zMenuNode AddListener(zMenuManager.nodeEvent arg_event, FlexibleMethodDefinition arg_method)
             {
@@ -321,6 +330,24 @@ namespace ZombieTweak2.zMenu
             {
                 suffix = arg_Suffix ?? string.Empty;
                 return this;
+            }
+            public zMenuNode SetColor(Color arg_Color)
+            {
+                List<TextPart> textParts = GetTextParts();
+                foreach (TextPart part in textParts) 
+                { 
+                    part.SetColor(arg_Color);
+                }
+                return this;
+            }
+            public List<TextPart> GetTextParts()
+            {
+                return this.GetType()
+                           .GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                           .Where(f => f.FieldType == typeof(TextPart))
+                           .Select(f => f.GetValue(this) as TextPart)
+                           .Where(tp => tp != null)
+                           .ToList();
             }
             private void UpdateTitle()
             {

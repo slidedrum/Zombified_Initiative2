@@ -101,6 +101,11 @@ namespace ZombieTweak2.zMenu
                     rect.localScale = new Vector3(x, y, z);
                     return this;
                 }
+                public TextPart SetColor(Color color)
+                {
+                    textMesh.color = color;
+                    return this;
+                }
             }
         }
     }
