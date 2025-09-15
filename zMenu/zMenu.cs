@@ -301,6 +301,12 @@ namespace ZombieTweak2.zMenu
             gameObject.transform.rotation = rot;
             return this;
         }
+        public zMenuNode AddNode(zMenu menu)
+        {
+            FlexibleMethodDefinition callback = new FlexibleMethodDefinition(menu.Open);
+            menu.parrentMenu = this;
+            return AddNode(menu.name, callback);
+        }
         public zMenuNode AddNode(string arg_Name) 
         {
             Action callback = null;
