@@ -15,19 +15,26 @@ namespace ZombieTweak2.zMenu
         {
             public class TextPart
             {
-                public string text;
-                public GameObject gameObject;
-                public TextMeshProUGUI textMesh;
-                public RectTransform rect;
+                private string _text;
+                public string text 
+                { 
+                    get => _text; 
+                    set 
+                    { 
+                        _text = value;
+                        textMesh.text = value;
+                    } 
+                }
+                public GameObject gameObject { get; private set; }
+                private TextMeshProUGUI textMesh;
+                public RectTransform rect { get; private set; }
 
                 public TextPart(zMenuNode parent, string arg_Text)
                 {
-                    text = arg_Text;
-
                     // Child object under the node
-                    gameObject = new GameObject($"TextPart {text}");
+                    gameObject = new GameObject($"TextPart {arg_Text}");
                     rect = gameObject.AddComponent<RectTransform>();
-                    rect.SetParent(parent.rect, false);
+                    rect.SetParent(parent.rect.transform, false);
 
                     // Add TMP
                     textMesh = gameObject.AddComponent<TextMeshProUGUI>();
@@ -35,6 +42,8 @@ namespace ZombieTweak2.zMenu
                     textMesh.fontSize = 24;
                     textMesh.alignment = TextAlignmentOptions.Center;
                     textMesh.color = parent.color;
+
+
 
                     rect.anchoredPosition = Vector2.zero; // center inside node
                     rect.localScale = Vector3.one;
@@ -50,7 +59,17 @@ namespace ZombieTweak2.zMenu
 
                     TMP_FontAsset font = Resources.Load<TMP_FontAsset>("ShareTechMono-Regular_TMPro");
                     textMesh.font = font;
+                    text = arg_Text;
+                }
 
+                //set color
+                //set font
+                //set alignment
+                //set font size
+                public TextPart SetText(string newText)
+                {
+                    text = newText;
+                    return this;
                 }
                 public TextPart SetPosition(Vector2 pos)
                 {
