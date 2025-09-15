@@ -6,9 +6,8 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using Zombified_Initiative;
-using static ZombieTweak2.zMenu.zMenuNode;
 
-namespace ZombieTweak2
+namespace ZombieTweak2.zMenu
 {
     public static class zMenuManager
     {
@@ -27,8 +26,8 @@ namespace ZombieTweak2
             zMenu newMenu = new zMenu(name, parrentMenu);
             if (parrentMenu == null)
             {
-                newMenu.centerNode.ClearListeners(nodeEvent.OnPressed);
-                newMenu.centerNode.AddListener(nodeEvent.OnPressed, CloseAllMenues);
+                newMenu.centerNode.ClearListeners(zMenu.zMenuNode.nodeEvent.OnPressed);
+                newMenu.centerNode.AddListener(zMenu.zMenuNode.nodeEvent.OnPressed, CloseAllMenues);
             }
             registerMenu(newMenu);
             return newMenu;
@@ -40,7 +39,7 @@ namespace ZombieTweak2
         }
         public static void Update()
         {
-            playerInControll = (FocusStateManager.CurrentState == eFocusState.FPS || FocusStateManager.CurrentState == eFocusState.Dead);
+            playerInControll = FocusStateManager.CurrentState == eFocusState.FPS || FocusStateManager.CurrentState == eFocusState.Dead;
             if (playerInControll) 
             {
                 bool menuOpen = currentMenu != null;
@@ -113,11 +112,11 @@ namespace ZombieTweak2
         {
             menuParrent = GameObject.Find(menuParrentPath);
             mainMenu = new zMenu("Main");
-            mainMenu.centerNode.AddListener(nodeEvent.OnPressed, CloseAllMenues);
+            mainMenu.centerNode.AddListener(zMenu.zMenuNode.nodeEvent.OnPressed, CloseAllMenues);
             registerMenu(mainMenu);
         }
     }
-    public class zMenu
+    public partial class zMenu
     {
         private string name;
         public IEnumerable<zMenuNode> allNodes
@@ -253,7 +252,7 @@ namespace ZombieTweak2
             for (int i = 0; i < count; i++)
             {
                 // Calculate angle for this node (start at top, go clockwise)
-                float angle = (2 * Mathf.PI / count) * i - Mathf.PI / 2; // subtract PI/2 = top start
+                float angle = 2 * Mathf.PI / count * i - Mathf.PI / 2; // subtract PI/2 = top start
 
                 // Compute x and y positions (flip Y for clockwise)
                 float x = radius * Mathf.Cos(angle);
@@ -284,7 +283,7 @@ namespace ZombieTweak2
         }
         public zMenu setPosition(Vector3 pos)
         {
-            this.gameObject.transform.position = pos;
+            gameObject.transform.position = pos;
             return this;
         }
         public zMenu setLocalPosition(float x, float y, float z)
@@ -294,7 +293,7 @@ namespace ZombieTweak2
         }
         public zMenu setLocalPosition(Vector3 pos)
         {
-            this.gameObject.transform.localPosition = pos;
+            gameObject.transform.localPosition = pos;
             return this;
         }
         public zMenu setRotation(Quaternion rot)
@@ -344,282 +343,18 @@ namespace ZombieTweak2
                 node.Update();
             }
         }
-        internal void Lateupdate()
+        public void Lateupdate()
         {
 
         }
-        public class zMenuNode
+
+        public Color getTextColor()
         {
-            public string text;
-            public string prefix;
-            public string suffix;
-            public string fullText;
-            public string title;
-            public string subtitle;
-            public string description;
-            public bool selected = false;
-            public bool pressed = false;
-            public int pressedAt = Time.frameCount;
-            public zMenu parrentMenu;
-            private FlexibleEvent OnPressed = new();
-            private FlexibleEvent WhilePressed = new();
-            private FlexibleEvent OnUnpressed = new();
-            private FlexibleEvent WhileUnpressed = new();
-            private FlexibleEvent OnSelected = new();
-            private FlexibleEvent WhileSelected = new();
-            private FlexibleEvent OnDeselected = new();
-            private FlexibleEvent WhileDeselected = new();
-            public enum nodeEvent
-            {
-                OnPressed,
-                WhilePressed,
-                OnUnpressed,
-                WhileUnpressed,
-                OnSelected,
-                WhileSelected,
-                OnDeselected,
-                WhileDeselected,
-            }
-            private Dictionary<nodeEvent, FlexibleEvent> eventMap;
-            public TextPart fullTextPart;
-            public TextPart prefixPart;
-            public TextPart suffixPart;
-            public TextPart titlePart;
-            public TextPart subtitlePart;
-            public TextPart descriptionPart;
-            public RectTransform rect;
-            public GameObject gameObject;
-            public Color color;
-
-            //settings
-
-            public zMenuNode(string arg_Name, zMenu arg_Menu, FlexibleMethodDefinition arg_Callback)
-            {
-                text = arg_Name;
-                parrentMenu = arg_Menu;
-                if (arg_Callback != null) OnPressed.Listen(arg_Callback);
-
-                // Create node container
-                gameObject = new GameObject($"zMenuNode {text}");
-                gameObject.transform.SetParent(parrentMenu.canvas.transform, false);
-
-                rect = gameObject.AddComponent<RectTransform>();
-                rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
-                rect.anchoredPosition = Vector2.zero;
-                rect.localScale = Vector3.one;
-                rect.sizeDelta = new Vector2(300, 0);
-
-                // Node color for child TextParts
-                color = parrentMenu.textColor;
-
-
-                // Vertical layout for stacking text parts
-                VerticalLayoutGroup layout = gameObject.AddComponent<VerticalLayoutGroup>();
-                layout.childAlignment = TextAnchor.MiddleCenter;  // stack from top
-                layout.spacing = 2f;
-                layout.childControlWidth = true;   // children will stretch horizontally
-                layout.childControlHeight = false; // children keep their own height
-                layout.childForceExpandWidth = true;  // stretch width to match container
-                layout.childForceExpandHeight = false; // keep height per child
-
-                // ContentSizeFitter makes the node expand vertically based on children
-                ContentSizeFitter fitter = gameObject.AddComponent<ContentSizeFitter>();
-                fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-                fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
-
-                // Create the text in a TextPart
-                titlePart = new TextPart(this, $"title {title}").SetScale(0.75f, 0.75f);
-                fullTextPart = new TextPart(this, $"Hello from {text}");
-                subtitlePart = new TextPart(this, $"subtitle {title}").SetScale(0.75f,0.75f);
-                eventMap = new Dictionary<nodeEvent, FlexibleEvent>(){
-                    { nodeEvent.OnPressed, OnPressed },
-                    { nodeEvent.WhilePressed, WhilePressed },
-                    { nodeEvent.OnUnpressed, OnUnpressed },
-                    { nodeEvent.WhileUnpressed, WhileUnpressed },
-                    { nodeEvent.OnSelected, OnSelected },
-                    { nodeEvent.WhileSelected, WhileSelected },
-                    { nodeEvent.OnDeselected, OnDeselected },
-                    { nodeEvent.WhileDeselected, WhileDeselected }};
-            }
-            public zMenuNode Update()
-            {
-                if (selected)
-                    WhileSelected.Invoke();
-                else
-                    WhileDeselected.Invoke();
-                if (pressed)
-                {
-                    WhilePressed.Invoke();
-                    if (Time.frameCount - pressedAt > 2)
-                    {
-                        Unpress();
-                    }
-                }
-                else
-                    WhileUnpressed.Invoke();
-                FaceCamera();
-                return this;
-            }
-            public zMenuNode SetPosition(float x, float y)
-            {
-                rect.anchoredPosition = new Vector2(x, y);
-                return this;
-            }
-            public zMenuNode SetSize(float scale)
-            {
-                return SetSize(new Vector3(scale, scale, scale));
-            }
-            public zMenuNode SetSize(Vector3 scale)
-            {
-                rect.localScale = scale;
-                return this;
-            }
-            public zMenuNode FaceCamera()
-            {
-                Quaternion rotation = Quaternion.LookRotation(gameObject.transform.position - Camera.main.transform.position);
-                setRotation(rotation);
-                return this;
-            }
-            public zMenuNode setRotation(Quaternion rot)
-            {
-                gameObject.transform.rotation = rot;
-                return this;
-            }
-            public zMenuNode Deselect()
-            {
-                selected = false;
-                SetSize(1f);
-                OnDeselected.Invoke();
-                return this;
-            }
-            public zMenuNode Select()
-            {
-                selected = true;
-                SetSize(1.5f);
-                OnSelected.Invoke();
-                return this;
-            }
-            public zMenuNode Press()
-            {
-                if (!pressed)
-                {
-                    pressedAt = Time.frameCount;
-                    OnPressed.Invoke();
-                    pressed = true;
-                }
-                return this;
-            }
-            public zMenuNode Unpress()
-            {
-                if (pressed)
-                {
-                    OnUnpressed.Invoke();
-                }
-                pressed = false;
-                return this;
-            }
-            public zMenuNode AddListener(nodeEvent arg_event, Action arg_method)
-            {
-                if (eventMap.TryGetValue(arg_event, out var flexEvent))
-                {
-                    flexEvent.Listen(arg_method);
-                }
-                return this;
-            }
-            public zMenuNode AddListener(nodeEvent arg_event, FlexibleMethodDefinition arg_method)
-            {
-                if (eventMap.TryGetValue(arg_event, out var flexEvent))
-                {
-                    flexEvent.Listen(arg_method);
-                }
-                return this;
-            }
-            public zMenuNode RemoveListener(nodeEvent arg_event, FlexibleMethodDefinition arg_method)
-            {
-                if (eventMap.TryGetValue(arg_event, out var flexEvent))
-                {
-                    flexEvent.Unlisten(arg_method);
-                }
-                return this;
-            }
-            public zMenuNode ClearListeners(nodeEvent arg_event)
-            {
-                if (eventMap.TryGetValue(arg_event, out var flexEvent))
-                {
-                    flexEvent.ClearListeners();
-                }
-                return this;
-            }
-            public class TextPart
-            {
-                public string text;
-                public GameObject gameObject;
-                public TextMeshProUGUI textMesh;
-                public RectTransform rect;
-
-                public TextPart(zMenuNode parent, string arg_Text)
-                {
-                    text = arg_Text;
-
-                    // Child object under the node
-                    gameObject = new GameObject($"TextPart {text}");
-                    rect = gameObject.AddComponent<RectTransform>();
-                    rect.SetParent(parent.rect, false);
-
-                    // Add TMP
-                    textMesh = gameObject.AddComponent<TextMeshProUGUI>();
-                    textMesh.text = arg_Text;
-                    textMesh.fontSize = 24;
-                    textMesh.alignment = TextAlignmentOptions.Center;
-                    textMesh.color = parent.color;
-
-                    rect.anchoredPosition = Vector2.zero; // center inside node
-                    rect.localScale = Vector3.one;
-
-
-                    // Fixed width, height auto
-                    rect.sizeDelta = new Vector2(300, 0);
-
-                    // Make height auto-adjust to text
-                    ContentSizeFitter fitter = gameObject.AddComponent<ContentSizeFitter>();
-                    fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-                    fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
-
-                    TMP_FontAsset font = Resources.Load<TMP_FontAsset>("ShareTechMono-Regular_TMPro");
-                    textMesh.font = font;
-
-                }
-                public TextPart SetPosition(Vector2 pos)
-                {
-                    SetPosition(pos.x, pos.y);
-                    return this;
-                }
-                public TextPart SetPosition(float x, float y)
-                {
-                    rect.anchoredPosition = new Vector2(x, y);
-                    return this;
-                }
-                public TextPart SetScale(Vector2 scale)
-                {
-                    SetScale (scale.x, scale.y,1);
-                    return this;
-                }
-                public TextPart SetScale(Vector3 scale)
-                {
-                    SetScale(scale.x, scale.y, scale.z);
-                    return this;
-                }
-                public TextPart SetScale(float x, float y)
-                {
-                    SetScale(x,y,1);
-                    return this;
-                }
-                public TextPart SetScale(float x, float y, float z)
-                {
-                    rect.localScale = new Vector3(x, y,z);
-                    return this;
-                }
-            }
+            return textColor;
+        }
+        public Canvas getCanvas()
+        {
+            return canvas;
         }
     }
     public class OrderedSet<T> : IEnumerable<T>, IEnumerable

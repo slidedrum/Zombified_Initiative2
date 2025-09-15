@@ -23,6 +23,7 @@ using UnityEngine;
 using UnityEngine.PlayerLoop;
 using UnityEngine.SceneManagement;
 using ZombieTweak2;
+using ZombieTweak2.zMenu;
 
 namespace Zombified_Initiative;
 

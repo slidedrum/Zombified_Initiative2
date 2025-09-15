@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Zombified_Initiative;
 
-namespace ZombieTweak2
+namespace ZombieTweak2.zMenu
 {
     public static class zMenus
     {
