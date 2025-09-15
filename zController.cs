@@ -179,7 +179,7 @@ namespace Zombified_Initiative
             if (netInfo.FUNC == 3) //pickup pack
             {
                 ZiMain.SendBotToPickupItem(botname, item);
-    //            Zi.ExecuteBotAction(zombie.GetComponent<PlayerAIBot>(), new PlayerBotActionCollectItem.Descriptor(zombie.GetComponent<PlayerAIBot>())
+    //            Zi.ExecuteBotActionOld(zombie.GetComponent<PlayerAIBot>(), new PlayerBotActionCollectItem.Descriptor(zombie.GetComponent<PlayerAIBot>())
     //            {
     //                TargetItem = item,
     //                TargetContainer = item.container,
@@ -205,7 +205,7 @@ namespace Zombified_Initiative
     //            var resourcePack = backpackItem.Instance.Cast<ItemEquippable>();
     //            zombie.GetComponent<PlayerAIBot>().Inventory.DoEquipItem(resourcePack);
 
-    //            Zi.ExecuteBotAction(zombie.GetComponent<PlayerAIBot>(), new PlayerBotActionShareResourcePack.Descriptor(zombie.GetComponent<PlayerAIBot>())
+    //            Zi.ExecuteBotActionOld(zombie.GetComponent<PlayerAIBot>(), new PlayerBotActionShareResourcePack.Descriptor(zombie.GetComponent<PlayerAIBot>())
     //            {
     //                Receiver = human,
     //                Item = resourcePack,
