@@ -130,16 +130,7 @@ namespace ZombieTweak2.zMenu
         }
         public OrderedSet<zMenuNode> nodes { get; private set; }
         public  zMenuNode centerNode { get; private set; }
-        private zMenu _parrentMenu;
-        private zMenu parrentMenu { 
-            get => _parrentMenu; 
-            set 
-            {
-                _parrentMenu = value;
-                centerNode.ClearListeners(zMenuNode.nodeEvent.OnPressed);
-                centerNode.AddListener(zMenuNode.nodeEvent.OnPressed, _parrentMenu.Open);
-            } 
-        }
+        private zMenu parrentMenu;
         private GameObject gameObject;
         private Canvas canvas;
         private RectTransform rectTransform;
@@ -147,7 +138,7 @@ namespace ZombieTweak2.zMenu
         //settings
         private Vector2 canvasSize = new Vector2(1000, 1000);
         private Vector3 canvasScale = new Vector3(0.002f, 0.002f, 0.002f);
-        private float radius = 125f;
+        private float radius = 200f;
         private Color textColor = new Color(0.25f, 0.25f, 0.25f, 1f);
 
         public zMenu(string arg_Name, zMenu arg_ParrentMenu = null)
@@ -163,7 +154,7 @@ namespace ZombieTweak2.zMenu
                 onClose = new FlexibleMethodDefinition(parrentMenu.Open);
             else
                 onClose = new FlexibleMethodDefinition(Close);
-            centerNode = new zMenuNode(parrentMenu != null ? parrentMenu.name : "Close", this, onClose).SetTitle(name);
+            centerNode = new zMenuNode(arg_Name, this, onClose);
             Close();
         }
         public zMenu Close()

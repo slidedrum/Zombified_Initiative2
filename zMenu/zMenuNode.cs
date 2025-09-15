@@ -1,5 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -8,71 +12,13 @@ namespace ZombieTweak2.zMenu
     public partial class zMenu {
         public partial class zMenuNode
         {
-            private string _title;
-            public string title { 
-                get => _title; 
-                set 
-                {
-                    _title = value;
-                    UpdateTitle();
-                } 
-            }
-            private string _subtitle;
-            public string subtitle { 
-                get => _subtitle;
-                set 
-                { 
-                    _subtitle = value;
-                    UpdateSubtitle();
-                }
-            }
-            private string _description;
-            public string description {
-                get => _description; 
-                set 
-                { 
-                    _description = value;
-                    UpdateDescription();
-                } 
-            }
-            private string _text;
-            public string text
-            {
-                get => _text;
-                set
-                {
-                    _text = value;
-                    UpdateText();
-                }
-            }
-            private string _prefix;
-            public string prefix 
-            {
-                get => _prefix;
-                set
-                {
-                    _prefix = value;
-                    UpdateText();
-                }
-            }
-            private string _suffix;
-            public string suffix
-            {
-                get => _suffix;
-                set
-                {
-                    _suffix = value;
-                    UpdateText();
-                }
-            }
-            public string fullText 
-            {
-                get => prefix + " " + text + " " + suffix;
-                [Obsolete("\nDon't assign to fullText. Use vars \"prefix\", \"text\" and \"suffix\" instead.\nYou probably want var \"text\".", error: true)]
-                set { }
-            }
-            public bool closeOnPress { get; private set; }
-
+            public string text;
+            public string prefix;
+            public string suffix;
+            public string fullText;
+            public string title;
+            public string subtitle;
+            public string description;
             public bool selected = false;
             public bool pressed = false;
             public int pressedAt = Time.frameCount;
@@ -98,6 +44,8 @@ namespace ZombieTweak2.zMenu
             }
             private Dictionary<nodeEvent, FlexibleEvent> eventMap;
             public TextPart fullTextPart;
+            public TextPart prefixPart;
+            public TextPart suffixPart;
             public TextPart titlePart;
             public TextPart subtitlePart;
             public TextPart descriptionPart;
@@ -109,10 +57,13 @@ namespace ZombieTweak2.zMenu
 
             public zMenuNode(string arg_Name, zMenu arg_Menu, FlexibleMethodDefinition arg_Callback)
             {
-                // Create node container
-                gameObject = new GameObject($"zMenuNode {arg_Name}");
-                gameObject.transform.SetParent(arg_Menu.getCanvas().transform, false);
+                text = arg_Name;
+                parrentMenu = arg_Menu;
+                if (arg_Callback != null) OnPressed.Listen(arg_Callback);
 
+                // Create node container
+                gameObject = new GameObject($"zMenuNode {text}");
+                gameObject.transform.SetParent(parrentMenu.getCanvas().transform, false);
 
                 rect = gameObject.AddComponent<RectTransform>();
                 rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
@@ -120,11 +71,9 @@ namespace ZombieTweak2.zMenu
                 rect.localScale = Vector3.one;
                 rect.sizeDelta = new Vector2(300, 0);
 
-                parrentMenu = arg_Menu;
-                if (arg_Callback != null) OnPressed.Listen(arg_Callback);
-
                 // Node color for child TextParts
                 color = parrentMenu.getTextColor();
+
 
                 // Vertical layout for stacking text parts
                 VerticalLayoutGroup layout = gameObject.AddComponent<VerticalLayoutGroup>();
@@ -141,13 +90,9 @@ namespace ZombieTweak2.zMenu
                 fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
 
                 // Create the text in a TextPart
-                titlePart = new TextPart(this, $"{title}").SetScale(0.75f, 0.75f);
-                fullTextPart = new TextPart(this, $"{text}");
-                subtitlePart = new TextPart(this, $"{title}").SetScale(0.75f, 0.75f);
-                descriptionPart = new TextPart(this, description);
-
-                text = arg_Name;
-
+                titlePart = new TextPart(this, $"title {title}").SetScale(0.75f, 0.75f);
+                fullTextPart = new TextPart(this, $"Hello from {text}");
+                subtitlePart = new TextPart(this, $"subtitle {title}").SetScale(0.75f, 0.75f);
                 eventMap = new Dictionary<nodeEvent, FlexibleEvent>(){
                     { nodeEvent.OnPressed, OnPressed },
                     { nodeEvent.WhilePressed, WhilePressed },
@@ -179,41 +124,16 @@ namespace ZombieTweak2.zMenu
             }
             public zMenuNode SetPosition(float x, float y)
             {
-                SetPosition(new Vector2(x, y));
-                return this;
-            }
-            public zMenuNode SetPosition(Vector2 pos)
-            {
-                rect.anchoredPosition = pos;
+                rect.anchoredPosition = new Vector2(x, y);
                 return this;
             }
             public zMenuNode SetSize(float scale)
             {
                 return SetSize(new Vector3(scale, scale, scale));
             }
-            public zMenuNode SetSize(float x, float y)
-            {
-                SetSize(new Vector2(x, y));
-                return this;
-            }
-            public zMenuNode SetSize(Vector2 scale)
-            {
-                SetSize(new Vector3(scale.x, scale.y, rect.localScale.z));
-                return this;
-            }
-            public zMenuNode SetSize(float x, float y, float z)
-            {
-                SetSize(new Vector3(x,y,z));
-                return this;
-            }
-            public zMenuNode SetSize(Vector3 scale) //main passthrough
+            public zMenuNode SetSize(Vector3 scale)
             {
                 rect.localScale = scale;
-                return this;
-            }
-            public zMenuNode SetClose(bool close)
-            {
-                closeOnPress = close;
                 return this;
             }
             public zMenuNode FaceCamera()
@@ -248,8 +168,6 @@ namespace ZombieTweak2.zMenu
                     pressedAt = Time.frameCount;
                     OnPressed.Invoke();
                     pressed = true;
-                    if (closeOnPress)
-                        zMenuManager.CloseAllMenues();
                 }
                 return this;
             }
@@ -264,25 +182,17 @@ namespace ZombieTweak2.zMenu
             }
             public zMenuNode AddListener(nodeEvent arg_event, Action arg_method)
             {
-                return AddListener(arg_event, (FlexibleMethodDefinition)arg_method);
-            }
-            public zMenuNode AddListener(nodeEvent arg_event, Delegate method, params object[] args)
-            {
-                return AddListener(arg_event, method);
-            }
-            public zMenuNode AddListener(nodeEvent arg_event, FlexibleMethodDefinition arg_method)
-            {
                 if (eventMap.TryGetValue(arg_event, out var flexEvent))
                 {
                     flexEvent.Listen(arg_method);
                 }
                 return this;
             }
-            public zMenuNode RemoveListener(nodeEvent arg_event, Action arg_method)
+            public zMenuNode AddListener(nodeEvent arg_event, FlexibleMethodDefinition arg_method)
             {
                 if (eventMap.TryGetValue(arg_event, out var flexEvent))
                 {
-                    flexEvent.Unlisten(arg_method);
+                    flexEvent.Listen(arg_method);
                 }
                 return this;
             }
@@ -302,53 +212,6 @@ namespace ZombieTweak2.zMenu
                 }
                 return this;
             }
-            public zMenuNode SetTitle(string arg_Title)
-            {
-                title = arg_Title ?? string.Empty;
-                return this;
-            }
-            public zMenuNode SetSubtitle(string arg_Subtitle)
-            {
-                subtitle = arg_Subtitle ?? string.Empty;
-                return this;
-            }
-            public zMenuNode SetDescription(string arg_Description)
-            {
-                description = arg_Description ?? string.Empty;
-                return this;
-            }
-            public zMenuNode SetText(string arg_Text)
-            {
-                text = arg_Text ?? string.Empty;
-                return this;
-            }
-            public zMenuNode SetPrefix(string arg_Prefix)
-            {
-                prefix = arg_Prefix ?? string.Empty;
-                return this;
-            }
-            public zMenuNode SetSuffix(string arg_Suffix)
-            {
-                suffix = arg_Suffix ?? string.Empty;
-                return this;
-            }
-            private void UpdateTitle()
-            {
-                titlePart.SetText(title);
-            }
-            private void UpdateSubtitle()
-            {
-                subtitlePart.SetText(subtitle);
-            }
-            private void UpdateDescription()
-            {
-                descriptionPart.SetText(description);
-            }
-            private void UpdateText()
-            {
-                fullTextPart.SetText(fullText);
-            }
-
         }
     }
 }
