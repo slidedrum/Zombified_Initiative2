@@ -28,6 +28,8 @@ namespace Zombified_Initiative;
 //want to make "go here" command
 //want to make "home" location function where they "follow" a set location but aren't strickly stuck to it if they get into combat, similar to following a player.
 
+//found bot commands in PUI_CommunicationMenu.execute
+
 
 
 [HarmonyPatch]

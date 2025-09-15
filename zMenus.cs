@@ -7,35 +7,30 @@ using Zombified_Initiative;
 
 namespace ZombieTweak2
 {
-    internal class zMenus
+    public static class zMenus
     {
-        public static bool setup = false;
-        public static ZMenu mainMenu = ZMenuManger.mainMenu;
-        public static void setupRadialMenus()
+        public static void CreateMenus()
         {
-            if (!setup)
-            {
-                ZMenu allmenu = ZMenuManger.addMenu("All", mainMenu);
-                ZMenu option1Menu = ZMenuManger.addMenu("option 1", allmenu);
-                allmenu.AddNode("option 1", option1Menu.Show);
-                allmenu.AddNode("option 2", testCallback);
-                allmenu.AddNode("option 3", testCallback);
-                allmenu.AddNode("option 4", testCallback);
-                mainMenu.AddNode("All", allmenu.Show);
-                mainMenu.AddNode("Dauda", testCallback);
-                mainMenu.AddNode("Hacket", testCallback);
-                mainMenu.AddNode("Bishop", testCallback);
-                mainMenu.AddNode("Woods", testCallback);
-                option1Menu.AddNode("longer message", testCallback);
-                option1Menu.AddNode("This is a longer message", testCallback);
-                option1Menu.AddNode("This is a message with a new line\nwhat does it look like?", testCallback);
-                option1Menu.AddNode("This is a much longer message with a without a new line what does this look like?", testCallback);
-                setup = true;
-            }
-        }
-        public static void testCallback(ZMenuNode node)
-        {
-            Zi.sendChatMessage($"Menu button {node.text} pressed");
+            zMenu oneMenu = zMenuManager.createMenu("One", zMenuManager.mainMenu);
+            zMenu twoMenu = zMenuManager.createMenu("Two", zMenuManager.mainMenu);
+            zMenuManager.mainMenu.AddNode("One", oneMenu.Open);
+            zMenuManager.mainMenu.AddNode("Two", twoMenu.Open);
+            zMenuManager.mainMenu.AddNode("Three");
+            zMenuManager.mainMenu.AddNode("Four");
+            zMenuManager.mainMenu.AddNode("Five");
+           
+            oneMenu.AddNode("option 1");
+            oneMenu.AddNode("option 2");
+            oneMenu.AddNode("option 3");
+            oneMenu.AddNode("option 4");
+            oneMenu.AddNode("option 5");
+
+            twoMenu.AddNode("option 1");
+            twoMenu.AddNode("option 2");
+            twoMenu.AddNode("option 3");
+            twoMenu.AddNode("option 4");
+            twoMenu.AddNode("option 5");
+
         }
     }
 }

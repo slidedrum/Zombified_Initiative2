@@ -86,7 +86,7 @@ namespace Zombified_Initiative
         public static void onKey()
         {
             heldDuration = Time.time - interactionHeldStart;
-            //if time held is larger than threshold and less than last deltatime
+            //if smoothTime held is larger than threshold and less than last deltatime
             if (heldDuration > holdThreshold && heldDuration - Time.deltaTime <= holdThreshold)
             {
                 Zi.log.LogInfo("held duration: " + heldDuration);

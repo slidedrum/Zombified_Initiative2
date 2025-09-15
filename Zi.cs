@@ -20,6 +20,8 @@ using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
 using UnityEngine;
+using UnityEngine.PlayerLoop;
+using UnityEngine.SceneManagement;
 using ZombieTweak2;
 
 namespace Zombified_Initiative;
@@ -85,16 +87,37 @@ public class Zi : BasePlugin
     {
         Harmony m_Harmony = new Harmony("ZombieController");
         m_Harmony.PatchAll();
+        Log.LogInfo("Registering zComputer");
         ClassInjector.RegisterTypeInIl2Cpp<zComputer>();
-        ClassInjector.RegisterTypeInIl2Cpp<ZMenuNode>();
+        Log.LogInfo("Registered zComputer");
+        Log.LogInfo("Registering ZMenu");
+        Log.LogInfo("Registered ZMenu");
+        Log.LogInfo("Registering ZMenuNode");
+        ClassInjector.RegisterTypeInIl2Cpp<zUpdater>();
+        Log.LogInfo("Registered ZMenuNode");
+        //ClassInjector.RegisterTypeInIl2Cpp<zUpdater>();
         var ZombieController = AddComponent<zController>();
         NetworkAPI.RegisterEvent<ZINetInfo>(ZINetInfo.NetworkIdentity, zController.ReceiveZINetInfo);
         LG_Factory.add_OnFactoryBuildDone((Action)ZombieController.OnFactoryBuildDone);
         EventAPI.OnExpeditionStarted += ZombieController.Initialize;
         log = Log;
-        
+        //zUpdater.onUpdate.Listen(ZMenuManger.Update);
         zActionSub.addOnRemoved((Action<PlayerAIBot, PlayerBotActionBase>)onActionRemoved);
         zActionSub.addOnAdded((Action<PlayerAIBot, PlayerBotActionBase>)onActionAdded);
+
+        EventAPI.OnManagersSetup += () =>
+        {
+            zUpdater.CreateInstance();       // ensure the updater exists
+            zUpdater.onUpdate.Listen(zMenuManager.Update);
+            zUpdater.onLateUpdate.Listen(zMenuManager.LateUpdate);
+        };
+        LG_Factory.add_OnFactoryBuildDone((Action)zMenuManager.OnFactoryBuildDone);
+        LG_Factory.add_OnFactoryBuildDone((Action)zMenus.CreateMenus);
+        
+    }
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+
     }
 
     private void onActionAdded(PlayerAIBot bot, PlayerBotActionBase action)
