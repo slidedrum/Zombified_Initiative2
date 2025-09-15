@@ -17,7 +17,17 @@ namespace ZombieTweak2.zMenu
         public  static zMenu mainMenu { get; private set; }
         public static zMenu currentMenu { get; internal set; }
         private static zMenu.zMenuNode selectedNode;
-
+        public enum nodeEvent
+        {
+            OnPressed,
+            WhilePressed,
+            OnUnpressed,
+            WhileUnpressed,
+            OnSelected,
+            WhileSelected,
+            OnDeselected,
+            WhileDeselected,
+        }
         //static settings
         public static string menuParrentPath = "GUI/CellUI_Camera(Clone)/NavMarkerLayer";
 
@@ -26,8 +36,8 @@ namespace ZombieTweak2.zMenu
             zMenu newMenu = new zMenu(name, parrentMenu);
             if (parrentMenu == null)
             {
-                newMenu.centerNode.ClearListeners(zMenu.zMenuNode.nodeEvent.OnPressed);
-                newMenu.centerNode.AddListener(zMenu.zMenuNode.nodeEvent.OnPressed, CloseAllMenues);
+                newMenu.centerNode.ClearListeners(zMenuManager.nodeEvent.OnPressed);
+                newMenu.centerNode.AddListener(zMenuManager.nodeEvent.OnPressed, CloseAllMenues);
             }
             registerMenu(newMenu);
             return newMenu;
@@ -112,7 +122,7 @@ namespace ZombieTweak2.zMenu
         {
             menuParrent = GameObject.Find(menuParrentPath);
             mainMenu = new zMenu("Main");
-            mainMenu.centerNode.AddListener(zMenu.zMenuNode.nodeEvent.OnPressed, CloseAllMenues);
+            mainMenu.centerNode.AddListener(zMenuManager.nodeEvent.OnPressed, CloseAllMenues);
             registerMenu(mainMenu);
         }
     }
@@ -136,8 +146,11 @@ namespace ZombieTweak2.zMenu
             set 
             {
                 _parrentMenu = value;
-                centerNode.ClearListeners(zMenuNode.nodeEvent.OnPressed);
-                centerNode.AddListener(zMenuNode.nodeEvent.OnPressed, _parrentMenu.Open);
+                if (value != null)
+                {
+                    centerNode.ClearListeners(zMenuManager.nodeEvent.OnPressed);
+                    centerNode.AddListener(zMenuManager.nodeEvent.OnPressed, _parrentMenu.Open);
+                }
             } 
         }
         private GameObject gameObject;
@@ -154,16 +167,16 @@ namespace ZombieTweak2.zMenu
         {
             nodes = new OrderedSet<zMenuNode>();
             name = arg_Name;
-            parrentMenu = arg_ParrentMenu;
             gameObject = new GameObject($"zMenu {name}");
             gameObject.transform.SetParent(zMenuManager.menuParrent.transform);
             setupCanvas();
             FlexibleMethodDefinition onClose;
-            if (parrentMenu != null)
-                onClose = new FlexibleMethodDefinition(parrentMenu.Open);
+            if (arg_ParrentMenu != null)
+                onClose = new FlexibleMethodDefinition(arg_ParrentMenu.Open);
             else
                 onClose = new FlexibleMethodDefinition(Close);
-            centerNode = new zMenuNode(parrentMenu != null ? parrentMenu.name : "Close", this, onClose).SetTitle(name);
+            centerNode = new zMenuNode(arg_ParrentMenu != null ? arg_ParrentMenu.name : "Close", this, onClose).SetTitle(name);
+            parrentMenu = arg_ParrentMenu;
             Close();
         }
         public zMenu Close()

@@ -85,18 +85,8 @@ namespace ZombieTweak2.zMenu
             private FlexibleEvent WhileSelected = new();
             private FlexibleEvent OnDeselected = new();
             private FlexibleEvent WhileDeselected = new();
-            public enum nodeEvent
-            {
-                OnPressed,
-                WhilePressed,
-                OnUnpressed,
-                WhileUnpressed,
-                OnSelected,
-                WhileSelected,
-                OnDeselected,
-                WhileDeselected,
-            }
-            private Dictionary<nodeEvent, FlexibleEvent> eventMap;
+
+            private Dictionary<zMenuManager.nodeEvent, FlexibleEvent> eventMap;
             public TextPart fullTextPart;
             public TextPart titlePart;
             public TextPart subtitlePart;
@@ -148,15 +138,15 @@ namespace ZombieTweak2.zMenu
 
                 text = arg_Name;
 
-                eventMap = new Dictionary<nodeEvent, FlexibleEvent>(){
-                    { nodeEvent.OnPressed, OnPressed },
-                    { nodeEvent.WhilePressed, WhilePressed },
-                    { nodeEvent.OnUnpressed, OnUnpressed },
-                    { nodeEvent.WhileUnpressed, WhileUnpressed },
-                    { nodeEvent.OnSelected, OnSelected },
-                    { nodeEvent.WhileSelected, WhileSelected },
-                    { nodeEvent.OnDeselected, OnDeselected },
-                    { nodeEvent.WhileDeselected, WhileDeselected }};
+                eventMap = new Dictionary<zMenuManager.nodeEvent, FlexibleEvent>(){
+                    { zMenuManager.nodeEvent.OnPressed, OnPressed },
+                    { zMenuManager.nodeEvent.WhilePressed, WhilePressed },
+                    { zMenuManager.nodeEvent.OnUnpressed, OnUnpressed },
+                    { zMenuManager.nodeEvent.WhileUnpressed, WhileUnpressed },
+                    { zMenuManager.nodeEvent.OnSelected, OnSelected },
+                    { zMenuManager.nodeEvent.WhileSelected, WhileSelected },
+                    { zMenuManager.nodeEvent.OnDeselected, OnDeselected },
+                    { zMenuManager.nodeEvent.WhileDeselected, WhileDeselected }};
             }
             public zMenuNode Update()
             {
@@ -262,15 +252,15 @@ namespace ZombieTweak2.zMenu
                 pressed = false;
                 return this;
             }
-            public zMenuNode AddListener(nodeEvent arg_event, Action arg_method)
+            public zMenuNode AddListener(zMenuManager.nodeEvent arg_event, Action arg_method)
             {
                 return AddListener(arg_event, (FlexibleMethodDefinition)arg_method);
             }
-            public zMenuNode AddListener(nodeEvent arg_event, Delegate method, params object[] args)
+            public zMenuNode AddListener(zMenuManager.nodeEvent arg_event, Delegate method, params object[] args)
             {
-                return AddListener(arg_event, method);
+                return AddListener(arg_event, (FlexibleMethodDefinition)method);
             }
-            public zMenuNode AddListener(nodeEvent arg_event, FlexibleMethodDefinition arg_method)
+            public zMenuNode AddListener(zMenuManager.nodeEvent arg_event, FlexibleMethodDefinition arg_method)
             {
                 if (eventMap.TryGetValue(arg_event, out var flexEvent))
                 {
@@ -278,7 +268,7 @@ namespace ZombieTweak2.zMenu
                 }
                 return this;
             }
-            public zMenuNode RemoveListener(nodeEvent arg_event, Action arg_method)
+            public zMenuNode RemoveListener(zMenuManager.nodeEvent arg_event, Action arg_method)
             {
                 if (eventMap.TryGetValue(arg_event, out var flexEvent))
                 {
@@ -286,7 +276,7 @@ namespace ZombieTweak2.zMenu
                 }
                 return this;
             }
-            public zMenuNode RemoveListener(nodeEvent arg_event, FlexibleMethodDefinition arg_method)
+            public zMenuNode RemoveListener(zMenuManager.nodeEvent arg_event, FlexibleMethodDefinition arg_method)
             {
                 if (eventMap.TryGetValue(arg_event, out var flexEvent))
                 {
@@ -294,7 +284,7 @@ namespace ZombieTweak2.zMenu
                 }
                 return this;
             }
-            public zMenuNode ClearListeners(nodeEvent arg_event)
+            public zMenuNode ClearListeners(zMenuManager.nodeEvent arg_event)
             {
                 if (eventMap.TryGetValue(arg_event, out var flexEvent))
                 {
