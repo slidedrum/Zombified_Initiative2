@@ -1,5 +1,6 @@
 ﻿using GameData;
 using Player;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Zombified_Initiative;
@@ -81,12 +82,12 @@ namespace ZombieTweak2
         {
             //ItemDataBlock.s_blockIDByName has all ids
             //RootPlayerBotAction.s_itemBasePrios has what bots can pick up
-            foreach (var item in RootPlayerBotAction.s_itemBasePrios)
+            foreach (Il2CppSystem.Collections.Generic.KeyValuePair<uint,float> item in RootPlayerBotAction.s_itemBasePrios)
             {
                 uint id = item.Key;
                 float priority = item.Value;
                 ItemDataBlock block = ItemDataBlock.s_blockByID[id];
-                var name = block.publicName;
+                var name = block.name;
                 ZiMain.log.LogMessage($"{name}:{priority}");
             }
         }

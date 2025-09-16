@@ -112,6 +112,7 @@ public class ZiMain : BasePlugin
         NetworkAPI.RegisterEvent<ZISendBotToPickupItemInfo>("sendBotToPickupItem", SendBotToPickupItem);
 
         LG_Factory.add_OnFactoryBuildDone((Action)ZombieController.OnFactoryBuildDone);
+        LG_Factory.add_OnFactoryBuildDone((Action)zSlideComputer.Init);
         EventAPI.OnExpeditionStarted += ZombieController.Initialize;
         log = Log;
         zActionSub.addOnRemoved((Action<PlayerAIBot, PlayerBotActionBase>)onActionRemoved);
@@ -171,7 +172,6 @@ public class ZiMain : BasePlugin
     { //TODO - Use a string builder
         string typeName = action.GetIl2CppType().Name;
         bool manualAction = isManualAction(action);
-        log.LogInfo($"action removed {typeName} manual {manualAction}");
         if (typeName == "PlayerBotActionCollectItem")
         {
             var descriptor = action.DescBase.Cast<PlayerBotActionCollectItem.Descriptor>();
