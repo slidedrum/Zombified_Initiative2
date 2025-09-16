@@ -17,12 +17,37 @@ using ZombieTweak2;
 using ZombieTweak2.zMenu;
 using static SNetwork.SNetStructs;
 
+//todo fix pickup action failing sometimes  -- Done?  
+//todo change cancel to look up -- done
+//todo make look down select yourself -- done
+//todo make "i need health/ammo" quck action overide share permission
+//todo make smart select pick up turrets
+//todo fix bot extra data only updating when you look away
+//todo track down KeyNotFoundException: The given key was not present in the dictionary.
+
+//todo refactor PlayConfirmSound hook to not be so dumb
+
+//want to make custom blacklist pickups
+//want to fix attack not always working
+//want to make attack wake room sometimes
+//want to make "clear room" command
+
+//want to make "go here" command
+//want to make "home" location function where they "follow" a set location but aren't strickly stuck to it if they get into combat, similar to following a player.
+
+//found bot commands in PUI_CommunicationMenu.execute
+//RootPlayerBotAction is where actions are chosen
+//if (item2.pItemData.itemID_gearCRC != 116U && item2.pItemData.itemID_gearCRC != 30U) is what says don't pick up.  hard coded.
+//ItemDataBlock.s_blockIDByName has all ids
+//RootPlayerBotAction.s_itemBasePrios has what bots can pick up
+
+
 namespace Zombified_Initiative;
 
 [BepInDependency("dev.gtfomodding.gtfo-api")]
 [BepInPlugin("com.hirnukuono.zombified_initiative", "Zombified Initiative", "0.9.6")]
 public class ZiMain : BasePlugin
-{
+{ //this class should contain all methods to call actions, any helpers to faciliate that, and inital setup,
     public static ManualLogSource log;
 
     public static Dictionary<string, PlayerAIBot> BotTable = new();

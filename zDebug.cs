@@ -8,7 +8,35 @@ using Zombified_Initiative;
 namespace ZombieTweak2
 {
     public static class zDebug
-    {
+    {//This class is unused, but it's where i put all the stuff I need for debugging.
+        private static GameObject debugSphere;
+        internal static void ShowDebugSphere(Vector3 position, float radius)
+        {
+            if (debugSphere == null)
+            {
+                debugSphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                debugSphere.name = "LookDirectionDebugSphere";
+
+                // Remove collider so it doesn’t interfere with physics
+                UnityEngine.Object.Destroy(debugSphere.GetComponent<Collider>());
+
+                // Make it semi-transparent
+                var renderer = debugSphere.GetComponent<Renderer>();
+                renderer.material = new Material(Shader.Find("Standard"));
+                renderer.material.color = new Color(0f, 1f, 0f, 0.3f); // green, 30% opacity
+                renderer.material.SetFloat("_Mode", 3); // Transparent mode
+                renderer.material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+                renderer.material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+                renderer.material.SetInt("_ZWrite", 0);
+                renderer.material.DisableKeyword("_ALPHATEST_ON");
+                renderer.material.EnableKeyword("_ALPHABLEND_ON");
+                renderer.material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+                renderer.material.renderQueue = 3000;
+            }
+
+            debugSphere.transform.position = position;
+            debugSphere.transform.localScale = Vector3.one * (radius * 2f); // scale to match search radius
+        }
         private static void printAllNames()
         {
             System.Collections.Generic.HashSet<string> ArchetypeNames = new System.Collections.Generic.HashSet<string>();
@@ -63,5 +91,6 @@ namespace ZombieTweak2
                 ZiMain.log.LogMessage($"{name}:{priority}");
             }
         }
+
     }
 }

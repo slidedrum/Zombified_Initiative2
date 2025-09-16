@@ -8,7 +8,7 @@ using UnityEngine;
 namespace Zombified_Initiative
 {
     public class zComputer : MonoBehaviour
-    {
+    {//This class will be replaced, I think?
         bool menusetup = false;
         TextDataBlock textmenuroot;
         TextDataBlock textallowedpickups;

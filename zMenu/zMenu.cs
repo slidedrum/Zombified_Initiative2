@@ -80,7 +80,7 @@ namespace ZombieTweak2.zMenu
                         nodeDict[node.gameObject] = node;
                     }
                     List<GameObject>  nodeList = nodeDict.Keys.ToList();
-                    GameObject selectedNodeObject = zSearch.GetClosestInLookDirection(Camera.current.transform, nodeList, 10f);
+                    GameObject selectedNodeObject = zSearch.GetClosestObjectInLookDirection(Camera.current.transform, nodeList, 10f);
                     selectedNode = null;
                     if (selectedNodeObject != null)
                         nodeDict.TryGetValue(selectedNodeObject, out selectedNode);

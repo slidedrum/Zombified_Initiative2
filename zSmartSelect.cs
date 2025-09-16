@@ -103,10 +103,10 @@ namespace Zombified_Initiative
                 if (agent != null) // optional null check
                     agentGameObjects.Add(agent.gameObject);
             }
-            GameObject agentImLookingAt = zSearch.GetClosestInLookDirection(cameraTransform, agentGameObjects, 30f);
-            GameObject enemyImLookingAt = zSearch.GetClosestInLookDirection(cameraTransform, zSearch.GetGameObjectsWithLookDirection<EnemyAgent>(cameraTransform));
-            GameObject itemImLookingAt = zSearch.GetClosestInLookDirection(cameraTransform, zSearch.GetGameObjectsWithLookDirection<ItemInLevel>(cameraTransform), 180f);
-            GameObject lookingAt = zSearch.GetClosestInLookDirection(cameraTransform, new List<GameObject>() { agentImLookingAt, enemyImLookingAt, itemImLookingAt } );
+            GameObject agentImLookingAt = zSearch.GetClosestObjectInLookDirection(cameraTransform, agentGameObjects, 30f);
+            GameObject enemyImLookingAt = zSearch.GetClosestObjectInLookDirection(cameraTransform, zSearch.GetGameObjectsWithLookDirection<EnemyAgent>(cameraTransform));
+            GameObject itemImLookingAt = zSearch.GetClosestObjectInLookDirection(cameraTransform, zSearch.GetGameObjectsWithLookDirection<ItemInLevel>(cameraTransform), 180f);
+            GameObject lookingAt = zSearch.GetClosestObjectInLookDirection(cameraTransform, new List<GameObject>() { agentImLookingAt, enemyImLookingAt, itemImLookingAt } );
             switch (lookingAt)
             {
                 case null:
@@ -166,7 +166,7 @@ namespace Zombified_Initiative
         {
             var localPlayer = PlayerManager.GetLocalPlayerAgent();
             var cameraTransform = localPlayer.FPSCamera.transform;
-            GameObject botImLookingAt = zSearch.GetClosestInLookDirection(cameraTransform, ZiMain.BotTable.Values.Select(b => b.gameObject).ToList(), 30f);
+            GameObject botImLookingAt = zSearch.GetClosestObjectInLookDirection(cameraTransform, ZiMain.BotTable.Values.Select(b => b.gameObject).ToList(), 30f);
             if (botImLookingAt != null)
             {
                 ZiMain.sendChatMessage("I'm ready", botImLookingAt.GetComponent<PlayerAgent>(), localPlayer);
@@ -185,7 +185,7 @@ namespace Zombified_Initiative
             ZiMain.log.LogInfo("found " + items.Count + " items");
             if (items.Count > 0)
             {
-                selection.setItem(zSearch.GetClosestInLookDirection(cameraTransform, items, 180f));
+                selection.setItem(zSearch.GetClosestObjectInLookDirection(cameraTransform, items, 180f));
                 if (selection.getItem() != null)
                     ZiMain.log.LogInfo("closest item: " + selection.getItem().name);
             }

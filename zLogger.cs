@@ -1,9 +1,11 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using BepInEx.Core.Logging.Interpolation;
 using BepInEx.Logging;
 
 namespace ZombieTweak2
 {
+    [Obsolete]
     internal static class zLogger
     {
         private static readonly ManualLogSource _Logger;

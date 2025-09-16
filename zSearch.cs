@@ -9,11 +9,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
+using ZombieTweak2;
 
 namespace Zombified_Initiative
 {
     public static class zSearch
-    {
+    {//this class is for finding stuff inside the world.
+        #region obsolete
+        [Obsolete]
         public static RaycastHit? RaycastHit()
         {
             if (Physics.Raycast(Camera.current.ScreenPointToRay(Input.mousePosition), out var hitInfo))
@@ -21,17 +24,18 @@ namespace Zombified_Initiative
             return null;
         }
 
-
+        [Obsolete]
         public static Il2CppStructArray<RaycastHit> RaycastHits()
         {
             return Physics.RaycastAll(Camera.current.ScreenPointToRay(Input.mousePosition));
         }
+        [Obsolete]
         public static ItemInLevel GetItemUnderPlayerAim()
         {
             return GetComponentUnderPlayerAim<ItemInLevel>
                 (item => "Found item: " + item.PublicName);
         }
-
+        [Obsolete]
         public static PlayerAgent GetHumanUnderPlayerAim()
         {
             var playerAIBot = GetComponentUnderPlayerAim<PlayerAIBot>
@@ -48,11 +52,13 @@ namespace Zombified_Initiative
             ZiMain.log.LogInfo("Found local player: " + localPlayerAgent.PlayerName);
             return localPlayerAgent;
         }
+        [Obsolete]
         public static EnemyAgent GetMonsterUnderPlayerAim()
         {
             return GetComponentUnderPlayerAim<EnemyAgent>
                 (enemy => "Found monster: " + enemy.EnemyData.name, false);
         }
+        [Obsolete]
         public static T GetComponentUnderPlayerAim<T>(System.Func<T, string> message, bool raycastAll = true) where T : class
         {
             if (raycastAll)
@@ -83,7 +89,8 @@ namespace Zombified_Initiative
 
             return null;
         }
-        public static GameObject GetClosestInLookDirection(Transform baseTransform,List<GameObject> candidates,float maxAngle = 180f, Vector3? candidateOffset = null, Vector3? baseOffset = null)
+        #endregion
+        public static GameObject GetClosestObjectInLookDirection(Transform baseTransform,List<GameObject> candidates,float maxAngle = 180f, Vector3? candidateOffset = null, Vector3? baseOffset = null)
         {
             candidateOffset = candidateOffset ?? Vector3.zero;
             baseOffset = baseOffset ?? Vector3.zero;
@@ -131,40 +138,12 @@ namespace Zombified_Initiative
             }
             return results;
         }
-        private static GameObject debugSphere;
-        private static void ShowDebugSphere(Vector3 position, float radius)
-        {
-            if (debugSphere == null)
-            {
-                debugSphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                debugSphere.name = "LookDirectionDebugSphere";
-
-                // Remove collider so it doesn’t interfere with physics
-                UnityEngine.Object.Destroy(debugSphere.GetComponent<Collider>());
-
-                // Make it semi-transparent
-                var renderer = debugSphere.GetComponent<Renderer>();
-                renderer.material = new Material(Shader.Find("Standard"));
-                renderer.material.color = new Color(0f, 1f, 0f, 0.3f); // green, 30% opacity
-                renderer.material.SetFloat("_Mode", 3); // Transparent mode
-                renderer.material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-                renderer.material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-                renderer.material.SetInt("_ZWrite", 0);
-                renderer.material.DisableKeyword("_ALPHATEST_ON");
-                renderer.material.EnableKeyword("_ALPHABLEND_ON");
-                renderer.material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-                renderer.material.renderQueue = 3000;
-            }
-
-            debugSphere.transform.position = position;
-            debugSphere.transform.localScale = Vector3.one * (radius * 2f); // scale to match search radius
-        }
         public static List<GameObject> GetGameObjectsWithLookDirection<T>(Transform source,float searchRadius = 3,float rayDistance = 10000f) where T : Component
         {
             Ray ray = new Ray(source.position, source.forward);
             if (Physics.Raycast(ray, out RaycastHit hit, rayDistance))
             {
-                ShowDebugSphere(hit.point, searchRadius);
+                zDebug.ShowDebugSphere(hit.point, searchRadius);
                 return GetObjectsWithComponentInRadius<T>(hit.point, searchRadius);
             }
             return new List<GameObject>();
