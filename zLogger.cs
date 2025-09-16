@@ -7,7 +7,9 @@ namespace ZombieTweak2
 {
     [Obsolete]
     internal static class zLogger
-    {
+    { 
+        //This is no longer used.  I think I can just delete it?  but keeping it here for a bit just in case.
+        
         private static readonly ManualLogSource _Logger;
 
         static zLogger()

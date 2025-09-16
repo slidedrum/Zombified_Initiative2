@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TMPro;
+﻿using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -15,6 +10,7 @@ namespace ZombieTweak2.zMenu
         {
             public class TextPart
             {
+                //This is my text handler.  It's not pretty, but it's mine.
                 private string _text;
                 public string text 
                 { 
@@ -28,31 +24,23 @@ namespace ZombieTweak2.zMenu
                 public GameObject gameObject { get; private set; }
                 private TextMeshProUGUI textMesh;
                 public RectTransform rect { get; private set; }
-
                 public TextPart(zMenuNode parent, string arg_Text)
                 {
-                    // Child object under the node
                     gameObject = new GameObject($"TextPart {arg_Text}");
                     rect = gameObject.AddComponent<RectTransform>();
                     rect.SetParent(parent.rect.transform, false);
 
-                    // Add TMP
                     textMesh = gameObject.AddComponent<TextMeshProUGUI>();
                     textMesh.text = arg_Text;
                     textMesh.fontSize = 24;
                     textMesh.alignment = TextAlignmentOptions.Center;
                     textMesh.color = parent.color;
 
-
-
                     rect.anchoredPosition = Vector2.zero; // center inside node
                     rect.localScale = Vector3.one;
 
-
-                    // Fixed width, height auto
                     rect.sizeDelta = new Vector2(300, 0);
 
-                    // Make height auto-adjust to text
                     ContentSizeFitter fitter = gameObject.AddComponent<ContentSizeFitter>();
                     fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
                     fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
@@ -62,7 +50,7 @@ namespace ZombieTweak2.zMenu
                     text = arg_Text;
                 }
 
-                //set color
+                //TODO
                 //set font
                 //set alignment
                 //set font size

@@ -1,28 +1,20 @@
-﻿using AIGraph;
-using GameData;
+﻿using GameData;
 using GTFO.API;
 using HarmonyLib;
-using Il2CppSystem.Diagnostics;
-using LevelGeneration;
 using Player;
 using SNetwork;
 using System;
 using System.Collections.Generic;
-using TMPro;
-using UnityEngine;
-using ZombieTweak2;
 using static Zombified_Initiative.ZiMain;
 
 namespace Zombified_Initiative;
 
-
-
-//This file contains all harmony patches.
-//Might split this up later if there gets to be too many of them.
-
 [HarmonyPatch]
 public class ZombifiedPatches
 {
+    //This file contains all harmony patches.
+    //Might split this up later if there gets to be too many of them.
+
     [HarmonyPatch(typeof(PlayerAIBot), nameof(PlayerAIBot.SetEnabled))]
     [HarmonyPostfix]
 

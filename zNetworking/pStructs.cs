@@ -1,15 +1,15 @@
 ﻿using Agents;
 using Enemies;
-using LevelGeneration;
 using Player;
 using SNetwork;
 using UnityEngine;
-using static Il2CppSystem.Globalization.CultureInfo;
 
 namespace ZombieTweak2.zNetworking
+
 {
     public class pStructs
     {
+        //This handles encoding and decoding objects for network transfer.
         public static PlayerAgent Get_RefFrom_pStruct(pPlayerAgent pStruct)
         {
             if (!pStruct.TryGet(out PlayerAgent refrence))

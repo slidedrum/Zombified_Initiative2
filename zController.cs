@@ -1,22 +1,15 @@
 ﻿using Agents;
-using Dissonance;
 using Enemies;
 using GameData;
 using Gear;
 using GTFO.API;
-using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using LevelGeneration;
 using Localization;
 using Player;
 using SNetwork;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
-using UnityEngine.UIElements;
-using ZombieTweak2;
-using static Il2CppSystem.Xml.XmlWellFormedWriter.AttributeValueCache;
 
 namespace Zombified_Initiative
 {
@@ -297,13 +290,8 @@ namespace Zombified_Initiative
             bool ready = (FocusStateManager.CurrentState == eFocusState.FPS || FocusStateManager.CurrentState == eFocusState.Dead);
             if (ready)
             {
-                //zMenus.setupRadialMenus();
-                zSmartSelect.update();
                 if (Input.GetKeyDown(KeyCode.L))
                     SwitchDebug();
-                //if (Input.GetKeyDown(KeyCode.P))
-                /// bot under aim, stop? no aim? all stop?
-                //  PreventManualActions();
 
                 if (Input.GetKeyDown(KeyCode.J))
                 {

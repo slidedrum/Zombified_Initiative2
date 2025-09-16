@@ -15,7 +15,6 @@ using System.Collections.Generic;
 using UnityEngine.SceneManagement;
 using ZombieTweak2;
 using ZombieTweak2.zMenu;
-using static SNetwork.SNetStructs;
 
 //todo fix pickup action failing sometimes  -- Done?  
 //todo change cancel to look up -- done
@@ -123,6 +122,7 @@ public class ZiMain : BasePlugin
             zUpdater.CreateInstance();
             zUpdater.onUpdate.Listen(zMenuManager.Update);
             zUpdater.onLateUpdate.Listen(zMenuManager.LateUpdate);
+            zUpdater.onUpdate.Listen(zSmartSelect.update);
         };
         LG_Factory.add_OnFactoryBuildDone((Action)zMenuManager.OnFactoryBuildDone);
         LG_Factory.add_OnFactoryBuildDone((Action)zMenus.CreateMenus);

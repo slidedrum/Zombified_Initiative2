@@ -1,9 +1,6 @@
 ﻿using Player;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 using Zombified_Initiative;
 
@@ -11,6 +8,10 @@ namespace ZombieTweak2.zMenu
 {
     public static class zMenus
     {
+        //This is the class that actually creates the menue instances
+        //This is spesific to ZI
+        //Very unfinished atm
+
         public static List<zMenu> botMenus;
         public static Dictionary<int, bool> botSelections = new();
         private static Dictionary<int, zMenu.zMenuNode> selectionBotNodes = new();
@@ -52,9 +53,6 @@ namespace ZombieTweak2.zMenu
             movePermMenu.AddNode("Toggle");
             movePermMenu.AddNode("On");
             movePermMenu.AddNode("Off");
-
-
-
         }
         private static void toggleSharePermissionForSelected()
         {

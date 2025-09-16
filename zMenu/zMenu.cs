@@ -1,5 +1,4 @@
-﻿using GTFO.API;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +11,7 @@ namespace ZombieTweak2.zMenu
 {
     public static class zMenuManager
     {
+        //This is the big custom menu manager.  Handles all menu creation and shit.  More work to do, but pretty good so far.
         public static HashSet<zMenu> menues { get; private set; } = new();
         public static GameObject menuParrent;
         private static bool playerInControll = false;
@@ -146,6 +146,8 @@ namespace ZombieTweak2.zMenu
     }
     public partial class zMenu
     {
+        // This class is the menu instance.
+
         private string name;
         public IEnumerable<zMenuNode> allNodes
         {
@@ -476,6 +478,9 @@ namespace ZombieTweak2.zMenu
     }
     public class OrderedSet<T> : IEnumerable<T>, IEnumerable
     {
+        //This didn't exist for some reason, so I had an AI make it.  I mostly understand it.  
+        //TODO remake it not with AI.
+
         private readonly List<T> _list = new();
         private readonly Dictionary<T, int> _dict = new();
 

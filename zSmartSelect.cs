@@ -1,20 +1,16 @@
 ﻿using Enemies;
-using Gear;
 using LevelGeneration;
 using Player;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 namespace Zombified_Initiative
 {
     public class Selection
     {
+        //This class handles a selection instance
+        
         private GameObject item = null;
         private GameObject bot = null;
         private GameObject enemy = null;
@@ -43,8 +39,10 @@ namespace Zombified_Initiative
             return enemy; 
         }
     }
-    public class zSmartSelect
+    public static class zSmartSelect
     {
+        //This class handles everything with the smart select button (V)
+        
         public static float interactionHeldStart = Time.time;
         public static bool interactionHeld = false;
         public static bool interactable = true;

@@ -1,20 +1,16 @@
-﻿using LevelGeneration;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Dynamic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using Zombified_Initiative;
-using static Il2CppSystem.Globalization.CultureInfo;
 
 namespace ZombieTweak2
 {
-
     public class zUpdater : MonoBehaviour
-    {
+    {   
+        //This class handles stuff that would normally be handled by making things a monobehavior
+        //For whatever reason I can't use custom types as args in methods in Il2cpp (╯°□°)╯︵ ┻━┻
+        //So i'm doing this instead.  If there's a better way, lmk.  Maybe I'll refactor again.
+
         public static FlexibleEvent onUpdate = new();
         public static FlexibleEvent onLateUpdate = new();
         public static zUpdater Instance = new();
@@ -33,12 +29,10 @@ namespace ZombieTweak2
         {
             if (Instance == null)
             {
-                // Create a new GameObject and attach zUpdater
                 GameObject go = new GameObject("zUpdater");
                 Instance = go.AddComponent<zUpdater>();
             }
         }
-
         private void Update()
         {
             onUpdate?.Invoke();
@@ -55,21 +49,17 @@ namespace ZombieTweak2
             Instance.Invoke(methodName, time);
         }
     }
-
-    /// --- AI GENERATED ---
-    /// <summary>
-    /// Sentinel to indicate optional/default argument
-    /// </summary>
     public static class Default
     {
+        //This was added by an AI, not 100% sure why it's needed. ¯\_(ツ)_/¯
+        //but I don't understand it enough to get rid of it (yet).
         public static readonly object Value = new object();
     }
-
-    /// <summary>
-    /// Fully managed flexible event system that works in BepInEx IL2CPP environments
-    /// </summary>
     public class FlexibleMethodDefinition
     {
+        // This is a mostly AI generated class.
+        // This is a much more easy to use version of action that handles return types, arbitrary argument types and ammounts.
+
         public Delegate method;
         public object[] args;
 
@@ -90,12 +80,12 @@ namespace ZombieTweak2
     }
     public class FlexibleEvent
     {
-        // Each listener stores a wrapper delegate (pure C#) and pre-bound arguments
-        private readonly List<Action> listeners = new();
+        // This is a mostly AI generated class.
+        // This is a much more easy to use version of action that handles return types, arbitrary argument types and ammounts.
 
-        /// <summary>
-        /// Subscribe a method with preset arguments
-        /// </summary>
+        private readonly HashSet<Action> listeners = new();//this used to be a list, but I think hash set is better.
+                                                           //if you need to do the same thing twice, do it inside your own method.
+                                                           //Don't add the same callback twice.
         public void Listen(Action method)
         {
             if (method == null) return;
@@ -105,10 +95,6 @@ namespace ZombieTweak2
         {
             Listen(method.method, method.args);
         }
-
-        /// <summary>
-        /// Subscribe a method with arguments (supports optional parameters via Default.Value)
-        /// </summary>
         public void Listen(Delegate method, params object[] args)
         {
             if (method == null) return;
@@ -135,15 +121,9 @@ namespace ZombieTweak2
                         throw new ArgumentException($"Missing required argument '{parameters[i].Name}'");
                 }
             }
-
-            // Wrap the method in a pure Action to avoid IL2CPP delegate issues
             void Wrapper() => method.DynamicInvoke(finalArgs);
             listeners.Add(Wrapper);
         }
-
-        /// <summary>
-        /// Unsubscribe a listener (works for parameterless Actions only)
-        /// </summary>
         public void Unlisten(Action method)
         {
             listeners.Remove(method);
@@ -156,10 +136,6 @@ namespace ZombieTweak2
         {
             listeners.Clear();
         }
-
-        /// <summary>
-        /// Invoke all listeners
-        /// </summary>
         public void Invoke()
         {
             foreach (var listener in listeners)
@@ -168,5 +144,4 @@ namespace ZombieTweak2
             }
         }
     }
-    /// --- END AI GENERATED ---
 }

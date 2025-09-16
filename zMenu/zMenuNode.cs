@@ -1,5 +1,4 @@
-﻿//using Il2CppSystem.Collections.Generic;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -8,9 +7,12 @@ using UnityEngine.UI;
 
 namespace ZombieTweak2.zMenu
 {
-    public partial class zMenu {
+    public partial class zMenu 
+    {
         public partial class zMenuNode
         {
+            //This is a menu node instance, there if you want to create one, call the parrent menu.addnode not this.
+
             private string _title;
             public string title { 
                 get => _title; 
@@ -103,10 +105,8 @@ namespace ZombieTweak2.zMenu
 
             public zMenuNode(string arg_Name, zMenu arg_Menu, FlexibleMethodDefinition arg_Callback)
             {
-                // Create node container
                 gameObject = new GameObject($"zMenuNode {arg_Name}");
                 gameObject.transform.SetParent(arg_Menu.getCanvas().transform, false);
-
 
                 rect = gameObject.AddComponent<RectTransform>();
                 rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
@@ -116,25 +116,20 @@ namespace ZombieTweak2.zMenu
 
                 parrentMenu = arg_Menu;
                 if (arg_Callback != null) OnPressed.Listen(arg_Callback);
-
-                // Node color for child TextParts
                 color = parrentMenu.getTextColor();
 
-                // Vertical layout for stacking text parts
                 VerticalLayoutGroup layout = gameObject.AddComponent<VerticalLayoutGroup>();
-                layout.childAlignment = TextAnchor.MiddleCenter;  // stack from top
+                layout.childAlignment = TextAnchor.MiddleCenter;
                 layout.spacing = 2f;
-                layout.childControlWidth = true;   // children will stretch horizontally
-                layout.childControlHeight = false; // children keep their own height
-                layout.childForceExpandWidth = true;  // stretch width to match container
-                layout.childForceExpandHeight = false; // keep height per child
+                layout.childControlWidth = true;
+                layout.childControlHeight = false;
+                layout.childForceExpandWidth = true;
+                layout.childForceExpandHeight = false;
 
-                // ContentSizeFitter makes the node expand vertically based on children
                 ContentSizeFitter fitter = gameObject.AddComponent<ContentSizeFitter>();
                 fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
                 fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
 
-                // Create the text in a TextPart
                 titlePart = new TextPart(this, $"{title}").SetScale(0.75f, 0.75f);
                 fullTextPart = new TextPart(this, $"{text}");
                 subtitlePart = new TextPart(this, $"{title}").SetScale(0.75f, 0.75f);
@@ -366,7 +361,6 @@ namespace ZombieTweak2.zMenu
             {
                 fullTextPart.SetText(fullText);
             }
-
         }
     }
 }
