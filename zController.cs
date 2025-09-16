@@ -138,12 +138,12 @@ namespace Zombified_Initiative
                 {
                     foreach (KeyValuePair<String, PlayerAIBot> bt in ZiMain.BotTable)
                     {
-                        ZiMain.SendBotToKillEnemy(bt.Key, enemy, PlayerBotActionAttack.StanceEnum.All, PlayerBotActionAttack.AttackMeansEnum.All, PlayerBotActionWalk.Descriptor.PostureEnum.Stand);
+                        ZiMain.SendBotToKillEnemyOld(bt.Key, enemy, PlayerBotActionAttack.StanceEnum.All, PlayerBotActionAttack.AttackMeansEnum.All, PlayerBotActionWalk.Descriptor.PostureEnum.Stand);
                     }
                 }
                 else if (netInfo.SLOT < 8) //one bot
                 {
-                    ZiMain.SendBotToKillEnemy(botname, enemy, PlayerBotActionAttack.StanceEnum.All, PlayerBotActionAttack.AttackMeansEnum.All, PlayerBotActionWalk.Descriptor.PostureEnum.Stand);
+                    ZiMain.SendBotToKillEnemyOld(botname, enemy, PlayerBotActionAttack.StanceEnum.All, PlayerBotActionAttack.AttackMeansEnum.All, PlayerBotActionWalk.Descriptor.PostureEnum.Stand);
                 }
             }
 
@@ -178,7 +178,7 @@ namespace Zombified_Initiative
             }
             if (netInfo.FUNC == 3) //pickup pack
             {
-                ZiMain.SendBotToPickupItem(botname, item);
+                ZiMain.SendBotToPickupItemOld(botname, item);
     //            Zi.ExecuteBotActionOld(zombie.GetComponent<PlayerAIBot>(), new PlayerBotActionCollectItem.Descriptor(zombie.GetComponent<PlayerAIBot>())
     //            {
     //                TargetItem = item,
@@ -192,7 +192,7 @@ namespace Zombified_Initiative
 
             if (netInfo.FUNC == 4) //share pack
             {
-                ZiMain.SendBotToShareResourcePack(botname, agent.TryCast<PlayerAgent>(), senderAgent);
+                ZiMain.SendBotToShareResourcePackOld(botname, agent.TryCast<PlayerAgent>(), senderAgent);
     //            PlayerAgent human = agent.TryCast<PlayerAgent>();
     //            if (human == null) return;
 
@@ -354,7 +354,7 @@ namespace Zombified_Initiative
                     var monster = zSearch.GetMonsterUnderPlayerAim();
                     if (monster != null)
                     {
-                        ZiMain.SendBotToKillEnemy(bot, monster,
+                        ZiMain.SendBotToKillEnemyOld(bot, monster,
                             PlayerBotActionAttack.StanceEnum.All,
                             PlayerBotActionAttack.AttackMeansEnum.All,
                             PlayerBotActionWalk.Descriptor.PostureEnum.Stand);
@@ -365,11 +365,11 @@ namespace Zombified_Initiative
                 {
                     var item = zSearch.GetItemUnderPlayerAim();
                     if (item != null)
-                        ZiMain.SendBotToPickupItem(bot, item);
+                        ZiMain.SendBotToPickupItemOld(bot, item);
                 }
 
                 if (Input.GetKeyDown(KeyCode.I) && ready)
-                    ZiMain.SendBotToShareResourcePack(bot, zSearch.GetHumanUnderPlayerAim());
+                    ZiMain.SendBotToShareResourcePackOld(bot, zSearch.GetHumanUnderPlayerAim());
             }
             if (Time.time > lastupdatetime + 1f)
             {

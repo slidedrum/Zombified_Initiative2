@@ -15,6 +15,7 @@ using System.Collections.Generic;
 using UnityEngine.SceneManagement;
 using ZombieTweak2;
 using ZombieTweak2.zMenu;
+using static SNetwork.SNetStructs;
 
 namespace Zombified_Initiative;
 
@@ -79,16 +80,13 @@ public class ZiMain : BasePlugin
     {
         Harmony m_Harmony = new Harmony("ZombieController");
         m_Harmony.PatchAll();
-        Log.LogInfo("Registering zComputer");
         ClassInjector.RegisterTypeInIl2Cpp<zComputer>();
-        Log.LogInfo("Registered zComputer");
-        Log.LogInfo("Registering ZMenu");
-        Log.LogInfo("Registered ZMenu");
-        Log.LogInfo("Registering ZMenuNode");
         ClassInjector.RegisterTypeInIl2Cpp<zUpdater>();
-        Log.LogInfo("Registered ZMenuNode");
         var ZombieController = AddComponent<zController>();
+
         NetworkAPI.RegisterEvent<ZINetInfo>(ZINetInfo.NetworkIdentity, zController.ReceiveZINetInfo);
+        NetworkAPI.RegisterEvent<ZISendBotToPickupItemInfo>("sendBotToPickupItem", SendBotToPickupItem);
+
         LG_Factory.add_OnFactoryBuildDone((Action)ZombieController.OnFactoryBuildDone);
         EventAPI.OnExpeditionStarted += ZombieController.Initialize;
         log = Log;
@@ -105,6 +103,9 @@ public class ZiMain : BasePlugin
         LG_Factory.add_OnFactoryBuildDone((Action)zMenus.CreateMenus);
         
     }
+
+
+
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
 
@@ -199,27 +200,11 @@ public class ZiMain : BasePlugin
         PlayerChatManager.WantToSentTextMessage(sender != null ? sender : PlayerManager.GetLocalPlayerAgent(), message, reciver);
     }
     [Obsolete]
-    public static void attackMyTarget(string bot, bool everyone = false)
-    {
-        var monster = zSearch.GetMonsterUnderPlayerAim();
-        if (monster == null) return;
-        if (everyone)
-        {
-            log.LogInfo("all bots attack");
-            foreach (var iBot in ZiMain.BotTable.Keys)
-            {
-                attackMonster(iBot, monster);
-            }
-        }
-        else
-        {
-            attackMonster(bot, monster);
-        }
-    }
+
     public static void attackMonster(string bot, EnemyAgent monster)
     {
         log.LogInfo($"bot " + bot + " attack");
-        SendBotToKillEnemy(bot, monster, PlayerBotActionAttack.StanceEnum.All, PlayerBotActionAttack.AttackMeansEnum.All, PlayerBotActionWalk.Descriptor.PostureEnum.Stand);
+        SendBotToKillEnemyOld(bot, monster, PlayerBotActionAttack.StanceEnum.All, PlayerBotActionAttack.AttackMeansEnum.All, PlayerBotActionWalk.Descriptor.PostureEnum.Stand);
     }
     public static void setPickupPermission(string bot, bool allowed)
     { //TODO - figure out network stuff and refactor this. Right now I'm a little scared to touch this because I can't test it.
@@ -260,7 +245,84 @@ public class ZiMain : BasePlugin
             }
         }
     }
-    public static void SendBotToKillEnemy(String chosenBot, Agent enemy, PlayerBotActionAttack.StanceEnum stance = PlayerBotActionAttack.StanceEnum.All, PlayerBotActionAttack.AttackMeansEnum means = PlayerBotActionAttack.AttackMeansEnum.All, PlayerBotActionWalk.Descriptor.PostureEnum posture = PlayerBotActionWalk.Descriptor.PostureEnum.Stand)
+    public static List<PlayerAIBot> GetBotList()
+    {//TODO this is bad there's got to be a better way.  Though it's pretty cheap regardless.
+        List<PlayerAIBot> playerAiBots = new();
+        var playerAgentsInLevel = PlayerManager.PlayerAgentsInLevel;
+        foreach (var agent in playerAgentsInLevel)
+        {
+            var aiBot = agent.gameObject.GetComponent<PlayerAIBot>();
+            if (aiBot != null)
+            {
+                playerAiBots.Add(aiBot);
+            }
+        }
+        return playerAiBots;
+    }
+
+    public static void SendBotTokillEnemy(PlayerAIBot bot, Agent enemy, PlayerBotActionAttack.StanceEnum stance = PlayerBotActionAttack.StanceEnum.All, PlayerBotActionAttack.AttackMeansEnum means = PlayerBotActionAttack.AttackMeansEnum.All, PlayerBotActionWalk.Descriptor.PostureEnum posture = PlayerBotActionWalk.Descriptor.PostureEnum.Stand, PlayerAgent commander = null)
+    {
+
+    }
+    public static Item TryGetItemInLevelFromItemData(pItemData itemData)
+    {
+        Item item;
+        PlayerBackpackManager.TryGetItemInLevelFromItemData(itemData, out item);
+        return item;
+    }
+    public static PlayerAgent GetAgentFrom_pStruct(SNetStructs.pPlayer player_struct)
+    {
+        if (!player_struct.TryGetPlayer(out SNet_Player player))
+            return null;
+        return player.PlayerAgent.TryCast<PlayerAgent>();
+    }
+
+    public static SNetStructs.pPlayer Get_pStructFromAgent(PlayerAgent agent)
+    {
+        SNetStructs.pPlayer player = new();
+        player.SetPlayer(agent.Owner);
+        return player;
+    }
+    public static PlayerAgent GetAgentFrom_pPlayer(SNetStructs.pPlayer player_struct)
+    {
+        if (!player_struct.TryGetPlayer(out SNet_Player player))
+            return null;
+        return player.PlayerAgent.TryCast<PlayerAgent>();
+    }
+
+    public static SNetStructs.pPlayer Get_pPlayerFromAgent(PlayerAgent agent)
+    {
+        SNetStructs.pPlayer player = new();
+        player.SetPlayer(agent.Owner);
+        return player;
+    }
+    public struct ZISendBotToPickupItemInfo
+    {
+        public int botId;
+        public pItemData item;
+    }
+    private static void SendBotToPickupItem(ulong sender, ZISendBotToPickupItemInfo info)
+    {
+        log.LogInfo($"Networked message! botID: {info.botId} - pItemData: {info.item}");
+        Item _item;
+        PlayerBackpackManager.TryGetItemInLevelFromItemData(info.item, out _item);
+        //log.LogInfo($"Got _item {(_item == null ? "null" : _item.Pointer)}");
+        //ItemInLevel item = _item.gameObject.GetComponent<ItemInLevel>();
+        //log.LogInfo($"Got item {item} - {item.PublicName}");
+        //PlayerAgent bot = GetAgentFromId(info.botId).gameObject.GetComponent<PlayerAgent>();
+        //log.LogInfo($"got bot {bot} - {bot.PlayerName}");
+    }
+    public static void SendBotToPickupItem(PlayerAIBot bot, ItemInLevel item, PlayerAgent commander = null)
+    {
+
+    }
+    public static void SendBotToShareResourcePack(PlayerAIBot sender, PlayerAgent reciver, PlayerAgent commander = null)
+    {
+
+    }
+
+    
+    public static void SendBotToKillEnemyOld(String chosenBot, Agent enemy, PlayerBotActionAttack.StanceEnum stance = PlayerBotActionAttack.StanceEnum.All, PlayerBotActionAttack.AttackMeansEnum means = PlayerBotActionAttack.AttackMeansEnum.All, PlayerBotActionWalk.Descriptor.PostureEnum posture = PlayerBotActionWalk.Descriptor.PostureEnum.Stand)
     { //TODO - might change chosen bot to be a PlayerAiBot instead of a string.
       // - otherwise looks fine?
         var bot = ZiMain.BotTable[chosenBot];
@@ -278,14 +340,30 @@ public class ZiMain : BasePlugin
         },
             "Added kill enemy action to " + bot.Agent.PlayerName, 0, bot.m_playerAgent.PlayerSlotIndex, 0, 0, enemy.m_replicator.Key + 1);
     }
-    public static void SendBotToPickupItem(String chosenBot, ItemInLevel item)
+    public static void SendBotToPickupItemOld(string chosenBot, ItemInLevel item)
     { //TODO - refactor all NetworkAPI usage
       //TODO - saving item types as ints?  there's got to be a better way.
         int itemtype = 0;
         int itemserial = 0;
-        var bot = ZiMain.BotTable[chosenBot];
+        PlayerAIBot bot = ZiMain.BotTable[chosenBot];
         if (bot == null)
             return;
+
+
+
+
+
+        //int botId = GetIdFromAgent(bot.Agent);
+        //pItemData itemData = item.pItemData;
+        //ZISendBotToPickupItemInfo info = new ZISendBotToPickupItemInfo
+        //{
+        //    botId = botId,
+        //    item = itemData
+        //};
+        //SendBotToPickupItem(0, info);
+
+
+
 
         var res = item.TryCast<ResourcePackPickup>();
         if (res != null && res.m_packType == eResourceContainerSpawnType.AmmoWeapon) itemtype = 1;
@@ -307,8 +385,7 @@ public class ZiMain : BasePlugin
         ExecuteBotActionOld(bot, descriptor,
             "Added collect item action to " + bot.Agent.PlayerName, 3, bot.m_playerAgent.PlayerSlotIndex, itemtype, itemserial, 0);
     }
-
-    public static void SendBotToShareResourcePack(String sender, PlayerAgent reciver, PlayerAgent commander = null)
+    public static void SendBotToShareResourcePackOld(String sender, PlayerAgent reciver, PlayerAgent commander = null)
     { //TODO - might change chosen bot to be a PlayerAiBot instead of a string.
       // - otherwise looks fine?
         var bot = ZiMain.BotTable[sender];
@@ -338,6 +415,23 @@ public class ZiMain : BasePlugin
         },
             "Added share resource action to " + bot.Agent.PlayerName, 4, bot.m_playerAgent.PlayerSlotIndex, 0, 0, reciver.m_replicator.Key + 1);
     }
+    public static void attackMyTarget(string bot, bool everyone = false)
+    {
+        var monster = zSearch.GetMonsterUnderPlayerAim();
+        if (monster == null) return;
+        if (everyone)
+        {
+            log.LogInfo("all bots attack");
+            foreach (var iBot in ZiMain.BotTable.Keys)
+            {
+                attackMonster(iBot, monster);
+            }
+        }
+        else
+        {
+            attackMonster(bot, monster);
+        }
+    }
     //[Obsolete]
     public static void ExecuteBotActionOld(PlayerAIBot bot, PlayerBotActionBase.Descriptor descriptor, string message, int func, int slot, int itemtype, int itemserial, int agentid)
     { //TODO refactor all NetworkAPI usage
@@ -348,18 +442,5 @@ public class ZiMain : BasePlugin
         }
         if (!SNet.IsMaster) NetworkAPI.InvokeEvent<ZiMain.ZINetInfo>("ZINetInfo", new ZiMain.ZINetInfo(func, slot, itemtype, itemserial, agentid));
     }
-    public static List<PlayerAIBot> GetBotList()
-    {//TODO this is bad there's got to be a better way.  Though it's pretty cheap regardless.
-        List<PlayerAIBot> playerAiBots = new();
-        var playerAgentsInLevel = PlayerManager.PlayerAgentsInLevel;
-        foreach (var agent in playerAgentsInLevel)
-        {
-            var aiBot = agent.gameObject.GetComponent<PlayerAIBot>();
-            if (aiBot != null)
-            {
-                playerAiBots.Add(aiBot);
-            }
-        }
-        return playerAiBots;
-    }
+
 } // plugin

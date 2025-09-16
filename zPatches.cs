@@ -64,7 +64,6 @@ public class ZombifiedPatches
     }
     [HarmonyPatch(typeof(PlaceNavMarkerOnGO), nameof(PlaceNavMarkerOnGO.UpdateExtraInfo))]
     [HarmonyPostfix]
-
     public static void UpdateExtraInfoPatch(PlaceNavMarkerOnGO __instance)
     {
         string original = __instance.m_extraInfo;
@@ -245,13 +244,13 @@ public class ZombifiedPatches
                 log.LogInfo($"bot " + who + " pickup resource");
                 var item = zSearch.GetItemUnderPlayerAim();
                 if (item != null)
-                    SendBotToPickupItem(who, item);
+                    SendBotToPickupItemOld(who, item);
             }
 
             if (wha == "supply resource (aimed or me)")
             {
                 log.LogInfo($"bot " + who + " share resource");
-                ZiMain.SendBotToShareResourcePack(who, zSearch.GetHumanUnderPlayerAim());
+                ZiMain.SendBotToShareResourcePackOld(who, zSearch.GetHumanUnderPlayerAim());
             }
 
             if (wha.Contains("sentry mode"))

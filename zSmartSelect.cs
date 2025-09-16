@@ -114,7 +114,7 @@ namespace Zombified_Initiative
                         if (Vector3.Angle(cameraTransform.forward, Vector3.down) < 15f)
                         {
                             PlayerAgent agent = selection.getBot().GetComponent<PlayerAgent>();
-                            ZiMain.SendBotToShareResourcePack(agent.PlayerName, lookingAt.GetComponent<PlayerAgent>());
+                            ZiMain.SendBotToShareResourcePackOld(agent.PlayerName, lookingAt.GetComponent<PlayerAgent>());
                         }
                         else
                         {
@@ -128,7 +128,7 @@ namespace Zombified_Initiative
                         if (selection.getBot() != null)
                         {
                             PlayerAgent agent = selection.getBot().GetComponent<PlayerAgent>();
-                            ZiMain.SendBotToShareResourcePack(agent.PlayerName, lookingAt.GetComponent<PlayerAgent>());
+                            ZiMain.SendBotToShareResourcePackOld(agent.PlayerName, lookingAt.GetComponent<PlayerAgent>());
                         }
                         break;
                     }
@@ -139,7 +139,7 @@ namespace Zombified_Initiative
                         {
                             PlayerAgent bot = selection.getBot().GetComponent<PlayerAgent>();
                             ZiMain.sendChatMessage("Attacking enemy", bot, localPlayer);
-                            ZiMain.SendBotToKillEnemy(bot.PlayerName, lookingAt.GetComponent<EnemyAgent>());
+                            ZiMain.SendBotToKillEnemyOld(bot.PlayerName, lookingAt.GetComponent<EnemyAgent>());
                         }
                         break;
                     }
@@ -151,7 +151,7 @@ namespace Zombified_Initiative
                             PlayerAgent bot = selection.getBot().GetComponent<PlayerAgent>();
                             ItemInLevel pickup = lookingAt.GetComponent<ItemInLevel>();
                             ZiMain.sendChatMessage("Picking up item: " + pickup.PublicName, bot, localPlayer);
-                            ZiMain.SendBotToPickupItem(bot.PlayerName, pickup);
+                            ZiMain.SendBotToPickupItemOld(bot.PlayerName, pickup);
                         }
                         break;
                     }
