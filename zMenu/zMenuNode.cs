@@ -88,6 +88,7 @@ namespace ZombieTweak2.zMenu
             private FlexibleEvent WhileSelected = new();
             private FlexibleEvent OnDeselected = new();
             private FlexibleEvent WhileDeselected = new();
+            private FlexibleEvent OnDoublePressed = new(); //TODO
 
             private Dictionary<zMenuManager.nodeEvent, FlexibleEvent> eventMap;
             public TextPart fullTextPart;
