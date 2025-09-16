@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
+using Zombified_Initiative;
 
 namespace ZombieTweak2.zMenu
 {
@@ -80,17 +81,27 @@ namespace ZombieTweak2.zMenu
 
             public bool selected = false;
             public bool pressed = false;
-            public int pressedAt = Time.frameCount;
+            public bool holding = false;
+            public int frameFirstPressedAt = Time.frameCount;
+            public float timeFirstPressedAt = Time.time;
+            public int frameLastPressedAt = Time.frameCount;
+            public float timeLastPressedAt = Time.time;
             public zMenu parrentMenu;
             private FlexibleEvent OnPressed = new();
             private FlexibleEvent WhilePressed = new();
             private FlexibleEvent OnUnpressed = new();
+            private FlexibleEvent OnUnpressedSelected = new();
             private FlexibleEvent WhileUnpressed = new();
             private FlexibleEvent OnSelected = new();
             private FlexibleEvent WhileSelected = new();
             private FlexibleEvent OnDeselected = new();
             private FlexibleEvent WhileDeselected = new();
             private FlexibleEvent OnDoublePressed = new(); //TODO
+            private FlexibleEvent OnTapped = new();
+            private FlexibleEvent OnHeld = new();
+            private FlexibleEvent OnHeldSelected = new();
+            private FlexibleEvent OnHeldImmediate = new();
+            private FlexibleEvent OnHeldImmediateSelected = new();
 
             private Dictionary<zMenuManager.nodeEvent, FlexibleEvent> eventMap;
             public TextPart fullTextPart;
@@ -102,6 +113,8 @@ namespace ZombieTweak2.zMenu
             public Color color;
 
             //settings
+            private float tapThreshold = 0.1f;
+            private float holdThreshold = 0.2f;
 
             public zMenuNode(string arg_Name, zMenu arg_Menu, FlexibleMethodDefinition arg_Callback)
             {
@@ -115,7 +128,7 @@ namespace ZombieTweak2.zMenu
                 rect.sizeDelta = new Vector2(300, 0);
 
                 parrentMenu = arg_Menu;
-                if (arg_Callback != null) OnPressed.Listen(arg_Callback);
+                if (arg_Callback != null) OnUnpressedSelected.Listen(arg_Callback);
                 color = parrentMenu.getTextColor();
 
                 VerticalLayoutGroup layout = gameObject.AddComponent<VerticalLayoutGroup>();
@@ -141,11 +154,18 @@ namespace ZombieTweak2.zMenu
                     { zMenuManager.nodeEvent.OnPressed, OnPressed },
                     { zMenuManager.nodeEvent.WhilePressed, WhilePressed },
                     { zMenuManager.nodeEvent.OnUnpressed, OnUnpressed },
+                    { zMenuManager.nodeEvent.OnUnpressedSelected, OnUnpressedSelected },
                     { zMenuManager.nodeEvent.WhileUnpressed, WhileUnpressed },
                     { zMenuManager.nodeEvent.OnSelected, OnSelected },
                     { zMenuManager.nodeEvent.WhileSelected, WhileSelected },
                     { zMenuManager.nodeEvent.OnDeselected, OnDeselected },
-                    { zMenuManager.nodeEvent.WhileDeselected, WhileDeselected }};
+                    { zMenuManager.nodeEvent.WhileDeselected, WhileDeselected },
+                    { zMenuManager.nodeEvent.OnTapped, OnTapped },
+                    { zMenuManager.nodeEvent.OnHeld, OnHeld },
+                    { zMenuManager.nodeEvent.OnHeldSelected, OnHeldSelected },
+                    { zMenuManager.nodeEvent.OnHeldImmediate, OnHeldImmediate },
+                    { zMenuManager.nodeEvent.OnHeldImmediateSelected, OnHeldImmediateSelected },
+                };
             }
             public zMenuNode Update()
             {
@@ -156,16 +176,10 @@ namespace ZombieTweak2.zMenu
                 }
                 else
                     WhileDeselected.Invoke();
-                if (pressed)
-                {
-                    WhilePressed.Invoke();
-                    if (Time.frameCount - pressedAt > 2)
-                    {
-                        Unpress();
-                    }
-                }
-                else
+                if (!pressed)
                     WhileUnpressed.Invoke();
+                //if (pressed && Time.frameCount - frameLastPressedAt > 2)
+                //    Unpress();
                 FaceCamera();
                 return this;
             }
@@ -235,15 +249,34 @@ namespace ZombieTweak2.zMenu
                 parrentMenu.OnDeselected.Invoke();
                 return this;
             }
+            public zMenuNode Pressing()
+            {
+                frameLastPressedAt = Time.frameCount;
+                timeLastPressedAt = Time.time;
+                WhilePressed.Invoke();
+                float heldTime = Time.time - timeFirstPressedAt;
+                if (!holding && heldTime > holdThreshold)
+                {
+                    ZiMain.log.LogInfo(fullText + " was held");
+                    holding = true;
+                    if (selected)
+                        OnHeldImmediateSelected.Invoke();
+                    else
+                        OnHeldImmediate.Invoke();
+                }
+                return this;
+            }
             public zMenuNode Press()
             {
-                if (!pressed)
+                frameFirstPressedAt = Time.frameCount;
+                timeFirstPressedAt = Time.time;
+                pressed = true;
+                ZiMain.log.LogInfo(fullText + "was pressed");
+                OnPressed.Invoke();
+                if (closeOnPress)
                 {
-                    pressedAt = Time.frameCount;
-                    OnPressed.Invoke();
-                    pressed = true;
-                    if (closeOnPress)
-                        zMenuManager.CloseAllMenues();
+                    zMenuManager.CloseAllMenues();
+                    return this;
                 }
                 return this;
             }
@@ -252,7 +285,19 @@ namespace ZombieTweak2.zMenu
                 if (pressed)
                 {
                     OnUnpressed.Invoke();
+                    if (holding)
+                        OnHeld.Invoke();
+                    if (selected)
+                        OnUnpressedSelected.Invoke();
+                    if (holding && selected)
+                        OnHeldSelected.Invoke();
+                    if (Time.time - timeFirstPressedAt < tapThreshold)
+                    {
+                        ZiMain.log.LogInfo(fullText + "was tapped");
+                        OnTapped.Invoke();
+                    }
                 }
+                holding = false;
                 pressed = false;
                 return this;
             }

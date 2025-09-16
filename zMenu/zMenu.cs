@@ -29,7 +29,13 @@ namespace ZombieTweak2.zMenu
             WhileSelected,
             OnDeselected,
             WhileDeselected,
-            OnDoulbePressed //TODO
+            OnDoulbePressed, //TODO
+            OnTapped,
+            OnHeld,
+            OnHeldImmediate,
+            OnUnpressedSelected,
+            OnHeldSelected,
+            OnHeldImmediateSelected,
         }
         public enum menuEvent
         {
@@ -44,14 +50,16 @@ namespace ZombieTweak2.zMenu
         }
         //static settings
         public static string menuParrentPath = "GUI/CellUI_Camera(Clone)/NavMarkerLayer";
+        internal static bool pressable;
+        internal static zMenu.zMenuNode pressedNode;
 
         public static zMenu createMenu(string name, zMenu parrentMenu = null)
         {
             zMenu newMenu = new zMenu(name, parrentMenu);
             if (parrentMenu == null)
             {
-                newMenu.centerNode.ClearListeners(zMenuManager.nodeEvent.OnPressed);
-                newMenu.centerNode.AddListener(zMenuManager.nodeEvent.OnPressed, CloseAllMenues);
+                newMenu.centerNode.ClearListeners(zMenuManager.nodeEvent.OnUnpressedSelected);
+                newMenu.centerNode.AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, CloseAllMenues);
             }
             else
             {
@@ -68,23 +76,21 @@ namespace ZombieTweak2.zMenu
         public static void Update()
         {
             playerInControll = FocusStateManager.CurrentState == eFocusState.FPS || FocusStateManager.CurrentState == eFocusState.Dead;
-            if (playerInControll) 
+            if (playerInControll)
             {
                 bool menuOpen = currentMenu != null;
-                bool nodeSelected = false;
                 if (menuOpen) {
 
-                    Dictionary<GameObject, zMenu.zMenuNode>  nodeDict = new(currentMenu.nodes.Count+1);
+                    Dictionary<GameObject, zMenu.zMenuNode> nodeDict = new(currentMenu.nodes.Count + 1);
                     foreach (var node in currentMenu.allNodes)
                     {
                         nodeDict[node.gameObject] = node;
                     }
-                    List<GameObject>  nodeList = nodeDict.Keys.ToList();
+                    List<GameObject> nodeList = nodeDict.Keys.ToList();
                     GameObject selectedNodeObject = zSearch.GetClosestObjectInLookDirection(Camera.current.transform, nodeList, 10f);
                     selectedNode = null;
                     if (selectedNodeObject != null)
                         nodeDict.TryGetValue(selectedNodeObject, out selectedNode);
-                    nodeSelected = selectedNode != null;
                     foreach (zMenu.zMenuNode node in nodeDict.Values)
                     {
                         if (node == selectedNode)
@@ -98,28 +104,39 @@ namespace ZombieTweak2.zMenu
                     }
                     currentMenu.Update();
                 }
-                if (Input.GetKeyDown(KeyCode.M))
+                if (Input.GetKey(KeyCode.M))
                 {
-                    if (menuOpen)
+                    if (pressable) //is this the first frame of holding the button?
                     {
-                        if (nodeSelected)
+                        if (!menuOpen) //is the menu closed?
+                            mainMenu.Open();//open main menu
+                        else if (selectedNode != null) //Are we hovering over a button?
                         {
-                            selectedNode.Press();
-                        }
-                        else
-                        {
-                            CloseAllMenues();
+                            pressedNode = selectedNode; //save the node we have selected
+                            pressedNode.Press(); //let the button know it's been pressed
                         }
                     }
-                    else
-                    {
-                        mainMenu.Open();
-                    } 
+                    else //this is not the first frame of holding the button.
+                    {    //We are holding the button.
+                        if (pressedNode != null) //did we start pressing a node on the first frame?
+                        {
+                            pressedNode.Pressing(); //let the node know.
+                        }
+                    }
+                    pressable = false;
                 }
+                else //we are not holding the button
+                {
+                    pressable = true; //we can have a first frame again
+                    if (pressedNode != null) 
+                        pressedNode.Unpress();
+                    pressedNode = null; //stop holding onto the node.
+                } 
             }
         }
         public static void CloseAllMenues()
         {
+            pressedNode = null;
             foreach (zMenu menu in menues)
             {
                 menu.ResetRelativePosition();
@@ -140,7 +157,7 @@ namespace ZombieTweak2.zMenu
         {
             menuParrent = GameObject.Find(menuParrentPath);
             mainMenu = new zMenu("Main");
-            mainMenu.centerNode.AddListener(zMenuManager.nodeEvent.OnPressed, CloseAllMenues);
+            mainMenu.centerNode.AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, CloseAllMenues);
             registerMenu(mainMenu);
         }
     }
@@ -161,6 +178,8 @@ namespace ZombieTweak2.zMenu
         public OrderedSet<zMenuNode> nodes { get; private set; }
         public  zMenuNode centerNode { get; private set; }
         private zMenu _parrentMenu;
+        internal int frameOpenedAt = Time.frameCount;
+        internal float timeOpenedAt = Time.time;
         private zMenu parrentMenu { 
             get => _parrentMenu; 
             set 
@@ -254,6 +273,8 @@ namespace ZombieTweak2.zMenu
         }
         public zMenu Open()
         {
+            timeOpenedAt = Time.time;
+            frameOpenedAt = Time.frameCount;
             if (!zMenuManager.menues.Contains(this))
                 ZiMain.log.LogWarning($"Unregestered menu opened! ({name}) It may not clsoe properly.");
             setVisiblity(true);
@@ -453,7 +474,7 @@ namespace ZombieTweak2.zMenu
         }
         public zMenuNode AddNode(string arg_Name, FlexibleMethodDefinition callback)
         {
-            zMenuNode node = new zMenuNode(arg_Name,this,callback).SetPosition(0,nodes.Count+1*100);
+            zMenuNode node = new zMenuNode(arg_Name,this,callback);
             RegisterNode(node);
             return node;
         }

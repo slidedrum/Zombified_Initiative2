@@ -37,7 +37,7 @@ namespace ZombieTweak2.zMenu
                 zMenu.zMenuNode node = selectionMenu.AddNode(bot.m_playerAgent.PlayerName,toggleBotSelection, bot);
                 selectionBotNodes[id] = node;
                 updateColorBaesdOnSelection(node, bot);
-                node.AddListener(zMenuManager.nodeEvent.OnPressed, updateColorBaesdOnSelection, node, bot);
+                node.AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, updateColorBaesdOnSelection, node, bot);
                 node.parrentMenu.AddListener(zMenuManager.menuEvent.OnOpened, updateColorBaesdOnSelection, node, bot);
             }
 
