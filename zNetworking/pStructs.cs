@@ -6,23 +6,23 @@ using SNetwork;
 using UnityEngine;
 using static Il2CppSystem.Globalization.CultureInfo;
 
-namespace ZombieTweak2
+namespace ZombieTweak2.zNetworking
 {
     public class pStructs
     {
-        public static PlayerAgent Get_RefFrom_pStruct(Agents.pPlayerAgent pStruct)
+        public static PlayerAgent Get_RefFrom_pStruct(pPlayerAgent pStruct)
         {
             if (!pStruct.TryGet(out PlayerAgent refrence))
                 return null;
             return refrence;
         }
-        public static Agent Get_RefFrom_pStruct(Agents.pAgent pStruct)
+        public static Agent Get_RefFrom_pStruct(pAgent pStruct)
         {
             if (!pStruct.TryGet(out Agent refrence))
                 return null;
             return refrence;
         }
-        public static EnemyAgent Get_RefFrom_pStruct(Agents.pEnemyAgent pStruct)
+        public static EnemyAgent Get_RefFrom_pStruct(pEnemyAgent pStruct)
         {
             if (!pStruct.TryGet(out EnemyAgent refrence))
                 return null;
@@ -47,21 +47,21 @@ namespace ZombieTweak2
             pStruct.SetPlayer(refrence.Owner);
             return pStruct;
         }
-        public static Agents.pAgent Get_pStructFromRefrence(Agent refrence)
+        public static pAgent Get_pStructFromRefrence(Agent refrence)
         {
-            Agents.pAgent pStruct = new();
+            pAgent pStruct = new();
             pStruct.Set(refrence);
             return pStruct;
         }
-        public static Agents.pPlayerAgent Get_pStructFromRefrence(PlayerAgent refrence)
+        public static pPlayerAgent Get_pStructFromRefrence(PlayerAgent refrence)
         {
-            Agents.pPlayerAgent pStruct = new();
+            pPlayerAgent pStruct = new();
             pStruct.Set(refrence);
             return pStruct;
         }
-        public static Agents.pEnemyAgent Get_pStructFromRefrence(EnemyAgent refrence)
+        public static pEnemyAgent Get_pStructFromRefrence(EnemyAgent refrence)
         {
-            Agents.pEnemyAgent pStruct = new();
+            pEnemyAgent pStruct = new();
             pStruct.Set(refrence);
             return pStruct;
         }
