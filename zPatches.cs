@@ -1,10 +1,15 @@
-﻿using GameData;
+﻿using AIGraph;
+using GameData;
 using GTFO.API;
 using HarmonyLib;
+using Il2CppSystem.Diagnostics;
+using LevelGeneration;
 using Player;
 using SNetwork;
 using System;
 using System.Collections.Generic;
+using TMPro;
+using UnityEngine;
 using ZombieTweak2;
 using static Zombified_Initiative.ZiMain;
 
@@ -29,6 +34,10 @@ namespace Zombified_Initiative;
 //want to make "home" location function where they "follow" a set location but aren't strickly stuck to it if they get into combat, similar to following a player.
 
 //found bot commands in PUI_CommunicationMenu.execute
+//RootPlayerBotAction is where actions are chosen
+//if (item2.pItemData.itemID_gearCRC != 116U && item2.pItemData.itemID_gearCRC != 30U) is what says don't pick up.  hard coded.
+//ItemDataBlock.s_blockIDByName has all ids
+//RootPlayerBotAction.s_itemBasePrios has what bots can pick up
 
 
 
@@ -166,7 +175,6 @@ public class ZombifiedPatches
         }
         return false;
     }
-
     [HarmonyPatch(typeof(CommunicationMenu), nameof(CommunicationMenu.PlayConfirmSound))]
     [HarmonyPrefix]
 
