@@ -18,7 +18,6 @@ namespace ZombieTweak2.zMenu
         public  static zMenu mainMenu { get; private set; }
         public static zMenu currentMenu { get; internal set; }
         private static zMenu.zMenuNode selectedNode;
-
         public static Color defaultColor { get; private set; } = new Color(0.25f, 0.25f, 0.25f, 1f);
         public enum nodeEvent
         {
@@ -30,6 +29,7 @@ namespace ZombieTweak2.zMenu
             WhileSelected,
             OnDeselected,
             WhileDeselected,
+            OnDoulbePressed //TODO
         }
         public enum menuEvent
         {
