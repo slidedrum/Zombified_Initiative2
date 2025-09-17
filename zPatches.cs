@@ -19,16 +19,16 @@ public class ZombifiedPatches
     //This file contains all harmony patches.
     //Might split this up later if there gets to be too many of them.
 
-    //[HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.UpdateActionCollectItem))]
-    //[HarmonyPrefix]
-    //public static bool UpdateActionCollectItem(PlayerAIBot __instance)
-    //{
-    //    if (!zSlideComputer.GetPickupPermission(__instance))
-    //    {
-    //        return false;
-    //    }
-    //    return true;
-    //}
+    [HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.UpdateActionCollectItem))]
+    [HarmonyPrefix]
+    public static bool UpdateActionCollectItem(RootPlayerBotAction __instance)
+    {
+        if (!zSlideComputer.GetPickupPermission(__instance.m_agent.Owner.PlayerSlotIndex()))
+        {
+            return false;
+        }
+        return true;
+    }
 
     public static float newPrio = 0f;
     [HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.GetItemPrio))]
