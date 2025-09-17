@@ -7,7 +7,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using ZombieTweak2;
 using static Zombified_Initiative.ZiMain;
 
 namespace Zombified_Initiative;
@@ -24,7 +23,8 @@ public class ZombifiedPatches
     public static bool GetItemPrio(PlayerAIBot __instance, InventorySlot itemSlot, uint itemID, ref float __result)
     {
         //This is the big one.  I'm trying to completely and faithfully re-create this methdod, just without the hard coded agentItem values.
-        //What we do is check how many the rest of the team (not including this bot) has of this agentItem type, vs the theoritical total they could have.  
+        //What we do is check how many the rest of the team (not including this bot) has of this agentItem type, vs the theoritical total they could have.
+        //TODO make bots take current resource needs into account.  For example if the team is low on tool, tool refill should be higher priority.
         __result = 0;
         ItemDataBlock itemDataBlock;
         if (ItemDataBlock.s_blockByID.ContainsKey(itemID))
@@ -41,23 +41,25 @@ public class ZombifiedPatches
             ZiMain.log.LogWarning($"Tried to get priority for unmapped item: ({itemID}){itemDataBlock.name} in {itemSlot}");
             return false;
         }
-        ZiMain.log.LogInfo($"Getting item pritiy ({itemID}){itemDataBlock.name} in {itemSlot}");
+        //ZiMain.log.LogInfo($"Getting item pritiy ({itemID}){itemDataBlock.name} in {itemSlot}");
 
         float basePriority = RootPlayerBotAction.s_itemBasePrios[itemID];
 
         List<PlayerAgent> playerAgentsList = PlayerManager.PlayerAgentsInLevel.ToArray().ToList();
 
-        List<PlayerAgent> otherAgents = new (playerAgentsList);
-        otherAgents = otherAgents.Where(a => a != null && a.CharacterID != __instance.Agent.CharacterID).ToList();
-        ZiMain.log.LogInfo($"count {otherAgents.Count}");
-        //otherAgents.Remove(__instance.Agent);  //this doesn't work for some stupid dang reason
-
         float highestAmmoCap = 0f;
         float currentTotalAmmo = 0f;
         float priorityFloor = 0.15f;
-
-        foreach (PlayerAgent agent in otherAgents)
+        int foundMe = 0;
+        int otherAgents = 0;
+        foreach (PlayerAgent agent in playerAgentsList)
         {
+            if (agent.CharacterID == __instance.Agent.CharacterID)
+            {
+                foundMe++;
+                continue;
+            }
+            otherAgents++;
             PlayerBackpack agentBackpack = PlayerBackpackManager.GetBackpack(agent.Owner);
             BackpackItem agentItem = null;
             if (agentBackpack != null)
@@ -95,27 +97,29 @@ public class ZombifiedPatches
             highestAmmoCap = Math.Max(ammoCap, highestAmmoCap);
             currentTotalAmmo += agentAmmo;
         }
-        ZiMain.log.LogMessage($"otherAgents count: {otherAgents.Count}");
-        ZiMain.log.LogMessage($"highestAmmoCap: {highestAmmoCap}");
-        ZiMain.log.LogMessage($"currentTotalAmmo: {currentTotalAmmo}");
-        ZiMain.log.LogMessage($"basePriority: {basePriority}");
-        ZiMain.log.LogMessage($"priorityFloor: {priorityFloor}");
+        //ZiMain.log.LogMessage($"Foundme: {foundMe}");
+        //ZiMain.log.LogMessage($"otherAgents count: {otherAgents}");
+        //ZiMain.log.LogMessage($"highestAmmoCap: {highestAmmoCap}");
+        //ZiMain.log.LogMessage($"currentTotalAmmo: {currentTotalAmmo}");
+        //ZiMain.log.LogMessage($"basePriority: {basePriority}");
+        //ZiMain.log.LogMessage($"priorityFloor: {priorityFloor}");
 
-        if (highestAmmoCap > 0.0f && otherAgents.Count > 0)
+        if (highestAmmoCap > 0.0f && otherAgents > 0)
         {
-            float maxOtherTotal = otherAgents.Count * highestAmmoCap;
+            
+            float maxOtherTotal = otherAgents * highestAmmoCap;
             float fillFactor = currentTotalAmmo / maxOtherTotal;
             float minPriority = basePriority * priorityFloor;
-            ZiMain.log.LogMessage($"maxOtherTotal: {maxOtherTotal}");
-            ZiMain.log.LogMessage($"fillFactor: {fillFactor}");
-            ZiMain.log.LogMessage($"minPriority: {minPriority}");
+            //ZiMain.log.LogMessage($"maxOtherTotal: {maxOtherTotal}");
+            //ZiMain.log.LogMessage($"fillFactor: {fillFactor}");
+            //ZiMain.log.LogMessage($"minPriority: {minPriority}");
             __result = Mathf.Lerp(basePriority, minPriority, fillFactor);
-            ZiMain.log.LogMessage($"Priority: {__result}");
         }
         else
         {
             __result = basePriority;
         }
+        //ZiMain.log.LogMessage($"Priority: {__result}");
         return false;
     }
 
