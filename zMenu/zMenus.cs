@@ -1,4 +1,5 @@
-﻿using Player;
+﻿using Agents;
+using Player;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -32,7 +33,7 @@ namespace ZombieTweak2.zMenu
             foreach (PlayerAIBot bot in playerAiBots)
             {
                 string botName = bot.m_playerAgent.PlayerName;
-                int id = bot.GetInstanceID();
+                int id = bot.Agent.Owner.PlayerSlotIndex();
                 botSelections[id] = true;
                 zMenu.zMenuNode node = selectionMenu.AddNode(bot.m_playerAgent.PlayerName,toggleBotSelection, bot);
                 selectionBotNodes[id] = node;
@@ -40,49 +41,13 @@ namespace ZombieTweak2.zMenu
                 node.AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, updateColorBaesdOnSelection, node, bot);
                 node.parrentMenu.AddListener(zMenuManager.menuEvent.OnOpened, updateColorBaesdOnSelection, node, bot);
             }
-
-            zMenu pickupPermMenu = zMenuManager.createMenu("Pickups", permissionMenu);
-            pickupPermMenu.AddNode("Toggle", toglePickupPermissionForSelected);
-            pickupPermMenu.AddNode("On", setPickupPermissionForSelected, true);
-            pickupPermMenu.AddNode("Off", setPickupPermissionForSelected, false);
-            zMenu sharePermMenu = zMenuManager.createMenu("Share", permissionMenu);
-            sharePermMenu.AddNode("Toggle");
-            sharePermMenu.AddNode("On");
-            sharePermMenu.AddNode("Off");
-            zMenu movePermMenu = zMenuManager.createMenu("Move", permissionMenu);
-            movePermMenu.AddNode("Toggle");
-            movePermMenu.AddNode("On");
-            movePermMenu.AddNode("Off");
-        }
-        private static void toggleSharePermissionForSelected()
-        {
-            List<PlayerAIBot> SelectedBots = getSelectedBots();
-            foreach (PlayerAIBot bot in SelectedBots)
-            {
-                //Zi.(bot.m_playerAgent.PlayerName);
-            }
-        }
-        private static void toglePickupPermissionForSelected()
-        {
-            List<PlayerAIBot> SelectedBots = getSelectedBots();
-            foreach (PlayerAIBot bot in SelectedBots) 
-            {
-                ZiMain.togglePickupPermission(bot.m_playerAgent.PlayerName);
-            }
-        }
-        private static void setPickupPermissionForSelected(bool allowed)
-        {
-            List<PlayerAIBot> SelectedBots = getSelectedBots();
-            foreach (PlayerAIBot bot in SelectedBots)
-            {
-                ZiMain.setPickupPermission(bot.m_playerAgent.PlayerName, allowed);
-            }
+            permissionMenu.AddNode("Pickups",zSlideComputer.TogglePickupPermission);
         }
         public static zMenu.zMenuNode updateColorBaesdOnSelection(zMenu.zMenuNode node, PlayerAIBot bot)
         {
             if (checkForUntrackedBot(bot))
                 return null;
-            if (botSelections[bot.GetInstanceID()])
+            if (botSelections[bot.Agent.Owner.PlayerSlotIndex()])
                 node.SetColor(selectedColor);
             else
                 node.SetColor(zMenuManager.defaultColor);
@@ -92,7 +57,7 @@ namespace ZombieTweak2.zMenu
         {
             if (checkForUntrackedBot(bot))
                 return null;
-            botSelections[bot.GetInstanceID()] = !botSelections[bot.GetInstanceID()];
+            botSelections[bot.Agent.Owner.PlayerSlotIndex()] = !botSelections[bot.Agent.Owner.PlayerSlotIndex()];
             return bot;
         }
         public static List<PlayerAIBot> getSelectedBots()
@@ -101,7 +66,7 @@ namespace ZombieTweak2.zMenu
             var allBots = ZiMain.GetBotList();
             foreach (PlayerAIBot bot in allBots)
             {
-                bool botSelected = botSelections[bot.GetInstanceID()];
+                bool botSelected = botSelections[bot.Agent.Owner.PlayerSlotIndex()];
                 if (botSelected)
                 {
                     selectedBots.Add(bot);
@@ -113,7 +78,7 @@ namespace ZombieTweak2.zMenu
         {
             if (checkForUntrackedBot(bot))
                 return null;
-            botSelections[bot.GetInstanceID()] = selected;
+            botSelections[bot.Agent.Owner.PlayerSlotIndex()] = selected;
             return bot;
         }
         private static bool checkForUntrackedBot(PlayerAIBot bot)
@@ -123,7 +88,7 @@ namespace ZombieTweak2.zMenu
                 ZiMain.log.LogError("Can't toggle bot selection of null!  This should not happen.");
                 return true;
             }
-            if (!botSelections.ContainsKey(bot.GetInstanceID()))
+            if (!botSelections.ContainsKey(bot.Agent.Owner.PlayerSlotIndex()))
                 throw new KeyNotFoundException($"The bot {bot} is not tracked for selection.  This should't happen.");
             return false;
         }

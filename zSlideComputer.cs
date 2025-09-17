@@ -1,8 +1,12 @@
 ﻿using GameData;
+using GTFO.API;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using Player;
+using SNetwork;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine.UIElements;
 using Zombified_Initiative;
 
 namespace ZombieTweak2
@@ -11,8 +15,10 @@ namespace ZombieTweak2
     {
         //This class is for handling things like stopping bots from do unwanted actions
 
-        public static Il2CppSystem.Collections.Generic.Dictionary<uint,float> itemPrios = RootPlayerBotAction.s_itemBasePrios;
-        public static Il2CppSystem.Collections.Generic.Dictionary<uint, float> OriginalItemPrios = new ();
+        public static Il2CppSystem.Collections.Generic.Dictionary<uint,float> itemPrios = new ();
+        public static Il2CppSystem.Collections.Generic.Dictionary<uint, float> zerodItemPrios = new ();
+        public static Il2CppSystem.Collections.Generic.Dictionary<uint, float> OriginalItemPrios = new();
+        public static Dictionary<int, bool> PickUpPerms = new ();
         private static Il2CppReferenceArray<ItemDataBlock> consumableItems;
         private static List<string> consumableItemPublicNames;
         private static List<string> consumableItemNames;
@@ -28,12 +34,18 @@ namespace ZombieTweak2
             {
                 itemPrios[kvp.Key] = kvp.Value;
             }
+            RootPlayerBotAction.s_itemBasePrios = itemPrios;
             consumableItems = ItemSpawnManager.m_itemDataPerInventorySlot[(int)InventorySlot.Consumable];
             consumableItemPublicNames = consumableItems.Select(item => item.publicName).ToList();
             consumableItemNames = consumableItems.Select(item => item.name).ToList();
             fullGlowStickNames = new List<string> { "CONSUMABLE_GlowStick", "CONSUMABLE_GlowStick_Christmas", "CONSUMABLE_GlowStick_Halloween", "CONSUMABLE_GlowStick_Yellow" };
             shortGlowStickNames = new List<string> { "Glow Stick", "Red Glow Stick", "Glow Stick Orange", "Glow Stick Yellow" };
-            
+
+            List<PlayerAIBot> playerAiBots = ZiMain.GetBotList();
+            foreach (PlayerAIBot bot in playerAiBots)
+            {
+                PickUpPerms[bot.GetInstanceID()] = true;
+            }
         }
         public static void FirstTimeSetup()
         {
@@ -41,6 +53,7 @@ namespace ZombieTweak2
             foreach (var kvp in RootPlayerBotAction.s_itemBasePrios)
             {
                 OriginalItemPrios[kvp.Key] = kvp.Value;
+                zerodItemPrios[kvp.Key] = 0;
             }
             //Might need to modify PlayerAIBot.s_recognisedItemTypes?
             //PlayerAIBot.KnowsHowToUseItem also could be relevent.
@@ -123,5 +136,55 @@ namespace ZombieTweak2
             }
             return false;
         }
+        public static void FlipPickupPermission(List<PlayerAIBot> botSelection, bool allowed)
+        {
+            foreach (PlayerAIBot bot in botSelection)
+            {
+                SetPickupPermissions(bot,!GetPickupPermission(bot));
+            }
+        }
+        public static void TogglePickupPermission(List<PlayerAIBot> botSelection, bool allowed)
+        {
+            var unselectedCount = 0;
+            var selectedCount = 0;
+            foreach (PlayerAIBot bot in botSelection)
+            {
+                if (GetPickupPermission(bot))
+                    selectedCount++;
+                else
+                    unselectedCount++;
+            }
+            bool majority = selectedCount > unselectedCount;
+            foreach (PlayerAIBot bot in botSelection)
+            {
+                SetPickupPermissions(bot, !majority);
+            }
+        }
+        public static void SetPickupPermission(List<PlayerAIBot> botSelection, bool allowed)
+        {
+            foreach (var bot in botSelection)
+                SetPickupPermission(bot.GetInstanceID(), allowed);
+        }
+        public static void SetPickupPermissions(PlayerAIBot bot, bool allowed)
+        {
+            SetPickupPermission(bot.GetInstanceID(), allowed);
+        }
+        public static void SetPickupPermission(int id, bool allowed)
+        {
+            PickUpPerms[id] = allowed;
+        }
+        public static bool GetPickupPermission(PlayerAIBot bot)
+        {
+            return PickUpPerms[bot.GetInstanceID()];
+        }
+        public static bool GetPickupPermission(int id)
+        {
+            if (PickUpPerms.ContainsKey(id))
+                return PickUpPerms[id];
+            ZiMain.log.LogWarning($"Unknown bot asked for pickup perms id:{id}.");
+            return false;
+        }
+
+
     }
 }
