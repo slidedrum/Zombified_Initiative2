@@ -1,4 +1,5 @@
 ﻿using GameData;
+using HarmonyLib;
 using Player;
 using System.Collections.Generic;
 using System.Linq;
@@ -74,7 +75,7 @@ namespace ZombieTweak2
                 ZiMain.log.LogInfo($"{slotName} ({items.Count}):");
                 foreach (var item in items)
                 {
-                    ZiMain.log.LogInfo($"\t - {item.publicName}");
+                    ZiMain.log.LogInfo($"\t - ({ItemDataBlock.s_blockIDByName[item.name]}){item.publicName}");
                 }
             }
         }
@@ -90,6 +91,24 @@ namespace ZombieTweak2
                 var name = block.name;
                 ZiMain.log.LogMessage($"{name}:{priority}");
             }
+        }
+        private static string printNameFromID(uint id)
+        {
+            if (ItemDataBlock.s_blockByID.ContainsKey(id))
+            {
+                string name = ItemDataBlock.s_blockByID[id].name + " - " + ItemDataBlock.s_blockByID[id].publicName;
+                ZiMain.log.LogInfo($"{id}: {name}");
+                return name;
+            }
+            return "";
+        }
+        private static ItemDataBlock getDatablockFromId(uint id)
+        {
+            if (ItemDataBlock.s_blockByID.ContainsKey(id))
+            {
+                return ItemDataBlock.s_blockByID[id];
+            }
+            return null;
         }
 
     }

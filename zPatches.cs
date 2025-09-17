@@ -5,6 +5,9 @@ using Player;
 using SNetwork;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
+using ZombieTweak2;
 using static Zombified_Initiative.ZiMain;
 
 namespace Zombified_Initiative;
@@ -14,6 +17,100 @@ public class ZombifiedPatches
 {
     //This file contains all harmony patches.
     //Might split this up later if there gets to be too many of them.
+
+    [HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.GetItemPrio))]
+    [HarmonyPrefix]
+
+    public static bool GetItemPrio(PlayerAIBot __instance, InventorySlot itemSlot, uint itemID, ref float __result)
+    {
+        //This is the big one.  I'm trying to completely and faithfully re-create this methdod, just without the hard coded agentItem values.
+        //What we do is check how many the rest of the team (not including this bot) has of this agentItem type, vs the theoritical total they could have.  
+        __result = 0;
+        ItemDataBlock itemDataBlock;
+        if (ItemDataBlock.s_blockByID.ContainsKey(itemID))
+        {
+            itemDataBlock = ItemDataBlock.s_blockByID[itemID];
+        }
+        else
+        {
+            //unkown agentItem id!
+            ZiMain.log.LogError($"Tried to get priority for unknow id: {itemID}");
+            return false;
+        }
+        if (!RootPlayerBotAction.s_itemBasePrios.ContainsKey(itemID))
+        {
+            ZiMain.log.LogWarning($"Tried to get priority for unmapped item: ({itemID}){itemDataBlock.name} in {itemSlot}");
+            return false;
+        }
+        ZiMain.log.LogInfo($"Getting item pritiy ({itemID}){itemDataBlock.name} in {itemSlot}");
+
+        float basePriority = RootPlayerBotAction.s_itemBasePrios[itemID];
+
+        List<PlayerAgent> playerAgentsList = PlayerManager.PlayerAgentsInLevel.ToArray().ToList();
+        PlayerAgent myAgent = __instance.Agent;
+
+        List<PlayerAgent> otherAgents = new (playerAgentsList);
+        otherAgents.Remove(myAgent);
+
+        float highestAmmoCap = 0f;
+        float currentTotalAmmo = 0f;
+        float priorityFloor = 0.15f;
+
+        foreach (PlayerAgent agent in otherAgents)
+        {
+            PlayerBackpack agentBackpack = PlayerBackpackManager.GetBackpack(agent.Owner);
+            BackpackItem agentItem = null;
+            if (agentBackpack != null) 
+                agentBackpack.TryGetBackpackItem(itemSlot, out agentItem);
+            if (agentItem != null)
+            {
+                if (agentItem.Instance.ItemDataBlock.persistentID == itemID) //are we looking at the same item?
+                {
+                    float ammoCap = 1;
+                    float agentAmmo = 0;
+                    InventorySlotAmmo pack = null;
+                    switch (itemSlot)
+                    {
+                        case InventorySlot.ResourcePack:
+                            pack = agentBackpack?.AmmoStorage?.ResourcePackAmmo;
+                            priorityFloor = 0.5f;
+                            break;
+                        case InventorySlot.Consumable:
+                            pack = agentBackpack?.AmmoStorage?.ConsumableAmmo;
+                            priorityFloor = 0.25f;
+                            break;
+                        default:
+
+                            break;
+                    }
+                    if (pack != null)
+                    {
+                        ammoCap = pack.AmmoMaxCap;
+                        agentAmmo = pack.AmmoInPack;
+                    }
+                    else
+                    {
+                        ammoCap = 1;
+                        agentAmmo = 1;
+                    }
+                    highestAmmoCap = Math.Max(ammoCap, highestAmmoCap);
+                    currentTotalAmmo += agentAmmo;
+                }
+            }
+        }
+        if (highestAmmoCap > 0.0f && otherAgents.Count > 0)
+        {
+            float maxOtherTotal = otherAgents.Count * highestAmmoCap;
+            float fillFactor = currentTotalAmmo / maxOtherTotal;
+            float minPriority = basePriority * priorityFloor;
+            __result = Mathf.Lerp(basePriority, minPriority, fillFactor);
+        }
+        else
+        {
+            __result = basePriority;
+        }
+        return false;
+    }
 
     [HarmonyPatch(typeof(PlayerAIBot), nameof(PlayerAIBot.SetEnabled))]
     [HarmonyPostfix]

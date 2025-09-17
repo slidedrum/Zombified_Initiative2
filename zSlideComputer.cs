@@ -1,9 +1,6 @@
 ﻿using GameData;
-using HarmonyLib;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
-using Il2CppSystem;
 using Player;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Zombified_Initiative;
@@ -45,6 +42,8 @@ namespace ZombieTweak2
             {
                 OriginalItemPrios[kvp.Key] = kvp.Value;
             }
+            //Might need to modify PlayerAIBot.s_recognisedItemTypes?
+            //PlayerAIBot.KnowsHowToUseItem also could be relevent.
         }
         public static void Update()
         {
@@ -106,9 +105,11 @@ namespace ZombieTweak2
         }
         public static bool SetBotItemPriority(uint id, float priority)
         {
-            if (itemPrios.ContainsKey(id))
+            if (ItemDataBlock.s_blockByID.ContainsKey(id))
             {
                 itemPrios[id] = priority;
+                if (!PlayerAIBot.s_recognisedItemTypes.Contains(id))
+                    PlayerAIBot.s_recognisedItemTypes.Add(id);
                 return true;
             }
             return false;
@@ -118,8 +119,7 @@ namespace ZombieTweak2
             if (ItemDataBlock.s_blockIDByName.ContainsKey(itemName))
             {
                 uint id = ItemDataBlock.GetBlockID(itemName);
-                itemPrios[id] = priority;
-                return true;
+                return SetBotItemPriority(id, priority);
             }
             return false;
         }
