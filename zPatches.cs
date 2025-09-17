@@ -19,10 +19,21 @@ public class ZombifiedPatches
     //This file contains all harmony patches.
     //Might split this up later if there gets to be too many of them.
 
+    //[HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.UpdateActionCollectItem))]
+    //[HarmonyPrefix]
+    //public static bool UpdateActionCollectItem(PlayerAIBot __instance)
+    //{
+    //    if (!zSlideComputer.GetPickupPermission(__instance))
+    //    {
+    //        return false;
+    //    }
+    //    return true;
+    //}
+
     public static float newPrio = 0f;
     [HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.GetItemPrio))]
     [HarmonyPostfix]
-    public static void GetItemPrio(PlayerAIBot __instance, InventorySlot itemSlot, uint itemID, ref float __result)
+    public static void GetItemPrio(RootPlayerBotAction __instance, InventorySlot itemSlot, uint itemID, ref float __result)
     {
         //This is supposed to be a full prefix replacement where the original method never runs.
         //But for some reason the output is not re-created perfectly.  That would't be a big deal honestly.
@@ -30,17 +41,10 @@ public class ZombifiedPatches
         //So instead I only run my custom logic as a fallback.
         //This approach still allows me to support arbitrary item pickups not normally in the list, without breaking the logic.
         //Theoretically if there are a bunch of new items in the list, they could get into a "hot potato" loop.  but I'm calling that a "known shippable" for now.
-        if (!zSlideComputer.GetPickupPermission(__instance))
-        {
-            //Perms dissabled
-            __result = 0f;
-            return;
-        }
-        if (__result != 0) //did we already get a result?
-            return;
-        if (!RootPlayerBotAction.s_itemBasePrios.ContainsKey(itemID)) //do we have a new result?
-            return;
+        var originalResult = __result;
         __result = 0f;
+        if (!zSlideComputer.GetPickupPermission(__instance.m_agent.Owner.PlayerSlotIndex()))
+            return;
 
         ItemDataBlock itemDataBlock;
         if (ItemDataBlock.s_blockByID.ContainsKey(itemID))
@@ -57,8 +61,7 @@ public class ZombifiedPatches
             ZiMain.log.LogWarning($"Tried to get priority for unmapped item: ({itemID}){itemDataBlock.name} in {itemSlot}");
             return;
         }
-        ZiMain.log.LogInfo($"Getting item pritiy ({itemID}){itemDataBlock.name} in {itemSlot}");
-
+        __result = 0f;
         float basePriority = RootPlayerBotAction.s_itemBasePrios[itemID];
 
         List<PlayerAgent> playerAgentsList = PlayerManager.PlayerAgentsInLevel.ToArray().ToList();
@@ -70,7 +73,7 @@ public class ZombifiedPatches
         int otherAgents = 0;
         foreach (PlayerAgent agent in playerAgentsList)
         {
-            if (agent.CharacterID == __instance.Agent.CharacterID)
+            if (agent.CharacterID == __instance.m_agent.CharacterID)
             {
                 foundMe++;
                 continue;
@@ -115,41 +118,39 @@ public class ZombifiedPatches
         }
         if (foundMe == 0)
         {
-            var alive = __instance.Agent is UnityEngine.Object uObj && uObj;
-            //ZiMain.log.LogError($"Could not find this agent! canceling and returning 0?");
-            //ZiMain.log.LogError($"\nCharID ({__instance.Agent?.CharacterID ?? -1337})");
-            //ZiMain.log.LogError($"\nGlobalID ({(alive ? __instance.Agent.GlobalID : -1337)})");
-            //ZiMain.log.LogError($"\nGameObjectID ({(alive ? __instance.Agent.GameObjectID : -1337)})");
-            //ZiMain.log.LogError($"\nGetInstanceID ({(alive ? __instance.Agent.GetInstanceID() : -1337)})");
-            //ZiMain.log.LogError($"\nGetPriorityID ({(alive ? __instance.Agent.GetPriorityID() : -1337)})");
-            //ZiMain.log.LogError($"\n_CharacterID_k__BackingField ({__instance.Agent?._CharacterID_k__BackingField ?? -1337})");
-            //ZiMain.log.LogError($"\n_GameObjectID_k__BackingField ({__instance.Agent?._GameObjectID_k__BackingField ?? -1337})");
-            zDebug.nofindagent = __instance.Agent;
+            var alive = __instance.m_agent is UnityEngine.Object uObj && uObj;
+            ZiMain.log.LogError($"Could not find this agent! This will probably cause issues. {alive}");
         }
-        //ZiMain.log.LogMessage($"Foundme: {foundMe}");
-        //ZiMain.log.LogMessage($"otherAgents count: {otherAgents}");
-        //ZiMain.log.LogMessage($"highestAmmoCap: {highestAmmoCap}");
-        //ZiMain.log.LogMessage($"currentTotalAmmo: {currentTotalAmmoOfOtherBotsNotThisBot}");
-        //ZiMain.log.LogMessage($"basePriority: {basePriority}");
-        //ZiMain.log.LogMessage($"priorityFloor: {priorityFloor}");
-
+        float maxOtherTotal = -1f;
+        float fillFactor = -1f;
+        float minPriority = -1f;
         if (highestAmmoCap > 0.0f && otherAgents > 0)
         {
 
-            float maxOtherTotal = playerAgentsList.Count * highestAmmoCap;
-            float fillFactor = currentTotalAmmoOfOtherBotsNotThisBot / maxOtherTotal;
-            float minPriority = basePriority * priorityFloor;
-            //ZiMain.log.LogMessage($"maxOtherTotal: {maxOtherTotal}");
-            //ZiMain.log.LogMessage($"fillFactor: {fillFactor}");
-            //ZiMain.log.LogMessage($"minPriority: {minPriority}");
+            maxOtherTotal = playerAgentsList.Count * highestAmmoCap;
+            fillFactor = currentTotalAmmoOfOtherBotsNotThisBot / maxOtherTotal;
+            minPriority = basePriority * priorityFloor;
+
             __result = Mathf.Lerp(basePriority, minPriority, fillFactor);
         }
         else
         {
             __result = basePriority;
         }
-        //ZiMain.log.LogMessage($"Priority: {__result}");
-        newPrio = __result;
+        if (Math.Abs(__result - originalResult) > 5)
+        { 
+            //Leaving this as a prefix for a bit to make sure this actually works.
+            ZiMain.log.LogWarning($"Priority: {__result} vs {originalResult}");
+            ZiMain.log.LogMessage($"Foundme: {foundMe}");
+            ZiMain.log.LogMessage($"otherAgents count: {otherAgents}");
+            ZiMain.log.LogMessage($"highestAmmoCap: {highestAmmoCap}");
+            ZiMain.log.LogMessage($"currentTotalAmmo: {currentTotalAmmoOfOtherBotsNotThisBot}");
+            ZiMain.log.LogMessage($"basePriority: {basePriority}");
+            ZiMain.log.LogMessage($"priorityFloor: {priorityFloor}");
+            ZiMain.log.LogMessage($"maxOtherTotal: {maxOtherTotal}");
+            ZiMain.log.LogMessage($"fillFactor: {fillFactor}");
+            ZiMain.log.LogMessage($"minPriority: {minPriority}");
+        }
         return;
     }
     [HarmonyPatch(typeof(PlayerAIBot), nameof(PlayerAIBot.SetEnabled))]
