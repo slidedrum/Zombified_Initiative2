@@ -33,7 +33,6 @@ public class ZombifiedPatches
         }
         else
         {
-            //unkown agentItem id!
             ZiMain.log.LogError($"Tried to get priority for unknow id: {itemID}");
             return false;
         }
@@ -47,10 +46,9 @@ public class ZombifiedPatches
         float basePriority = RootPlayerBotAction.s_itemBasePrios[itemID];
 
         List<PlayerAgent> playerAgentsList = PlayerManager.PlayerAgentsInLevel.ToArray().ToList();
-        PlayerAgent myAgent = __instance.Agent;
 
         List<PlayerAgent> otherAgents = new (playerAgentsList);
-        otherAgents.Remove(myAgent);
+        otherAgents.Remove(__instance.Agent);
 
         float highestAmmoCap = 0f;
         float currentTotalAmmo = 0f;
@@ -60,49 +58,54 @@ public class ZombifiedPatches
         {
             PlayerBackpack agentBackpack = PlayerBackpackManager.GetBackpack(agent.Owner);
             BackpackItem agentItem = null;
-            if (agentBackpack != null) 
-                agentBackpack.TryGetBackpackItem(itemSlot, out agentItem);
-            if (agentItem != null)
+            if (agentBackpack != null)
+                if (!agentBackpack.TryGetBackpackItem(itemSlot, itemID, out agentItem))
+                    continue;
+            if (agentItem == null)
+                continue;
+            float ammoCap = 1;
+            float agentAmmo = 0;
+            InventorySlotAmmo pack = null;
+            switch (itemSlot)
             {
-                if (agentItem.Instance.ItemDataBlock.persistentID == itemID) //are we looking at the same item?
-                {
-                    float ammoCap = 1;
-                    float agentAmmo = 0;
-                    InventorySlotAmmo pack = null;
-                    switch (itemSlot)
-                    {
-                        case InventorySlot.ResourcePack:
-                            pack = agentBackpack?.AmmoStorage?.ResourcePackAmmo;
-                            priorityFloor = 0.5f;
-                            break;
-                        case InventorySlot.Consumable:
-                            pack = agentBackpack?.AmmoStorage?.ConsumableAmmo;
-                            priorityFloor = 0.25f;
-                            break;
-                        default:
+                case InventorySlot.ResourcePack:
+                    pack = agentBackpack?.AmmoStorage?.ResourcePackAmmo;
+                    priorityFloor = 0.5f;
+                    break;
+                case InventorySlot.Consumable:
+                    pack = agentBackpack?.AmmoStorage?.ConsumableAmmo;
+                    priorityFloor = 0.25f;
+                    break;
+                default:
 
-                            break;
-                    }
-                    if (pack != null)
-                    {
-                        ammoCap = pack.AmmoMaxCap;
-                        agentAmmo = pack.AmmoInPack;
-                    }
-                    else
-                    {
-                        ammoCap = 1;
-                        agentAmmo = 1;
-                    }
-                    highestAmmoCap = Math.Max(ammoCap, highestAmmoCap);
-                    currentTotalAmmo += agentAmmo;
-                }
+                    break;
             }
+            if (pack != null)
+            {
+                ammoCap = pack.AmmoMaxCap;
+                agentAmmo = pack.AmmoInPack;
+            }
+            else
+            {
+                ammoCap = 1;
+                agentAmmo = 1;
+            }
+            highestAmmoCap = Math.Max(ammoCap, highestAmmoCap);
+            currentTotalAmmo += agentAmmo;
         }
+        ZiMain.log.LogMessage($"highestAmmoCap: {highestAmmoCap}");
+        ZiMain.log.LogMessage($"currentTotalAmmo: {currentTotalAmmo}");
+        ZiMain.log.LogMessage($"basePriority: {basePriority}");
+        ZiMain.log.LogMessage($"priorityFloor: {priorityFloor}");
+
         if (highestAmmoCap > 0.0f && otherAgents.Count > 0)
         {
             float maxOtherTotal = otherAgents.Count * highestAmmoCap;
             float fillFactor = currentTotalAmmo / maxOtherTotal;
             float minPriority = basePriority * priorityFloor;
+            ZiMain.log.LogMessage($"maxOtherTotal: {maxOtherTotal}");
+            ZiMain.log.LogMessage($"fillFactor: {fillFactor}");
+            ZiMain.log.LogMessage($"minPriority: {minPriority}");
             __result = Mathf.Lerp(basePriority, minPriority, fillFactor);
         }
         else
