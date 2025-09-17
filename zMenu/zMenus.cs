@@ -30,7 +30,7 @@ namespace ZombieTweak2.zMenu
 
             selectionMenu.AddNode("Toggle all", SelectionToggleAllBots).AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, UpdateIndicatorForNode, selectionMenu.centerNode, botSelection);
             selectionMenu.AddNode("Flip all", SelectionFlipAllBots).AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, UpdateIndicatorForNode, selectionMenu.centerNode, botSelection);
-            UpdateIndicatorForNode(selectionMenu.centerNode, botSelection);
+            //UpdateIndicatorForNode(selectionMenu.centerNode, botSelection);
 
             List<PlayerAIBot> playerAiBots = ZiMain.GetBotList();
             foreach (PlayerAIBot bot in playerAiBots)
@@ -40,7 +40,7 @@ namespace ZombieTweak2.zMenu
                 botSelection[id] = true;
                 zMenu.zMenuNode node = selectionMenu.AddNode(bot.m_playerAgent.PlayerName,toggleBotSelection, bot);
                 selectionBotNodes[id] = node;
-                updateColorBaesdOnSelection(node, bot);
+                //updateColorBaesdOnSelection(node, bot);
                 node.AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, updateColorBaesdOnSelection, node, bot);
                 node.AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, UpdateIndicatorForNode, selectionMenu.centerNode, botSelection);
                 node.parrentMenu.AddListener(zMenuManager.menuEvent.OnOpened, updateColorBaesdOnSelection, node, bot);
@@ -48,7 +48,7 @@ namespace ZombieTweak2.zMenu
             var pickupNode = permissionMenu.AddNode("Pickups", zSlideComputer.TogglePickupPermission);
             pickupNode.AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, UpdateIndicatorForNode, pickupNode, zSlideComputer.PickUpPerms);
             permissionMenu.AddListener(zMenuManager.menuEvent.OnOpened, UpdateIndicatorForNode, permissionMenu.centerNode, botSelection);
-            UpdateIndicatorForNode(permissionMenu.centerNode, botSelection);
+            //UpdateIndicatorForNode(permissionMenu.centerNode, botSelection);
         }
         public static zMenu.zMenuNode UpdateIndicatorForNode(zMenu.zMenuNode node, Dictionary<int, bool> selectionPickUpPerms)
         {

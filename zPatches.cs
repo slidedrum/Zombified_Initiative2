@@ -35,11 +35,8 @@ public class ZombifiedPatches
     [HarmonyPostfix]
     public static void GetItemPrio(RootPlayerBotAction __instance, InventorySlot itemSlot, uint itemID, ref float __result)
     {
-        //This is supposed to be a full prefix replacement where the original method never runs.
-        //But for some reason the output is not re-created perfectly.  That would't be a big deal honestly.
-        //Except for the fact that it causes bots to constantly pick up/put down items in a loop.
-        //So instead I only run my custom logic as a fallback.
-        //This approach still allows me to support arbitrary item pickups not normally in the list, without breaking the logic.
+        //This is a full re-implentation of the original method.  But without the hard coded values.
+        //This approach allows me to support arbitrary item pickups not normally in the list, without breaking the logic.
         //Theoretically if there are a bunch of new items in the list, they could get into a "hot potato" loop.  but I'm calling that a "known shippable" for now.
         var originalResult = __result;
         __result = 0f;
