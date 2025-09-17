@@ -70,5 +70,10 @@ namespace ZombieTweak2.zNetworking
             pItemData pStruct = refrence.Get_pItemData();
             return pStruct;
         }
+
+        public struct pBotSelections
+        {
+            public long data;
+        }
     }
 }

@@ -2,12 +2,15 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ZombieTweak2.zMenu;
 using Zombified_Initiative;
+using static Zombified_Initiative.ZiMain;
 
 namespace ZombieTweak2.zNetworking
 {
     public class zNetworking
     { //This class will handle all incoming and outgoing network requests.
+        public static Dictionary<int, bool> botSelections = new Dictionary<int, bool>();
         public static long EncodeBotSelectionForNetwork(Dictionary<int, bool> botSelection)
         {
             //this method is AI generated, but I fully understand what it's doing.  I just didn't know how to do bitwise ops.
@@ -61,8 +64,13 @@ namespace ZombieTweak2.zNetworking
                     break;
                 }
             }
-
             return botSelection;
+        }
+        public static void reciveTogglePickupPermission(ulong sender, pStructs.pBotSelections info)
+        {
+            ZiMain.log.LogInfo($"Recived toggle perm wiht pbotsends {info.data}");
+            botSelections = DecodeBotSelectionFromNetwork(info.data);
+            zSlideComputer.TogglePickupPermission(botSelections); //this works, it's downstream.
         }
     }
 }

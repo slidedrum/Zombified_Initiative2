@@ -5,6 +5,8 @@ using Player;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using ZombieTweak2.zMenu;
+using ZombieTweak2.zNetworking;
 using Zombified_Initiative;
 
 namespace ZombieTweak2
@@ -111,6 +113,15 @@ namespace ZombieTweak2
                 return ItemDataBlock.s_blockByID[id];
             }
             return null;
+        }
+        private static pStructs.pBotSelections testSend = new pStructs.pBotSelections();
+        private static void setuppBotSelectionsForTest()
+        {
+            testSend.data = zNetworking.zNetworking.EncodeBotSelectionForNetwork(zMenus.botSelection);
+        }
+        private static void TestReciveTogglePickupPermission()
+        {
+            zNetworking.zNetworking.reciveTogglePickupPermission(0, testSend);
         }
 
     }
