@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.UIElements;
+using ZombieTweak2.zMenu;
 using Zombified_Initiative;
 
 namespace ZombieTweak2
@@ -18,7 +19,7 @@ namespace ZombieTweak2
         public static Il2CppSystem.Collections.Generic.Dictionary<uint,float> itemPrios = new ();
         public static Il2CppSystem.Collections.Generic.Dictionary<uint, float> zerodItemPrios = new ();
         public static Il2CppSystem.Collections.Generic.Dictionary<uint, float> OriginalItemPrios = new();
-        public static Dictionary<int, bool> PickUpPerms = new ();
+        public static Dictionary<int, bool> PickUpPerms = new (); //bot.Agent.Owner.PlayerSlotIndex()
         private static Il2CppReferenceArray<ItemDataBlock> consumableItems;
         private static List<string> consumableItemPublicNames;
         private static List<string> consumableItemNames;
@@ -44,7 +45,7 @@ namespace ZombieTweak2
             List<PlayerAIBot> playerAiBots = ZiMain.GetBotList();
             foreach (PlayerAIBot bot in playerAiBots)
             {
-                PickUpPerms[bot.GetInstanceID()] = true;
+                PickUpPerms[bot.Agent.Owner.PlayerSlotIndex()] = true;
             }
         }
         public static void FirstTimeSetup()
@@ -76,7 +77,6 @@ namespace ZombieTweak2
             }
             return botItems;
         }
-
         public static string ConvertItemPublicName(string name)
         {
             if (consumableItemNames.Contains(name))
@@ -136,46 +136,142 @@ namespace ZombieTweak2
             }
             return false;
         }
-        public static void FlipPickupPermission(List<PlayerAIBot> botSelection, bool allowed)
+        //Using bot.Agent.Owner.PlayerSlotIndex() as a key is good for transfering over network.
+        //Issues may arrise when the number of bots changes mid mission.  
+        //TODO handle that
+        public static void FlipPickupPermission()
         {
-            foreach (PlayerAIBot bot in botSelection)
+            foreach (var bot in zMenus.botSelection)
             {
-                SetPickupPermissions(bot,!GetPickupPermission(bot));
+                if (!bot.Value) //unselected, ignore.
+                    continue;
+                TogglePickupPermission(bot.Key);
             }
         }
-        public static void TogglePickupPermission(List<PlayerAIBot> botSelection, bool allowed)
+        public static void FlipPickupPermission(List<int> idList)
         {
-            var unselectedCount = 0;
-            var selectedCount = 0;
-            foreach (PlayerAIBot bot in botSelection)
+            foreach (int id in idList)
             {
-                if (GetPickupPermission(bot))
-                    selectedCount++;
-                else
-                    unselectedCount++;
-            }
-            bool majority = selectedCount > unselectedCount;
-            foreach (PlayerAIBot bot in botSelection)
-            {
-                SetPickupPermissions(bot, !majority);
+                SetPickupPermission(id, !GetPickupPermission(id));
             }
         }
-        public static void SetPickupPermission(List<PlayerAIBot> botSelection, bool allowed)
+        public static void FlipPickupPermission(List<PlayerAIBot> botList)
+        {
+            foreach (PlayerAIBot bot in botList)
+            {
+                SetPickupPermission(bot,!GetPickupPermission(bot));
+            }
+        }
+        public static void FlipPickupPermission(Dictionary<int, bool> botSelection)
         {
             foreach (var bot in botSelection)
-                SetPickupPermission(bot.GetInstanceID(), allowed);
+            {
+                if (!bot.Value) //unselected, ignore.
+                    continue;
+                TogglePickupPermission(bot.Key);
+            }
         }
-        public static void SetPickupPermissions(PlayerAIBot bot, bool allowed)
+        public static void TogglePickupPermission()
+        { 
+            var botSelection = zMenus.botSelection;
+            TogglePickupPermission(botSelection);
+        }
+        public static void TogglePickupPermission(int id)
         {
-            SetPickupPermission(bot.GetInstanceID(), allowed);
+            SetPickupPermission(id, !GetPickupPermission(id));
+        }
+        public static void TogglePickupPermission(List<int> idList)
+        {
+            var dissabledCount = 0;
+            var enabledCount = 0;
+            foreach (int id in idList)
+            {
+                if (GetPickupPermission(id))
+                    enabledCount++;
+                else
+                    dissabledCount++;
+            }
+            bool majority = enabledCount > dissabledCount;
+            foreach (int id in idList)
+            {
+                SetPickupPermission(id, !majority);
+            }
+        }
+        public static void TogglePickupPermission(List<PlayerAIBot> botList)
+        {
+            var dissabledCount = 0;
+            var enabledCount = 0;
+            foreach (PlayerAIBot bot in botList)
+            {
+                if (GetPickupPermission(bot))
+                    enabledCount++;
+                else
+                    dissabledCount++;
+            }
+            bool majority = enabledCount > dissabledCount;
+            foreach (PlayerAIBot bot in botList)
+            {
+                SetPickupPermission(bot, !majority);
+            }
+        }
+        public static void TogglePickupPermission(Dictionary<int, bool> botSelection)
+        {
+            var dissabledCount = 0;
+            var enabledCount = 0;
+            foreach (var bot in botSelection)
+            {
+                if (!bot.Value) //unselected, ignore.
+                    continue;
+                if (GetPickupPermission(bot.Key))
+                    enabledCount++;
+                else
+                    dissabledCount++;
+            }
+            bool majority = enabledCount > dissabledCount;
+            foreach (var bot in botSelection)
+            {
+                if (!bot.Value) //unselected, ignore.
+                    continue;
+                SetPickupPermission(bot.Key,!majority);
+            }
         }
         public static void SetPickupPermission(int id, bool allowed)
         {
+            ZiMain.log.LogMessage($"Setting pickup perm for id {id} to {allowed}");
             PickUpPerms[id] = allowed;
+        }
+        public static void SetPickupPermission(PlayerAIBot bot, bool allowed)
+        {
+            SetPickupPermission(bot.Agent.Owner.PlayerSlotIndex(), allowed);
+        }
+        public static void SetPickupPermission(List<int> idList, bool allowed)
+        {
+            foreach (int id in idList)
+                SetPickupPermission(id, allowed);
+        }
+        public static void SetPickupPermission(List<PlayerAIBot> botList, bool allowed)
+        {
+            foreach (var bot in botList)
+                SetPickupPermission(bot.Agent.Owner.PlayerSlotIndex(), allowed);
         }
         public static bool GetPickupPermission(PlayerAIBot bot)
         {
-            return PickUpPerms[bot.GetInstanceID()];
+            if (bot == null)
+            {
+                ZiMain.log.LogError($"Can't get pickup perms when bot is null");
+                return true;
+            }
+            if (bot.Agent == null) 
+            { 
+                ZiMain.log.LogError($"Can't get pickup perms when Agent is null");
+                return true; 
+            }
+            if (bot.Agent.Owner == null) 
+            {
+                ZiMain.log.LogError($"Can't get pickup perms when Owner is null");
+                return true; 
+            }
+            return PickUpPerms[bot.Agent.Owner.PlayerSlotIndex()];
         }
         public static bool GetPickupPermission(int id)
         {
@@ -184,7 +280,5 @@ namespace ZombieTweak2
             ZiMain.log.LogWarning($"Unknown bot asked for pickup perms id:{id}.");
             return false;
         }
-
-
     }
 }

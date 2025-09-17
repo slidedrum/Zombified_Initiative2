@@ -228,7 +228,7 @@ namespace ZombieTweak2.zMenu
                 onClose = new FlexibleMethodDefinition(arg_ParrentMenu.Open);
             else
                 onClose = new FlexibleMethodDefinition(Close);
-            centerNode = new zMenuNode(arg_ParrentMenu != null ? arg_ParrentMenu.name : "Close", this, onClose).SetTitle(name);
+            centerNode = new zMenuNode(name, this, onClose).SetTitle(arg_ParrentMenu != null ? arg_ParrentMenu.name : "Close");
             parrentMenu = arg_ParrentMenu;
             Close();
             eventMap = new Dictionary<zMenuManager.menuEvent, FlexibleEvent>(){ //I think all invokes are covered?  Might be missing one.
@@ -479,6 +479,18 @@ namespace ZombieTweak2.zMenu
             RegisterNode(node);
             return node;
         }
+        public zMenuNode GetNode(string nodeName)
+        {
+            foreach (zMenuNode node in allNodes)
+            {
+                if (node.text == nodeName)
+                {
+                    return node;
+                }
+            }
+            ZiMain.log.LogError($"Node {nodeName} not found in menu {name}");
+            return null;
+        }
         public zMenu RegisterNode(zMenuNode node)
         {
             nodes.Add(node);
@@ -497,8 +509,6 @@ namespace ZombieTweak2.zMenu
         {
             return canvas;
         }
-
-
     }
     public class OrderedSet<T> : IEnumerable<T>, IEnumerable
     {

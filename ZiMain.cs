@@ -23,10 +23,11 @@ using ZombieTweak2.zMenu;
 //todo make smart select pick up turrets
 //todo fix bot extra data only updating when you look away
 //todo track down KeyNotFoundException: The given key was not present in the dictionary.
+//todo move methods arround to other classes that make more sense
 
-//todo refactor PlayConfirmSound hook to not be so dumb
+//todo refactor PlayConfirmSound hook to not be so dumb -- probably just going to remvoe support for q menu
 
-//want to make custom blacklist pickups
+//want to make custom blacklist pickups - IN PROGRESS
 //want to fix attack not always working
 //want to make attack wake room sometimes
 //want to make "clear room" command

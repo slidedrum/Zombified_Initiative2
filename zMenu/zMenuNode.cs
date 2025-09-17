@@ -110,16 +110,16 @@ namespace ZombieTweak2.zMenu
             public TextPart descriptionPart;
             public RectTransform rect;
             public GameObject gameObject;
-            public Color color;
+            public UnityEngine.Color color;
 
             //settings
             private float tapThreshold = 0.1f;
             private float holdThreshold = 0.2f;
 
-            public zMenuNode(string arg_Name, zMenu arg_Menu, FlexibleMethodDefinition arg_Callback)
+            public zMenuNode(string arg_Name, zMenu arg_parrentMenu, FlexibleMethodDefinition arg_Callback)
             {
                 gameObject = new GameObject($"zMenuNode {arg_Name}");
-                gameObject.transform.SetParent(arg_Menu.getCanvas().transform, false);
+                gameObject.transform.SetParent(arg_parrentMenu.getCanvas().transform, false);
 
                 rect = gameObject.AddComponent<RectTransform>();
                 rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
@@ -127,7 +127,7 @@ namespace ZombieTweak2.zMenu
                 rect.localScale = Vector3.one;
                 rect.sizeDelta = new Vector2(300, 0);
 
-                parrentMenu = arg_Menu;
+                parrentMenu = arg_parrentMenu;
                 if (arg_Callback != null) OnUnpressedSelected.Listen(arg_Callback);
                 color = parrentMenu.getTextColor();
 
@@ -143,9 +143,9 @@ namespace ZombieTweak2.zMenu
                 fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
                 fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
 
-                titlePart = new TextPart(this, $"{title}").SetScale(0.75f, 0.75f);
+                titlePart = new TextPart(this, $"{title}").SetScale(0.50f, 0.50f).SetColor(new Color(0.2f, 0.2f, 0.2f, 1f));
                 fullTextPart = new TextPart(this, $"{text}");
-                subtitlePart = new TextPart(this, $"{title}").SetScale(0.75f, 0.75f);
+                subtitlePart = new TextPart(this, $"{title}").SetScale(0.25f, 0.25f).SetColor(new Color(0.1f, 0.1f, 0.1f, 1f));
                 descriptionPart = new TextPart(this, description);
 
                 text = arg_Name;
@@ -217,7 +217,7 @@ namespace ZombieTweak2.zMenu
                 rect.localScale = scale;
                 return this;
             }
-            public zMenuNode SetClose(bool close)
+            public zMenuNode SetCloseMenuOnPress(bool close)
             {
                 closeOnPress = close;
                 return this;
@@ -372,7 +372,7 @@ namespace ZombieTweak2.zMenu
                 suffix = arg_Suffix ?? string.Empty;
                 return this;
             }
-            public zMenuNode SetColor(Color arg_Color)
+            public zMenuNode SetColor(UnityEngine.Color arg_Color)
             {
                 List<TextPart> textParts = GetTextParts();
                 foreach (TextPart part in textParts) 
