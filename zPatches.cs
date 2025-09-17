@@ -48,7 +48,9 @@ public class ZombifiedPatches
         List<PlayerAgent> playerAgentsList = PlayerManager.PlayerAgentsInLevel.ToArray().ToList();
 
         List<PlayerAgent> otherAgents = new (playerAgentsList);
-        otherAgents.Remove(__instance.Agent);
+        otherAgents = otherAgents.Where(a => a != null && a.CharacterID != __instance.Agent.CharacterID).ToList();
+        ZiMain.log.LogInfo($"count {otherAgents.Count}");
+        //otherAgents.Remove(__instance.Agent);  //this doesn't work for some stupid dang reason
 
         float highestAmmoCap = 0f;
         float currentTotalAmmo = 0f;
@@ -93,6 +95,7 @@ public class ZombifiedPatches
             highestAmmoCap = Math.Max(ammoCap, highestAmmoCap);
             currentTotalAmmo += agentAmmo;
         }
+        ZiMain.log.LogMessage($"otherAgents count: {otherAgents.Count}");
         ZiMain.log.LogMessage($"highestAmmoCap: {highestAmmoCap}");
         ZiMain.log.LogMessage($"currentTotalAmmo: {currentTotalAmmo}");
         ZiMain.log.LogMessage($"basePriority: {basePriority}");
@@ -107,6 +110,7 @@ public class ZombifiedPatches
             ZiMain.log.LogMessage($"fillFactor: {fillFactor}");
             ZiMain.log.LogMessage($"minPriority: {minPriority}");
             __result = Mathf.Lerp(basePriority, minPriority, fillFactor);
+            ZiMain.log.LogMessage($"Priority: {__result}");
         }
         else
         {
