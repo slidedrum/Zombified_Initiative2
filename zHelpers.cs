@@ -1,20 +1,8 @@
-﻿using Player;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using TMPro;
-using UnityEngine;
-using UnityEngine.UI;
-using Zombified_Initiative;
 namespace ZombieTweak2
 {
-    public static class Default
-    {
-        //This was added by an AI, not 100% sure why it's needed. ¯\_(ツ)_/¯
-        //but I don't understand it enough to get rid of it (yet).
-        public static readonly object Value = new object();
-    }
     public class FlexibleMethodDefinition
     {
         // This is a mostly AI generated class.
@@ -43,9 +31,9 @@ namespace ZombieTweak2
         // This is a mostly AI generated class.
         // This is a much more easy to use version of action that handles return types, arbitrary argument types and ammounts.
 
-        private readonly OrderedSet<Action> listeners = new();//this used to be a list, but I think hash set is better.
-                                                           //if you need to do the same thing twice, do it inside your own method.
-                                                           //Don't add the same callback twice.
+        private readonly OrderedSet<Action> listeners = new();//this used to be a list, but I think OrderedSet is better.
+                                                              //if you need to do the same thing twice, do it inside your own method.
+                                                              //Don't add the same callback twice.
         public void Listen(Action method)
         {
             if (method == null) return;
@@ -159,5 +147,11 @@ namespace ZombieTweak2
         IEnumerator IEnumerable.GetEnumerator() => _list.GetEnumerator();
 
         public List<T> ToList() => new(_list);
+    }
+    public static class Default
+    {
+        //This was added by an AI, not 100% sure why it's needed. ¯\_(ツ)_/¯
+        //but I don't understand it enough to get rid of it (yet).
+        public static readonly object Value = new object();
     }
 }
