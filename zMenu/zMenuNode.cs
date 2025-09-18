@@ -315,22 +315,17 @@ namespace ZombieTweak2.zMenu
                     if (Time.time - timeFirstPressedAt < holdThreshold)
                     {
                         ZiMain.log.LogInfo(fullText + "was tapped");
-                        
+                        OnTapped.Invoke();
                         if (Time.time - lastTapTime <= doubleTapThreshold)
                         {
-                            // DOUBLE TAP
                             ZiMain.log.LogInfo(fullText + "was double tapped!");
                             OnDoubleTapped.Invoke();
-                            lastTapTime = Time.time;
                         }
                         else
                         {
-                            // First tap
-                            OnTapped.Invoke();
-                            lastTapTime = Time.time;
-                            // Schedule check after threshold
                             zUpdater.InvokeStatic(new FlexibleMethodDefinition(InvokeTappedExclusive), doubleTapThreshold - (Time.deltaTime / 2));
                         }
+                        lastTapTime = Time.time;
                     }
                 }
                 held = false;
@@ -342,7 +337,7 @@ namespace ZombieTweak2.zMenu
                 // If no second tap happened (lastTapTime is still within threshold window)
                 if (Time.time - lastTapTime >= doubleTapThreshold - Time.deltaTime && !pressed)
                 {
-                    ZiMain.log.LogInfo(fullText + " was single tapped!");
+                    ZiMain.log.LogInfo(fullText + "was single tapped!");
                     OnTappedExclusive.Invoke();
                 }
             }
