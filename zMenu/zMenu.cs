@@ -27,6 +27,7 @@ namespace ZombieTweak2.zMenu
             }
         }
         public OrderedSet<zMenuNode> nodes { get; private set; }
+        public OrderedSet<zMenuNode> dissabledNodes { get; private set; }
         public  zMenuNode centerNode { get; private set; }
         private zMenu _parrentMenu;
         internal int frameOpenedAt = Time.frameCount;
@@ -318,6 +319,28 @@ namespace ZombieTweak2.zMenu
                 flexEvent.ClearListeners();
             }
             return this;
+        }
+        public void DissableNode(string nodeText)
+        {
+            var nodeToDissable = nodes.FirstOrDefault(n => n.text == nodeText);
+            if (nodeToDissable != null)
+            {
+                nodes.Remove(nodeToDissable);
+                nodeToDissable.gameObject.SetActive(false);
+            }
+            else
+                ZiMain.log.LogWarning($"Could not find node {nodeText} to dissable from {name} menu");
+        }
+        public void EnableNode(string nodeText)
+        {
+            var nodeToEnable = dissabledNodes.FirstOrDefault(n => n.text == nodeText);
+            if (nodeToEnable != null)
+            {
+                dissabledNodes.Add(nodeToEnable);
+                nodeToEnable.gameObject.SetActive(true);
+            }
+            else
+                ZiMain.log.LogWarning($"Could not find node {nodeText} to enable from {name} menu");
         }
         public zMenuNode AddNode(zMenu menu)
         {
