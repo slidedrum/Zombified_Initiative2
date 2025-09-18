@@ -115,7 +115,8 @@ namespace ZombieTweak2.zMenu
             private TextPart subtitlePart;
             private TextPart descriptionPart;
             private RectTransform rect;
-            private Color _color; // backing field
+            private SelectionColorHandler selectionColorHandler;
+            private Color _color;
             public Color color
             {
                 get => _color;
@@ -128,7 +129,7 @@ namespace ZombieTweak2.zMenu
                 }
             }
 
-            private Color _colorOffset; // backing field
+            private Color _colorOffset;
             public Color ColorOffset
             {
                 get => _colorOffset;
@@ -137,7 +138,7 @@ namespace ZombieTweak2.zMenu
                     var oldValue = _colorOffset;
                     _colorOffset = value;
                     if (oldValue != value)
-                        I_SetColor(_color); // use _color, not _colorOffset
+                        I_SetColor(_color);
                 }
             }
             public GameObject gameObject;
@@ -200,6 +201,14 @@ namespace ZombieTweak2.zMenu
                     { zMenuManager.nodeEvent.OnHeldImmediate, OnHeldImmediate },
                     { zMenuManager.nodeEvent.OnHeldImmediateSelected, OnHeldImmediateSelected },
                 };
+
+                selectionColorHandler = new SelectionColorHandler(this);
+                AddListener(zMenuManager.nodeEvent.OnSelected, selectionColorHandler.onSelected);
+                AddListener(zMenuManager.nodeEvent.OnDeselected, selectionColorHandler.OnDeselected);
+                AddListener(zMenuManager.nodeEvent.OnPressed, selectionColorHandler.OnPressed);
+                AddListener(zMenuManager.nodeEvent.OnUnpressed, selectionColorHandler.OnUnpressed);
+
+
             }
             public zMenuNode Update()
             {
@@ -282,6 +291,7 @@ namespace ZombieTweak2.zMenu
             }
             public zMenuNode Select()
             {
+                if (selected) return this;
                 selected = true;
                 SetSize(1.5f);
                 OnSelected.Invoke();
@@ -290,6 +300,7 @@ namespace ZombieTweak2.zMenu
             }
             public zMenuNode Deselect()
             {
+                if (!selected) return this;
                 selected = false;
                 SetSize(1f);
                 OnDeselected.Invoke();
@@ -502,32 +513,45 @@ namespace ZombieTweak2.zMenu
             private class SelectionColorHandler
             {
                 private zMenuNode node;
+                private bool selected = false;
+                private bool pressed = false;
+                private static Color selectedOffset = new Color(-0.1f, -0.1f, -0.1f);
+                private static Color pressedOffset = new Color(0.3f, 0.2f, 0.5f);
+
                 public SelectionColorHandler(zMenuNode Node)
                 {
                     node = Node;
                 }
-                public static Color AdjustBrightness(Color color, float amount)
-                {
-                    float r = Mathf.Clamp01(color.r + amount);
-                    float g = Mathf.Clamp01(color.g + amount);
-                    float b = Mathf.Clamp01(color.b + amount);
-                    return new Color(r, g, b, color.a);
-                }
-                protected void onSelected()
-                {
-                    //node.SetColor(node)
-                }
-                protected void OnDeselected()
-                {
 
-                }
-                protected void OnPressed()
+                internal void onSelected()
                 {
-
+                    selected = true;
+                    UpdateOffset();
                 }
-                protected void OnUnpressed()
-                {
 
+                internal void OnDeselected()
+                {
+                    selected = false;
+                    UpdateOffset();
+                }
+
+                internal void OnPressed()
+                {
+                    pressed = true;
+                    UpdateOffset();
+                }
+
+                internal void OnUnpressed()
+                {
+                    pressed = false;
+                    UpdateOffset();
+                }
+
+                private void UpdateOffset()
+                {
+                    node.ColorOffset = new Color(0,0,0);
+                    if (selected) node.ColorOffset += selectedOffset;
+                    if (pressed) node.ColorOffset += pressedOffset;
                 }
             }
         }

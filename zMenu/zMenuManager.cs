@@ -98,11 +98,11 @@ namespace ZombieTweak2.zMenu
                     }
                     foreach (zMenu.zMenuNode node in nodeDict.Values)
                     {
-                        if (node == selectedNode)
+                        if (node == selectedNode && !node.selected)
                         {
                             node.Select();
                         }
-                        else
+                        if (node != selectedNode && node.selected)
                         {
                             node.Deselect();
                         }

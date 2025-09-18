@@ -38,8 +38,8 @@ namespace ZombieTweak2.zMenu
                 _parrentMenu = value;
                 if (value != null)
                 {
-                    centerNode.ClearListeners(zMenuManager.nodeEvent.OnPressed);
-                    centerNode.AddListener(zMenuManager.nodeEvent.OnPressed, _parrentMenu.Open);
+                    centerNode.ClearListeners(zMenuManager.nodeEvent.OnUnpressedSelected);
+                    centerNode.AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, _parrentMenu.Open);
                 }
             } 
         }
@@ -201,7 +201,7 @@ namespace ZombieTweak2.zMenu
             textRect.offsetMin = Vector2.zero;
             textRect.offsetMax = Vector2.zero;
         }
-        public void setupCanvas()
+        private void setupCanvas()
         {
             if (canvas) return;
             GameObject canvasGO = new GameObject("Canvas");

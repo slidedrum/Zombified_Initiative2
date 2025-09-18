@@ -71,7 +71,7 @@ namespace ZombieTweak2.zMenu
                     fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
                     fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
 
-                    TMP_FontAsset font = Resources.Load<TMP_FontAsset>("ShareTechMono-Regular_TMPro");
+                    TMP_FontAsset font = GameObject.Find("GUI/CellUI_Camera(Clone)/WatermarkLayer/MovementRoot/PUI_Watermark(Clone)/Text").GetComponent<TextMeshPro>().font;
                     textMesh.font = font;
                     text = arg_Text;
                 }
