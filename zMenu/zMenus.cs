@@ -30,28 +30,33 @@ namespace ZombieTweak2.zMenu
 
             selectionMenu.AddNode("Toggle all", SelectionToggleAllBots).AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, UpdateIndicatorForNode, selectionMenu.centerNode, botSelection);
             selectionMenu.AddNode("Flip all", SelectionFlipAllBots).AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, UpdateIndicatorForNode, selectionMenu.centerNode, botSelection);
-            //UpdateIndicatorForNode(selectionMenu.centerNode, botSelection);
-
+            
             List<PlayerAIBot> playerAiBots = ZiMain.GetBotList();
-            foreach (PlayerAIBot bot in playerAiBots)
+            foreach (PlayerAIBot bot in playerAiBots.AsEnumerable().Reverse())
             {
                 string botName = bot.m_playerAgent.PlayerName;
                 int id = bot.Agent.Owner.PlayerSlotIndex();
-                botSelection[id] = true;
                 zMenu.zMenuNode node = selectionMenu.AddNode(bot.m_playerAgent.PlayerName,toggleBotSelection, bot);
                 selectionBotNodes[id] = node;
-                //updateColorBaesdOnSelection(node, bot);
                 node.AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, updateColorBaesdOnSelection, node, bot);
                 node.AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, UpdateIndicatorForNode, selectionMenu.centerNode, botSelection);
                 node.parrentMenu.AddListener(zMenuManager.menuEvent.OnOpened, updateColorBaesdOnSelection, node, bot);
             }
-            var pickupNode = permissionMenu.AddNode("Pickups", zSlideComputer.TogglePickupPermission);
-            pickupNode.AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, UpdateIndicatorForNode, pickupNode, zSlideComputer.PickUpPerms);
+            foreach (PlayerAIBot bot in playerAiBots)
+            {
+                int id = bot.Agent.Owner.PlayerSlotIndex();
+                botSelection[id] = true;
+            }
+
+            var pickupNode = permissionMenu.AddNode("Pickups").AddListener(zMenuManager.nodeEvent.OnTapped, zSlideComputer.TogglePickupPermission);
+            pickupNode.AddListener(zMenuManager.nodeEvent.OnTapped, UpdateIndicatorForNode, pickupNode, zSlideComputer.PickUpPerms);
+            selectionMenu.AddListener(zMenuManager.menuEvent.OnOpened, UpdateIndicatorForNode, selectionMenu.centerNode, botSelection);
             permissionMenu.AddListener(zMenuManager.menuEvent.OnOpened, UpdateIndicatorForNode, permissionMenu.centerNode, botSelection);
-            //UpdateIndicatorForNode(permissionMenu.centerNode, botSelection);
+            permissionMenu.AddListener(zMenuManager.menuEvent.OnOpened, UpdateIndicatorForNode, pickupNode, zSlideComputer.PickUpPerms);
         }
         public static zMenu.zMenuNode UpdateIndicatorForNode(zMenu.zMenuNode node, Dictionary<int, bool> selectionPickUpPerms)
         {
+            ZiMain.log.LogInfo($"Updatin selections for node {node.text}");
             string endcolor = "</color>";
             string enabledColor = "<color=#FFA50066>";
             string dissabledColor = "<color=#CCCCCC66>";
@@ -75,7 +80,6 @@ namespace ZombieTweak2.zMenu
                     sbSubtitle += ']';
             }
             node.subtitle = sbSubtitle;
-            return node;
             return node;
         }
         public static zMenu.zMenuNode updateColorBaesdOnSelection(zMenu.zMenuNode node, PlayerAIBot bot)
