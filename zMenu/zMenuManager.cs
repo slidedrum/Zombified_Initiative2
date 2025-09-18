@@ -19,6 +19,7 @@ namespace ZombieTweak2.zMenu
         public static zMenu currentMenu { get; internal set; }
         private static zMenu.zMenuNode selectedNode;
         public static FPSCamera mainCamera;
+        private static bool menuWasOpen = false;
         public static Color defaultColor { get; private set; } = new Color(0.25f, 0.25f, 0.25f, 1f);
         public enum nodeEvent
         {
@@ -40,6 +41,7 @@ namespace ZombieTweak2.zMenu
             OnHeldSelected,
             WhileHeldSelected,
             OnHeldImmediateSelected,
+            OnTappedExclusive,
         }
         public enum menuEvent
         {
@@ -79,13 +81,15 @@ namespace ZombieTweak2.zMenu
         }
         public static void Update()
         {
-            playerInControll = FocusStateManager.CurrentState == eFocusState.FPS || FocusStateManager.CurrentState == eFocusState.Dead;
+            playerInControll = FocusStateManager.CurrentState == eFocusState.FPS || FocusStateManager.CurrentState == eFocusState.Dead || FocusStateManager.CurrentState == eFocusState.FPS_CommunicationDialog;
             if (playerInControll)
             {
-
                 bool menuOpen = currentMenu != null;
                 if (menuOpen)
                 {
+                    menuWasOpen = true;
+                    if (FocusStateManager.CurrentState != eFocusState.FPS_CommunicationDialog)
+                        CloseAllMenues();
                     Dictionary<GameObject, zMenu.zMenuNode> nodeDict = new(currentMenu.nodes.Count + 1);
                     foreach (var node in currentMenu.allNodes)
                     {
@@ -120,6 +124,11 @@ namespace ZombieTweak2.zMenu
                         else if (zSearch.GetClosestObjectInLookDirection(mainCamera.transform, nodeList, 20f) == null) //close if we're not looking near a node with a wider tolerance.
                             CloseAllMenues();
                     }
+                }
+                else if (FocusStateManager.CurrentState == eFocusState.FPS_CommunicationDialog && menuWasOpen)
+                {
+                    menuWasOpen = false;
+                    FocusStateManager.ChangeState(FocusStateManager.PreviousState);
                 }
                 if (Input.GetKey(KeyCode.M))
                 {

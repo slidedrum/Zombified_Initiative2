@@ -200,6 +200,7 @@ namespace ZombieTweak2.zMenu
                     { zMenuManager.nodeEvent.WhileHeldSelected, WhileHeldSelected },
                     { zMenuManager.nodeEvent.OnHeldImmediate, OnHeldImmediate },
                     { zMenuManager.nodeEvent.OnHeldImmediateSelected, OnHeldImmediateSelected },
+                    { zMenuManager.nodeEvent.OnTappedExclusive, OnTappedExclusive },
                 };
 
                 selectionColorHandler = new SelectionColorHandler(this);
@@ -325,12 +326,11 @@ namespace ZombieTweak2.zMenu
                     }
                     else
                     {
-                        ZiMain.log.LogInfo(fullText + "was held");
+                        ZiMain.log.LogInfo(fullText + " was held");
                         held = true;
                         if (selected)
                             OnHeldImmediateSelected.Invoke();
-                        else
-                            OnHeldImmediate.Invoke();
+                        OnHeldImmediate.Invoke();
                     }
                 }
                 return this;

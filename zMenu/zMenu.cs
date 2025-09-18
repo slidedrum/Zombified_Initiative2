@@ -32,9 +32,9 @@ namespace ZombieTweak2.zMenu
         private zMenu _parrentMenu;
         internal int frameOpenedAt = Time.frameCount;
         internal float timeOpenedAt = Time.time;
-        private zMenu parrentMenu { 
+        public zMenu parrentMenu { 
             get => _parrentMenu; 
-            set 
+            private set 
             {
                 _parrentMenu = value;
                 if (value != null)
@@ -129,6 +129,7 @@ namespace ZombieTweak2.zMenu
         }
         public zMenu Open()
         {
+            FocusStateManager.ChangeState(eFocusState.FPS_CommunicationDialog);
             timeOpenedAt = Time.time;
             frameOpenedAt = Time.frameCount;
             if (!zMenuManager.menues.Contains(this))

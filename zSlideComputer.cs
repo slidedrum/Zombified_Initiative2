@@ -56,8 +56,8 @@ namespace ZombieTweak2
         private static List<string> _consumableItemNames;
 
 
-        private static List<string> fullGlowStickNames;
-        private static List<string> shortGlowStickNames;
+        public static List<string> fullGlowStickNames { get; private set; }
+        public static List<string> shortGlowStickNames { get; private set; }
 
         public static void Init()
         {
@@ -106,6 +106,13 @@ namespace ZombieTweak2
                 }
             }
             return 0f;
+        }
+        public static void ResetAllItemPrio()
+        {
+            foreach (var kvp in OriginalItemPrios)
+            {
+                itemPrios[kvp.Key] = kvp.Value;
+            }
         }
         public static void ResetItemPrio(uint itemID)
         {
