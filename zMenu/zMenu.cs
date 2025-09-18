@@ -31,7 +31,7 @@ namespace ZombieTweak2.zMenu
             WhileSelected,
             OnDeselected,
             WhileDeselected,
-            OnDoulbePressed, //TODO
+            OnDoubleTapped, //TODO
             OnTapped,
             OnHeld,
             WhileHeld,

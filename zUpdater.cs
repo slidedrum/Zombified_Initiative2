@@ -1,4 +1,6 @@
-﻿using System;
+﻿using BepInEx.Unity.IL2CPP.Utils;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Zombified_Initiative;
@@ -42,11 +44,18 @@ namespace ZombieTweak2
         {
             onLateUpdate?.Invoke();
         }
-        public static void InvokeStatic(string methodName, float time)
+        public static void InvokeStatic(FlexibleMethodDefinition method, float time)
         {
             if (Instance == null)
                 CreateInstance();
-            Instance.Invoke(methodName, time);
+
+            Instance.StartCoroutine(Instance.InvokeDelayed(method, time));
+        }
+
+        private IEnumerator InvokeDelayed(FlexibleMethodDefinition method, float time)
+        {
+            yield return new WaitForSeconds(time);
+            method.method.DynamicInvoke(method.args);
         }
     }
 

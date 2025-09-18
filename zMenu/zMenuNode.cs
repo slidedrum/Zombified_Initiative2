@@ -86,6 +86,7 @@ namespace ZombieTweak2.zMenu
             public float timeFirstPressedAt = Time.time;
             public int frameLastPressedAt = Time.frameCount;
             public float timeLastPressedAt = Time.time;
+            public float lastTapTime = Time.time;
             public zMenu parrentMenu;
             private FlexibleEvent OnPressed = new();
             private FlexibleEvent WhilePressed = new();
@@ -96,7 +97,9 @@ namespace ZombieTweak2.zMenu
             private FlexibleEvent WhileSelected = new();
             private FlexibleEvent OnDeselected = new();
             private FlexibleEvent WhileDeselected = new();
-            private FlexibleEvent OnDoublePressed = new(); //TODO
+            private FlexibleEvent OnDoubleTapped = new();
+            private FlexibleEvent OnTappedExclusive = new();
+            private FlexibleEvent OnTappedThenHeld = new(); //TODO?
             private FlexibleEvent OnTapped = new();
             private FlexibleEvent OnHeld = new();
             private FlexibleEvent WhileHeld = new();
@@ -106,16 +109,17 @@ namespace ZombieTweak2.zMenu
             private FlexibleEvent OnHeldImmediateSelected = new();
 
             private Dictionary<zMenuManager.nodeEvent, FlexibleEvent> eventMap;
-            public TextPart fullTextPart;
-            public TextPart titlePart;
-            public TextPart subtitlePart;
-            public TextPart descriptionPart;
-            public RectTransform rect;
+            private TextPart fullTextPart;
+            private TextPart titlePart;
+            private TextPart subtitlePart;
+            private TextPart descriptionPart;
+            private RectTransform rect;
             public GameObject gameObject;
             public UnityEngine.Color color;
 
             //settings
             private float holdThreshold = 0.2f;
+            private float doubleTapThreshold = 0.3f;
 
             public zMenuNode(string arg_Name, zMenu arg_parrentMenu, FlexibleMethodDefinition arg_Callback)
             {
@@ -161,6 +165,7 @@ namespace ZombieTweak2.zMenu
                     { zMenuManager.nodeEvent.WhileSelected, WhileSelected },
                     { zMenuManager.nodeEvent.OnDeselected, OnDeselected },
                     { zMenuManager.nodeEvent.WhileDeselected, WhileDeselected },
+                    { zMenuManager.nodeEvent.OnDoubleTapped, OnDoubleTapped },
                     { zMenuManager.nodeEvent.OnTapped, OnTapped },
                     { zMenuManager.nodeEvent.OnHeld, OnHeld },
                     { zMenuManager.nodeEvent.WhileHeld, WhileHeld },
@@ -304,15 +309,41 @@ namespace ZombieTweak2.zMenu
                         OnUnpressedSelected.Invoke();
                     if (held && selected)
                         OnHeldSelected.Invoke();
+
+                    // If released quickly enough = tap
                     if (Time.time - timeFirstPressedAt < holdThreshold)
                     {
                         ZiMain.log.LogInfo(fullText + "was tapped");
-                        OnTapped.Invoke();
+                        
+                        if (Time.time - lastTapTime <= doubleTapThreshold)
+                        {
+                            // DOUBLE TAP
+                            ZiMain.log.LogInfo(fullText + "was double tapped!");
+                            OnDoubleTapped.Invoke();
+                            lastTapTime = Time.time;
+                        }
+                        else
+                        {
+                            // First tap
+                            OnTapped.Invoke();
+                            lastTapTime = Time.time;
+                            // Schedule check after threshold
+                            zUpdater.InvokeStatic(new FlexibleMethodDefinition(InvokeTappedExclusive), doubleTapThreshold - (Time.deltaTime / 2));
+                        }
                     }
                 }
                 held = false;
                 pressed = false;
                 return this;
+            }
+            private void InvokeTappedExclusive()
+            {
+                // If no second tap happened (lastTapTime is still within threshold window)
+                if (Time.time - lastTapTime >= doubleTapThreshold - Time.deltaTime && !pressed)
+                {
+                    ZiMain.log.LogInfo(fullText + " was single tapped!");
+                    OnTappedExclusive.Invoke();
+                }
             }
             public zMenuNode AddListener(zMenuManager.nodeEvent arg_event, Action arg_method)
             {
