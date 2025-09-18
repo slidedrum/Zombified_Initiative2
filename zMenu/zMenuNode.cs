@@ -81,7 +81,7 @@ namespace ZombieTweak2.zMenu
 
             public bool selected = false;
             public bool pressed = false;
-            public bool holding = false;
+            public bool held = false;
             public int frameFirstPressedAt = Time.frameCount;
             public float timeFirstPressedAt = Time.time;
             public int frameLastPressedAt = Time.frameCount;
@@ -99,7 +99,9 @@ namespace ZombieTweak2.zMenu
             private FlexibleEvent OnDoublePressed = new(); //TODO
             private FlexibleEvent OnTapped = new();
             private FlexibleEvent OnHeld = new();
+            private FlexibleEvent WhileHeld = new();
             private FlexibleEvent OnHeldSelected = new();
+            private FlexibleEvent WhileHeldSelected = new();
             private FlexibleEvent OnHeldImmediate = new();
             private FlexibleEvent OnHeldImmediateSelected = new();
 
@@ -162,7 +164,9 @@ namespace ZombieTweak2.zMenu
                     { zMenuManager.nodeEvent.WhileDeselected, WhileDeselected },
                     { zMenuManager.nodeEvent.OnTapped, OnTapped },
                     { zMenuManager.nodeEvent.OnHeld, OnHeld },
+                    { zMenuManager.nodeEvent.WhileHeld, WhileHeld },
                     { zMenuManager.nodeEvent.OnHeldSelected, OnHeldSelected },
+                    { zMenuManager.nodeEvent.WhileHeldSelected, WhileHeldSelected },
                     { zMenuManager.nodeEvent.OnHeldImmediate, OnHeldImmediate },
                     { zMenuManager.nodeEvent.OnHeldImmediateSelected, OnHeldImmediateSelected },
                 };
@@ -255,14 +259,24 @@ namespace ZombieTweak2.zMenu
                 timeLastPressedAt = Time.time;
                 WhilePressed.Invoke();
                 float heldTime = Time.time - timeFirstPressedAt;
-                if (!holding && heldTime > holdThreshold)
+                if (heldTime > holdThreshold)
                 {
-                    ZiMain.log.LogInfo(fullText + " was held");
-                    holding = true;
-                    if (selected)
-                        OnHeldImmediateSelected.Invoke();
+                    if (held)
+                    {
+                        if (selected)
+                            WhileHeldSelected.Invoke();
+                        else
+                            WhileHeld.Invoke();
+                    }
                     else
-                        OnHeldImmediate.Invoke();
+                    {
+                        ZiMain.log.LogInfo(fullText + " was held");
+                        held = true;
+                        if (selected)
+                            OnHeldImmediateSelected.Invoke();
+                        else
+                            OnHeldImmediate.Invoke();
+                    }
                 }
                 return this;
             }
@@ -285,11 +299,11 @@ namespace ZombieTweak2.zMenu
                 if (pressed)
                 {
                     OnUnpressed.Invoke();
-                    if (holding)
+                    if (held)
                         OnHeld.Invoke();
                     if (selected)
                         OnUnpressedSelected.Invoke();
-                    if (holding && selected)
+                    if (held && selected)
                         OnHeldSelected.Invoke();
                     if (Time.time - timeFirstPressedAt < tapThreshold)
                     {
@@ -297,7 +311,7 @@ namespace ZombieTweak2.zMenu
                         OnTapped.Invoke();
                     }
                 }
-                holding = false;
+                held = false;
                 pressed = false;
                 return this;
             }

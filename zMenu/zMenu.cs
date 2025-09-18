@@ -21,7 +21,8 @@ namespace ZombieTweak2.zMenu
         private static zMenu.zMenuNode selectedNode;
         public static Color defaultColor { get; private set; } = new Color(0.25f, 0.25f, 0.25f, 1f);
         public enum nodeEvent
-        {
+        { 
+            // To add an event it must be added here, a flexible event must be created, it must be added in the eventMap, and given a place where it is invoked.
             OnPressed,
             WhilePressed,
             OnUnpressed,
@@ -33,9 +34,11 @@ namespace ZombieTweak2.zMenu
             OnDoulbePressed, //TODO
             OnTapped,
             OnHeld,
+            WhileHeld,
             OnHeldImmediate,
             OnUnpressedSelected,
             OnHeldSelected,
+            WhileHeldSelected,
             OnHeldImmediateSelected,
         }
         public enum menuEvent
@@ -283,7 +286,6 @@ namespace ZombieTweak2.zMenu
             ArrangeNodes();
             if (RelativePosition == Vector3.zero)
                 MoveInfrontOfCamera();
-
             zMenu oldMenu = zMenuManager.currentMenu;
             zMenuManager.currentMenu = this;
             if (oldMenu != null && oldMenu != this)
