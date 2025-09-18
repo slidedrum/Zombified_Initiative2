@@ -97,7 +97,6 @@ public class ZombifiedPatches
                     priorityFloor = 0.25f;
                     break;
                 default:
-
                     break;
             }
             if (pack != null)

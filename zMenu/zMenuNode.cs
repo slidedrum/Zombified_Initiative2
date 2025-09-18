@@ -115,7 +115,6 @@ namespace ZombieTweak2.zMenu
             public UnityEngine.Color color;
 
             //settings
-            private float tapThreshold = 0.1f;
             private float holdThreshold = 0.2f;
 
             public zMenuNode(string arg_Name, zMenu arg_parrentMenu, FlexibleMethodDefinition arg_Callback)
@@ -305,7 +304,7 @@ namespace ZombieTweak2.zMenu
                         OnUnpressedSelected.Invoke();
                     if (held && selected)
                         OnHeldSelected.Invoke();
-                    if (Time.time - timeFirstPressedAt < tapThreshold)
+                    if (Time.time - timeFirstPressedAt < holdThreshold)
                     {
                         ZiMain.log.LogInfo(fullText + "was tapped");
                         OnTapped.Invoke();
