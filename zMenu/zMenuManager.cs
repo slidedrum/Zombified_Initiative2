@@ -53,7 +53,7 @@ namespace ZombieTweak2.zMenu
             WhileDeselected,
         }
         //static settings
-        public static string menuParrentPath = "GUI/CellUI_Camera(Clone)/NavMarkerLayer";
+        //public static string menuParrentPath = "GUI/CellUI_Camera(Clone)/NavMarkerLayer";
         internal static bool pressable;
         internal static zMenu.zMenuNode pressedNode;
 
@@ -176,7 +176,7 @@ namespace ZombieTweak2.zMenu
         public static void OnFactoryBuildDone()
         {
             mainCamera = PlayerManager.GetLocalPlayerAgent().FPSCamera;
-            menuParrent = GameObject.Find(menuParrentPath);
+            menuParrent = new GameObject("menus");// GuiManager.PlayerLayer.WardenObjectives.transform.parent.gameObject;//GameObject.Find(menuParrentPath);
             mainMenu = new zMenu("Main");
             mainMenu.centerNode.AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, CloseAllMenues);
             registerMenu(mainMenu);

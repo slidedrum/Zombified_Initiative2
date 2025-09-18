@@ -5,6 +5,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
 using Zombified_Initiative;
+using static ZombieTweak2.zNetworking.pStructs;
 
 namespace ZombieTweak2.zMenu
 {
@@ -15,8 +16,7 @@ namespace ZombieTweak2.zMenu
         //Very unfinished atm
 
         public static List<zMenu> botMenus;
-        public static Dictionary<int, bool> botSelection = new();
-        private static Dictionary<int, zMenu.zMenuNode> selectionBotNodes = new();
+
         public static Color selectedColor = new Color(0.25f, 0.16175f, 0.0f);
         private static zMenu selectionMenu;
         private static zMenu actionMenu;
@@ -28,30 +28,30 @@ namespace ZombieTweak2.zMenu
             actionMenu = zMenuManager.createMenu("Actions", zMenuManager.mainMenu);
             permissionMenu = zMenuManager.createMenu("Permissions", zMenuManager.mainMenu);
 
-            selectionMenu.AddNode("Toggle all", SelectionToggleAllBots).AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, UpdateIndicatorForNode, selectionMenu.centerNode, botSelection);
-            selectionMenu.AddNode("Flip all", SelectionFlipAllBots).AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, UpdateIndicatorForNode, selectionMenu.centerNode, botSelection);
+            selectionMenu.AddNode("Toggle all", SelectionMenu.SelectionToggleAllBots).AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, UpdateIndicatorForNode, selectionMenu.centerNode, SelectionMenu.botSelection);
+            selectionMenu.AddNode("Flip all", SelectionMenu.SelectionFlipAllBots).AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, UpdateIndicatorForNode, selectionMenu.centerNode, SelectionMenu.botSelection);
             
             List<PlayerAIBot> playerAiBots = ZiMain.GetBotList();
             foreach (PlayerAIBot bot in playerAiBots.AsEnumerable().Reverse())
             {
                 string botName = bot.m_playerAgent.PlayerName;
                 int id = bot.Agent.Owner.PlayerSlotIndex();
-                zMenu.zMenuNode node = selectionMenu.AddNode(bot.m_playerAgent.PlayerName,toggleBotSelection, bot);
-                selectionBotNodes[id] = node;
-                node.AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, updateColorBaesdOnSelection, node, bot);
-                node.AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, UpdateIndicatorForNode, selectionMenu.centerNode, botSelection);
-                node.parrentMenu.AddListener(zMenuManager.menuEvent.OnOpened, updateColorBaesdOnSelection, node, bot);
+                zMenu.zMenuNode node = selectionMenu.AddNode(bot.m_playerAgent.PlayerName, SelectionMenu.toggleBotSelection, bot);
+                SelectionMenu.selectionBotNodes[id] = node;
+                node.AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, SelectionMenu.updateColorBaesdOnSelection, node, bot);
+                node.AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, UpdateIndicatorForNode, selectionMenu.centerNode, SelectionMenu.botSelection);
+                node.parrentMenu.AddListener(zMenuManager.menuEvent.OnOpened, SelectionMenu.updateColorBaesdOnSelection, node, bot);
             }
             foreach (PlayerAIBot bot in playerAiBots)
             {
                 int id = bot.Agent.Owner.PlayerSlotIndex();
-                botSelection[id] = true;
+                SelectionMenu.botSelection[id] = true;
             }
 
             var pickupNode = permissionMenu.AddNode("Pickups").AddListener(zMenuManager.nodeEvent.OnTapped, zSlideComputer.TogglePickupPermission);
             pickupNode.AddListener(zMenuManager.nodeEvent.OnTapped, UpdateIndicatorForNode, pickupNode, zSlideComputer.PickUpPerms);
-            selectionMenu.AddListener(zMenuManager.menuEvent.OnOpened, UpdateIndicatorForNode, selectionMenu.centerNode, botSelection);
-            permissionMenu.AddListener(zMenuManager.menuEvent.OnOpened, UpdateIndicatorForNode, permissionMenu.centerNode, botSelection);
+            selectionMenu.AddListener(zMenuManager.menuEvent.OnOpened, UpdateIndicatorForNode, selectionMenu.centerNode, SelectionMenu.botSelection);
+            permissionMenu.AddListener(zMenuManager.menuEvent.OnOpened, UpdateIndicatorForNode, permissionMenu.centerNode, SelectionMenu.botSelection);
             permissionMenu.AddListener(zMenuManager.menuEvent.OnOpened, UpdateIndicatorForNode, pickupNode, zSlideComputer.PickUpPerms);
         }
         public static zMenu.zMenuNode UpdateIndicatorForNode(zMenu.zMenuNode node, Dictionary<int, bool> selectionPickUpPerms)
@@ -82,16 +82,23 @@ namespace ZombieTweak2.zMenu
             node.subtitle = sbSubtitle;
             return node;
         }
-        public static zMenu.zMenuNode updateColorBaesdOnSelection(zMenu.zMenuNode node, PlayerAIBot bot)
+
+
+
+        private static void addBotMenus(zMenu menu)
         {
-            if (checkForUntrackedBot(bot))
-                return null;
-            if (botSelection[bot.Agent.Owner.PlayerSlotIndex()])
-                node.SetColor(selectedColor);
-            else
-                node.SetColor(zMenuManager.defaultColor);
-            return node;
+
         }
+
+    }
+    public static class PermissionsMenu
+    {
+
+    }
+    public static class SelectionMenu
+    {
+        public static Dictionary<int, bool> botSelection = new();
+        public static Dictionary<int, zMenu.zMenuNode> selectionBotNodes = new();
         public static PlayerAIBot toggleBotSelection(PlayerAIBot bot)
         {
             if (checkForUntrackedBot(bot))
@@ -113,6 +120,25 @@ namespace ZombieTweak2.zMenu
             }
             return selectedBots;
         }
+        public static void SelectionFlipAllBots()
+        {
+            foreach (var bot in ZiMain.GetBotList())
+            {
+                toggleBotSelection(bot);
+                updateColorBaesdOnSelection(selectionBotNodes[bot.Agent.Owner.PlayerSlotIndex()], bot);
+            }
+        }
+        public static void SelectionToggleAllBots()
+        {
+            int selectedCount = botSelection.Values.Count(value => value);
+            int unselectedCount = botSelection.Values.Count() - selectedCount;
+            bool majority = selectedCount > unselectedCount;
+            foreach (var bot in ZiMain.GetBotList())
+            {
+                setBotSelection(bot, !majority);
+                updateColorBaesdOnSelection(selectionBotNodes[bot.Agent.Owner.PlayerSlotIndex()], bot);
+            }
+        }
         public static PlayerAIBot setBotSelection(PlayerAIBot bot, bool selected)
         {
             if (checkForUntrackedBot(bot))
@@ -131,28 +157,15 @@ namespace ZombieTweak2.zMenu
                 throw new KeyNotFoundException($"The bot {bot} is not tracked for selection.  This should't happen.");
             return false;
         }
-        private static void addBotMenus(zMenu menu)
+        public static zMenu.zMenuNode updateColorBaesdOnSelection(zMenu.zMenuNode node, PlayerAIBot bot)
         {
-
-        }
-        private static void SelectionFlipAllBots()
-        {
-            foreach (var bot in ZiMain.GetBotList())
-            {
-                toggleBotSelection(bot);
-                updateColorBaesdOnSelection(selectionBotNodes[bot.Agent.Owner.PlayerSlotIndex()], bot);
-            }
-        }
-        public static void SelectionToggleAllBots()
-        {
-            int selectedCount = botSelection.Values.Count(value => value);
-            int unselectedCount = botSelection.Values.Count() - selectedCount;
-            bool majority = selectedCount > unselectedCount;
-            foreach (var bot in ZiMain.GetBotList())
-            {
-                setBotSelection(bot,!majority);
-                updateColorBaesdOnSelection(selectionBotNodes[bot.Agent.Owner.PlayerSlotIndex()], bot);
-            }
+            if (checkForUntrackedBot(bot))
+                return null;
+            if (botSelection[bot.Agent.Owner.PlayerSlotIndex()])
+                node.SetColor(zMenus.selectedColor);
+            else
+                node.SetColor(zMenuManager.defaultColor);
+            return node;
         }
     }
 }

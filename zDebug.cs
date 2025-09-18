@@ -117,7 +117,7 @@ namespace ZombieTweak2
         private static pStructs.pBotSelections testSend = new pStructs.pBotSelections();
         private static void setuppBotSelectionsForTest()
         {
-            testSend.data = zNetworking.zNetworking.EncodeBotSelectionForNetwork(zMenus.botSelection);
+            testSend.data = zNetworking.zNetworking.EncodeBotSelectionForNetwork(SelectionMenu.botSelection);
         }
         private static void TestReciveTogglePickupPermission()
         {

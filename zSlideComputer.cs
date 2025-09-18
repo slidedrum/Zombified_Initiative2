@@ -141,7 +141,7 @@ namespace ZombieTweak2
         //TODO handle that
         public static void FlipPickupPermission()
         {
-            foreach (var bot in zMenus.botSelection)
+            foreach (var bot in SelectionMenu.botSelection)
             {
                 if (!bot.Value) //unselected, ignore.
                     continue;
@@ -173,7 +173,7 @@ namespace ZombieTweak2
         }
         public static void TogglePickupPermission()
         { 
-            var botSelection = zMenus.botSelection;
+            var botSelection = SelectionMenu.botSelection;
             TogglePickupPermission(botSelection);
         }
         public static void TogglePickupPermission(int id)
