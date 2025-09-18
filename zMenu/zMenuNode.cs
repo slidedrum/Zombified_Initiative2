@@ -14,57 +14,57 @@ namespace ZombieTweak2.zMenu
         {
             //This is a menu node instance, there if you want to create one, call the parrent menu.addnode not this.
 
-            private string _title;
+            private string _title = "";
             public string title { 
-                get => _title; 
+                get => _title.Trim(); 
                 set 
                 {
                     _title = value;
                     UpdateTitle();
                 } 
             }
-            private string _subtitle;
+            private string _subtitle = "";
             public string subtitle { 
-                get => _subtitle;
+                get => _subtitle.Trim();
                 set 
                 { 
                     _subtitle = value;
                     UpdateSubtitle();
                 }
             }
-            private string _description;
+            private string _description = "";
             public string description {
-                get => _description; 
+                get => _description.Trim(); 
                 set 
                 { 
                     _description = value;
                     UpdateDescription();
                 } 
             }
-            private string _text;
+            private string _text = "";
             public string text
             {
-                get => _text;
+                get => _text.Trim();
                 set
                 {
                     _text = value;
                     UpdateText();
                 }
             }
-            private string _prefix;
+            private string _prefix = "";
             public string prefix 
             {
-                get => _prefix;
+                get => _prefix.Trim();
                 set
                 {
                     _prefix = value;
                     UpdateText();
                 }
             }
-            private string _suffix;
+            private string _suffix = "";
             public string suffix
             {
-                get => _suffix;
+                get => _suffix.Trim();
                 set
                 {
                     _suffix = value;
@@ -73,7 +73,7 @@ namespace ZombieTweak2.zMenu
             }
             public string fullText 
             {
-                get => prefix + " " + text + " " + suffix;
+                get => string.Join(" ", prefix, text, suffix).Trim();
                 [Obsolete("\nDon't assign to fullText. Use vars \"prefix\", \"text\" and \"suffix\" instead.\nYou probably want var \"text\".", error: true)]
                 set { }
             }
@@ -115,8 +115,33 @@ namespace ZombieTweak2.zMenu
             private TextPart subtitlePart;
             private TextPart descriptionPart;
             private RectTransform rect;
+            private Color _color; // backing field
+            public Color color
+            {
+                get => _color;
+                set
+                {
+                    var oldValue = _color;
+                    _color = value;
+                    if (oldValue != value)
+                        I_SetColor(_color);
+                }
+            }
+
+            private Color _colorOffset; // backing field
+            public Color ColorOffset
+            {
+                get => _colorOffset;
+                set
+                {
+                    var oldValue = _colorOffset;
+                    _colorOffset = value;
+                    if (oldValue != value)
+                        I_SetColor(_color); // use _color, not _colorOffset
+                }
+            }
             public GameObject gameObject;
-            public UnityEngine.Color color;
+
 
             //settings
             private float holdThreshold = 0.2f;
@@ -192,6 +217,19 @@ namespace ZombieTweak2.zMenu
                 FaceCamera();
                 return this;
             }
+            public Vector3 GetRelativePosition()
+            {
+                // local position in menu space, accounting for canvas scale
+                Vector3 localPos = new Vector3(rect.anchoredPosition.x, rect.anchoredPosition.y, 0f);
+                Vector3 scaledLocalPos = Vector3.Scale(localPos, parrentMenu.getCanvas().transform.localScale);
+
+                // world position
+                Vector3 worldPos = parrentMenu.gameObject.transform.TransformPoint(scaledLocalPos);
+
+                // relative to camera
+                return Camera.main.transform.position - worldPos;
+            }
+
             public zMenuNode SetPosition(float x, float y)
             {
                 SetPosition(new Vector2(x, y));
@@ -412,12 +450,22 @@ namespace ZombieTweak2.zMenu
                 suffix = arg_Suffix ?? string.Empty;
                 return this;
             }
-            public zMenuNode SetColor(UnityEngine.Color arg_Color)
+            public zMenuNode I_SetColor(Color arg_Color)
             {
+                List<TextPart> textParts = GetTextParts();
+                foreach (TextPart part in textParts)
+                {
+                    part.SetColor(color + ColorOffset);
+                }
+                return this;
+            }
+            public zMenuNode SetColor(Color arg_Color)
+            {
+                color = arg_Color;
                 List<TextPart> textParts = GetTextParts();
                 foreach (TextPart part in textParts) 
                 { 
-                    part.SetColor(arg_Color);
+                    part.SetColor(color + ColorOffset);
                 }
                 return this;
             }
@@ -432,19 +480,55 @@ namespace ZombieTweak2.zMenu
             }
             private void UpdateTitle()
             {
-                titlePart.SetText(title);
+                if (titlePart != null)
+                    titlePart.SetText(title);
             }
             private void UpdateSubtitle()
             {
-                subtitlePart.SetText(subtitle);
+                if (subtitlePart != null)
+                    subtitlePart.SetText(subtitle);
             }
             private void UpdateDescription()
             {
-                descriptionPart.SetText(description);
+                if (descriptionPart != null)
+                    descriptionPart.SetText(description);
             }
             private void UpdateText()
             {
-                fullTextPart.SetText(fullText);
+                if (fullTextPart != null)
+                    fullTextPart.SetText(fullText);
+            }
+
+            private class SelectionColorHandler
+            {
+                private zMenuNode node;
+                public SelectionColorHandler(zMenuNode Node)
+                {
+                    node = Node;
+                }
+                public static Color AdjustBrightness(Color color, float amount)
+                {
+                    float r = Mathf.Clamp01(color.r + amount);
+                    float g = Mathf.Clamp01(color.g + amount);
+                    float b = Mathf.Clamp01(color.b + amount);
+                    return new Color(r, g, b, color.a);
+                }
+                protected void onSelected()
+                {
+                    //node.SetColor(node)
+                }
+                protected void OnDeselected()
+                {
+
+                }
+                protected void OnPressed()
+                {
+
+                }
+                protected void OnUnpressed()
+                {
+
+                }
             }
         }
     }

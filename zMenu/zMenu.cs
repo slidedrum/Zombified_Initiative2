@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using TargetTransforms;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -82,19 +83,21 @@ namespace ZombieTweak2.zMenu
             playerInControll = FocusStateManager.CurrentState == eFocusState.FPS || FocusStateManager.CurrentState == eFocusState.Dead;
             if (playerInControll)
             {
+                
                 bool menuOpen = currentMenu != null;
                 if (menuOpen) {
-
                     Dictionary<GameObject, zMenu.zMenuNode> nodeDict = new(currentMenu.nodes.Count + 1);
                     foreach (var node in currentMenu.allNodes)
                     {
                         nodeDict[node.gameObject] = node;
                     }
                     List<GameObject> nodeList = nodeDict.Keys.ToList();
-                    GameObject selectedNodeObject = zSearch.GetClosestObjectInLookDirection(Camera.current.transform, nodeList, 10f);
+                    GameObject selectedNodeObject = zSearch.GetClosestObjectInLookDirection(Camera.main.transform, nodeList, 10f);
                     selectedNode = null;
                     if (selectedNodeObject != null)
+                    {
                         nodeDict.TryGetValue(selectedNodeObject, out selectedNode);
+                    }
                     foreach (zMenu.zMenuNode node in nodeDict.Values)
                     {
                         if (node == selectedNode)
@@ -107,13 +110,26 @@ namespace ZombieTweak2.zMenu
                         }
                     }
                     currentMenu.Update();
+                    if (selectedNodeObject == null)
+                    {
+                        Vector3 angleToTarget = (currentMenu.gameObject.transform.position - Camera.main.transform.position).normalized;
+                        Vector3 cameraAngle = Camera.main.transform.forward;
+                        float angleDelta = Vector3.Angle(cameraAngle, angleToTarget);
+                        if (angleDelta > 45) //close if we're looking too far away.
+                            CloseAllMenues();
+                        else if (zSearch.GetClosestObjectInLookDirection(Camera.main.transform, nodeList, 20f) == null) //close if we're not looking near a node with a wider tolerance.
+                            CloseAllMenues();
+                    }
                 }
                 if (Input.GetKey(KeyCode.M))
                 {
                     if (pressable) //is this the first frame of holding the button?
                     {
                         if (!menuOpen) //is the menu closed?
-                            mainMenu.Open();//open main menu
+                        {
+                            mainMenu.Open();
+                            ZiMain.log.LogInfo($"Main menu opened");
+                        } //open main menu
                         else if (selectedNode != null) //Are we hovering over a button?
                         {
                             pressedNode = selectedNode; //save the node we have selected
@@ -196,7 +212,7 @@ namespace ZombieTweak2.zMenu
                 }
             } 
         }
-        private GameObject gameObject;
+        public GameObject gameObject;
         private Canvas canvas;
         private RectTransform rectTransform;
         private Vector3 RelativePosition = Vector3.zero;
@@ -280,12 +296,22 @@ namespace ZombieTweak2.zMenu
             timeOpenedAt = Time.time;
             frameOpenedAt = Time.frameCount;
             if (!zMenuManager.menues.Contains(this))
-                ZiMain.log.LogWarning($"Unregestered menu opened! ({name}) It may not clsoe properly.");
-            setVisiblity(true);
-            FaceCamera();
-            ArrangeNodes();
+                ZiMain.log.LogWarning($"Unregestered menu opened! ({name}) It may not close properly.");
             if (RelativePosition == Vector3.zero)
-                MoveInfrontOfCamera();
+            {
+                if (parrentMenu == null)
+                { 
+                    MoveInfrontOfCamera();
+                }
+                else
+                { //TODO move this into a listener so it can be disabled.
+                    var node = parrentMenu.GetNode(name);
+                    SetRelativePosition(Camera.main.transform.position - node.gameObject.transform.position);
+                }
+            }
+            ArrangeNodes();
+            FaceCamera();
+            setVisiblity(true);
             zMenu oldMenu = zMenuManager.currentMenu;
             zMenuManager.currentMenu = this;
             if (oldMenu != null && oldMenu != this)
@@ -293,15 +319,21 @@ namespace ZombieTweak2.zMenu
             OnOpened.Invoke();
             return this;
         }
-        public zMenu ResetRelativePosition()
+        public zMenu SetRelativePosition(float x, float y, float z)
+        {
+            return SetRelativePosition(new Vector3 (x, y, z));
+        }
+        public zMenu SetRelativePosition(Vector3 relativePosition)
+        {
+            RelativePosition = relativePosition;
+            return setPosition(Camera.main.transform.position - RelativePosition);
+        }
+        public zMenu ResetRelativePosition(bool setPos = true)
         {
             RelativePosition = Vector3.zero;
+            if (setPos)
+                return setPosition(Camera.main.transform.position - RelativePosition);
             return this;
-        }
-        public zMenu SetRelativePostion(Vector3 position)
-        { 
-            RelativePosition = position;
-            return this; 
         }
         private void AddDebugVisuals()
         {
@@ -358,7 +390,7 @@ namespace ZombieTweak2.zMenu
             gameObject.transform.position = Camera.main.transform.position + Camera.main.transform.forward * 1f;
             gameObject.transform.rotation = Quaternion.LookRotation(gameObject.transform.position - Camera.main.transform.position);
         }
-        public void ArrangeNodes()
+        public zMenu ArrangeNodes()
         {
             int count = nodes.Count;
             for (int i = 0; i < count; i++)
@@ -373,25 +405,25 @@ namespace ZombieTweak2.zMenu
                 // Set node position
                 nodes[i].SetPosition(x, y);
             }
+            return this;
         }
         public zMenu MoveInfrontOfCamera()
         {
             Camera cam = Camera.main;
             Vector3 position = cam.transform.position + cam.transform.forward * 1f;
-            setPosition(position);
-            RelativePosition = cam.transform.position - gameObject.transform.position;
-            return this;
+            return SetRelativePosition(cam.transform.position - position);
         }
-        public zMenu FaceCamera()
+        public zMenu FaceCamera(bool menuOnly = false)
         {
             Quaternion rotation = Quaternion.LookRotation(gameObject.transform.position - Camera.main.transform.position);
-            setRotation(rotation); 
-            return this;
+            if (!menuOnly)
+                foreach (var node in nodes)
+                    node.FaceCamera();
+            return setRotation(rotation); 
         }
         public zMenu setPosition(float x, float y, float z)
         {
-            setPosition(new Vector3(x, y, z));
-            return this;
+            return setPosition(new Vector3(x, y, z));
         }
         public zMenu setPosition(Vector3 pos)
         {
@@ -400,8 +432,7 @@ namespace ZombieTweak2.zMenu
         }
         public zMenu setLocalPosition(float x, float y, float z)
         {
-            setLocalPosition(new Vector3(x, y, z));
-            return this;
+            return setLocalPosition(new Vector3(x, y, z));
         }
         public zMenu setLocalPosition(Vector3 pos)
         {

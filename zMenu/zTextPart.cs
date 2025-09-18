@@ -21,8 +21,34 @@ namespace ZombieTweak2.zMenu
                         textMesh.text = value;
                     } 
                 }
+                private Color _textColor;
+                public Color textColor
+                {
+                    get => _textColor;
+                    set
+                    {
+                        var oldValue = _textColor;
+                        _textColor = value;
+                        if (oldValue != value)
+                            I_SetColor(_textColor);
+                    }
+                }
+
+                private Color _colorOffset;
+                public Color ColorOffset
+                {
+                    get => _colorOffset;
+                    set
+                    {
+                        var oldValue = _colorOffset;
+                        _colorOffset = value;
+                        if (oldValue != value)
+                            I_SetColor(_textColor); // combine base + offset
+                    }
+                }
                 public GameObject gameObject { get; private set; }
                 private TextMeshProUGUI textMesh;
+
                 public RectTransform rect { get; private set; }
                 public TextPart(zMenuNode parent, string arg_Text)
                 {
@@ -89,10 +115,20 @@ namespace ZombieTweak2.zMenu
                     rect.localScale = new Vector3(x, y, z);
                     return this;
                 }
+                private TextPart I_SetColor(Color color)
+                {
+                    textMesh.color = textColor + ColorOffset;
+                    return this;
+                }
                 public TextPart SetColor(Color color)
                 {
-                    textMesh.color = color;
+                    textColor = color;
+                    textMesh.color = textColor + ColorOffset;
                     return this;
+                }
+                public Color GetColor()
+                {
+                    return textColor;
                 }
             }
         }
