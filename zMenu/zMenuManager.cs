@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Player;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,6 +18,7 @@ namespace ZombieTweak2.zMenu
         public static zMenu mainMenu { get; private set; }
         public static zMenu currentMenu { get; internal set; }
         private static zMenu.zMenuNode selectedNode;
+        public static FPSCamera mainCamera;
         public static Color defaultColor { get; private set; } = new Color(0.25f, 0.25f, 0.25f, 1f);
         public enum nodeEvent
         {
@@ -90,7 +92,7 @@ namespace ZombieTweak2.zMenu
                         nodeDict[node.gameObject] = node;
                     }
                     List<GameObject> nodeList = nodeDict.Keys.ToList();
-                    GameObject selectedNodeObject = zSearch.GetClosestObjectInLookDirection(Camera.main.transform, nodeList, 10f);
+                    GameObject selectedNodeObject = zSearch.GetClosestObjectInLookDirection(mainCamera.transform, nodeList, 10f);
                     selectedNode = null;
                     if (selectedNodeObject != null)
                     {
@@ -110,12 +112,12 @@ namespace ZombieTweak2.zMenu
                     currentMenu.Update();
                     if (selectedNodeObject == null)
                     {
-                        Vector3 angleToTarget = (currentMenu.gameObject.transform.position - Camera.main.transform.position).normalized;
-                        Vector3 cameraAngle = Camera.main.transform.forward;
+                        Vector3 angleToTarget = (currentMenu.gameObject.transform.position - mainCamera.Position).normalized;
+                        Vector3 cameraAngle = mainCamera.transform.forward;
                         float angleDelta = Vector3.Angle(cameraAngle, angleToTarget);
                         if (angleDelta > 45) //close if we're looking too far away.
                             CloseAllMenues();
-                        else if (zSearch.GetClosestObjectInLookDirection(Camera.main.transform, nodeList, 20f) == null) //close if we're not looking near a node with a wider tolerance.
+                        else if (zSearch.GetClosestObjectInLookDirection(mainCamera.transform, nodeList, 20f) == null) //close if we're not looking near a node with a wider tolerance.
                             CloseAllMenues();
                     }
                 }
@@ -173,10 +175,12 @@ namespace ZombieTweak2.zMenu
         }
         public static void OnFactoryBuildDone()
         {
+            mainCamera = PlayerManager.GetLocalPlayerAgent().FPSCamera;
             menuParrent = GameObject.Find(menuParrentPath);
             mainMenu = new zMenu("Main");
             mainMenu.centerNode.AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, CloseAllMenues);
             registerMenu(mainMenu);
+
         }
     }
 }

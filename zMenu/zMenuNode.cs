@@ -236,7 +236,7 @@ namespace ZombieTweak2.zMenu
                 Vector3 worldPos = parrentMenu.gameObject.transform.TransformPoint(scaledLocalPos);
 
                 // relative to camera
-                return Camera.main.transform.position - worldPos;
+                return zMenuManager.mainCamera.Position - worldPos;
             }
 
             public zMenuNode SetPosition(float x, float y)
@@ -280,7 +280,7 @@ namespace ZombieTweak2.zMenu
             }
             public zMenuNode FaceCamera()
             {
-                Quaternion rotation = Quaternion.LookRotation(gameObject.transform.position - Camera.main.transform.position);
+                Quaternion rotation = Quaternion.LookRotation(gameObject.transform.position - zMenuManager.mainCamera.Position);
                 setRotation(rotation);
                 return this;
             }

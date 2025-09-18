@@ -18,7 +18,7 @@ public class ZombifiedPatches
 {
     //This file contains all harmony patches.
     //Might split this up later if there gets to be too many of them.
-
+        
     [HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.UpdateActionCollectItem))]
     [HarmonyPrefix]
     public static bool UpdateActionCollectItem(RootPlayerBotAction __instance)

@@ -91,10 +91,14 @@ namespace ZombieTweak2.zMenu
                     { zMenuManager.menuEvent.OnDeselected, OnDeselected },
                     { zMenuManager.menuEvent.WhileDeselected, WhileDeselected }};
         }
+        public void UpdatePosition()
+        {
+            Vector3 newpos = zMenuManager.mainCamera.Position - RelativePosition;
+            setPosition(newpos);
+        }
         public void Update()
         {
-            Vector3 newpos = Camera.main.transform.position - RelativePosition;
-            setPosition(newpos);
+            UpdatePosition();
             FaceCamera();
             if (gameObject.activeInHierarchy)
                 WhileOpened.Invoke();
@@ -137,7 +141,7 @@ namespace ZombieTweak2.zMenu
                 else
                 { //TODO move this into a listener so it can be disabled.
                     var node = parrentMenu.GetNode(name);
-                    SetRelativePosition(Camera.main.transform.position - node.gameObject.transform.position);
+                    SetRelativePosition(zMenuManager.mainCamera.Position - node.gameObject.transform.position);
                 }
             }
             ArrangeNodes();
@@ -157,13 +161,13 @@ namespace ZombieTweak2.zMenu
         public zMenu SetRelativePosition(Vector3 relativePosition)
         {
             RelativePosition = relativePosition;
-            return setPosition(Camera.main.transform.position - RelativePosition);
+            return setPosition(zMenuManager.mainCamera.Position - RelativePosition);
         }
         public zMenu ResetRelativePosition(bool setPos = true)
         {
             RelativePosition = Vector3.zero;
             if (setPos)
-                return setPosition(Camera.main.transform.position - RelativePosition);
+                return setPosition(zMenuManager.mainCamera.Position - RelativePosition);
             return this;
         }
         private void AddDebugVisuals()
@@ -218,8 +222,8 @@ namespace ZombieTweak2.zMenu
             rect.sizeDelta = canvasSize; // size in "pixels"
             rect.localPosition = Vector3.zero;      // center inside menu
             rect.localScale = canvasScale;  // scale down so it’s not huge
-            gameObject.transform.position = Camera.main.transform.position + Camera.main.transform.forward * 1f;
-            gameObject.transform.rotation = Quaternion.LookRotation(gameObject.transform.position - Camera.main.transform.position);
+            gameObject.transform.position = zMenuManager.mainCamera.Position + zMenuManager.mainCamera.transform.forward * 1f;
+            gameObject.transform.rotation = Quaternion.LookRotation(gameObject.transform.position - zMenuManager.mainCamera.Position);
         }
         public zMenu ArrangeNodes()
         {
@@ -240,13 +244,12 @@ namespace ZombieTweak2.zMenu
         }
         public zMenu MoveInfrontOfCamera()
         {
-            Camera cam = Camera.main;
-            Vector3 position = cam.transform.position + cam.transform.forward * 1f;
-            return SetRelativePosition(cam.transform.position - position);
+            Vector3 position = zMenuManager.mainCamera.Position + zMenuManager.mainCamera.transform.forward * 1f;
+            return SetRelativePosition(zMenuManager.mainCamera.Position - position);
         }
         public zMenu FaceCamera(bool menuOnly = false)
         {
-            Quaternion rotation = Quaternion.LookRotation(gameObject.transform.position - Camera.main.transform.position);
+            Quaternion rotation = Quaternion.LookRotation(gameObject.transform.position - zMenuManager.mainCamera.Position);
             if (!menuOnly)
                 foreach (var node in nodes)
                     node.FaceCamera();
