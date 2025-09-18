@@ -110,10 +110,10 @@ namespace ZombieTweak2.zMenu
             private readonly FlexibleEvent OnHeldImmediateSelected = new();
 
             private Dictionary<zMenuManager.nodeEvent, FlexibleEvent> eventMap;
-            private TextPart fullTextPart;
-            private TextPart titlePart;
-            private TextPart subtitlePart;
-            private TextPart descriptionPart;
+            public TextPart fullTextPart;//todo make these private and add setters and getters for font stuff.
+            public TextPart titlePart;
+            public TextPart subtitlePart;
+            public TextPart descriptionPart;
             private RectTransform rect;
             private SelectionColorHandler selectionColorHandler;
             private Color _color;
@@ -291,6 +291,7 @@ namespace ZombieTweak2.zMenu
             }
             public zMenuNode Select()
             {
+
                 if (selected) return this;
                 selected = true;
                 SetSize(1.5f);
@@ -350,6 +351,7 @@ namespace ZombieTweak2.zMenu
             }
             public zMenuNode Unpress()
             {
+
                 if (pressed)
                 {
                     OnUnpressed.Invoke();
@@ -546,7 +548,7 @@ namespace ZombieTweak2.zMenu
                     pressed = false;
                     UpdateOffset();
                 }
-
+                //TODO change color when held.
                 private void UpdateOffset()
                 {
                     node.ColorOffset = new Color(0,0,0);

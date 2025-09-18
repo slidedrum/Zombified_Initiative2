@@ -42,7 +42,8 @@ public class ZombifiedPatches
         __result = 0f;
         if (!zSlideComputer.GetPickupPermission(__instance.m_agent.Owner.PlayerSlotIndex()))
             return;
-
+        if (!zSlideComputer.enabledItemPrios.ContainsKey(itemID) || !zSlideComputer.enabledItemPrios[itemID])
+            return;
         ItemDataBlock itemDataBlock;
         if (ItemDataBlock.s_blockByID.ContainsKey(itemID))
         {

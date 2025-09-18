@@ -16,13 +16,46 @@ namespace ZombieTweak2
     {
         //This class is for handling things like stopping bots from do unwanted actions
 
-        public static Il2CppSystem.Collections.Generic.Dictionary<uint,float> itemPrios = new ();
-        public static Il2CppSystem.Collections.Generic.Dictionary<uint, float> zerodItemPrios = new ();
+        public static Il2CppSystem.Collections.Generic.Dictionary<uint, float> itemPrios = new();
+        public static Il2CppSystem.Collections.Generic.Dictionary<uint, bool> enabledItemPrios = new ();
         public static Il2CppSystem.Collections.Generic.Dictionary<uint, float> OriginalItemPrios = new();
         public static Dictionary<int, bool> PickUpPerms = new (); //bot.Agent.Owner.PlayerSlotIndex()
-        private static Il2CppReferenceArray<ItemDataBlock> consumableItems;
-        private static List<string> consumableItemPublicNames;
-        private static List<string> consumableItemNames;
+
+
+        public static Il2CppReferenceArray<ItemDataBlock> consumableItems 
+        { 
+            get 
+            {
+                return ItemSpawnManager.m_itemDataPerInventorySlot?[(int)InventorySlot.Consumable];
+            } 
+        }
+        private static Il2CppReferenceArray<ItemDataBlock> _consumableItems;
+        public static List<string> consumableItemPublicNames 
+        { 
+            get 
+            {
+                if (consumableItems.Equals(_consumableItems))
+                    return _consumableItemPublicNames;
+                _consumableItems = consumableItems;
+                _consumableItemPublicNames = consumableItems.Select(item => item.publicName).ToList();
+                return _consumableItemPublicNames; 
+            } 
+        }
+        private static List<string> _consumableItemPublicNames;
+        public static List<string> consumableItemNames 
+        {
+            get 
+            {
+                if (consumableItems.Equals(_consumableItems))
+                    return _consumableItemNames;
+                _consumableItems = consumableItems;
+                _consumableItemNames = consumableItems.Select(item => item.name).ToList();
+                return _consumableItemNames;
+            } 
+        }
+        private static List<string> _consumableItemNames;
+
+
         private static List<string> fullGlowStickNames;
         private static List<string> shortGlowStickNames;
 
@@ -34,11 +67,9 @@ namespace ZombieTweak2
             foreach (var kvp in OriginalItemPrios)
             {
                 itemPrios[kvp.Key] = kvp.Value;
+                enabledItemPrios[kvp.Key] = true;
             }
             RootPlayerBotAction.s_itemBasePrios = itemPrios;
-            consumableItems = ItemSpawnManager.m_itemDataPerInventorySlot[(int)InventorySlot.Consumable];
-            consumableItemPublicNames = consumableItems.Select(item => item.publicName).ToList();
-            consumableItemNames = consumableItems.Select(item => item.name).ToList();
             fullGlowStickNames = new List<string> { "CONSUMABLE_GlowStick", "CONSUMABLE_GlowStick_Christmas", "CONSUMABLE_GlowStick_Halloween", "CONSUMABLE_GlowStick_Yellow" };
             shortGlowStickNames = new List<string> { "Glow Stick", "Red Glow Stick", "Glow Stick Orange", "Glow Stick Yellow" };
 
@@ -54,10 +85,45 @@ namespace ZombieTweak2
             foreach (var kvp in RootPlayerBotAction.s_itemBasePrios)
             {
                 OriginalItemPrios[kvp.Key] = kvp.Value;
-                zerodItemPrios[kvp.Key] = 0;
             }
             //Might need to modify PlayerAIBot.s_recognisedItemTypes?
             //PlayerAIBot.KnowsHowToUseItem also could be relevent.
+        }
+        public static float GetItemPrio(uint itemID)
+        {
+            foreach (var kv in enabledItemPrios)
+            {
+                if (kv.Key == itemID)
+                {
+                    if (!kv.Value) return 0f;
+
+                    foreach (var kv2 in itemPrios)
+                    {
+                        if (kv2.Key == itemID)
+                            return kv2.Value;
+                    }
+                    return 0f;
+                }
+            }
+            return 0f;
+        }
+        public static void ResetItemPrio(uint itemID)
+        {
+            if (!itemPrios.ContainsKey(itemID))
+                return;
+            itemPrios[itemID] = OriginalItemPrios[itemID];
+        }
+        public static void ToggleItemPrioDissabled(uint itemID)
+        {
+            if (!enabledItemPrios.ContainsKey(itemID))
+                return;
+            SetItemPrioDissabled(itemID, !enabledItemPrios[itemID]);
+        }
+        public static void SetItemPrioDissabled(uint itemID, bool allowed)
+        {
+            if (!enabledItemPrios.ContainsKey(itemID))
+                return;
+            enabledItemPrios[itemID] = allowed;
         }
         public static void Update()
         {

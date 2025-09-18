@@ -63,7 +63,7 @@ namespace ZombieTweak2.zMenu
         //settings
         private Vector2 canvasSize = new Vector2(1000, 1000);
         private Vector3 canvasScale = new Vector3(0.002f, 0.002f, 0.002f);
-        private float radius = 125f;
+        public float radius = 125f;
         private Color textColor = zMenuManager.defaultColor;
         private zMenuNode selectedNode;
 

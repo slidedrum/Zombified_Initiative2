@@ -1,4 +1,5 @@
 ﻿using Agents;
+using GameData;
 using Player;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,16 +22,19 @@ namespace ZombieTweak2.zMenu
         private static zMenu selectionMenu;
         private static zMenu actionMenu;
         private static zMenu permissionMenu;
+        private static zMenu pickupDetailsSubmenu;
 
         public static void CreateMenus()
         {
             selectionMenu = zMenuManager.createMenu("Bot selection", zMenuManager.mainMenu);
             actionMenu = zMenuManager.createMenu("Actions", zMenuManager.mainMenu);
             permissionMenu = zMenuManager.createMenu("Permissions", zMenuManager.mainMenu);
+            pickupDetailsSubmenu = zMenuManager.createMenu("Pickups", permissionMenu);
+            permissionMenu.DissableNode("Pickups");
 
             selectionMenu.AddNode("Toggle all", SelectionMenu.SelectionToggleAllBots).AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, UpdateIndicatorForNode, selectionMenu.centerNode, SelectionMenu.botSelection);
             selectionMenu.AddNode("Flip all", SelectionMenu.SelectionFlipAllBots).AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, UpdateIndicatorForNode, selectionMenu.centerNode, SelectionMenu.botSelection);
-            
+            //todo add option to set selection to the bots that are following you.
             List<PlayerAIBot> playerAiBots = ZiMain.GetBotList();
             foreach (PlayerAIBot bot in playerAiBots.AsEnumerable().Reverse())
             {
@@ -50,6 +54,10 @@ namespace ZombieTweak2.zMenu
 
             var pickupNode = permissionMenu.AddNode("Pickups").AddListener(zMenuManager.nodeEvent.OnTapped, zSlideComputer.TogglePickupPermission);
             pickupNode.AddListener(zMenuManager.nodeEvent.OnTapped, UpdateIndicatorForNode, pickupNode, zSlideComputer.PickUpPerms);
+            pickupNode.AddListener(zMenuManager.nodeEvent.OnHeld, pickupDetailsSubmenu.Open);
+            PermissionsMenuClass.setUpItemNodes(pickupDetailsSubmenu);
+            pickupDetailsSubmenu.centerNode.AddListener(zMenuManager.nodeEvent.OnHeldSelected, zSlideComputer.ResetItemPrio);
+            pickupDetailsSubmenu.radius = 175;
             selectionMenu.AddListener(zMenuManager.menuEvent.OnOpened, UpdateIndicatorForNode, selectionMenu.centerNode, SelectionMenu.botSelection);
             permissionMenu.AddListener(zMenuManager.menuEvent.OnOpened, UpdateIndicatorForNode, permissionMenu.centerNode, SelectionMenu.botSelection);
             permissionMenu.AddListener(zMenuManager.menuEvent.OnOpened, UpdateIndicatorForNode, pickupNode, zSlideComputer.PickUpPerms);
@@ -91,9 +99,70 @@ namespace ZombieTweak2.zMenu
         }
 
     }
-    public static class PermissionsMenu
+    public static class PermissionsMenuClass
     {
+        public static void setUpItemNodes(zMenu menu)
+        {
+            foreach (var item in zSlideComputer.itemPrios)
+            {
+                uint itemID = item.Key;
+                ItemDataBlock block = ItemDataBlock.s_blockByID[itemID];
+                string publicName = block.publicName;
+                var node = menu.AddNode(publicName);
+                node.AddListener(zMenuManager.nodeEvent.WhileSelected, ChangePrioBasedOnMouseWheel, itemID, node);
+                node.AddListener(zMenuManager.nodeEvent.OnTapped, zSlideComputer.ToggleItemPrioDissabled, itemID);
+                node.AddListener(zMenuManager.nodeEvent.OnTapped, updateNodePriorityDisplay, node, itemID);//TODO make these args order consistant.
+                node.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, zSlideComputer.ResetItemPrio, itemID);
+                menu.centerNode.AddListener(zMenuManager.nodeEvent.OnHeldSelected, updateNodePriorityDisplay, node, itemID);
+                updateNodePriorityDisplay(node, itemID);
+                node.fullTextPart.SetScale(0.75f, 0.75f);
+                node.subtitlePart.SetScale(0.5f, 0.5f);
+                node.titlePart.SetScale(0.3f, 0.3f);
+            }
+        }
+        public static void updateNodePriorityDisplay(zMenu.zMenuNode node, uint itemID)
+        {
+            if (zSlideComputer.itemPrios[itemID] == zSlideComputer.OriginalItemPrios[itemID])
+            {
+                node.SetPrefix("");
+                node.SetSuffix("");
+            }
+            else
+            {
+                node.SetPrefix("* ");
+                node.SetSuffix(" *");
+            }
+            string hex = ColorUtility.ToHtmlStringRGB(GetPriorityColor(zSlideComputer.GetItemPrio(itemID)));
+            node.SetSubtitle($"<color=#CC840066>[ </color><color=#{hex}>{zSlideComputer.GetItemPrio(itemID)}</color><color=#CC840066> ]</color>");
+        }
+        public static Color GetPriorityColor(float value)
+        {
+            // scale factor to dim colors
+            float max = 0.25f;
 
+            Color red = new Color(max, 0f, 0f);
+            Color yellow = new Color(max, max, 0f);
+            Color green = new Color(0f, max, 0f);
+            Color blue = new Color(0f, 0f, max);
+
+            if (value <= 25f)
+                return Color.Lerp(red, yellow, value / 25f);
+            if (value <= 50f)
+                return Color.Lerp(yellow, green, (value - 25f) / 25f);
+            return Color.Lerp(green, blue, (value - 50f) / 50f);
+        }
+        public static void ChangePrioBasedOnMouseWheel(uint id, zMenu.zMenuNode node, int increment = 10)
+        {
+            if (node == null || !node.gameObject.activeInHierarchy)
+                return;
+            float scroll = Input.GetAxis("Mouse ScrollWheel");
+            int normalizedScroll = (int)Mathf.Sign(scroll);
+            if (scroll == 0f)
+                return;
+            float currentPrio = zSlideComputer.GetItemPrio(id);
+            zSlideComputer.SetBotItemPriority(id, Mathf.Clamp(currentPrio + (normalizedScroll * increment),0,100));
+            updateNodePriorityDisplay(node, id);
+        }
     }
     public static class SelectionMenu
     {
