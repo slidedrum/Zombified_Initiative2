@@ -50,11 +50,13 @@ namespace Zombified_Initiative
         public static bool _debug = true;
         public static bool _menuadded = false;
         private static float lastupdatetime = 0f;
-        
 
 
+        [Obsolete]
         public static void ReceiveZINetInfo(ulong sender, ZiMain.ZINetInfo netInfo)
         {
+            //TODO Phasing this out completely.
+
             // funktio attack 0
             // funktio toggleshare 1
             // funktio togglepickup 2
@@ -62,10 +64,10 @@ namespace Zombified_Initiative
             // funktio sharepack 4
             // funktio cancel 5
 
-            EnemyAgent? enemy = null;
-            ItemInLevel? item = null;
+            EnemyAgent enemy = null;
+            ItemInLevel item = null;
             Agent agent = null;
-            zComputer? zombie = null;
+            zComputer zombie = null;
             String botname = "";
             int itemtype = netInfo.ITEMTYPE;
             int itemserial = netInfo.ITEMSERIAL;
@@ -141,34 +143,34 @@ namespace Zombified_Initiative
             }
 
 
-            if (netInfo.FUNC == 1) //toggleshare
-            {
-                if (netInfo.SLOT == 8)//all bots
-                {
-                    foreach (PlayerAIBot iBot in ZiMain.BotTable.Values)
-                    {
-                        iBot.GetComponent<zComputer>().toggleSharePermission();
-                    }
-                }
-                else if (netInfo.SLOT < 8)//one bot
-                {
-                    zombie.toggleSharePermission();
-                }
-            }
-            if (netInfo.FUNC == 2) //togglepickup
-            {
-                if (netInfo.SLOT == 8)//all bots
-                {
-                    foreach (PlayerAIBot iBot in ZiMain.BotTable.Values)
-                    {
-                        iBot.GetComponent<zComputer>().togglePickupPermission();
-                    }
-                }
-                else if (netInfo.SLOT < 8)//one bot
-                {
-                    zombie.togglePickupPermission();
-                }
-            }
+            //if (netInfo.FUNC == 1) //toggleshare
+            //{
+            //    if (netInfo.SLOT == 8)//all bots
+            //    {
+            //        foreach (PlayerAIBot iBot in ZiMain.BotTable.Values)
+            //        {
+            //            iBot.GetComponent<zComputer>().toggleSharePermission();
+            //        }
+            //    }
+            //    else if (netInfo.SLOT < 8)//one bot
+            //    {
+            //        zombie.toggleSharePermission();
+            //    }
+            //}
+            //if (netInfo.FUNC == 2) //togglepickup
+            //{
+            //    if (netInfo.SLOT == 8)//all bots
+            //    {
+            //        foreach (PlayerAIBot iBot in ZiMain.BotTable.Values)
+            //        {
+            //            iBot.GetComponent<zComputer>().togglePickupPermission();
+            //        }
+            //    }
+            //    else if (netInfo.SLOT < 8)//one bot
+            //    {
+            //        zombie.togglePickupPermission();
+            //    }
+            //}
             if (netInfo.FUNC == 3) //pickup pack
             {
                 ZiMain.SendBotToPickupItemOld(botname, item);

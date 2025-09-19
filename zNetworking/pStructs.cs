@@ -70,10 +70,19 @@ namespace ZombieTweak2.zNetworking
             pItemData pStruct = refrence.Get_pItemData();
             return pStruct;
         }
-
         public struct pBotSelections
         {
             public long data;
+        }
+        public struct pItemPrioDisable
+        {
+            public uint id;
+            public bool allowed;
+        }
+        public struct pBotItemPrio
+        {
+            public uint id;
+            public float prio;
         }
     }
 }

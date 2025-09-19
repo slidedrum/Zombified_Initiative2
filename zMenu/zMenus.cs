@@ -53,15 +53,20 @@ namespace ZombieTweak2.zMenu
             }
             var pickupNode = permissionMenu.AddNode("Pickups").AddListener(zMenuManager.nodeEvent.OnTapped, zSlideComputer.TogglePickupPermission);
             pickupNode.AddListener(zMenuManager.nodeEvent.OnTapped, UpdateIndicatorForNode, pickupNode, zSlideComputer.PickUpPerms);
-            pickupNode.AddListener(zMenuManager.nodeEvent.OnHeld, pickupDetailsSubmenu.Open);
-            PermissionsMenuClass.setUpItemNodes(pickupDetailsSubmenu);
+            pickupNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, pickupDetailsSubmenu.Open);
+            //TODO make 5 item filters that you can switch between by scrolling on center node.
+            //ALL - ENCOUNTERED - RESOURCES - PLACEABLES - THROWABLES
+            pickupDetailsSubmenu.centerNode.ClearListeners(zMenuManager.nodeEvent.OnUnpressedSelected); 
             pickupDetailsSubmenu.centerNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, zSlideComputer.ResetAllItemPrio);
-            pickupDetailsSubmenu.centerNode.ClearListeners(zMenuManager.nodeEvent.OnUnpressedSelected);
             pickupDetailsSubmenu.centerNode.AddListener(zMenuManager.nodeEvent.OnTapped, pickupDetailsSubmenu.parrentMenu.Open);
+            PermissionsMenuClass.setUpItemNodes(pickupDetailsSubmenu);
             pickupDetailsSubmenu.radius = 175;
             selectionMenu.AddListener(zMenuManager.menuEvent.OnOpened, UpdateIndicatorForNode, selectionMenu.centerNode, SelectionMenu.botSelection);
             permissionMenu.AddListener(zMenuManager.menuEvent.OnOpened, UpdateIndicatorForNode, permissionMenu.centerNode, SelectionMenu.botSelection);
             permissionMenu.AddListener(zMenuManager.menuEvent.OnOpened, UpdateIndicatorForNode, pickupNode, zSlideComputer.PickUpPerms);
+
+            permissionMenu.AddNode("Share");
+            permissionMenu.AddNode("Move");
         }
         public static zMenu.zMenuNode UpdateIndicatorForNode(zMenu.zMenuNode node, Dictionary<int, bool> selectionPickUpPerms)
         {
@@ -89,6 +94,7 @@ namespace ZombieTweak2.zMenu
                     sbSubtitle += ']';
             }
             node.subtitle = sbSubtitle;
+            node.subtitlePart.SetScale(0.5f, 0.5f);
             return node;
         }
 
@@ -102,6 +108,7 @@ namespace ZombieTweak2.zMenu
     }
     public static class PermissionsMenuClass
     {
+        public static Dictionary<uint,zMenu.zMenuNode> prioNodesByID = new Dictionary<uint,zMenu.zMenuNode>();
         public static void setUpItemNodes(zMenu menu)
         {
             zMenu.zMenuNode glowstickNode = null;
@@ -117,17 +124,22 @@ namespace ZombieTweak2.zMenu
                     if (glowstickNode == null)
                     {
                         glowstickNode = menu.AddNode(zSlideComputer.shortGlowStickNames.FirstOrDefault());
+                        prioNodesByID[itemID] = glowstickNode;
                     }
                     node = glowstickNode;
                 }
                 else
+                {
                     node = menu.AddNode(publicName);
+                    prioNodesByID[itemID] = node;
+                }
                 node.AddListener(zMenuManager.nodeEvent.WhileSelected, ChangePrioBasedOnMouseWheel, itemID, node);
                 node.AddListener(zMenuManager.nodeEvent.OnTapped, zSlideComputer.ToggleItemPrioDissabled, itemID);
                 node.AddListener(zMenuManager.nodeEvent.OnTapped, updateNodePriorityDisplay, node, itemID);//TODO make these args order consistant.
                 node.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, zSlideComputer.ResetItemPrio, itemID);
                 node.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, zSlideComputer.SetItemPrioDissabled, itemID, true);
                 node.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, updateNodePriorityDisplay, node, itemID);
+                menu.centerNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, zSlideComputer.SetItemPrioDissabled, itemID, true);
                 menu.centerNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, updateNodePriorityDisplay, node, itemID);
                 updateNodePriorityDisplay(node, itemID);
                 node.fullTextPart.SetScale(0.75f, 0.75f);

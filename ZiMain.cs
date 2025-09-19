@@ -7,6 +7,7 @@ using Gear;
 using GTFO.API;
 using HarmonyLib;
 using Il2CppInterop.Runtime.Injection;
+using Il2CppSystem.Reflection;
 using LevelGeneration;
 using Player;
 using SNetwork;
@@ -15,6 +16,8 @@ using System.Collections.Generic;
 using UnityEngine.SceneManagement;
 using ZombieTweak2;
 using ZombieTweak2.zMenu;
+using ZombieTweak2.zNetworking;
+using static ZombieTweak2.zNetworking.pStructs;
 
 //todo fix pickup action failing sometimes  -- Done?  
 //todo change cancel to look up -- done
@@ -24,6 +27,8 @@ using ZombieTweak2.zMenu;
 //todo fix bot extra data only updating when you look away
 //todo track down KeyNotFoundException: The given key was not present in the dictionary.
 //todo move methods arround to other classes that make more sense
+//todo handle bots joining/leaving or any other way the bot count can change mid mission.
+//todo customize resource share thresholds, or however that works.
 
 //todo refactor PlayConfirmSound hook to not be so dumb -- probably just going to remvoe support for q menu
 
@@ -112,6 +117,9 @@ public class ZiMain : BasePlugin
         NetworkAPI.RegisterEvent<ZINetInfo>(ZINetInfo.NetworkIdentity, zController.ReceiveZINetInfo);
         NetworkAPI.RegisterEvent<ZISendBotToPickupItemInfo>("sendBotToPickupItem", SendBotToPickupItem);
 
+        NetworkAPI.RegisterEvent<pItemPrioDisable>("SetItemPrioDissable", zNetworking.reciveSetItemPrioDissable);
+        NetworkAPI.RegisterEvent<pBotItemPrio>("SetBotItemPrio", zNetworking.reciveSetBotItemPrio);
+
         LG_Factory.add_OnFactoryBuildDone((Action)ZombieController.OnFactoryBuildDone);
         LG_Factory.add_OnFactoryBuildDone((Action)zSlideComputer.Init);
         EventAPI.OnExpeditionStarted += ZombieController.Initialize;
@@ -198,11 +206,18 @@ public class ZiMain : BasePlugin
         }
         if (typeName == "PlayerBotActionShareResourcePack")
         {
+            log.LogInfo("PlayerBotActionShareResourcePack removed");
             var descriptor = action.DescBase.Cast<PlayerBotActionShareResourcePack.Descriptor>();
+            log.LogInfo("descriptor cast");
             float ammoLeft = bot.Backpack.AmmoStorage.GetAmmoInPack(AmmoType.ResourcePackRel);
-            log.LogInfo($"{bot.Agent.PlayerName} completed share {descriptor.Item.PublicName} task with status: {action.DescBase.Status}  access layers {descriptor.m_accessLayers}");
+            log.LogInfo($"Got ammo left {ammoLeft}");
+            log.LogInfo($"{bot.Agent.PlayerName} completed share");
+            log.LogInfo($" {descriptor.Item.PublicName} task with status: ");
+            log.LogInfo($"{action.DescBase.Status}  ");
+            log.LogInfo($"access layers {descriptor.m_accessLayers}");
             string article = manualAction ? "the" : "a";
             string receverOrMyslef = descriptor.Receiver == bot.Agent ? "myself" : descriptor.Receiver.PlayerName;
+            log.LogInfo($"Got reciver or myself {receverOrMyslef}");
             if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Successful)
                 sendChatMessage($"I gave {receverOrMyslef} {article} {descriptor.Item.PublicName}({ammoLeft}%).", bot.Agent);
             else if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Failed)
@@ -232,45 +247,8 @@ public class ZiMain : BasePlugin
         log.LogInfo($"bot " + bot + " attack");
         SendBotToKillEnemyOld(bot, monster, PlayerBotActionAttack.StanceEnum.All, PlayerBotActionAttack.AttackMeansEnum.All, PlayerBotActionWalk.Descriptor.PostureEnum.Stand);
     }
-    public static void setPickupPermission(string bot, bool allowed)
-    { //TODO - figure out network stuff and refactor this. Right now I'm a little scared to touch this because I can't test it.
-        foreach (KeyValuePair<String, PlayerAIBot> iBotTable in ZiMain.BotTable)
-        {
-            string botName = iBotTable.Key;
-            PlayerAIBot playerAIBot = iBotTable.Value;
-            if (bot == botName)
-            {
-                log.LogInfo($"{botName} pickup perm set to {allowed}");
-                if (!SNet.IsMaster) NetworkAPI.InvokeEvent<ZiMain.ZINetInfo>("ZINetInfo", new ZiMain.ZINetInfo(2, playerAIBot.m_playerAgent.PlayerSlotIndex, 0, 0, 0));
-                if (SNet.IsMaster)
-                {
-                    zComputer botComp = playerAIBot.GetComponent<zComputer>();
-                    if (botComp.pickupaction != null) botComp.pickupaction.DescBase.SetCompletionStatus(PlayerBotActionBase.Descriptor.StatusType.Failed);
-                    botComp.allowedpickups = allowed;
-                }
-            }
-        }
-    }
-    public static void togglePickupPermission(string bot, bool everyone = false)
-    { //TODO - rework so it doesn't need a for loop
-      //TODO - remove everyone arg
-        foreach (KeyValuePair<String, PlayerAIBot> iBotTable in ZiMain.BotTable)
-        {
-            string botName = iBotTable.Key;
-            PlayerAIBot playerAIBot = iBotTable.Value;
-            if (everyone || bot == botName)
-            {
-                log.LogInfo($"{botName} toggle resource pickups");
-                if (!SNet.IsMaster) NetworkAPI.InvokeEvent<ZiMain.ZINetInfo>("ZINetInfo", new ZiMain.ZINetInfo(2, playerAIBot.m_playerAgent.PlayerSlotIndex, 0, 0, 0));
-                if (SNet.IsMaster)
-                {
-                    zComputer botComp = playerAIBot.GetComponent<zComputer>();
-                    if (botComp.pickupaction != null) botComp.pickupaction.DescBase.SetCompletionStatus(PlayerBotActionBase.Descriptor.StatusType.Failed);
-                    botComp.allowedpickups = !botComp.allowedpickups;
-                }
-            }
-        }
-    }
+
+
     public static List<PlayerAIBot> GetBotList()
     {//TODO this is bad there's got to be a better way.  Though it's pretty cheap regardless.
         List<PlayerAIBot> playerAiBots = new();

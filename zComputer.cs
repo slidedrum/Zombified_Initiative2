@@ -2,6 +2,7 @@
 using Localization;
 using Player;
 using SNetwork;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -19,7 +20,7 @@ namespace Zombified_Initiative
         TextDataBlock textsupply;
         TextDataBlock textsentry;
         public CommunicationNode mymenu;
-
+        [Obsolete]
         public bool allowedpickups = true;
         public bool allowedshare = true;
         public bool allowedmove = true;
@@ -141,23 +142,6 @@ namespace Zombified_Initiative
                 if (!allowedmove && action.GetIl2CppType().Name == "PlayerBotActionFollow") action.DescBase.Status = PlayerBotActionBase.Descriptor.StatusType.Queued;
                 if (!allowedmove && action.GetIl2CppType().Name == "PlayerBotActionTravel") action.DescBase.Status = PlayerBotActionBase.Descriptor.StatusType.Queued;
 
-                // pickups?
-                if (!allowedpickups && action.GetIl2CppType().Name == "PlayerBotActionCollectItem")
-                {
-                    var descriptor = action.DescBase.Cast<PlayerBotActionCollectItem.Descriptor>();
-                    var itemIsDesinfectionPack = descriptor.TargetItem.PublicName == "Disinfection Pack";
-                    var itemIsMediPack = descriptor.TargetItem.PublicName == "MediPack";
-                    var itemIsAmmoPack = descriptor.TargetItem.PublicName == "Ammo Pack";
-                    var itemIsToolRefillPack = descriptor.TargetItem.PublicName == "Tool Refill Pack";
-
-                    var itemIsPack = itemIsToolRefillPack || itemIsAmmoPack || itemIsMediPack || itemIsDesinfectionPack;
-                    if (descriptor.Haste < ZiMain._manualActionsHaste && itemIsPack)
-                    {
-                        pickupaction = action;
-                        actionsToRemove.Add(action);
-                    }
-                } // pickups
-
                 // sharing?
                 if (!allowedshare && action.GetIl2CppType().Name == "PlayerBotActionShareResourcePack")
                 {
@@ -236,16 +220,6 @@ namespace Zombified_Initiative
             PlayerAgent agent = this.gameObject.GetComponent<PlayerAgent>();
             var nav = agent.NavMarker;
             nav.UpdateExtraInfo();
-        }
-        public void togglePickupPermission()
-        {
-            this.allowedpickups = !this.allowedpickups;
-            updateExtraInfo();
-        }
-        public void toggleSharePermission()
-        {
-            this.allowedpickups = !this.allowedpickups;
-            updateExtraInfo();
         }
         public void ToggleSentryMode()
         {

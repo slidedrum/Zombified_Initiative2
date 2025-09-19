@@ -46,7 +46,6 @@ namespace ZombieTweak2.zMenu
         }
         public GameObject gameObject;
         private Canvas canvas;
-        private RectTransform rectTransform;
         public Vector3 RelativePosition = Vector3.zero;
 
         private Dictionary<zMenuManager.menuEvent, FlexibleEvent> eventMap;

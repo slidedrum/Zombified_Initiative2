@@ -8,7 +8,9 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.UIElements;
 using ZombieTweak2.zMenu;
+using ZombieTweak2.zNetworking;
 using Zombified_Initiative;
+using static ZombieTweak2.zNetworking.pStructs;
 
 namespace ZombieTweak2
 {
@@ -20,6 +22,8 @@ namespace ZombieTweak2
         public static Il2CppSystem.Collections.Generic.Dictionary<uint, bool> enabledItemPrios = new ();
         public static Il2CppSystem.Collections.Generic.Dictionary<uint, float> OriginalItemPrios = new();
         public static Dictionary<int, bool> PickUpPerms = new (); //bot.Agent.Owner.PlayerSlotIndex()
+        public static Dictionary<int, bool> SharePerms = new (); //bot.Agent.Owner.PlayerSlotIndex()
+        public static Dictionary<int, bool> MovePerms = new (); //bot.Agent.Owner.PlayerSlotIndex()
 
 
         public static Il2CppReferenceArray<ItemDataBlock> consumableItems 
@@ -58,6 +62,7 @@ namespace ZombieTweak2
 
         public static List<string> fullGlowStickNames { get; private set; }
         public static List<string> shortGlowStickNames { get; private set; }
+        
 
         public static void Init()
         {
@@ -77,6 +82,8 @@ namespace ZombieTweak2
             foreach (PlayerAIBot bot in playerAiBots)
             {
                 PickUpPerms[bot.Agent.Owner.PlayerSlotIndex()] = true;
+                SharePerms[bot.Agent.Owner.PlayerSlotIndex()] = true;
+                MovePerms[bot.Agent.Owner.PlayerSlotIndex()] = true;
             }
         }
         public static void FirstTimeSetup()
@@ -109,6 +116,7 @@ namespace ZombieTweak2
         }
         public static void ResetAllItemPrio()
         {
+            ZiMain.log.LogMessage("Ressting all item priorties to default");
             foreach (var kvp in OriginalItemPrios)
             {
                 itemPrios[kvp.Key] = kvp.Value;
@@ -126,10 +134,17 @@ namespace ZombieTweak2
                 return;
             SetItemPrioDissabled(itemID, !enabledItemPrios[itemID]);
         }
-        public static void SetItemPrioDissabled(uint itemID, bool allowed)
+        public static void SetItemPrioDissabled(uint itemID, bool allowed, ulong netSender = 0)
         {
             if (!enabledItemPrios.ContainsKey(itemID))
                 return;
+            if ((!SNet.IsMaster || true) && netSender == 0)//always send even as host for testing.
+            {
+                pStructs.pItemPrioDisable info = new pStructs.pItemPrioDisable();
+                info.id = itemID;
+                info.allowed = allowed;
+                NetworkAPI.InvokeEvent<pStructs.pItemPrioDisable>("SetItemPrioDissable", info);
+            }
             enabledItemPrios[itemID] = allowed;
         }
         public static void Update()
@@ -189,8 +204,15 @@ namespace ZombieTweak2
             }
             return I_SetBotItemPriority(itemName,priority);
         }
-        public static bool SetBotItemPriority(uint id, float priority)
+        public static bool SetBotItemPriority(uint id, float priority, ulong netSender = 0) //flowthrough main
         {
+            if ((!SNet.IsMaster || true)&& netSender == 0)//always send even as host for testing.
+            {
+                pBotItemPrio info = new pBotItemPrio();
+                info.id = id;
+                info.prio = priority;
+                NetworkAPI.InvokeEvent<pStructs.pBotItemPrio>("SetBotItemPrio",info);
+            }
             if (ItemDataBlock.s_blockByID.ContainsKey(id))
             {
                 itemPrios[id] = priority;
