@@ -27,7 +27,7 @@ namespace ZombieTweak2.zMenu
             }
         }
         public OrderedSet<zMenuNode> nodes { get; private set; }
-        public OrderedSet<zMenuNode> dissabledNodes { get; private set; }
+        public OrderedSet<zMenuNode> disabledNodes { get; private set; }
         public  zMenuNode centerNode { get; private set; }
         private zMenu _parrentMenu;
         internal int frameOpenedAt = Time.frameCount;
@@ -320,7 +320,7 @@ namespace ZombieTweak2.zMenu
             }
             return this;
         }
-        public void DissableNode(zMenuNode node)
+        public void DisableNode(zMenuNode node)
         {
             if (nodes.Contains(node))
             {
@@ -328,25 +328,25 @@ namespace ZombieTweak2.zMenu
                 node.gameObject.SetActive(false);
             }
             else
-                ZiMain.log.LogWarning($"Could not find node {node.text} to dissable from {name} menu");
+                ZiMain.log.LogWarning($"Could not find node {node.text} to disable from {name} menu");
         }
-        public void DissableNode(string nodeText)
+        public void DisableNode(string nodeText)
         {
-            var nodeToDissable = nodes.FirstOrDefault(n => n.text == nodeText);
-            if (nodeToDissable != null)
+            var nodeToDisable = nodes.FirstOrDefault(n => n.text == nodeText);
+            if (nodeToDisable != null)
             {
-                nodes.Remove(nodeToDissable);
-                nodeToDissable.gameObject.SetActive(false);
+                nodes.Remove(nodeToDisable);
+                nodeToDisable.gameObject.SetActive(false);
             }
             else
-                ZiMain.log.LogWarning($"Could not find node {nodeText} to dissable from {name} menu");
+                ZiMain.log.LogWarning($"Could not find node {nodeText} to disable from {name} menu");
         }
         public void EnableNode(string nodeText)
         {
-            var nodeToEnable = dissabledNodes.FirstOrDefault(n => n.text == nodeText);
+            var nodeToEnable = disabledNodes.FirstOrDefault(n => n.text == nodeText);
             if (nodeToEnable != null)
             {
-                dissabledNodes.Add(nodeToEnable);
+                disabledNodes.Add(nodeToEnable);
                 nodeToEnable.gameObject.SetActive(true);
             }
             else

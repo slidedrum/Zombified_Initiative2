@@ -137,13 +137,13 @@ namespace ZombieTweak2
                 return;
             itemPrios[itemID] = OriginalItemPrios[itemID];
         }
-        public static void ToggleItemPrioDissabled(uint itemID)
+        public static void ToggleItemPrioDisabled(uint itemID)
         {
             if (!enabledItemPrios.ContainsKey(itemID))
                 return;
-            SetItemPrioDissabled(itemID, !enabledItemPrios[itemID]);
+            SetItemPrioDisabled(itemID, !enabledItemPrios[itemID]);
         }
-        public static void SetItemPrioDissabled(uint itemID, bool allowed, ulong netSender = 0)
+        public static void SetItemPrioDisabled(uint itemID, bool allowed, ulong netSender = 0)
         {
             if (!enabledItemPrios.ContainsKey(itemID))
             {
@@ -155,7 +155,7 @@ namespace ZombieTweak2
                 pStructs.pItemPrioDisable info = new pStructs.pItemPrioDisable();
                 info.id = itemID;
                 info.allowed = allowed;
-                NetworkAPI.InvokeEvent<pStructs.pItemPrioDisable>("SetItemPrioDissable", info);
+                NetworkAPI.InvokeEvent<pStructs.pItemPrioDisable>("SetItemPrioDisable", info);
             }
             enabledItemPrios[itemID] = allowed;
         }
@@ -248,7 +248,7 @@ namespace ZombieTweak2
                 pItemPrio info = new pItemPrio();
                 info.id = id;
                 info.prio = priority;
-                NetworkAPI.InvokeEvent<pStructs.pItemPrio>("SetBotItemPrio",info);
+                NetworkAPI.InvokeEvent<pStructs.pItemPrio>("SetItemPrio",info);
             }
             if (ItemDataBlock.s_blockByID.ContainsKey(id))
             {
@@ -293,7 +293,7 @@ namespace ZombieTweak2
                 pStructs.pResourceThresholdDisable info = new pStructs.pResourceThresholdDisable();
                 info.id = itemID;
                 info.allowed = allowed;
-                NetworkAPI.InvokeEvent<pStructs.pResourceThresholdDisable>("SetResourceSharePermission", info);
+                NetworkAPI.InvokeEvent<pStructs.pResourceThresholdDisable>("SetResourceThresholdDisable", info);
             }
             enabledResourceShares[itemID] = allowed;
         }
@@ -310,7 +310,7 @@ namespace ZombieTweak2
         }
         public static void ToggleSharePermission(Dictionary<int, bool> botSelection)
         {
-            var dissabledCount = 0;
+            var disabledCount = 0;
             var enabledCount = 0;
             foreach (var bot in botSelection)
             {
@@ -319,9 +319,9 @@ namespace ZombieTweak2
                 if (GetSharePermission(bot.Key))
                     enabledCount++;
                 else
-                    dissabledCount++;
+                    disabledCount++;
             }
-            bool majority = enabledCount > dissabledCount;
+            bool majority = enabledCount > disabledCount;
             foreach (var bot in botSelection)
             {
                 if (!bot.Value) //unselected, ignore.
@@ -376,16 +376,16 @@ namespace ZombieTweak2
         }
         public static void TogglePickupPermission(List<int> idList)
         {
-            var dissabledCount = 0;
+            var disabledCount = 0;
             var enabledCount = 0;
             foreach (int id in idList)
             {
                 if (GetPickupPermission(id))
                     enabledCount++;
                 else
-                    dissabledCount++;
+                    disabledCount++;
             }
-            bool majority = enabledCount > dissabledCount;
+            bool majority = enabledCount > disabledCount;
             foreach (int id in idList)
             {
                 SetPickupPermission(id, !majority);
@@ -393,16 +393,16 @@ namespace ZombieTweak2
         }
         public static void TogglePickupPermission(List<PlayerAIBot> botList)
         {
-            var dissabledCount = 0;
+            var disabledCount = 0;
             var enabledCount = 0;
             foreach (PlayerAIBot bot in botList)
             {
                 if (GetPickupPermission(bot))
                     enabledCount++;
                 else
-                    dissabledCount++;
+                    disabledCount++;
             }
-            bool majority = enabledCount > dissabledCount;
+            bool majority = enabledCount > disabledCount;
             foreach (PlayerAIBot bot in botList)
             {
                 SetPickupPermission(bot, !majority);
@@ -410,7 +410,7 @@ namespace ZombieTweak2
         }
         public static void TogglePickupPermission(Dictionary<int, bool> botSelection)
         {
-            var dissabledCount = 0;
+            var disabledCount = 0;
             var enabledCount = 0;
             foreach (var bot in botSelection)
             {
@@ -419,9 +419,9 @@ namespace ZombieTweak2
                 if (GetPickupPermission(bot.Key))
                     enabledCount++;
                 else
-                    dissabledCount++;
+                    disabledCount++;
             }
-            bool majority = enabledCount > dissabledCount;
+            bool majority = enabledCount > disabledCount;
             foreach (var bot in botSelection)
             {
                 if (!bot.Value) //unselected, ignore.

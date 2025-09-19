@@ -283,12 +283,12 @@ namespace ZombieTweak2
                 }
             }
         }
-        private static void TestSetItemPrioDissableNetwork(ulong sender, uint id, bool allowed)
+        private static void TestSetItemPrioDisableNetwork(ulong sender, uint id, bool allowed)
         {
             pStructs.pItemPrioDisable info = new pStructs.pItemPrioDisable();
             info.allowed = allowed;
             info.id = id;
-            zNetworking.zNetworking.reciveSetItemPrioDissable(sender, info);
+            zNetworking.zNetworking.reciveSetItemPrioDisable(sender, info);
         }
         private static void TestSetBotItemPrioNetwork(ulong sender, uint id, float prio)
         {

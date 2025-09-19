@@ -121,7 +121,7 @@ public class ZiMain : BasePlugin
         //NetworkAPI.RegisterEvent<ZINetInfo>(ZINetInfo.NetworkIdentity, zController.ReceiveZINetInfo);
         NetworkAPI.RegisterEvent<ZISendBotToPickupItemInfo>("sendBotToPickupItem", SendBotToPickupItem);
 
-        NetworkAPI.RegisterEvent<pItemPrioDisable>("SetItemPrioDissable", zNetworking.reciveSetItemPrioDissable);
+        NetworkAPI.RegisterEvent<pItemPrioDisable>("SetItemPrioDisable", zNetworking.reciveSetItemPrioDisable);
         NetworkAPI.RegisterEvent<pItemPrio>("SetItemPrio", zNetworking.reciveSetItemPrio);
         NetworkAPI.RegisterEvent<pResourceThreshold>("SetResourceThreshold", zNetworking.reciveSetResourceThreshold);
         NetworkAPI.RegisterEvent<pResourceThresholdDisable>("SetResourceThresholdDisable", zNetworking.reciveSetResourceThresholdDisable);
@@ -270,7 +270,6 @@ public class ZiMain : BasePlugin
         }
         return playerAiBots;
     }
-
     public static void SendBotTokillEnemy(PlayerAIBot bot, Agent enemy, PlayerBotActionAttack.StanceEnum stance = PlayerBotActionAttack.StanceEnum.All, PlayerBotActionAttack.AttackMeansEnum means = PlayerBotActionAttack.AttackMeansEnum.All, PlayerBotActionWalk.Descriptor.PostureEnum posture = PlayerBotActionWalk.Descriptor.PostureEnum.Stand, PlayerAgent commander = null)
     {
 

@@ -84,7 +84,7 @@ namespace ZombieTweak2.zMenu
             ZiMain.log.LogInfo($"Updatin selections for node {node.text}");
             string endcolor = "</color>";
             string enabledColor = "<color=#FFA50066>";
-            string dissabledColor = "<color=#CCCCCC66>";
+            string disabledColor = "<color=#CCCCCC66>";
             string sbSubtitle = "[";
             var last = selectionPickUpPerms.Last();
             foreach (var bot in selectionPickUpPerms)
@@ -92,7 +92,7 @@ namespace ZombieTweak2.zMenu
                 if (bot.Value)
                     sbSubtitle += enabledColor;
                 else
-                    sbSubtitle += dissabledColor;
+                    sbSubtitle += disabledColor;
                 PlayerAgent agent;
                 int id = bot.Key;
                 PlayerManager.TryGetPlayerAgent(ref id, out agent);
@@ -215,12 +215,12 @@ namespace ZombieTweak2.zMenu
                     prioNodesByID[itemID] = node;
                 }
                 node.AddListener(zMenuManager.nodeEvent.WhileSelected, ChangePrioBasedOnMouseWheel, itemID, node);
-                node.AddListener(zMenuManager.nodeEvent.OnTapped, zSlideComputer.ToggleItemPrioDissabled, itemID);
+                node.AddListener(zMenuManager.nodeEvent.OnTapped, zSlideComputer.ToggleItemPrioDisabled, itemID);
                 node.AddListener(zMenuManager.nodeEvent.OnTapped, updateNodePriorityDisplay, node, itemID);//TODO make these args order consistant.
                 node.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, zSlideComputer.ResetItemPrio, itemID);
-                node.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, zSlideComputer.SetItemPrioDissabled, itemID, true);
+                node.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, zSlideComputer.SetItemPrioDisabled, itemID, true);
                 node.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, updateNodePriorityDisplay, node, itemID);
-                menu.centerNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, zSlideComputer.SetItemPrioDissabled, itemID, true);
+                menu.centerNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, zSlideComputer.SetItemPrioDisabled, itemID, true);
                 menu.centerNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, updateNodePriorityDisplay, node, itemID);
                 menu.AddListener(zMenuManager.menuEvent.OnOpened, updateNodePriorityDisplay, node, itemID);
                 node.fullTextPart.SetScale(0.75f, 0.75f);
