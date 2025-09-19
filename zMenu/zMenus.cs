@@ -22,7 +22,7 @@ namespace ZombieTweak2.zMenu
         public static Color selectedColor = new Color(0.25f, 0.16175f, 0.0f);
         private static zMenu selectionMenu;
         private static zMenu actionMenu;
-        private static zMenu permissionMenu;
+        public static zMenu permissionMenu;
         private static zMenu pickupDetailsSubmenu;
         private static zMenu shareDetailsSubmenu;
 

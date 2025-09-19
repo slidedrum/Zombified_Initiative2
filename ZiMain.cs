@@ -19,23 +19,24 @@ using ZombieTweak2.zMenu;
 using ZombieTweak2.zNetworking;
 using static ZombieTweak2.zNetworking.pStructs;
 
-//todo fix pickup action failing sometimes  -- Done?  
-//todo change cancel to look up -- done
-//todo make look down select yourself -- done
+//todo fix pickup action failing sometimes  -- DONE!  
+//todo change cancel to look up -- DONE
+//todo make look down select yourself -- DONE
 //todo make "i need health/ammo" quck action overide share permission
 //todo make smart select pick up turrets
 //todo fix bot extra data only updating when you look away
 //todo track down KeyNotFoundException: The given key was not present in the dictionary.
 //todo move methods arround to other classes that make more sense
 //todo handle bots joining/leaving or any other way the bot count can change mid mission.
-//todo customize resource share thresholds, or however that works.
+//todo customize resource share thresholds, or however that works. -- DONE
 //todo error when exiting q menu if radial menu is open
 //todo unheld selected might have problems.
 //todo double tap smart select on a bot to have them follow you.
+//todo move updateNodeThresholdDisplay and similar to the set methds not as node listeners.
 
 //todo refactor PlayConfirmSound hook to not be so dumb -- probably just going to remvoe support for q menu
 
-//want to make custom blacklist pickups - IN PROGRESS
+//want to make custom blacklist pickups - DONE
 //want to fix attack not always working
 //want to make attack wake room sometimes
 //want to make "clear room" command
@@ -121,7 +122,11 @@ public class ZiMain : BasePlugin
         NetworkAPI.RegisterEvent<ZISendBotToPickupItemInfo>("sendBotToPickupItem", SendBotToPickupItem);
 
         NetworkAPI.RegisterEvent<pItemPrioDisable>("SetItemPrioDissable", zNetworking.reciveSetItemPrioDissable);
-        NetworkAPI.RegisterEvent<pBotItemPrio>("SetBotItemPrio", zNetworking.reciveSetBotItemPrio);
+        NetworkAPI.RegisterEvent<pItemPrio>("SetItemPrio", zNetworking.reciveSetItemPrio);
+        NetworkAPI.RegisterEvent<pResourceThreshold>("SetResourceThreshold", zNetworking.reciveSetResourceThreshold);
+        NetworkAPI.RegisterEvent<pResourceThresholdDisable>("SetResourceThresholdDisable", zNetworking.reciveSetResourceThresholdDisable);
+        NetworkAPI.RegisterEvent<pSharePermission>("SetSharePermission", zNetworking.ReciveSetSharePermission);
+        NetworkAPI.RegisterEvent<pPickupPermission>("SetPickupPermission", zNetworking.ReciveSetPickupPermission);
 
         LG_Factory.add_OnFactoryBuildDone((Action)ZombieController.OnFactoryBuildDone);
         LG_Factory.add_OnFactoryBuildDone((Action)zSlideComputer.Init);

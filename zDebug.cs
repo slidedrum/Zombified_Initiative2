@@ -292,10 +292,10 @@ namespace ZombieTweak2
         }
         private static void TestSetBotItemPrioNetwork(ulong sender, uint id, float prio)
         {
-            pStructs.pBotItemPrio info = new pStructs.pBotItemPrio();
+            pStructs.pItemPrio info = new pStructs.pItemPrio();
             info.prio = prio;
             info.id = id;
-            zNetworking.zNetworking.reciveSetBotItemPrio(sender, info);
+            zNetworking.zNetworking.reciveSetItemPrio(sender, info);
         }
     }
 }

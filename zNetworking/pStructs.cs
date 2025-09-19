@@ -80,17 +80,27 @@ namespace ZombieTweak2.zNetworking
             public uint id;
             public bool allowed;
         }
-        public struct pBotItemPrio
+        public struct pItemPrio
         {
             public uint id;
             public float prio;
+        }
+        public struct pPickupPermission
+        {
+            public int playerID;
+            public bool allowed;
+        }
+        public struct pSharePermission
+        {
+            public int playerID;
+            public bool allowed;
         }
         public struct pResourceThresholdDisable
         {
             public uint id;
             public bool allowed;
         }
-        public struct pBotResourceThreshold
+        public struct pResourceThreshold
         {
             public uint id;
             public int threshold;

@@ -1,5 +1,7 @@
-﻿using GameData;
+﻿using Dissonance.Networking.Client;
+using GameData;
 using GTFO.API;
+using HarmonyLib;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using Player;
 using SNetwork;
@@ -144,8 +146,11 @@ namespace ZombieTweak2
         public static void SetItemPrioDissabled(uint itemID, bool allowed, ulong netSender = 0)
         {
             if (!enabledItemPrios.ContainsKey(itemID))
+            {
+                ZiMain.log.LogWarning($"Attemted to set item pick up allow for unknown id: {itemID} - {allowed}");
                 return;
-            if ((!SNet.IsMaster || true) && netSender == 0)//always send even as host for testing.
+            }
+            if (netSender == 0)
             {
                 pStructs.pItemPrioDisable info = new pStructs.pItemPrioDisable();
                 info.id = itemID;
@@ -190,14 +195,21 @@ namespace ZombieTweak2
             return name;
   
         }
-        public static void SetResourceThreshold(uint itemID, int threshold)
+        public static void SetResourceThreshold(uint itemID, int threshold, ulong netSender = 0)
         {
             if (!resourceThresholds.ContainsKey(itemID))
             {
                 ZiMain.log.LogWarning($"Attemted to set resource threshold for unknown id: {itemID} - {threshold}");
                 return;
             }
-            resourceThresholds[itemID] = Math.Clamp(threshold,0,100);
+            if (netSender == 0)
+            {
+                pStructs.pResourceThreshold info = new pStructs.pResourceThreshold();
+                info.id = itemID;
+                info.threshold = threshold;
+                NetworkAPI.InvokeEvent<pStructs.pResourceThreshold>("SetResourceThreshold", info);
+            }
+            resourceThresholds[itemID] = Math.Clamp(threshold, 0, 100);
         }
         public static int GetResourceThreshold(uint itemID)
         {
@@ -231,12 +243,12 @@ namespace ZombieTweak2
         }
         public static bool SetBotItemPriority(uint id, float priority, ulong netSender = 0) //flowthrough main
         {
-            if ((!SNet.IsMaster || true)&& netSender == 0)//always send even as host for testing.
+            if (netSender == 0)
             {
-                pBotItemPrio info = new pBotItemPrio();
+                pItemPrio info = new pItemPrio();
                 info.id = id;
                 info.prio = priority;
-                NetworkAPI.InvokeEvent<pStructs.pBotItemPrio>("SetBotItemPrio",info);
+                NetworkAPI.InvokeEvent<pStructs.pItemPrio>("SetBotItemPrio",info);
             }
             if (ItemDataBlock.s_blockByID.ContainsKey(id))
             {
@@ -272,10 +284,17 @@ namespace ZombieTweak2
             }
             return enabledResourceShares[itemID];
         }
-        public static void SetResourceSharePermission(uint itemID, bool allowed)
+        public static void SetResourceSharePermission(uint itemID, bool allowed,ulong netSender = 0)
         {
             if (!enabledResourceShares.ContainsKey(itemID))
                 return;
+            if (netSender == 0)
+            {
+                pStructs.pResourceThresholdDisable info = new pStructs.pResourceThresholdDisable();
+                info.id = itemID;
+                info.allowed = allowed;
+                NetworkAPI.InvokeEvent<pStructs.pResourceThresholdDisable>("SetResourceSharePermission", info);
+            }
             enabledResourceShares[itemID] = allowed;
         }
         public static void ToggleBotSharePermission(int playerID)
@@ -410,16 +429,39 @@ namespace ZombieTweak2
                 SetPickupPermission(bot.Key,!majority);
             }
         }
-        public static void SetSharePermission(int playerID, bool allowed)
+        public static void SetSharePermission(int playerID, bool allowed, ulong netSender = 0)
         {
-            //todo check if exists.
+            if (!SharePerms.ContainsKey(playerID))
+            {
+                ZiMain.log.LogWarning($"Tried to set share perm for invalid player id: {playerID}, allowed:{allowed}");
+                return;
+            }
+            if (netSender == 0)
+            {
+                pStructs.pSharePermission info = new pStructs.pSharePermission();
+                info.playerID = playerID;
+                info.allowed = allowed;
+                NetworkAPI.InvokeEvent<pStructs.pSharePermission>("SetSharePermission", info);
+            }
             ZiMain.log.LogMessage($"Setting share perm for id {playerID} to {allowed}");
             SharePerms[playerID] = allowed;
         }
-        public static void SetPickupPermission(int id, bool allowed)
+        public static void SetPickupPermission(int playerID, bool allowed, ulong netSender = 0)
         {
-            ZiMain.log.LogMessage($"Setting pickup perm for id {id} to {allowed}");
-            PickUpPerms[id] = allowed;
+            if (!PickUpPerms.ContainsKey(playerID))
+            {
+                ZiMain.log.LogWarning($"Tried to set pickup perm for invalid player id: {playerID}, allowed:{allowed}");
+                return;
+            }
+            if (netSender == 0)
+            {
+                pStructs.pPickupPermission info = new pStructs.pPickupPermission();
+                info.playerID = playerID;
+                info.allowed = allowed;
+                NetworkAPI.InvokeEvent<pStructs.pPickupPermission>("SetPickupPermission", info);
+            }
+            ZiMain.log.LogMessage($"Setting pickup perm for id {playerID} to {allowed}");
+            PickUpPerms[playerID] = allowed;
         }
         public static void SetPickupPermission(PlayerAIBot bot, bool allowed)
         {

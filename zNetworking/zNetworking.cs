@@ -12,8 +12,8 @@ namespace ZombieTweak2.zNetworking
     { //This class will handle all incoming and outgoing network requests.
         //todo only update values every 100ms.  
         //if not host ask for host's value after change
-        public static Dictionary<int, bool> botSelections = new Dictionary<int, bool>();
-        public static long EncodeBotSelectionForNetwork(Dictionary<int, bool> botSelection)
+        internal static Dictionary<int, bool> botSelections = new Dictionary<int, bool>();
+        internal static long EncodeBotSelectionForNetwork(Dictionary<int, bool> botSelection)
         {
             //this method is AI generated, but I fully understand what it's doing.  I just didn't know how to do bitwise ops.
             const int MaxBots = 21; // 64 bits / 3 bits per bot
@@ -41,7 +41,7 @@ namespace ZombieTweak2.zNetworking
 
             return result;
         }
-        public static Dictionary<int, bool> DecodeBotSelectionFromNetwork(long encoded)
+        internal static Dictionary<int, bool> DecodeBotSelectionFromNetwork(long encoded)
         {
             const int MaxBots = 21;
             var botSelection = new Dictionary<int, bool>();
@@ -68,20 +68,20 @@ namespace ZombieTweak2.zNetworking
             }
             return botSelection;
         }
-        public static void reciveTogglePickupPermission(ulong sender, pStructs.pBotSelections info)
+        internal static void reciveTogglePickupPermission(ulong sender, pStructs.pBotSelections info)
         {
             ZiMain.log.LogInfo($"Recived toggle perm wiht pbotsends {info.data}");
             botSelections = DecodeBotSelectionFromNetwork(info.data);
             zSlideComputer.TogglePickupPermission(botSelections); //this works, it's downstream.
         }
 
-        public static void reciveSetItemPrioDissable(ulong sender, pStructs.pItemPrioDisable info)
+        internal static void reciveSetItemPrioDissable(ulong sender, pStructs.pItemPrioDisable info)
         {
             ZiMain.log.LogInfo($"Recived set item prio dissabled from network!");
             uint id = info.id;
             bool allowed = info.allowed;
             ZiMain.log.LogInfo($"id:{id}, allowed:{allowed}");
-            if (!PermissionsMenuClass.prioNodesByID.ContainsKey(id)) 
+            if (!PermissionsMenuClass.prioNodesByID.ContainsKey(id))
             {
                 ZiMain.log.LogError("Unknown id recived!");
                 return;
@@ -90,12 +90,12 @@ namespace ZombieTweak2.zNetworking
             PermissionsMenuClass.updateNodePriorityDisplay(PermissionsMenuClass.prioNodesByID[id], id);
         }
 
-        internal static void reciveSetBotItemPrio(ulong sender, pStructs.pBotItemPrio info)
+        internal static void reciveSetItemPrio(ulong sender, pStructs.pItemPrio info)
         {
             ZiMain.log.LogInfo($"Recived set item prio value from network!");
             uint id = info.id;
             float prio = info.prio;
-            ZiMain.log.LogInfo($"id:{id}, allowed:{prio}");
+            ZiMain.log.LogInfo($"id:{id}, prio:{prio}");
             if (!PermissionsMenuClass.prioNodesByID.ContainsKey(id))
             {
                 ZiMain.log.LogError("Unknown id recived!");
@@ -103,6 +103,62 @@ namespace ZombieTweak2.zNetworking
             }
             zSlideComputer.SetBotItemPriority(id, prio, sender);
             PermissionsMenuClass.updateNodePriorityDisplay(PermissionsMenuClass.prioNodesByID[id], id);
+        }
+        internal static void reciveSetResourceThreshold(ulong sender, pStructs.pResourceThreshold info)
+        {
+            ZiMain.log.LogInfo($"Recived set resource threshold value from network!");
+            uint id = info.id;
+            int threshold = info.threshold;
+            ZiMain.log.LogInfo($"id:{id}, threshold:{threshold}");
+            if (!ShareMenuClass.packNodesByID.ContainsKey(id))
+            {
+                ZiMain.log.LogError("Unknown id recived!");
+                return;
+            }
+            zSlideComputer.SetResourceThreshold(id, threshold, sender);
+            ShareMenuClass.updateNodeThresholdDisplay(ShareMenuClass.packNodesByID[id], id);
+        }
+        internal static void reciveSetResourceThresholdDisable(ulong sender, pStructs.pResourceThresholdDisable info)
+        {
+            ZiMain.log.LogInfo($"Recived set resource disable value from network!");
+            uint id = info.id;
+            bool allowed = info.allowed;
+            ZiMain.log.LogInfo($"id:{id}, allowed:{allowed}");
+            if (!ShareMenuClass.packNodesByID.ContainsKey(id))
+            {
+                ZiMain.log.LogError("Unknown id recived!");
+                return;
+            }
+            zSlideComputer.SetResourceSharePermission(id, allowed, sender);
+            ShareMenuClass.updateNodeThresholdDisplay(ShareMenuClass.packNodesByID[id], id);
+        }
+        internal static void ReciveSetPickupPermission(ulong sender, pStructs.pPickupPermission info)
+        {
+            ZiMain.log.LogInfo($"Recived set pickup permision value from network!");
+            int playerID = info.playerID;
+            bool allowed = info.allowed;
+            ZiMain.log.LogInfo($"id:{playerID}, allowed:{allowed}");
+            if (!zSlideComputer.PickUpPerms.ContainsKey(playerID))
+            {
+                ZiMain.log.LogError("Unknown id recived!");
+                return;
+            }
+            zSlideComputer.SetPickupPermission(playerID, allowed, sender);
+            zMenus.UpdateIndicatorForNode(zMenus.permissionMenu.centerNode, zSlideComputer.PickUpPerms);
+        }
+        internal static void ReciveSetSharePermission(ulong sender, pStructs.pSharePermission info)
+        {
+            ZiMain.log.LogInfo($"Recived set share permision value from network!");
+            int playerID = info.playerID;
+            bool allowed = info.allowed;
+            ZiMain.log.LogInfo($"id:{playerID}, allowed:{allowed}");
+            if (!zSlideComputer.SharePerms.ContainsKey(playerID))
+            {
+                ZiMain.log.LogError("Unknown id recived!");
+                return;
+            }
+            zSlideComputer.SetSharePermission(playerID, allowed, sender);
+            zMenus.UpdateIndicatorForNode(zMenus.permissionMenu.centerNode, zSlideComputer.SharePerms);
         }
     }
 }
