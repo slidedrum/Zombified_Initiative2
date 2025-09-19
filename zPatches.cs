@@ -100,9 +100,9 @@ public class ZombifiedPatches
                     break;
             }
             float threshHold = 0.98f; //not needed fallback 
-            if (zSlideComputer.toolThresholds.ContainsKey(itemID))
+            if (zSlideComputer.resourceThresholds.ContainsKey(itemID))
             {
-                int baseThreshold = zSlideComputer.toolThresholds[itemID];
+                int baseThreshold = zSlideComputer.resourceThresholds[itemID];
                 float clampedThreshold = Mathf.Clamp01(baseThreshold / 100f);
                 float lowerThreshold = Mathf.Lerp(0f, 0.98f, clampedThreshold);
                 threshHold = Math.Min(lowerThreshold + ammoutCanGivePercent,0.98f);

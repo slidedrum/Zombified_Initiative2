@@ -161,7 +161,7 @@ namespace Zombified_Initiative
             //    this.myAI.Actions.Remove(action);
             //    ZiMain.log.LogInfo($"{this.myself.PlayerName} action {action.GetIl2CppType().Name} was cancelled");
             //}
-            actionsToRemove.Clear();
+            //actionsToRemove.Clear();
         } // slowUpdate
 
         public void PreventManualActions()

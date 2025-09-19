@@ -30,6 +30,8 @@ using static ZombieTweak2.zNetworking.pStructs;
 //todo handle bots joining/leaving or any other way the bot count can change mid mission.
 //todo customize resource share thresholds, or however that works.
 //todo error when exiting q menu if radial menu is open
+//todo unheld selected might have problems.
+//todo double tap smart select on a bot to have them follow you.
 
 //todo refactor PlayConfirmSound hook to not be so dumb -- probably just going to remvoe support for q menu
 

@@ -75,7 +75,7 @@ namespace ZombieTweak2
         }
         private static void SetToolThreshold(uint id, int threshold)
         {
-            zSlideComputer.toolThresholds[id] = threshold;
+            zSlideComputer.resourceThresholds[id] = threshold;
         }
         private static void printAllInventoryItems()
         {
@@ -125,7 +125,7 @@ namespace ZombieTweak2
         private static pStructs.pBotSelections testSend = new pStructs.pBotSelections();
         private static void setuppBotSelectionsForTest()
         {
-            testSend.data = zNetworking.zNetworking.EncodeBotSelectionForNetwork(SelectionMenu.botSelection);
+            testSend.data = zNetworking.zNetworking.EncodeBotSelectionForNetwork(SelectionMenuClass.botSelection);
         }
         private static void TestReciveTogglePickupPermission()
         {

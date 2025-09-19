@@ -59,15 +59,15 @@ namespace ZombieTweak2.zMenu
         internal static bool pressable;
         internal static zMenu.zMenuNode pressedNode;
 
-        public static zMenu createMenu(string name, zMenu parrentMenu = null)
+        public static zMenu createMenu(string name, zMenu parrentMenu = null, bool autoAddNode = true)
         {
             zMenu newMenu = new zMenu(name, parrentMenu);
-            if (parrentMenu == null)
+            if (parrentMenu == null )
             {
                 newMenu.centerNode.ClearListeners(zMenuManager.nodeEvent.OnUnpressedSelected);
                 newMenu.centerNode.AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, CloseAllMenues);
             }
-            else
+            else if (autoAddNode)
             {
                 parrentMenu.AddNode(newMenu);
             }

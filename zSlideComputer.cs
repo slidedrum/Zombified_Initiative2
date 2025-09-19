@@ -20,8 +20,9 @@ namespace ZombieTweak2
         //This class is for handling things like stopping bots from do unwanted actions
 
         public static Il2CppSystem.Collections.Generic.Dictionary<uint, float> itemPrios = new();
-        public static Il2CppSystem.Collections.Generic.Dictionary<uint, int> toolThresholds = new();
+        public static Il2CppSystem.Collections.Generic.Dictionary<uint, int> resourceThresholds = new();
         public static Il2CppSystem.Collections.Generic.Dictionary<uint, bool> enabledItemPrios = new ();
+        public static Il2CppSystem.Collections.Generic.Dictionary<uint, bool> enabledResourceShares = new ();
         public static Il2CppSystem.Collections.Generic.Dictionary<uint, float> OriginalItemPrios = new();
         public static Dictionary<int, bool> PickUpPerms = new (); //bot.Agent.Owner.PlayerSlotIndex()
         public static Dictionary<int, bool> SharePerms = new (); //bot.Agent.Owner.PlayerSlotIndex()
@@ -89,8 +90,9 @@ namespace ZombieTweak2
             }
             foreach (ItemDataBlock block in ItemSpawnManager.m_itemDataPerInventorySlot[(int)InventorySlot.ResourcePack])
             {
-                uint itemID = ItemDataBlock.s_blockIDByName[block.name]; //there's got to be a better way to get the id.
-                toolThresholds[itemID] = 100;
+                uint itemID = ItemDataBlock.s_blockIDByName[block.name]; //there's got to be a better way to get the playerID.
+                resourceThresholds[itemID] = 100;
+                enabledResourceShares[itemID] = true;
             }
         }
         public static void FirstTimeSetup()
@@ -188,6 +190,24 @@ namespace ZombieTweak2
             return name;
   
         }
+        public static void SetResourceThreshold(uint itemID, int threshold)
+        {
+            if (!resourceThresholds.ContainsKey(itemID))
+            {
+                ZiMain.log.LogWarning($"Attemted to set resource threshold for unknown id: {itemID} - {threshold}");
+                return;
+            }
+            resourceThresholds[itemID] = Math.Clamp(threshold,0,100);
+        }
+        public static int GetResourceThreshold(uint itemID)
+        {
+            if (!resourceThresholds.ContainsKey(itemID))
+            {
+                ZiMain.log.LogWarning($"Attemted to get resource threshold for unknown id: {itemID}");
+                return 0;
+            }
+            return resourceThresholds[itemID];
+        }
         private static bool SetBotItemPriority(string itemName, float priority)
         {
             itemName = ConvertItemPublicName(itemName);
@@ -236,12 +256,67 @@ namespace ZombieTweak2
             }
             return false;
         }
+
+        public static void ToggleResourceSharePermission(uint itemID)
+        {
+            if (!enabledResourceShares.ContainsKey(itemID))
+                return;
+            SetResourceSharePermission(itemID,!GetResourceSharePermission(itemID));
+        }
+        public static bool GetResourceSharePermission(uint itemID)
+        {
+            if (!enabledResourceShares.ContainsKey(itemID))
+            {
+                ZiMain.log.LogWarning($"tried to get resoruce share perms for unkown item id:{itemID}.");
+                return false;
+            }
+            return enabledResourceShares[itemID];
+        }
+        public static void SetResourceSharePermission(uint itemID, bool allowed)
+        {
+            if (!enabledResourceShares.ContainsKey(itemID))
+                return;
+            enabledResourceShares[itemID] = allowed;
+        }
+        public static void ToggleBotSharePermission(int playerID)
+        {
+            if (!SharePerms.ContainsKey(playerID))
+                return;
+            SetSharePermission(playerID,!GetSharePermission(playerID));
+        }
+        public static void ToggleBotSharePermission()
+        {
+            var botSelection = SelectionMenuClass.botSelection;
+            ToggleSharePermission(botSelection);
+        }
+        public static void ToggleSharePermission(Dictionary<int, bool> botSelection)
+        {
+            var dissabledCount = 0;
+            var enabledCount = 0;
+            foreach (var bot in botSelection)
+            {
+                if (!bot.Value) //unselected, ignore.
+                    continue;
+                if (GetSharePermission(bot.Key))
+                    enabledCount++;
+                else
+                    dissabledCount++;
+            }
+            bool majority = enabledCount > dissabledCount;
+            foreach (var bot in botSelection)
+            {
+                if (!bot.Value) //unselected, ignore.
+                    continue;
+                SetSharePermission(bot.Key, !majority);
+            }
+        }
         //Using bot.Agent.Owner.PlayerSlotIndex() as a key is good for transfering over network.
         //Issues may arrise when the number of bots changes mid mission.  
         //TODO handle that
+        //TODO add more variants of get/set/toggle/flip for all settings and possible ways you'd want to call it.
         public static void FlipPickupPermission()
         {
-            foreach (var bot in SelectionMenu.botSelection)
+            foreach (var bot in SelectionMenuClass.botSelection)
             {
                 if (!bot.Value) //unselected, ignore.
                     continue;
@@ -273,7 +348,7 @@ namespace ZombieTweak2
         }
         public static void TogglePickupPermission()
         { 
-            var botSelection = SelectionMenu.botSelection;
+            var botSelection = SelectionMenuClass.botSelection;
             TogglePickupPermission(botSelection);
         }
         public static void TogglePickupPermission(int id)
@@ -335,6 +410,12 @@ namespace ZombieTweak2
                 SetPickupPermission(bot.Key,!majority);
             }
         }
+        public static void SetSharePermission(int playerID, bool allowed)
+        {
+            //todo check if exists.
+            ZiMain.log.LogMessage($"Setting share perm for id {playerID} to {allowed}");
+            SharePerms[playerID] = allowed;
+        }
         public static void SetPickupPermission(int id, bool allowed)
         {
             ZiMain.log.LogMessage($"Setting pickup perm for id {id} to {allowed}");
@@ -378,6 +459,13 @@ namespace ZombieTweak2
             if (PickUpPerms.ContainsKey(id))
                 return PickUpPerms[id];
             ZiMain.log.LogWarning($"Unknown bot asked for pickup perms id:{id}.");
+            return false;
+        }
+        public static bool GetSharePermission(int id)
+        {
+            if (SharePerms.ContainsKey(id))
+                return SharePerms[id];
+            ZiMain.log.LogWarning($"Unknown bot asked for share perms id:{id}.");
             return false;
         }
     }

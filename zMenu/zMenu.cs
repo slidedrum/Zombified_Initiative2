@@ -320,6 +320,16 @@ namespace ZombieTweak2.zMenu
             }
             return this;
         }
+        public void DissableNode(zMenuNode node)
+        {
+            if (nodes.Contains(node))
+            {
+                nodes.Remove(node);
+                node.gameObject.SetActive(false);
+            }
+            else
+                ZiMain.log.LogWarning($"Could not find node {node.text} to dissable from {name} menu");
+        }
         public void DissableNode(string nodeText)
         {
             var nodeToDissable = nodes.FirstOrDefault(n => n.text == nodeText);

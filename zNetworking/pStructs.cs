@@ -70,6 +70,7 @@ namespace ZombieTweak2.zNetworking
             pItemData pStruct = refrence.Get_pItemData();
             return pStruct;
         }
+        //TODO consolidate these?
         public struct pBotSelections
         {
             public long data;
@@ -83,6 +84,16 @@ namespace ZombieTweak2.zNetworking
         {
             public uint id;
             public float prio;
+        }
+        public struct pResourceThresholdDisable
+        {
+            public uint id;
+            public bool allowed;
+        }
+        public struct pBotResourceThreshold
+        {
+            public uint id;
+            public int threshold;
         }
     }
 }

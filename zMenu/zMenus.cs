@@ -1,6 +1,7 @@
 ﻿using Agents;
 using GameData;
 using Player;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -23,34 +24,36 @@ namespace ZombieTweak2.zMenu
         private static zMenu actionMenu;
         private static zMenu permissionMenu;
         private static zMenu pickupDetailsSubmenu;
+        private static zMenu shareDetailsSubmenu;
 
         public static void CreateMenus()
         {
             selectionMenu = zMenuManager.createMenu("Bot selection", zMenuManager.mainMenu);
             actionMenu = zMenuManager.createMenu("Actions", zMenuManager.mainMenu);
             permissionMenu = zMenuManager.createMenu("Permissions", zMenuManager.mainMenu);
-            pickupDetailsSubmenu = zMenuManager.createMenu("Pickups", permissionMenu);
-            permissionMenu.DissableNode("Pickups");
-
-            selectionMenu.AddNode("Toggle all", SelectionMenu.SelectionToggleAllBots).AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, UpdateIndicatorForNode, selectionMenu.centerNode, SelectionMenu.botSelection);
-            selectionMenu.AddNode("Flip all", SelectionMenu.SelectionFlipAllBots).AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, UpdateIndicatorForNode, selectionMenu.centerNode, SelectionMenu.botSelection);
+            pickupDetailsSubmenu = zMenuManager.createMenu("Pickups", permissionMenu, false);
+            shareDetailsSubmenu = zMenuManager.createMenu("Share", permissionMenu, false);
+            //todo remove the flip/toggle nodes, and instead make hold action
+            selectionMenu.AddNode("Toggle all", SelectionMenuClass.SelectionToggleAllBots).AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, UpdateIndicatorForNode, selectionMenu.centerNode, SelectionMenuClass.botSelection);
+            selectionMenu.AddNode("Flip all", SelectionMenuClass.SelectionFlipAllBots).AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, UpdateIndicatorForNode, selectionMenu.centerNode, SelectionMenuClass.botSelection);
             //todo add option to set selection to the bots that are following you.
             List<PlayerAIBot> playerAiBots = ZiMain.GetBotList();
             foreach (PlayerAIBot bot in playerAiBots.AsEnumerable().Reverse())
             {
                 string botName = bot.m_playerAgent.PlayerName;
                 int id = bot.Agent.Owner.PlayerSlotIndex();
-                zMenu.zMenuNode node = selectionMenu.AddNode(bot.m_playerAgent.PlayerName, SelectionMenu.toggleBotSelection, bot);
-                SelectionMenu.selectionBotNodes[id] = node;
-                node.AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, SelectionMenu.updateColorBaesdOnSelection, node, bot);
-                node.AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, UpdateIndicatorForNode, selectionMenu.centerNode, SelectionMenu.botSelection);
-                node.parrentMenu.AddListener(zMenuManager.menuEvent.OnOpened, SelectionMenu.updateColorBaesdOnSelection, node, bot);
+                zMenu.zMenuNode node = selectionMenu.AddNode(bot.m_playerAgent.PlayerName, SelectionMenuClass.toggleBotSelection, bot);
+                SelectionMenuClass.selectionBotNodes[id] = node;
+                node.AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, SelectionMenuClass.updateColorBaesdOnSelection, node, bot);
+                node.AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, UpdateIndicatorForNode, selectionMenu.centerNode, SelectionMenuClass.botSelection);
+                node.parrentMenu.AddListener(zMenuManager.menuEvent.OnOpened, SelectionMenuClass.updateColorBaesdOnSelection, node, bot);
             }
             foreach (PlayerAIBot bot in playerAiBots)
             {
                 int id = bot.Agent.Owner.PlayerSlotIndex();
-                SelectionMenu.botSelection[id] = true;
+                SelectionMenuClass.botSelection[id] = true;
             }
+            //todo this might be an issue having two nodes with the same name.  Maybe add an ID getter system?
             var pickupNode = permissionMenu.AddNode("Pickups").AddListener(zMenuManager.nodeEvent.OnTapped, zSlideComputer.TogglePickupPermission);
             pickupNode.AddListener(zMenuManager.nodeEvent.OnTapped, UpdateIndicatorForNode, pickupNode, zSlideComputer.PickUpPerms);
             pickupNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, pickupDetailsSubmenu.Open);
@@ -61,11 +64,19 @@ namespace ZombieTweak2.zMenu
             pickupDetailsSubmenu.centerNode.AddListener(zMenuManager.nodeEvent.OnTapped, pickupDetailsSubmenu.parrentMenu.Open);
             PermissionsMenuClass.setUpItemNodes(pickupDetailsSubmenu);
             pickupDetailsSubmenu.radius = 175;
-            selectionMenu.AddListener(zMenuManager.menuEvent.OnOpened, UpdateIndicatorForNode, selectionMenu.centerNode, SelectionMenu.botSelection);
-            permissionMenu.AddListener(zMenuManager.menuEvent.OnOpened, UpdateIndicatorForNode, permissionMenu.centerNode, SelectionMenu.botSelection);
+            selectionMenu.AddListener(zMenuManager.menuEvent.OnOpened, UpdateIndicatorForNode, selectionMenu.centerNode, SelectionMenuClass.botSelection);
+            permissionMenu.AddListener(zMenuManager.menuEvent.OnOpened, UpdateIndicatorForNode, permissionMenu.centerNode, SelectionMenuClass.botSelection);
             permissionMenu.AddListener(zMenuManager.menuEvent.OnOpened, UpdateIndicatorForNode, pickupNode, zSlideComputer.PickUpPerms);
 
-            permissionMenu.AddNode("Share");
+            var shareNode = permissionMenu.AddNode("Share").AddListener(zMenuManager.nodeEvent.OnTapped, zSlideComputer.ToggleBotSharePermission);
+            shareNode.AddListener(zMenuManager.nodeEvent.OnTapped, UpdateIndicatorForNode, shareNode, zSlideComputer.SharePerms);
+            permissionMenu.AddListener(zMenuManager.menuEvent.OnOpened, UpdateIndicatorForNode, shareNode, zSlideComputer.SharePerms);
+            shareNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, shareDetailsSubmenu.Open);
+            shareDetailsSubmenu.centerNode.ClearListeners(zMenuManager.nodeEvent.OnUnpressedSelected);
+            shareDetailsSubmenu.centerNode.AddListener(zMenuManager.nodeEvent.OnTapped, shareDetailsSubmenu.parrentMenu.Open);
+            shareDetailsSubmenu.AddNode("");
+            ShareMenuClass.setUpPackNodes(shareDetailsSubmenu);
+
             permissionMenu.AddNode("Move");
         }
         public static zMenu.zMenuNode UpdateIndicatorForNode(zMenu.zMenuNode node, Dictionary<int, bool> selectionPickUpPerms)
@@ -97,14 +108,84 @@ namespace ZombieTweak2.zMenu
             node.subtitlePart.SetScale(0.5f, 0.5f);
             return node;
         }
+    }
+    public static class ShareMenuClass
+    {
+        public static Dictionary<uint, zMenu.zMenuNode> packNodesByID = new Dictionary<uint, zMenu.zMenuNode>();
 
-
-
-        private static void addBotMenus(zMenu menu)
+        public static void setUpPackNodes(zMenu menu)
         {
-
+            var resourceDataBlocks = ItemSpawnManager.m_itemDataPerInventorySlot[(int)InventorySlot.ResourcePack];
+            foreach (ItemDataBlock block in resourceDataBlocks)
+            {
+                uint itemID = ItemDataBlock.s_blockIDByName[block.name];
+                string name = block.publicName;
+                zMenu.zMenuNode node = menu.AddNode(name);
+                node.AddListener(zMenuManager.nodeEvent.OnTapped, zSlideComputer.ToggleResourceSharePermission, itemID);
+                node.AddListener(zMenuManager.nodeEvent.OnTapped, updateNodeThresholdDisplay, node, itemID);
+                node.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, zSlideComputer.SetResourceSharePermission, itemID, true);
+                node.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, zSlideComputer.SetResourceThreshold, itemID, 100);
+                node.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, updateNodeThresholdDisplay, node, itemID);
+                node.AddListener(zMenuManager.nodeEvent.WhileSelected, ChangeThresholdBasedOnMouseWheel, itemID, node, 5);
+                menu.AddListener(zMenuManager.menuEvent.OnOpened, updateNodeThresholdDisplay, node, itemID);
+                menu.centerNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, zSlideComputer.SetResourceThreshold, itemID, 100);
+                menu.centerNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, zSlideComputer.SetResourceSharePermission, itemID, true);
+                menu.centerNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, updateNodeThresholdDisplay, node, itemID);
+                node.fullTextPart.SetScale(0.75f, 0.75f);
+                node.subtitlePart.SetScale(0.5f, 0.5f);
+                node.titlePart.SetScale(0.3f, 0.3f);
+                if (menu.nodes.Count - 1 == (int)(resourceDataBlocks.Count/2))
+                {
+                    //TODO allow for rotation offsets or other modes for aranging nodes.
+                    menu.AddNode("");
+                }
+            }
         }
+        public static void updateNodeThresholdDisplay(zMenu.zMenuNode node, uint itemID)
+        {
+            if (zSlideComputer.GetResourceThreshold(itemID) == 100)
+            {
+                node.SetPrefix("");
+                node.SetSuffix("");
+            }
+            else
+            {
+                node.SetPrefix("* ");
+                node.SetSuffix(" *");
+            }
+            string hex = ColorUtility.ToHtmlStringRGB(GetThresholdColor(zSlideComputer.GetResourceThreshold(itemID)));
+            node.SetSubtitle($"<color=#CC840066>[ </color><color=#{hex}>{zSlideComputer.GetResourceThreshold(itemID)}</color><color=#CC840066> ]</color>");
+            if (zSlideComputer.enabledResourceShares[itemID])
+                node.SetColor(zMenuManager.defaultColor);
+            else
+                node.SetColor(new Color(0.25f, 0f, 0f));
+        }
+        public static Color GetThresholdColor(float value)
+        {
+            // scale factor to dim colors
+            float max = 0.25f;
 
+            Color red = new Color(max, 0f, 0f);
+            Color yellow = new Color(max, max, 0f);
+            Color green = new Color(0f, max, 0f);
+
+            if (value <= 40f) // 0 → 40: red → yellow
+                return Color.Lerp(red, yellow, value / 40f);
+            else // 40 → 100: yellow → green
+                return Color.Lerp(yellow, green, (value - 40f) / 60f);
+        }
+        public static void ChangeThresholdBasedOnMouseWheel(uint itemID, zMenu.zMenuNode node, int increment = 10)
+        {
+            if (node == null || !node.gameObject.activeInHierarchy || !zSlideComputer.enabledResourceShares[itemID])
+                return;
+            float scroll = Input.GetAxis("Mouse ScrollWheel");
+            int normalizedScroll = (int)Mathf.Sign(scroll);
+            if (scroll == 0f)
+                return;
+            float currentThreshold = zSlideComputer.GetResourceThreshold(itemID);
+            zSlideComputer.SetResourceThreshold(itemID, Math.Clamp((int)currentThreshold + (normalizedScroll * increment), 0,100));
+            updateNodeThresholdDisplay(node, itemID);
+        }
     }
     public static class PermissionsMenuClass
     {
@@ -141,7 +222,7 @@ namespace ZombieTweak2.zMenu
                 node.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, updateNodePriorityDisplay, node, itemID);
                 menu.centerNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, zSlideComputer.SetItemPrioDissabled, itemID, true);
                 menu.centerNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, updateNodePriorityDisplay, node, itemID);
-                updateNodePriorityDisplay(node, itemID);
+                menu.AddListener(zMenuManager.menuEvent.OnOpened, updateNodePriorityDisplay, node, itemID);
                 node.fullTextPart.SetScale(0.75f, 0.75f);
                 node.subtitlePart.SetScale(0.5f, 0.5f);
                 node.titlePart.SetScale(0.3f, 0.3f);
@@ -195,7 +276,7 @@ namespace ZombieTweak2.zMenu
             updateNodePriorityDisplay(node, itemID);
         }
     }
-    public static class SelectionMenu
+    public static class SelectionMenuClass
     {
         public static Dictionary<int, bool> botSelection = new();
         public static Dictionary<int, zMenu.zMenuNode> selectionBotNodes = new();
