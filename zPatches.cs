@@ -24,8 +24,8 @@ public class ZombifiedPatches
     [HarmonyPrefix]
     public static bool UpdateActionShareResoursePack(RootPlayerBotAction __instance, ref PlayerBotActionBase.Descriptor bestAction)
     {
-        //This is based on the original mono decomp.  Not a re-creation.
-        //Todo have a custom threshold per type - IN PROGRESS
+        //This is based on the original mono decomp. Not a re-creation.  Still quite modified though.
+        //Todo have a custom threshold per type - DONE
         //Todo Block some types outright. - DONE
         //Todo if someone else is already giving the target the same item, don't double up.
         if (!__instance.m_shareResourceAction.IsTerminated())
@@ -61,7 +61,7 @@ public class ZombifiedPatches
         
 
         PlayerAmmoStorage ammoStorage = backpack.AmmoStorage;
-        float ammoutCanGive = ammoStorage.ResourcePackAmmo.CostOfBullet / ammoStorage.ResourcePackAmmo.AmmoMaxCap;
+        float ammoutCanGivePercent = ammoStorage.ResourcePackAmmo.CostOfBullet / ammoStorage.ResourcePackAmmo.AmmoMaxCap;
 
         PlayerAgent chosenAgent = null;
         float topCandidateScore = 0f;
@@ -89,11 +89,11 @@ public class ZombifiedPatches
             switch (itemID)
             {
                 case 102: //medpack
-                    ammoutCanGive = AgentModifierManager.ApplyModifier(__instance.m_agent, AgentModifier.HealSupport, ammoutCanGive);//This is artifacts!;
+                    ammoutCanGivePercent = AgentModifierManager.ApplyModifier(__instance.m_agent, AgentModifier.HealSupport, ammoutCanGivePercent);//This is artifacts!;
                     break;
                 case 127: //toolPack
                 case 101: //Ammopack
-                    ammoutCanGive = AgentModifierManager.ApplyModifier(__instance.m_agent, AgentModifier.AmmoSupport, ammoutCanGive);
+                    ammoutCanGivePercent = AgentModifierManager.ApplyModifier(__instance.m_agent, AgentModifier.AmmoSupport, ammoutCanGivePercent);
                     break;
                 case 132: //Disinfect
                 default: //something weird
@@ -103,13 +103,9 @@ public class ZombifiedPatches
             if (zSlideComputer.toolThresholds.ContainsKey(itemID))
             {
                 int baseThreshold = zSlideComputer.toolThresholds[itemID];
-                float raisedThreshold = (float)baseThreshold + ammoutCanGive;
-                float clampedThreshold = Mathf.Clamp01(raisedThreshold / 100f);
-                threshHold = Mathf.Lerp(0f, 0.98f, clampedThreshold);
-                ZiMain.log.LogInfo($"{itemID} New threshold: {threshHold} can give {ammoutCanGive}");
-                //int baseThreshold = zSlideComputer.toolThresholds[itemID];
-                //float adjustedThreshold = baseThreshold + ammoutCanGive * 100f;
-                //threshHold = Mathf.Min(adjustedThreshold / 100f, 0.98f);
+                float clampedThreshold = Mathf.Clamp01(baseThreshold / 100f);
+                float lowerThreshold = Mathf.Lerp(0f, 0.98f, clampedThreshold);
+                threshHold = Math.Min(lowerThreshold + ammoutCanGivePercent,0.98f);
             }
             else
             {
@@ -122,26 +118,26 @@ public class ZombifiedPatches
             switch (itemID)
             {
                 case 102:
-                    if (candidateAgent.Damage.GetHealthRel() + ammoutCanGive < threshHold) // Would you have less than threshHold after heals?
+                    if (candidateAgent.Damage.GetHealthRel() + ammoutCanGivePercent < threshHold) // Would you have less than threshHold after heals?
                     {
                         candidateScore = threshHold - candidateAgent.Damage.GetHealthRel(); // more damaged -> higher score
                     }
                     break;
                 case 101:
-                    if (candidateAmmoStorage.StandardAmmo.RelInPack + ammoutCanGive < threshHold &&
-                        candidateAmmoStorage.SpecialAmmo.RelInPack + ammoutCanGive < threshHold) // Would we overflow primary or secondary ammo?
+                    if (candidateAmmoStorage.StandardAmmo.RelInPack + ammoutCanGivePercent < threshHold &&
+                        candidateAmmoStorage.SpecialAmmo.RelInPack + ammoutCanGivePercent < threshHold) // Would we overflow primary or secondary ammo?
                     {
                         candidateScore = threshHold - (candidateAmmoStorage.StandardAmmo.RelInPack + candidateAmmoStorage.SpecialAmmo.RelInPack) / 2f; // average of both ammo pools
                     }
                     break;
                 case 132:
-                    if (candidateAgent.Damage.Infection * threshHold > ammoutCanGive) // Would we overheal?
+                    if (candidateAgent.Damage.Infection * threshHold > ammoutCanGivePercent) // Would we overheal?
                     {
                         candidateScore = candidateAgent.Damage.Infection * threshHold; // score is how infected they are
                     }
                     break;
                 case 127:
-                    if (candidateAgent.NeedToolAmmo() && candidateAmmoStorage.ClassAmmo.RelInPack + ammoutCanGive < threshHold) // would we overflow tool ammo?
+                    if (candidateAgent.NeedToolAmmo() && candidateAmmoStorage.ClassAmmo.RelInPack + ammoutCanGivePercent < threshHold) // would we overflow tool ammo?
                     {
                         candidateScore = threshHold - candidateAmmoStorage.ClassAmmo.RelInPack; // how much ammo are they missing?
                     }
@@ -167,7 +163,6 @@ public class ZombifiedPatches
         if (chosenAgent != null)
         {
             __instance.m_shareResourceAction.Item = backpackItem.Instance.Cast<ItemEquippable>();
-            
             __instance.m_shareResourceAction.Receiver = chosenAgent;
             __instance.m_shareResourceAction.Haste = 0.8f;
             bestAction = __instance.m_shareResourceAction;
