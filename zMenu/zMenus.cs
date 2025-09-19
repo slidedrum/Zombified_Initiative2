@@ -134,6 +134,7 @@ namespace ZombieTweak2.zMenu
                 node.fullTextPart.SetScale(0.75f, 0.75f);
                 node.subtitlePart.SetScale(0.5f, 0.5f);
                 node.titlePart.SetScale(0.3f, 0.3f);
+                packNodesByID[itemID] = node;
                 if (menu.nodes.Count - 1 == (int)(resourceDataBlocks.Count/2))
                 {
                     //TODO allow for rotation offsets or other modes for aranging nodes.

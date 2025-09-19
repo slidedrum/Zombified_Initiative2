@@ -283,19 +283,47 @@ namespace ZombieTweak2
                 }
             }
         }
-        private static void TestSetItemPrioDisableNetwork(ulong sender, uint id, bool allowed)
+        private static void TestReciveSetItemPrioDisableNetwork(ulong sender, uint id, bool allowed)
         {
             pStructs.pItemPrioDisable info = new pStructs.pItemPrioDisable();
             info.allowed = allowed;
             info.id = id;
-            zNetworking.zNetworking.reciveSetItemPrioDisable(sender, info);
+            zNetworking.zNetworking.ReciveSetItemPrioDisable(sender, info);
         }
-        private static void TestSetBotItemPrioNetwork(ulong sender, uint id, float prio)
+        private static void TestReciveSetItemPrioNetwork(ulong sender, uint id, float prio)
         {
             pStructs.pItemPrio info = new pStructs.pItemPrio();
             info.prio = prio;
             info.id = id;
-            zNetworking.zNetworking.reciveSetItemPrio(sender, info);
+            zNetworking.zNetworking.ReciveSetItemPrio(sender, info);
+        }
+        private static void TestReciveSetResourceThresholdNetwork(ulong sender, uint id, int threshold)
+        {
+            pStructs.pResourceThreshold info = new pStructs.pResourceThreshold();
+            info.threshold = threshold;
+            info.id = id;
+            zNetworking.zNetworking.reciveSetResourceThreshold(sender, info);
+        }
+        private static void TestReciveSetResourceThresholdDisableNetwork(ulong sender, uint id, bool allowed)
+        {
+            pStructs.pResourceThresholdDisable info = new pStructs.pResourceThresholdDisable();
+            info.allowed = allowed;
+            info.id = id;
+            zNetworking.zNetworking.ReciveSetResourceThresholdDisable(sender, info);
+        }
+        private static void TestReciveSetPickupPermissionNetwork(ulong sender, int playerID, bool allowed)
+        {
+            pStructs.pPickupPermission info = new pStructs.pPickupPermission();
+            info.allowed = allowed;
+            info.playerID = playerID;
+            zNetworking.zNetworking.ReciveSetPickupPermission(sender, info);
+        }
+        private static void TestReciveSetSharePermissionNetwork(ulong sender, int playerID, bool allowed)
+        {
+            pStructs.pSharePermission info = new pStructs.pSharePermission();
+            info.allowed = allowed;
+            info.playerID = playerID;
+            zNetworking.zNetworking.ReciveSetSharePermission(sender, info);
         }
     }
 }

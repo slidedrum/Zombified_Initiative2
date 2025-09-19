@@ -121,10 +121,10 @@ public class ZiMain : BasePlugin
         //NetworkAPI.RegisterEvent<ZINetInfo>(ZINetInfo.NetworkIdentity, zController.ReceiveZINetInfo);
         NetworkAPI.RegisterEvent<ZISendBotToPickupItemInfo>("sendBotToPickupItem", SendBotToPickupItem);
 
-        NetworkAPI.RegisterEvent<pItemPrioDisable>("SetItemPrioDisable", zNetworking.reciveSetItemPrioDisable);
-        NetworkAPI.RegisterEvent<pItemPrio>("SetItemPrio", zNetworking.reciveSetItemPrio);
+        NetworkAPI.RegisterEvent<pItemPrioDisable>("SetItemPrioDisable", zNetworking.ReciveSetItemPrioDisable);
+        NetworkAPI.RegisterEvent<pItemPrio>("SetItemPrio", zNetworking.ReciveSetItemPrio);
         NetworkAPI.RegisterEvent<pResourceThreshold>("SetResourceThreshold", zNetworking.reciveSetResourceThreshold);
-        NetworkAPI.RegisterEvent<pResourceThresholdDisable>("SetResourceThresholdDisable", zNetworking.reciveSetResourceThresholdDisable);
+        NetworkAPI.RegisterEvent<pResourceThresholdDisable>("SetResourceThresholdDisable", zNetworking.ReciveSetResourceThresholdDisable);
         NetworkAPI.RegisterEvent<pSharePermission>("SetSharePermission", zNetworking.ReciveSetSharePermission);
         NetworkAPI.RegisterEvent<pPickupPermission>("SetPickupPermission", zNetworking.ReciveSetPickupPermission);
 
