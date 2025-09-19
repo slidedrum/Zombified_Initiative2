@@ -25,6 +25,8 @@ public class ZombifiedPatches
     public static bool UpdateActionShareResoursePack(RootPlayerBotAction __instance, ref PlayerBotActionBase.Descriptor bestAction)
     {
         //This is based on the original mono decomp.  Not a re-creation.
+        //Todo have a custom threshold per type
+        //Block some types outright.
         if (!__instance.m_shareResourceAction.IsTerminated())
         {
             //is there already share resource action?
@@ -302,6 +304,8 @@ public class ZombifiedPatches
     {
         string original = __instance.m_extraInfo;
         PlayerAgent agent = __instance.m_player;
+        if (!agent.Owner.IsBot)
+            return;
         int playerID = agent.Owner.PlayerSlotIndex();//todo cache the ID somewhere
         bool allowedPickup = zSlideComputer.PickUpPerms[playerID];
         bool allowedShare = zSlideComputer.SharePerms[playerID];

@@ -119,7 +119,7 @@ namespace ZombieTweak2
             ZiMain.log.LogMessage("Ressting all item priorties to default");
             foreach (var kvp in OriginalItemPrios)
             {
-                itemPrios[kvp.Key] = kvp.Value;
+                SetBotItemPriority(kvp.Key, kvp.Value);
             }
         }
         public static void ResetItemPrio(uint itemID)
