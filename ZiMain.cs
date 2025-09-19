@@ -29,6 +29,7 @@ using static ZombieTweak2.zNetworking.pStructs;
 //todo move methods arround to other classes that make more sense
 //todo handle bots joining/leaving or any other way the bot count can change mid mission.
 //todo customize resource share thresholds, or however that works.
+//todo error when exiting q menu if radial menu is open
 
 //todo refactor PlayConfirmSound hook to not be so dumb -- probably just going to remvoe support for q menu
 
@@ -114,7 +115,7 @@ public class ZiMain : BasePlugin
         ClassInjector.RegisterTypeInIl2Cpp<zUpdater>();
         var ZombieController = AddComponent<zController>();
 
-        NetworkAPI.RegisterEvent<ZINetInfo>(ZINetInfo.NetworkIdentity, zController.ReceiveZINetInfo);
+        //NetworkAPI.RegisterEvent<ZINetInfo>(ZINetInfo.NetworkIdentity, zController.ReceiveZINetInfo);
         NetworkAPI.RegisterEvent<ZISendBotToPickupItemInfo>("sendBotToPickupItem", SendBotToPickupItem);
 
         NetworkAPI.RegisterEvent<pItemPrioDisable>("SetItemPrioDissable", zNetworking.reciveSetItemPrioDissable);
@@ -247,7 +248,6 @@ public class ZiMain : BasePlugin
         log.LogInfo($"bot " + bot + " attack");
         SendBotToKillEnemyOld(bot, monster, PlayerBotActionAttack.StanceEnum.All, PlayerBotActionAttack.AttackMeansEnum.All, PlayerBotActionWalk.Descriptor.PostureEnum.Stand);
     }
-
 
     public static List<PlayerAIBot> GetBotList()
     {//TODO this is bad there's got to be a better way.  Though it's pretty cheap regardless.

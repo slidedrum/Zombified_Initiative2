@@ -10,6 +10,8 @@ namespace ZombieTweak2.zNetworking
 {
     public class zNetworking
     { //This class will handle all incoming and outgoing network requests.
+        //todo only update values every 100ms.  
+        //if not host ask for host's value after change
         public static Dictionary<int, bool> botSelections = new Dictionary<int, bool>();
         public static long EncodeBotSelectionForNetwork(Dictionary<int, bool> botSelection)
         {

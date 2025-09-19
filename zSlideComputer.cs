@@ -10,6 +10,7 @@ using UnityEngine.UIElements;
 using ZombieTweak2.zMenu;
 using ZombieTweak2.zNetworking;
 using Zombified_Initiative;
+using static Player.RootPlayerBotAction.GearAvailability;
 using static ZombieTweak2.zNetworking.pStructs;
 
 namespace ZombieTweak2
@@ -19,6 +20,7 @@ namespace ZombieTweak2
         //This class is for handling things like stopping bots from do unwanted actions
 
         public static Il2CppSystem.Collections.Generic.Dictionary<uint, float> itemPrios = new();
+        public static Il2CppSystem.Collections.Generic.Dictionary<uint, int> toolThresholds = new();
         public static Il2CppSystem.Collections.Generic.Dictionary<uint, bool> enabledItemPrios = new ();
         public static Il2CppSystem.Collections.Generic.Dictionary<uint, float> OriginalItemPrios = new();
         public static Dictionary<int, bool> PickUpPerms = new (); //bot.Agent.Owner.PlayerSlotIndex()
@@ -85,6 +87,11 @@ namespace ZombieTweak2
                 SharePerms[bot.Agent.Owner.PlayerSlotIndex()] = true;
                 MovePerms[bot.Agent.Owner.PlayerSlotIndex()] = true;
             }
+            foreach (ItemDataBlock block in ItemSpawnManager.m_itemDataPerInventorySlot[(int)InventorySlot.ResourcePack])
+            {
+                uint itemID = ItemDataBlock.s_blockIDByName[block.name]; //there's got to be a better way to get the id.
+                toolThresholds[itemID] = 100;
+            }
         }
         public static void FirstTimeSetup()
         {
@@ -93,8 +100,6 @@ namespace ZombieTweak2
             {
                 OriginalItemPrios[kvp.Key] = kvp.Value;
             }
-            //Might need to modify PlayerAIBot.s_recognisedItemTypes?
-            //PlayerAIBot.KnowsHowToUseItem also could be relevent.
         }
         public static float GetItemPrio(uint itemID)
         {

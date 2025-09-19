@@ -1,4 +1,5 @@
 ﻿using Agents;
+using BepInEx.Unity.IL2CPP.UnityEngine;
 using GameData;
 using GTFO.API;
 using HarmonyLib;
@@ -9,7 +10,6 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using ZombieTweak2;
-using static UnityEngine.UI.GridLayoutGroup;
 using static Zombified_Initiative.ZiMain;
 
 namespace Zombified_Initiative;
@@ -25,8 +25,9 @@ public class ZombifiedPatches
     public static bool UpdateActionShareResoursePack(RootPlayerBotAction __instance, ref PlayerBotActionBase.Descriptor bestAction)
     {
         //This is based on the original mono decomp.  Not a re-creation.
-        //Todo have a custom threshold per type
-        //Block some types outright.
+        //Todo have a custom threshold per type - IN PROGRESS
+        //Todo Block some types outright. - DONE
+        //Todo if someone else is already giving the target the same item, don't double up.
         if (!__instance.m_shareResourceAction.IsTerminated())
         {
             //is there already share resource action?
@@ -50,9 +51,17 @@ public class ZombifiedPatches
             //Do we have any resources to share?
             return false;
         }
+        int agentID = __instance.m_agent.Owner.PlayerSlotIndex();
+        var itemID = backpackItem.ItemID;
+        if (!zSlideComputer.SharePerms[agentID])
+        {
+            //Do we have share perms?
+            return false;
+        }
+        
 
         PlayerAmmoStorage ammoStorage = backpack.AmmoStorage;
-        float shareUnit = ammoStorage.ResourcePackAmmo.CostOfBullet / ammoStorage.ResourcePackAmmo.AmmoMaxCap;
+        float ammoutCanGive = ammoStorage.ResourcePackAmmo.CostOfBullet / ammoStorage.ResourcePackAmmo.AmmoMaxCap;
 
         PlayerAgent chosenAgent = null;
         float topCandidateScore = 0f;
@@ -77,48 +86,75 @@ public class ZombifiedPatches
                     continue;
                 }
             }
-
+            switch (itemID)
+            {
+                case 102: //medpack
+                    ammoutCanGive = AgentModifierManager.ApplyModifier(__instance.m_agent, AgentModifier.HealSupport, ammoutCanGive);//This is artifacts!;
+                    break;
+                case 127: //toolPack
+                case 101: //Ammopack
+                    ammoutCanGive = AgentModifierManager.ApplyModifier(__instance.m_agent, AgentModifier.AmmoSupport, ammoutCanGive);
+                    break;
+                case 132: //Disinfect
+                default: //something weird
+                    break;
+            }
+            float threshHold = 0.98f; //not needed fallback 
+            if (zSlideComputer.toolThresholds.ContainsKey(itemID))
+            {
+                int baseThreshold = zSlideComputer.toolThresholds[itemID];
+                float raisedThreshold = (float)baseThreshold + ammoutCanGive;
+                float clampedThreshold = Mathf.Clamp01(raisedThreshold / 100f);
+                threshHold = Mathf.Lerp(0f, 0.98f, clampedThreshold);
+                ZiMain.log.LogInfo($"{itemID} New threshold: {threshHold} can give {ammoutCanGive}");
+                //int baseThreshold = zSlideComputer.toolThresholds[itemID];
+                //float adjustedThreshold = baseThreshold + ammoutCanGive * 100f;
+                //threshHold = Mathf.Min(adjustedThreshold / 100f, 0.98f);
+            }
+            else
+            {
+                ZiMain.log.LogWarning($"Tried share unknown resoruce pack ID {itemID}");
+                return false;
+            }
             PlayerAmmoStorage candidateAmmoStorage = PlayerBackpackManager.GetBackpack(candidateAgent.Owner).AmmoStorage;
             float candidateScore = 0f;
-
-            if (__instance.m_gearAvailability.Has(RootPlayerBotAction.GearAvailability.GearFlags.Medipack))
+            //I'm not sure if m_gearAvailability is the best way to go here, Switching to itemID.  Hopefully that doesn't cause any unexpected issues.
+            switch (itemID)
             {
-                shareUnit = AgentModifierManager.ApplyModifier(__instance.m_agent, AgentModifier.HealSupport, shareUnit);//This is artifacts!
-                if (candidateAgent.Damage.GetHealthRel() + shareUnit < 0.98f)//Would you have less than 98% health even after heals?
-                {
-                    candidateScore = 0.98f - candidateAgent.Damage.GetHealthRel();//the more damaged they are, they higher the score
-                }
-            }
-            else if (__instance.m_gearAvailability.Has(RootPlayerBotAction.GearAvailability.GearFlags.AmmoPackWeapon))
-            {
-                shareUnit = AgentModifierManager.ApplyModifier(__instance.m_agent, AgentModifier.AmmoSupport, shareUnit);//This is artifacts!
-                if (candidateAmmoStorage.StandardAmmo.RelInPack + shareUnit < 0.98f &&//Would we overflow primary or secondary ammo?
-                    candidateAmmoStorage.SpecialAmmo.RelInPack + shareUnit < 0.98f)
-                {
-                    candidateScore = 0.98f - (candidateAmmoStorage.StandardAmmo.RelInPack + candidateAmmoStorage.SpecialAmmo.RelInPack) / 2f;//score is average of both ammo pools
-                }
-            }
-            else if (__instance.m_gearAvailability.Has(RootPlayerBotAction.GearAvailability.GearFlags.DisinfectionPack))
-            {
-                if (candidateAgent.Damage.Infection * 0.98f > shareUnit)//Would we overheal?
-                {
-                    candidateScore = candidateAgent.Damage.Infection * 0.98f;//our score is how infected they are
-                }
-            }
-            else if (__instance.m_gearAvailability.Has(RootPlayerBotAction.GearAvailability.GearFlags.AmmoPackTool))
-            {
-                shareUnit = AgentModifierManager.ApplyModifier(__instance.m_agent, AgentModifier.AmmoSupport, shareUnit);//This is artifacts!
-                if (candidateAgent.NeedToolAmmo() && candidateAmmoStorage.ClassAmmo.RelInPack + shareUnit < 0.98f)//would we overflow tool ammo?
-                {
-                    candidateScore = 0.98f - candidateAmmoStorage.ClassAmmo.RelInPack;//how much ammo are they missing?
-                }
+                case 102:
+                    if (candidateAgent.Damage.GetHealthRel() + ammoutCanGive < threshHold) // Would you have less than threshHold after heals?
+                    {
+                        candidateScore = threshHold - candidateAgent.Damage.GetHealthRel(); // more damaged -> higher score
+                    }
+                    break;
+                case 101:
+                    if (candidateAmmoStorage.StandardAmmo.RelInPack + ammoutCanGive < threshHold &&
+                        candidateAmmoStorage.SpecialAmmo.RelInPack + ammoutCanGive < threshHold) // Would we overflow primary or secondary ammo?
+                    {
+                        candidateScore = threshHold - (candidateAmmoStorage.StandardAmmo.RelInPack + candidateAmmoStorage.SpecialAmmo.RelInPack) / 2f; // average of both ammo pools
+                    }
+                    break;
+                case 132:
+                    if (candidateAgent.Damage.Infection * threshHold > ammoutCanGive) // Would we overheal?
+                    {
+                        candidateScore = candidateAgent.Damage.Infection * threshHold; // score is how infected they are
+                    }
+                    break;
+                case 127:
+                    if (candidateAgent.NeedToolAmmo() && candidateAmmoStorage.ClassAmmo.RelInPack + ammoutCanGive < threshHold) // would we overflow tool ammo?
+                    {
+                        candidateScore = threshHold - candidateAmmoStorage.ClassAmmo.RelInPack; // how much ammo are they missing?
+                    }
+                    break;
+                default:
+                    break;
             }
             if (candidateScore > 0f)//did they score at all?
             {
-                candidateScore = Mathf.Clamp01(candidateScore / 0.98f);//make sure the score is not over 1 and reduce it slightly.
+                candidateScore = Mathf.Clamp01(candidateScore / threshHold);//make sure the score is not over 1 and reduce it slightly.
                 if (!candidateAgent.Owner.IsBot)
                 {
-                    candidateScore = Mathf.Lerp(candidateScore, 1f, 0.5f);//deprioritize bots
+                    candidateScore = Mathf.Lerp(candidateScore, 1f, 0.5f);//prioritize players.
                 }
 
                 if (candidateScore > topCandidateScore)
@@ -128,10 +164,10 @@ public class ZombifiedPatches
                 }
             }
         }
-
         if (chosenAgent != null)
         {
             __instance.m_shareResourceAction.Item = backpackItem.Instance.Cast<ItemEquippable>();
+            
             __instance.m_shareResourceAction.Receiver = chosenAgent;
             __instance.m_shareResourceAction.Haste = 0.8f;
             bestAction = __instance.m_shareResourceAction;
@@ -159,6 +195,7 @@ public class ZombifiedPatches
         //This is a full re-implentation of the original method.  But without the hard coded values.
         //This approach allows me to support arbitrary item pickups not normally in the list, without breaking the logic.
         //Theoretically if there are a bunch of new items in the list, they could get into a "hot potato" loop.  but I'm calling that a "known shippable" for now.
+        
         var originalResult = __result;
         __result = 0f;
         if (!zSlideComputer.GetPickupPermission(__instance.m_agent.Owner.PlayerSlotIndex()))
@@ -445,23 +482,23 @@ public class ZombifiedPatches
             //    }
             //}
 
-            if (wha.Contains("share permission"))
-            {
-                foreach (KeyValuePair<String, PlayerAIBot> bt in ZiMain.BotTable)
-                {
-                    if (who == "AllBots" || who == bt.Key)
-                    {
-                        log.LogInfo($"{bt.Key} toggle resource use");
-                        if (!SNet.IsMaster) NetworkAPI.InvokeEvent<ZiMain.ZINetInfo>("ZINetInfo", new ZiMain.ZINetInfo(1, bt.Value.m_playerAgent.PlayerSlotIndex, 0, 0, 0));
-                        if (SNet.IsMaster)
-                        {
-                            whocomp = bt.Value.GetComponent<zComputer>();
-                            if (whocomp.shareaction != null) whocomp.shareaction.DescBase.SetCompletionStatus(PlayerBotActionBase.Descriptor.StatusType.Failed);
-                            whocomp.allowedshare = !whocomp.allowedshare;
-                        }
-                    }
-                }
-            }
+            //if (wha.Contains("share permission"))
+            //{
+            //    foreach (KeyValuePair<String, PlayerAIBot> bt in ZiMain.BotTable)
+            //    {
+            //        if (who == "AllBots" || who == bt.Key)
+            //        {
+            //            log.LogInfo($"{bt.Key} toggle resource use");
+            //            if (!SNet.IsMaster) NetworkAPI.InvokeEvent<ZiMain.ZINetInfo>("ZINetInfo", new ZiMain.ZINetInfo(1, bt.Value.m_playerAgent.PlayerSlotIndex, 0, 0, 0));
+            //            if (SNet.IsMaster)
+            //            {
+            //                whocomp = bt.Value.GetComponent<zComputer>();
+            //                if (whocomp.shareaction != null) whocomp.shareaction.DescBase.SetCompletionStatus(PlayerBotActionBase.Descriptor.StatusType.Failed);
+            //                whocomp.allowedshare = !whocomp.allowedshare;
+            //            }
+            //        }
+            //    }
+            //}
 
             if (wha == "clear command queue")
             {

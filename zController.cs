@@ -292,75 +292,75 @@ namespace Zombified_Initiative
             bool ready = (FocusStateManager.CurrentState == eFocusState.FPS || FocusStateManager.CurrentState == eFocusState.Dead);
             if (ready)
             {
-                if (Input.GetKeyDown(KeyCode.L))
-                    SwitchDebug();
+                //if (Input.GetKeyDown(KeyCode.L))
+                //    SwitchDebug();
 
-                if (Input.GetKeyDown(KeyCode.J))
-                {
-                    if (SNet.IsMaster)
-                    {
-                        foreach (KeyValuePair<string, PlayerAIBot> bt in ZiMain.BotTable)
-                        {
-                            zComputer zombie = bt.Value.GetComponent<zComputer>();
-                            zombie.allowedpickups = !zombie.allowedpickups;
-                            zombie.updateExtraInfo();
-                        }
-                    }
-                    if (!SNet.IsMaster) NetworkAPI.InvokeEvent<ZiMain.ZINetInfo>("ZINetInfo", new ZiMain.ZINetInfo(2, 8, 0, 0, 0));
-                    Print("Automatic resource pickups toggled for all bots");
-                }
+                //if (Input.GetKeyDown(KeyCode.J))
+                //{
+                //    if (SNet.IsMaster)
+                //    {
+                //        foreach (KeyValuePair<string, PlayerAIBot> bt in ZiMain.BotTable)
+                //        {
+                //            zComputer zombie = bt.Value.GetComponent<zComputer>();
+                //            zombie.allowedpickups = !zombie.allowedpickups;
+                //            zombie.updateExtraInfo();
+                //        }
+                //    }
+                //    if (!SNet.IsMaster) NetworkAPI.InvokeEvent<ZiMain.ZINetInfo>("ZINetInfo", new ZiMain.ZINetInfo(2, 8, 0, 0, 0));
+                //    Print("Automatic resource pickups toggled for all bots");
+                //}
 
-                if (Input.GetKeyDown(KeyCode.K))
-                {
-                    if (SNet.IsMaster)
-                    {
-                        foreach (KeyValuePair<string, PlayerAIBot> bt in ZiMain.BotTable)
-                        {
-                            zComputer zombie = bt.Value.GetComponent<zComputer>();
-                            zombie.allowedshare = !zombie.allowedshare;
-                            zombie.updateExtraInfo();
-                        }
-                    }
-                    if (!SNet.IsMaster) NetworkAPI.InvokeEvent<ZiMain.ZINetInfo>("ZINetInfo", new ZiMain.ZINetInfo(1, 8, 0, 0, 0));
-                    Print("Automatic resource uses toggled for all bots");
-                }
+                //if (Input.GetKeyDown(KeyCode.K))
+                //{
+                //    if (SNet.IsMaster)
+                //    {
+                //        foreach (KeyValuePair<string, PlayerAIBot> bt in ZiMain.BotTable)
+                //        {
+                //            zComputer zombie = bt.Value.GetComponent<zComputer>();
+                //            zombie.allowedshare = !zombie.allowedshare;
+                //            zombie.updateExtraInfo();
+                //        }
+                //    }
+                //    if (!SNet.IsMaster) NetworkAPI.InvokeEvent<ZiMain.ZINetInfo>("ZINetInfo", new ZiMain.ZINetInfo(1, 8, 0, 0, 0));
+                //    Print("Automatic resource uses toggled for all bots");
+                //}
 
-                if (Input.GetKey(KeyCode.Alpha8))
-                    SendBot("Dauda");
+                //if (Input.GetKey(KeyCode.Alpha8))
+                //    SendBot("Dauda");
 
-                if (Input.GetKey(KeyCode.Alpha9))
-                    SendBot("Hackett");
+                //if (Input.GetKey(KeyCode.Alpha9))
+                //    SendBot("Hackett");
 
-                if (Input.GetKey(KeyCode.Alpha0))
-                    SendBot("Bishop");
+                //if (Input.GetKey(KeyCode.Alpha0))
+                //    SendBot("Bishop");
 
-                if (Input.GetKey(KeyCode.F6))
-                    SendBot("Woods");
+                //if (Input.GetKey(KeyCode.F6))
+                //    SendBot("Woods");
             }
-            void SendBot(String bot)
-            {
-                if (Input.GetMouseButtonDown(2))
-                {
-                    var monster = zSearch.GetMonsterUnderPlayerAim();
-                    if (monster != null)
-                    {
-                        ZiMain.SendBotToKillEnemyOld(bot, monster,
-                            PlayerBotActionAttack.StanceEnum.All,
-                            PlayerBotActionAttack.AttackMeansEnum.All,
-                            PlayerBotActionWalk.Descriptor.PostureEnum.Stand);
-                    }
-                }
+            //void SendBot(String bot)
+            //{
+            //    if (Input.GetMouseButtonDown(2))
+            //    {
+            //        var monster = zSearch.GetMonsterUnderPlayerAim();
+            //        if (monster != null)
+            //        {
+            //            ZiMain.SendBotToKillEnemyOld(bot, monster,
+            //                PlayerBotActionAttack.StanceEnum.All,
+            //                PlayerBotActionAttack.AttackMeansEnum.All,
+            //                PlayerBotActionWalk.Descriptor.PostureEnum.Stand);
+            //        }
+            //    }
 
-                if (Input.GetKeyDown(KeyCode.U) && ready)
-                {
-                    var item = zSearch.GetItemUnderPlayerAim();
-                    if (item != null)
-                        ZiMain.SendBotToPickupItemOld(bot, item);
-                }
+            //    if (Input.GetKeyDown(KeyCode.U) && ready)
+            //    {
+            //        var item = zSearch.GetItemUnderPlayerAim();
+            //        if (item != null)
+            //            ZiMain.SendBotToPickupItemOld(bot, item);
+            //    }
 
-                if (Input.GetKeyDown(KeyCode.I) && ready)
-                    ZiMain.SendBotToShareResourcePackOld(bot, zSearch.GetHumanUnderPlayerAim());
-            }
+            //    if (Input.GetKeyDown(KeyCode.I) && ready)
+            //        ZiMain.SendBotToShareResourcePackOld(bot, zSearch.GetHumanUnderPlayerAim());
+            //}
             if (Time.time > lastupdatetime + 1f)
             {
                 ZiMain.slowUpdate();

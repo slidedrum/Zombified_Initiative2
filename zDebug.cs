@@ -73,6 +73,10 @@ namespace ZombieTweak2
             ZiMain.log.LogInfo("terminalItemLongNames:");
             ZiMain.log.LogInfo(string.Join("\n", terminalItemLongNames));
         }
+        private static void SetToolThreshold(uint id, int threshold)
+        {
+            zSlideComputer.toolThresholds[id] = threshold;
+        }
         private static void printAllInventoryItems()
         {
             var allItemTypes = ItemSpawnManager.m_itemDataPerInventorySlot;
@@ -83,7 +87,7 @@ namespace ZombieTweak2
                 ZiMain.log.LogInfo($"{slotName} ({items.Count}):");
                 foreach (var item in items)
                 {
-                    ZiMain.log.LogInfo($"\t - ({ItemDataBlock.s_blockIDByName[item.name]}){item.publicName}");
+                    ZiMain.log.LogInfo($"\t - ({ItemDataBlock.s_blockIDByName[item.name]}){item.publicName}"); //there's got to be a better way to get the id.
                 }
             }
         }

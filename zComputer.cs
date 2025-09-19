@@ -22,6 +22,7 @@ namespace Zombified_Initiative
         public CommunicationNode mymenu;
         [Obsolete]
         public bool allowedpickups = true;
+        [Obsolete]
         public bool allowedshare = true;
         public bool allowedmove = true;
         public bool started = false;
@@ -130,36 +131,36 @@ namespace Zombified_Initiative
                 this.menusetup = true;
             }
 
-            if (!SNet.IsMaster) return;
-            if (this.myAI.Actions.Count == 0) return;
-            actionsToRemove.Clear();
-            foreach (var action in this.myAI.Actions)
-            {
-                // sentry?
-                if (action.GetIl2CppType().Name == "PlayerBotActionFollow") followaction = action;
-                if (action.GetIl2CppType().Name == "PlayerBotActionTravel") travelaction = action;
+            //if (!SNet.IsMaster) return;
+            //if (this.myAI.Actions.Count == 0) return;
+            //actionsToRemove.Clear();
+            //foreach (var action in this.myAI.Actions)
+            //{
+            //    // sentry?
+            //    if (action.GetIl2CppType().Name == "PlayerBotActionFollow") followaction = action;
+            //    if (action.GetIl2CppType().Name == "PlayerBotActionTravel") travelaction = action;
 
-                if (!allowedmove && action.GetIl2CppType().Name == "PlayerBotActionFollow") action.DescBase.Status = PlayerBotActionBase.Descriptor.StatusType.Queued;
-                if (!allowedmove && action.GetIl2CppType().Name == "PlayerBotActionTravel") action.DescBase.Status = PlayerBotActionBase.Descriptor.StatusType.Queued;
+            //    if (!allowedmove && action.GetIl2CppType().Name == "PlayerBotActionFollow") action.DescBase.Status = PlayerBotActionBase.Descriptor.StatusType.Queued;
+            //    if (!allowedmove && action.GetIl2CppType().Name == "PlayerBotActionTravel") action.DescBase.Status = PlayerBotActionBase.Descriptor.StatusType.Queued;
 
-                // sharing?
-                if (!allowedshare && action.GetIl2CppType().Name == "PlayerBotActionShareResourcePack")
-                {
-                    var descriptor = action.DescBase.Cast<PlayerBotActionShareResourcePack.Descriptor>();
-                    if (descriptor.Haste < ZiMain._manualActionsHaste)
-                    {
-                        shareaction = action;
-                        actionsToRemove.Add(action);
-                    }
-                } // share
-            } // foreach action
+            //    // sharing?
+            //    //if (!allowedshare && action.GetIl2CppType().Name == "PlayerBotActionShareResourcePack")
+            //    //{
+            //    //    var descriptor = action.DescBase.Cast<PlayerBotActionShareResourcePack.Descriptor>();
+            //    //    if (descriptor.Haste < ZiMain._manualActionsHaste)
+            //    //    {
+            //    //        shareaction = action;
+            //    //        actionsToRemove.Add(action);
+            //    //    }
+            //    //} // share
+            //} // foreach action
 
-            if (actionsToRemove.Count == 0) return;
-            foreach (var action in actionsToRemove)
-            {
-                this.myAI.Actions.Remove(action);
-                ZiMain.log.LogInfo($"{this.myself.PlayerName} action {action.GetIl2CppType().Name} was cancelled");
-            }
+            //if (actionsToRemove.Count == 0) return;
+            //foreach (var action in actionsToRemove)
+            //{
+            //    this.myAI.Actions.Remove(action);
+            //    ZiMain.log.LogInfo($"{this.myself.PlayerName} action {action.GetIl2CppType().Name} was cancelled");
+            //}
             actionsToRemove.Clear();
         } // slowUpdate
 

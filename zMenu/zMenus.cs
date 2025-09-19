@@ -55,7 +55,7 @@ namespace ZombieTweak2.zMenu
             pickupNode.AddListener(zMenuManager.nodeEvent.OnTapped, UpdateIndicatorForNode, pickupNode, zSlideComputer.PickUpPerms);
             pickupNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, pickupDetailsSubmenu.Open);
             //TODO make 5 item filters that you can switch between by scrolling on center node.
-            //ALL - ENCOUNTERED - RESOURCES - PLACEABLES - THROWABLES
+            //ALL - ENCOUNTERED - RESOURCES - PLACEABLES - THROWABLES - FAVORITES
             pickupDetailsSubmenu.centerNode.ClearListeners(zMenuManager.nodeEvent.OnUnpressedSelected); 
             pickupDetailsSubmenu.centerNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, zSlideComputer.ResetAllItemPrio);
             pickupDetailsSubmenu.centerNode.AddListener(zMenuManager.nodeEvent.OnTapped, pickupDetailsSubmenu.parrentMenu.Open);
