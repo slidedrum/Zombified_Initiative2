@@ -71,7 +71,7 @@ namespace ZombieTweak2.zMenu
 
                     textMesh = gameObject.GetComponent<TextMeshPro>();
                     textMesh.enableAutoSizing = false;
-                    textMesh.fontSize = 3;
+                    textMesh.fontSize = 2.5f;
                     textMesh.alignment = TextAlignmentOptions.Center;
                     textMesh.color = parent.color;
                     textMesh.text = arg_Text;

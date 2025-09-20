@@ -177,7 +177,7 @@ namespace ZombieTweak2.zMenu
 
                 titlePart = new TextPart(this, $"{title}").SetScale(0.50f, 0.50f).SetColor(new Color(0.2f, 0.2f, 0.2f, 1f));
                 fullTextPart = new TextPart(this, $"{text}");
-                subtitlePart = new TextPart(this, $"{title}").SetScale(0.25f, 0.25f).SetColor(new Color(0.1f, 0.1f, 0.1f, 1f));
+                subtitlePart = new TextPart(this, $"{title}").SetScale(0.35f, 0.35f).SetColor(new Color(0.1f, 0.1f, 0.1f, 1f));
                 descriptionPart = new TextPart(this, description);
 
                 text = arg_Name;
