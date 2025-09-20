@@ -22,6 +22,9 @@ namespace ZombieTweak2.zMenu
         public static zMenu permissionMenu;
         private static zMenu pickupDetailsSubmenu;
         private static zMenu shareDetailsSubmenu;
+        private static string endcolor = "</color>";
+        private static string enabledColor = "<color=#FFA50066>";
+        private static string disabledColor = "<color=#CCCCCC33>";
 
         public static void CreateMenus()
         {
@@ -79,9 +82,7 @@ namespace ZombieTweak2.zMenu
         public static zMenu.zMenuNode UpdateIndicatorForNode(zMenu.zMenuNode node, Dictionary<int, bool> selectionPickUpPerms)
         {
             ZiMain.log.LogInfo($"Updatin selections for node {node.text}");
-            string endcolor = "</color>";
-            string enabledColor = "<color=#FFA50066>";
-            string disabledColor = "<color=#CCCCCC66>";
+            
             string sbSubtitle = "[";
             var last = selectionPickUpPerms.Last();
             foreach (var bot in selectionPickUpPerms)

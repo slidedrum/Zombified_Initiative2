@@ -116,7 +116,7 @@ namespace ZombieTweak2.zMenu
                         Vector3 angleToTarget = (currentMenu.gameObject.transform.position - mainCamera.Position).normalized;
                         Vector3 cameraAngle = mainCamera.transform.forward;
                         float angleDelta = Vector3.Angle(cameraAngle, angleToTarget);
-                        if (angleDelta > 45) //close if we're looking too far away.
+                        if (angleDelta > 45) //close if we're looking too far away. TODO add option to change this value.
                             CloseAllMenues();
                         else if (zSearch.GetClosestObjectInLookDirection(mainCamera.transform, nodeList, 20f) == null) //close if we're not looking near a node with a wider tolerance.
                             CloseAllMenues();

@@ -119,7 +119,6 @@ namespace Zombified_Initiative
                         flag = true;
                         ZiMain._menu.m_menu.CurrentNode.ChildNodes[5].m_ChildNodes[menunumber].m_ChildNodes[num].IsLastNode = false;
                     }
-
                 if (!flag)
                 {
                     ZiMain._menu.m_menu.CurrentNode.ChildNodes[5].m_ChildNodes[menunumber].m_ChildNodes.Add(mymenu);

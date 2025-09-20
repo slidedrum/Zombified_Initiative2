@@ -50,6 +50,7 @@ using static ZombieTweak2.zNetworking.pStructs;
 //want to make "clear room" command
 //want to completely re-write collection logic, not just priority logic
 //want to add new bot actions like hold position, look for resource type (in nearby rooms), ping item (go to term, then run ping command)
+//want to add chat commands for people who don't have the mod.
 
 //want to make "go here" command
 //want to make "home" location function where they "follow" a set location but aren't strickly stuck to it if they get into combat, similar to following a player.
@@ -334,7 +335,8 @@ public class ZiMain : BasePlugin
                 return;
             //request host
             pPickupItemInfo info = new pPickupItemInfo();
-            info.item = pStructs.Get_pStructFromRefrence(item);
+            info.item.replicatorRef.SetID(item.GetComponent<LG_PickupItem_Sync>().m_stateReplicator.Replicator); //TODO Nullcheck?
+            //info.item = pStructs.Get_pStructFromRefrence(item);
             info.playerAgent = pStructs.Get_pStructFromRefrence(aiBot.Agent);
             info.commander = pStructs.Get_pStructFromRefrence(commander); //This might be a problem in commander is null?  Not sure. TODO look into it.
             NetworkAPI.InvokeEvent<pPickupItemInfo>("RequestToPickupItem", info);
