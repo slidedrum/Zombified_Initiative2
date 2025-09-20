@@ -1,4 +1,6 @@
-﻿using TMPro;
+﻿using FluffyUnderware.Curvy.Generator;
+using FluffyUnderware.DevTools.Extensions;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -52,15 +54,27 @@ namespace ZombieTweak2.zMenu
                 public RectTransform rect { get; private set; }
                 public TextPart(zMenuNode parent, string arg_Text)
                 {
-                    gameObject = new GameObject($"TextPart {arg_Text}");
-                    rect = gameObject.AddComponent<RectTransform>();
+                    // Steal TextMeshPro from a reference object
+                    GameObject reference = GameObject.Find("GUI/CellUI_Camera(Clone)/NavMarkerLayer/NavMarkerGeneric(Clone)/IconHolder/Title");
+                    gameObject = Object.Instantiate(reference);
+                    gameObject.GetComponent<NavMarkerComponent>().Destroy();
+                    gameObject.transform.position = Vector3.zero;
+                    gameObject.transform.rotation = Quaternion.identity;
+                    gameObject.transform.localScale = Vector3.one;
+                    gameObject.layer = 0;
+                    gameObject.tag = "Untagged";
+                    gameObject.SetActive(true);
+
+                    gameObject.name = $"TextPart {arg_Text}";
+                    rect = gameObject.GetComponent<RectTransform>();
                     rect.SetParent(parent.rect.transform, false);
 
-                    textMesh = gameObject.AddComponent<TextMeshPro>();
-                    textMesh.text = arg_Text;
-                    textMesh.fontSize = 24;
+                    textMesh = gameObject.GetComponent<TextMeshPro>();
+                    textMesh.enableAutoSizing = false;
+                    textMesh.fontSize = 3;
                     textMesh.alignment = TextAlignmentOptions.Center;
                     textMesh.color = parent.color;
+                    textMesh.text = arg_Text;
 
                     rect.anchoredPosition = Vector2.zero; // center inside node
                     rect.localScale = Vector3.one;
@@ -70,11 +84,6 @@ namespace ZombieTweak2.zMenu
                     ContentSizeFitter fitter = gameObject.AddComponent<ContentSizeFitter>();
                     fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
                     fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
-
-                    // TODO(randomuserhi): Bug where font fails to load
-                    TextMeshPro src = GameObject.Find("GUI/CellUI_Camera(Clone)/WatermarkLayer/MovementRoot/PUI_Watermark(Clone)/Text").GetComponent<TextMeshPro>();
-                    textMesh.font = src.font;
-                    text = arg_Text;
                 }
 
                 //TODO
