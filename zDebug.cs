@@ -3,6 +3,7 @@ using Dissonance;
 using GameData;
 using GTFO.API;
 using HarmonyLib;
+using LevelGeneration;
 using Player;
 using SNetwork;
 using System;
@@ -12,6 +13,7 @@ using UnityEngine;
 using ZombieTweak2.zMenu;
 using ZombieTweak2.zNetworking;
 using Zombified_Initiative;
+using static ZombieTweak2.zNetworking.pStructs;
 
 namespace ZombieTweak2
 {
@@ -324,6 +326,22 @@ namespace ZombieTweak2
             info.allowed = allowed;
             info.playerID = playerID;
             zNetworking.zNetworking.ReciveSetSharePermission(sender, info);
+        }
+        private static void TestReciveRequestToPickupItemNetwork(ulong sender, PlayerAgent bot, ItemInLevel item)
+        {
+            pPickupItemInfo info = new pPickupItemInfo();
+            info.item = pStructs.Get_pStructFromRefrence(item);
+            info.playerAgent = pStructs.Get_pStructFromRefrence(bot);
+            info.commander = pStructs.Get_pStructFromRefrence(PlayerManager.GetLocalPlayerAgent());
+            zNetworking.zNetworking.ReciveRequestToPickupItem(sender, info);
+        }
+        private static void TestReciveRequestToShareResourcePackNetwork(ulong netSender, PlayerAgent sender, PlayerAgent receiver)
+        {
+            pStructs.pShareResourceInfo info = new pStructs.pShareResourceInfo();
+            info.sender = pStructs.Get_pStructFromRefrence(sender);
+            info.receiver = pStructs.Get_pStructFromRefrence(receiver);
+            info.commander = pStructs.Get_pStructFromRefrence(PlayerManager.GetLocalPlayerAgent());
+            zNetworking.zNetworking.ReciveRequestToShareResource(netSender, info);
         }
     }
 }
