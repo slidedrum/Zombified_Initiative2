@@ -2,6 +2,8 @@
 using System.Collections;
 using UnityEngine;
 using Zombified_Initiative;
+using HarmonyLib;
+using Player;
 
 namespace ZombieTweak2
 {
@@ -42,6 +44,7 @@ namespace ZombieTweak2
         {
             onLateUpdate?.Invoke();
         }
+
         public static void InvokeStatic(FlexibleMethodDefinition method, float time)
         {
             if (Instance == null)
@@ -57,4 +60,16 @@ namespace ZombieTweak2
         }
     }
 
+    public class zCameraEvents : MonoBehaviour
+    {
+        // This class handles update loops tied to the camera, specifically the Unity callbacks: OnPreRender, OnPreCull, etc...
+        // This behaviour is separate to zUpdater as it must be added to the FPSCamera which isn't available immediately on game load.
+
+        public FlexibleEvent onPreRender = new();
+
+        private void OnPreRender()
+        {
+            onPreRender?.Invoke();
+        }
+    }
 }

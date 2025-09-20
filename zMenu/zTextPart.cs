@@ -47,7 +47,7 @@ namespace ZombieTweak2.zMenu
                     }
                 }
                 public GameObject gameObject { get; private set; }
-                private TextMeshProUGUI textMesh;
+                private TextMeshPro textMesh;
 
                 public RectTransform rect { get; private set; }
                 public TextPart(zMenuNode parent, string arg_Text)
@@ -56,7 +56,7 @@ namespace ZombieTweak2.zMenu
                     rect = gameObject.AddComponent<RectTransform>();
                     rect.SetParent(parent.rect.transform, false);
 
-                    textMesh = gameObject.AddComponent<TextMeshProUGUI>();
+                    textMesh = gameObject.AddComponent<TextMeshPro>();
                     textMesh.text = arg_Text;
                     textMesh.fontSize = 24;
                     textMesh.alignment = TextAlignmentOptions.Center;
@@ -71,8 +71,9 @@ namespace ZombieTweak2.zMenu
                     fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
                     fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
 
-                    TMP_FontAsset font = GameObject.Find("GUI/CellUI_Camera(Clone)/WatermarkLayer/MovementRoot/PUI_Watermark(Clone)/Text").GetComponent<TextMeshPro>().font;
-                    textMesh.font = font;
+                    // TODO(randomuserhi): Bug where font fails to load
+                    TextMeshPro src = GameObject.Find("GUI/CellUI_Camera(Clone)/WatermarkLayer/MovementRoot/PUI_Watermark(Clone)/Text").GetComponent<TextMeshPro>();
+                    textMesh.font = src.font;
                     text = arg_Text;
                 }
 

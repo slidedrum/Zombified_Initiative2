@@ -129,6 +129,7 @@ public class ZiMain : BasePlugin
         m_Harmony.PatchAll();
         ClassInjector.RegisterTypeInIl2Cpp<zComputer>();
         ClassInjector.RegisterTypeInIl2Cpp<zUpdater>();
+        ClassInjector.RegisterTypeInIl2Cpp<zCameraEvents>();
         var ZombieController = AddComponent<zController>();
 
         //NetworkAPI.RegisterEvent<ZINetInfo>(ZINetInfo.NetworkIdentity, zController.ReceiveZINetInfo);
