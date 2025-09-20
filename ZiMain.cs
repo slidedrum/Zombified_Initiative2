@@ -7,15 +7,12 @@ using Gear;
 using GTFO.API;
 using HarmonyLib;
 using Il2CppInterop.Runtime.Injection;
-using Il2CppSystem.Reflection;
 using LevelGeneration;
 using Player;
 using SNetwork;
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UIElements;
 using ZombieTweak2;
 using ZombieTweak2.zMenu;
 using ZombieTweak2.zNetworking;
@@ -328,7 +325,7 @@ public class ZiMain : BasePlugin
         player.SetPlayer(agent.Owner);
         return player;
     }
-    public static void SendBotToPickupItemNew(PlayerAIBot aiBot, ItemInLevel item, PlayerAgent commander = null, ulong netsender = 0)
+    public static void SendBotToPickupItem(PlayerAIBot aiBot, ItemInLevel item, PlayerAgent commander = null, ulong netsender = 0)
     {
         //todo add to manual action list for refrence later.
         if (!SNet.IsMaster) //Are we a client?
@@ -357,7 +354,7 @@ public class ZiMain : BasePlugin
         sendChatMessage($"Picking up {item.PublicName}",aiBot.Agent,commander);
         aiBot.StartAction(desc);
     }
-    public static void SendBotToShareResourcePackNew(PlayerAIBot aiBot, PlayerAgent receiver, PlayerAgent commander = null, ulong netsender = 0)
+    public static void SendBotToShareResourcePack(PlayerAIBot aiBot, PlayerAgent receiver, PlayerAgent commander = null, ulong netsender = 0)
     {
         //todo add to manual action list for refrence later.
         if (!SNet.IsMaster)//Are we a client?

@@ -1,6 +1,4 @@
-﻿
-using Agents;
-using LevelGeneration;
+﻿using LevelGeneration;
 using Player;
 using SNetwork;
 using System;
@@ -9,7 +7,6 @@ using System.Linq;
 using UnityEngine;
 using ZombieTweak2.zMenu;
 using Zombified_Initiative;
-using static Zombified_Initiative.ZiMain;
 
 namespace ZombieTweak2.zNetworking
 {
@@ -80,9 +77,6 @@ namespace ZombieTweak2.zNetworking
             botSelections = DecodeBotSelectionFromNetwork(info.data);
             zSlideComputer.TogglePickupPermission(botSelections); //this works, it's downstream.
         }
-
-
-
         internal static void ReciveSetItemPrioDisable(ulong sender, pStructs.pItemPrioDisable info)
         {
             ZiMain.log.LogInfo($"Recived set item prio disabled from network!");
@@ -192,7 +186,7 @@ namespace ZombieTweak2.zNetworking
                 return;
             }
             PlayerAIBot aiBot = agent.gameObject.GetComponent<PlayerAIBot>();
-            ZiMain.SendBotToPickupItemNew(aiBot, item, commander, sender);
+            ZiMain.SendBotToPickupItem(aiBot, item, commander, sender);
         }
         internal static void ReciveRequestToShareResource(ulong netSender, pStructs.pShareResourceInfo info) 
         {
@@ -215,7 +209,7 @@ namespace ZombieTweak2.zNetworking
                 return;
             }
             PlayerAIBot aiBot = sender.gameObject.GetComponent<PlayerAIBot>();
-            ZiMain.SendBotToShareResourcePackNew(aiBot, receiver, commander, netSender);
+            ZiMain.SendBotToShareResourcePack(aiBot, receiver, commander, netSender);
         }
     }
 }

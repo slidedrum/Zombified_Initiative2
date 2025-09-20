@@ -1,18 +1,13 @@
-﻿using Dissonance.Networking.Client;
-using GameData;
+﻿using GameData;
 using GTFO.API;
-using HarmonyLib;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using Player;
-using SNetwork;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine.UIElements;
 using ZombieTweak2.zMenu;
 using ZombieTweak2.zNetworking;
 using Zombified_Initiative;
-using static Player.RootPlayerBotAction.GearAvailability;
 using static ZombieTweak2.zNetworking.pStructs;
 
 namespace ZombieTweak2

@@ -4,7 +4,6 @@ using Player;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 namespace Zombified_Initiative
 {
@@ -160,7 +159,7 @@ namespace Zombified_Initiative
                             ZiMain.log.LogInfo($"Looking at new self {receiver.PlayerName}");
                             GameObject selectedBotObject = selection.getBotGobject();
                             PlayerAIBot selectedBot = selectedBotObject.GetComponent<PlayerAIBot>();;
-                            ZiMain.SendBotToShareResourcePackNew(selectedBot, receiver);
+                            ZiMain.SendBotToShareResourcePack(selectedBot, receiver);
                         }
                         else
                         {
@@ -174,7 +173,7 @@ namespace Zombified_Initiative
                         GameObject selectedBotObject = selection.getBotGobject();
                         PlayerAgent receiver = lookingAt.gobject.GetComponent<PlayerAgent>();
                         PlayerAIBot selectedBot = selectedBotObject.GetComponent<PlayerAIBot>();
-                        ZiMain.SendBotToShareResourcePackNew(selectedBot, receiver,localPlayer);
+                        ZiMain.SendBotToShareResourcePack(selectedBot, receiver,localPlayer);
                         break;
                     }
                 case objectType.EnemyAgent:
@@ -191,7 +190,7 @@ namespace Zombified_Initiative
                         PlayerAgent agent = selection.getBotGobject().GetComponent<PlayerAgent>();
                         PlayerAIBot aiBot = selection.getBotGobject().GetComponent<PlayerAIBot>();
                         ItemInLevel pickup = lookingAt.gobject.GetComponent<ItemInLevel>();
-                        ZiMain.SendBotToPickupItemNew(aiBot, pickup,localPlayer);
+                        ZiMain.SendBotToPickupItem(aiBot, pickup,localPlayer);
                         break;
                     }
                 case objectType.Other:
