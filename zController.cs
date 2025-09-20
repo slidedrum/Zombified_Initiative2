@@ -13,6 +13,7 @@ using UnityEngine;
 
 namespace Zombified_Initiative
 {
+    [Obsolete]
     public class botAction(PlayerAIBot bot, Item targetItem, LG_ResourceContainer_Storage targetContainer, Vector3 targetPosition, float prio, float haste, string message, int func, int slot, int itemtype, int itemserial, int agentid,int depth, PlayerBotActionBase.Descriptor descriptor)
     {
         public PlayerAIBot Bot = bot;

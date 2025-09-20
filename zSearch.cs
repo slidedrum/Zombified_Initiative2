@@ -90,6 +90,7 @@ namespace Zombified_Initiative
         #endregion
         public static GameObject GetClosestObjectInLookDirection(Transform baseTransform,List<GameObject> candidates,float maxAngle = 180f, Vector3? candidateOffset = null, Vector3? baseOffset = null)
         {
+            //TODO add some optional leeway for very close objects
             candidateOffset = candidateOffset ?? Vector3.zero;
             baseOffset = baseOffset ?? Vector3.zero;
             if (baseTransform == null || candidates == null || candidates.Count == 0)

@@ -7,6 +7,7 @@ namespace Zombified_Initiative
 {
     public static class zActionSub
     {
+        //This whole class may be redundant.  I think there's a way to do this built in.  Not sure how it works yet tho.
         public static List<Action<PlayerAIBot, PlayerBotActionBase>> onAdded = new();
         public static List<Action<PlayerAIBot, PlayerBotActionBase>> onRemoved = new();
         public static Dictionary<int, List<PlayerBotActionBase>> botActionMap = new();

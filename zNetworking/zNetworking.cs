@@ -75,6 +75,9 @@ namespace ZombieTweak2.zNetworking
             botSelections = DecodeBotSelectionFromNetwork(info.data);
             zSlideComputer.TogglePickupPermission(botSelections); //this works, it's downstream.
         }
+
+
+
         internal static void ReciveSetItemPrioDisable(ulong sender, pStructs.pItemPrioDisable info)
         {
             ZiMain.log.LogInfo($"Recived set item prio disabled from network!");
@@ -89,7 +92,6 @@ namespace ZombieTweak2.zNetworking
             zSlideComputer.SetItemPrioDisabled(id, allowed, sender);
             PermissionsMenuClass.updateNodePriorityDisplay(PermissionsMenuClass.prioNodesByID[id], id);
         }
-
         internal static void ReciveSetItemPrio(ulong sender, pStructs.pItemPrio info)
         {
             ZiMain.log.LogInfo($"Recived set item prio value from network!");
