@@ -212,8 +212,6 @@ namespace ZombieTweak2.zMenu
 
             canvas = canvasGO.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.WorldSpace;
-            // canvas.sortingLayerName = "UI_Top";
-            // Camera.main.cullingMask |= (1 << LayerMask.NameToLayer("UI_Top"));
             canvas.worldCamera = Camera.main;
 
             var scaler = canvasGO.AddComponent<CanvasScaler>();
