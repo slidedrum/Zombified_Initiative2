@@ -1,4 +1,8 @@
 ﻿
+using Agents;
+using LevelGeneration;
+using Player;
+using SNetwork;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -161,6 +165,50 @@ namespace ZombieTweak2.zNetworking
             }
             zSlideComputer.SetSharePermission(playerID, allowed, sender);
             zMenus.UpdateIndicatorForNode(zMenus.permissionMenu.GetNode("Share"), zSlideComputer.SharePerms);
+        }
+        internal static void ReciveRequestToPickupItem(ulong sender, pStructs.pPickupItemInfo info)
+        {
+            ZiMain.log.LogInfo("Recived request to pickup item!");
+            if (!SNet.IsMaster)
+                return;
+            PlayerAgent agent = pStructs.Get_RefFrom_pStruct(info.playerAgent);
+            PlayerAgent commander = pStructs.Get_RefFrom_pStruct(info.commander);
+            ItemInLevel item = pStructs.Get_RefFrom_pStruct(info.item)?.GetComponent<ItemInLevel>();
+            ZiMain.log.LogInfo($"{commander.PlayerName} wants to tell {agent.PlayerName} to pickup a {item.PublicName}");
+            if (item != null || agent == null || commander == null)
+            {
+                ZiMain.log.LogError("Invalid request to pickup item: agent, item or commander is null.");
+                return;
+            }
+            if (!agent.Owner.IsBot)
+            {
+                ZiMain.log.LogWarning("Invalid request to pickup item, You can't tell a player what to do.");
+                return;
+            }
+            PlayerAIBot aiBot = agent.gameObject.GetComponent<PlayerAIBot>();
+            ZiMain.SendBotToPickupItemNew(aiBot, item, commander, sender);
+        }
+        internal static void ReciveRequestToShareResource(ulong netSender, pStructs.pShareResourceInfo info) 
+        {
+            ZiMain.log.LogInfo("Recived request to share resoruce!");
+            if (!SNet.IsMaster)
+                return;
+            PlayerAgent sender = pStructs.Get_RefFrom_pStruct(info.sender);
+            PlayerAgent receiver = pStructs.Get_RefFrom_pStruct(info.receiver);
+            PlayerAgent commander = pStructs.Get_RefFrom_pStruct(info.commander);
+            ZiMain.log.LogInfo($"{commander.PlayerName} wants to tell {sender.PlayerName} to share resoruces with {receiver.PlayerName}");
+            if (sender != null || receiver == null || commander == null)
+            {
+                ZiMain.log.LogError("Invalid request to share resource: sender, reciver or commander is null.");
+                return;
+            }
+            if (!sender.Owner.IsBot)
+            {
+                ZiMain.log.LogWarning("Invalid request to pickup item, You can't tell a player what to do.");
+                return;
+            }
+            PlayerAIBot aiBot = sender.gameObject.GetComponent<PlayerAIBot>();
+            ZiMain.SendBotToShareResourcePackNew(aiBot, receiver, commander, netSender);
         }
     }
 }

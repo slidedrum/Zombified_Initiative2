@@ -172,9 +172,9 @@ namespace Zombified_Initiative
                     {
                         ZiMain.log.LogInfo($"Looking at new agent {lookingAt.gobject.name}");
                         GameObject selectedBotObject = selection.getBotGobject();
-                        PlayerAIBot selectedBot = selectedBotObject.GetComponent<PlayerAIBot>();
                         PlayerAgent receiver = lookingAt.gobject.GetComponent<PlayerAgent>();
-                        ZiMain.SendBotToShareResourcePackNew(selectedBot, receiver);
+                        PlayerAIBot selectedBot = selectedBotObject.GetComponent<PlayerAIBot>();
+                        ZiMain.SendBotToShareResourcePackNew(selectedBot, receiver,localPlayer);
                         break;
                     }
                 case objectType.EnemyAgent:
@@ -188,10 +188,10 @@ namespace Zombified_Initiative
                 case objectType.Item:
                     {
                         ZiMain.log.LogInfo($"Looking at new item {lookingAt.gobject.name}");
-                        PlayerAgent bot = selection.getBotGobject().GetComponent<PlayerAgent>();
+                        PlayerAgent agent = selection.getBotGobject().GetComponent<PlayerAgent>();
+                        PlayerAIBot aiBot = selection.getBotGobject().GetComponent<PlayerAIBot>();
                         ItemInLevel pickup = lookingAt.gobject.GetComponent<ItemInLevel>();
-                        ZiMain.sendChatMessage("Picking up item: " + pickup.PublicName, bot, localPlayer);
-                        ZiMain.SendBotToPickupItemOld(bot.PlayerName, pickup);
+                        ZiMain.SendBotToPickupItemNew(aiBot, pickup,localPlayer);
                         break;
                     }
                 case objectType.Other:
@@ -211,20 +211,21 @@ namespace Zombified_Initiative
             var localPlayer = PlayerManager.GetLocalPlayerAgent();
             var cameraTransform = localPlayer.FPSCamera.transform;
             lookingObject lookingAt = GetFilteredObjectLookingAt();
-            if (lookingAt.type == objectType.None && Vector3.Angle(cameraTransform.forward, Vector3.up) < 15f)
+            if (lookingAt.type == objectType.None && Vector3.Angle(cameraTransform.forward, Vector3.up) < 15f && selection.getBotGobject() != null)
             {
                 ZiMain.sendChatMessage("Nevermind.", selection.getBotGobject().GetComponent<PlayerAgent>(), localPlayer);
                 selection.setBot(null);
-                //interactable = false; //I don't think I need this anymore?
                 return;
             }
             if (lookingAt.type != objectType.PlayerAgent)
                 return;
+            PlayerAgent agent = lookingAt.gobject.GetComponent<PlayerAgent>();
+            if (!agent.Owner.IsBot)
+                return;
             if (lookingAt.gobject != null)
             {
-                ZiMain.sendChatMessage("I'm ready", lookingAt.gobject.GetComponent<PlayerAgent>(), localPlayer);
+                ZiMain.sendChatMessage("I'm ready", agent, localPlayer);
                 selection.setBot(lookingAt.gobject);
-                //interactable = false; //I don't think I need this anymore?
             }
         }
     }

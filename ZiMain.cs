@@ -41,6 +41,9 @@ using static ZombieTweak2.zNetworking.pStructs;
 //todo add per bot overides for individual share/pickup perms.
 //todo add sounds
 //todo add options menu with things like default states and key rebinding
+//todo add mele only restriction
+//todo when perms removed, remove any current actions that are no longer allowed
+//todo add quick settings part of the menu for things like "auto select followed bots" 
 
 //todo refactor PlayConfirmSound hook to not be so dumb -- probably just going to remvoe support for q menu
 
@@ -131,14 +134,16 @@ public class ZiMain : BasePlugin
         var ZombieController = AddComponent<zController>();
 
         //NetworkAPI.RegisterEvent<ZINetInfo>(ZINetInfo.NetworkIdentity, zController.ReceiveZINetInfo);
-        NetworkAPI.RegisterEvent<ZISendBotToPickupItemInfo>("sendBotToPickupItem", SendBotToPickupItem);
+        //NetworkAPI.RegisterEvent<ZISendBotToPickupItemInfo>("sendBotToPickupItem", SendBotToPickupItem);
 
-        NetworkAPI.RegisterEvent<pItemPrioDisable>("SetItemPrioDisable", zNetworking.ReciveSetItemPrioDisable);
-        NetworkAPI.RegisterEvent<pItemPrio>("SetItemPrio", zNetworking.ReciveSetItemPrio);
-        NetworkAPI.RegisterEvent<pResourceThreshold>("SetResourceThreshold", zNetworking.reciveSetResourceThreshold);
-        NetworkAPI.RegisterEvent<pResourceThresholdDisable>("SetResourceThresholdDisable", zNetworking.ReciveSetResourceThresholdDisable);
-        NetworkAPI.RegisterEvent<pSharePermission>("SetSharePermission", zNetworking.ReciveSetSharePermission);
-        NetworkAPI.RegisterEvent<pPickupPermission>("SetPickupPermission", zNetworking.ReciveSetPickupPermission);
+        NetworkAPI.RegisterEvent<pItemPrioDisable>          ("SetItemPrioDisable",              zNetworking.ReciveSetItemPrioDisable);
+        NetworkAPI.RegisterEvent<pItemPrio>                 ("SetItemPrio",                     zNetworking.ReciveSetItemPrio);
+        NetworkAPI.RegisterEvent<pResourceThreshold>        ("SetResourceThreshold",            zNetworking.reciveSetResourceThreshold);
+        NetworkAPI.RegisterEvent<pResourceThresholdDisable> ("SetResourceThresholdDisable",     zNetworking.ReciveSetResourceThresholdDisable);
+        NetworkAPI.RegisterEvent<pSharePermission>          ("SetSharePermission",              zNetworking.ReciveSetSharePermission);
+        NetworkAPI.RegisterEvent<pPickupPermission>         ("SetPickupPermission",             zNetworking.ReciveSetPickupPermission);
+        NetworkAPI.RegisterEvent<pPickupItemInfo>           ("RequestToPickupItem",             zNetworking.ReciveRequestToPickupItem);
+        NetworkAPI.RegisterEvent<pShareResourceInfo>        ("RequestToShareResourcePack",      zNetworking.ReciveRequestToShareResource);
 
         LG_Factory.add_OnFactoryBuildDone((Action)ZombieController.OnFactoryBuildDone);
         LG_Factory.add_OnFactoryBuildDone((Action)zSlideComputer.Init);
@@ -302,7 +307,6 @@ public class ZiMain : BasePlugin
             return null;
         return player.PlayerAgent.TryCast<PlayerAgent>();
     }
-
     public static SNetStructs.pPlayer Get_pStructFromAgent(PlayerAgent agent)
     {
         //Do we need this?
@@ -317,7 +321,6 @@ public class ZiMain : BasePlugin
             return null;
         return player.PlayerAgent.TryCast<PlayerAgent>();
     }
-
     public static SNetStructs.pPlayer Get_pPlayerFromAgent(PlayerAgent agent)
     {
         //Do we need this?
@@ -325,23 +328,50 @@ public class ZiMain : BasePlugin
         player.SetPlayer(agent.Owner);
         return player;
     }
-    public struct ZISendBotToPickupItemInfo
+    public static void SendBotToPickupItemNew(PlayerAIBot aiBot, ItemInLevel item, PlayerAgent commander = null, ulong netsender = 0)
     {
-        public int botId;
-        public pItemData item;
-    }
-    private static void SendBotToPickupItem(ulong sender, ZISendBotToPickupItemInfo info)
-    {
-        log.LogInfo($"Networked message! botID: {info.botId} - pItemData: {info.item}");
-        Item _item;
-        PlayerBackpackManager.TryGetItemInLevelFromItemData(info.item, out _item);
-    }
-    public static void SendBotToPickupItem(PlayerAIBot bot, ItemInLevel item, PlayerAgent commander = null)
-    {
-
+        //todo add to manual action list for refrence later.
+        if (!SNet.IsMaster) //Are we a client?
+        {
+            if (netsender != 0) //Is this request coming from a different client?
+                return;
+            //request host
+            pPickupItemInfo info = new pPickupItemInfo();
+            info.item = pStructs.Get_pStructFromRefrence(item);
+            info.playerAgent = pStructs.Get_pStructFromRefrence(aiBot.Agent);
+            info.commander = pStructs.Get_pStructFromRefrence(commander); //This might be a problem in commander is null?  Not sure. TODO look into it.
+            NetworkAPI.InvokeEvent<pPickupItemInfo>("RequestToPickupItem", info);
+            return;
+        }
+        log.LogInfo($"{commander.PlayerName} is sending {aiBot.Agent.PlayerName} to pick up {item.PublicName} with the new method");
+        float prio = 5f;
+        float haste = 1f;
+        PlayerBotActionCollectItem.Descriptor desc = new(aiBot)
+        {
+            TargetItem = item,
+            TargetContainer = item.container,
+            TargetPosition = item.transform.position,
+            Prio = prio,
+            Haste = haste,
+        };
+        sendChatMessage($"Picking up {item.PublicName}",aiBot.Agent,commander);
+        aiBot.StartAction(desc);
     }
     public static void SendBotToShareResourcePackNew(PlayerAIBot aiBot, PlayerAgent receiver, PlayerAgent commander = null, ulong netsender = 0)
     {
+        //todo add to manual action list for refrence later.
+        if (!SNet.IsMaster)//Are we a client?
+        {
+            if (netsender != 0)//Is this request coming from a different client?
+                return;
+            //request host
+            pStructs.pShareResourceInfo info = new pStructs.pShareResourceInfo();
+            info.sender =       pStructs.Get_pStructFromRefrence(aiBot.Agent);
+            info.receiver =     pStructs.Get_pStructFromRefrence(receiver);
+            info.commander =    pStructs.Get_pStructFromRefrence(commander); //This might be a problem in commander is null?  Not sure. TODO look into it.
+            NetworkAPI.InvokeEvent<pStructs.pShareResourceInfo>("RequestToShareResourcePack", info);
+            return;
+        }
         float prio = 5f;
         float haste = 1f;
         BackpackItem backpackItem = null;
@@ -360,7 +390,7 @@ public class ZiMain : BasePlugin
             Haste = haste,
         };
         float ammoLeft = aiBot.Backpack.AmmoStorage.GetAmmoInPack(AmmoType.ResourcePackRel);
-        sendChatMessage($"Sharing my {resourcePack.PublicName} ({ammoLeft}%) with {receiver.PlayerName}.");
+        sendChatMessage($"Sharing my {resourcePack.PublicName} ({ammoLeft}%) with {receiver.PlayerName}.",aiBot.Agent,commander);
         aiBot.StartAction(desc);
     }
 
@@ -460,6 +490,7 @@ public class ZiMain : BasePlugin
         },
             "Added share resource action to " + bot.Agent.PlayerName, 4, bot.m_playerAgent.PlayerSlotIndex, 0, 0, receiver.m_replicator.Key + 1);
     }
+    [Obsolete]
     public static void attackMyTarget(string bot, bool everyone = false)
     {
         var monster = zSearch.GetMonsterUnderPlayerAim();

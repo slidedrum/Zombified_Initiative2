@@ -10,6 +10,8 @@ namespace ZombieTweak2.zNetworking
     public class pStructs
     {
         //This handles encoding and decoding objects for network transfer.
+
+        //TODO this conversion shit needs a better naming scheme, I have no idea wtf I did here.
         public static PlayerAgent Get_RefFrom_pStruct(pPlayerAgent pStruct)
         {
             if (!pStruct.TryGet(out PlayerAgent refrence))
@@ -28,13 +30,7 @@ namespace ZombieTweak2.zNetworking
                 return null;
             return refrence;
         }
-        public static GameObject Get_RefFrom_pStruct(pItemData pStruct)
-        {
-            GameObject item = null;
-            if (pStruct.replicatorRef.TryGetID(out IReplicator rep))
-                item = rep.ReplicatorSupplier.gameObject;
-            return item;
-        }
+
         public static PlayerAgent Get_RefFrom_pStruct(SNetStructs.pPlayer pStruct)
         {
             if (!pStruct.TryGetPlayer(out SNet_Player refrence))
@@ -70,6 +66,13 @@ namespace ZombieTweak2.zNetworking
             pItemData pStruct = refrence.Get_pItemData();
             return pStruct;
         }
+        public static GameObject Get_RefFrom_pStruct(pItemData pStruct)
+        {
+            GameObject item = null;
+            if (pStruct.replicatorRef.TryGetID(out IReplicator rep))
+                item = rep.ReplicatorSupplier.gameObject;
+            return item;
+        }
         //TODO consolidate these?
         public struct pBotSelections
         {
@@ -104,6 +107,19 @@ namespace ZombieTweak2.zNetworking
         {
             public uint id;
             public int threshold;
+        }
+
+        internal struct pPickupItemInfo
+        {
+            public pItemData item;
+            public pPlayerAgent playerAgent;
+            public pPlayerAgent commander;
+        }
+        internal struct pShareResourceInfo
+        {
+            public pPlayerAgent sender;
+            public pPlayerAgent receiver;
+            public pPlayerAgent commander;
         }
     }
 }
