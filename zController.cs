@@ -2,7 +2,6 @@
 using Enemies;
 using GameData;
 using Gear;
-using GTFO.API;
 using LevelGeneration;
 using Localization;
 using Player;

@@ -1,6 +1,4 @@
-﻿using Agents;
-using BepInEx.Unity.IL2CPP.UnityEngine;
-using GameData;
+﻿using GameData;
 using GTFO.API;
 using HarmonyLib;
 using Player;
