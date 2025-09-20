@@ -13,11 +13,15 @@ using Player;
 using SNetwork;
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UIElements;
 using ZombieTweak2;
 using ZombieTweak2.zMenu;
 using ZombieTweak2.zNetworking;
 using static ZombieTweak2.zNetworking.pStructs;
+
+//toto priority: Re-create send bot to do manual action
 
 //todo fix pickup action failing sometimes  -- DONE!  
 //todo change cancel to look up -- DONE
@@ -33,6 +37,10 @@ using static ZombieTweak2.zNetworking.pStructs;
 //todo unheld selected might have problems.
 //todo double tap smart select on a bot to have them follow you.
 //todo move updateNodeThresholdDisplay and similar to the set methds not as node listeners.
+//todo add option to let bots open lockers
+//todo add per bot overides for individual share/pickup perms.
+//todo add sounds
+//todo add options menu with things like default states and key rebinding
 
 //todo refactor PlayConfirmSound hook to not be so dumb -- probably just going to remvoe support for q menu
 
@@ -40,6 +48,8 @@ using static ZombieTweak2.zNetworking.pStructs;
 //want to fix attack not always working
 //want to make attack wake room sometimes
 //want to make "clear room" command
+//want to completely re-write collection logic, not just priority logic
+//want to add new bot actions like hold position, look for resource type (in nearby rooms), ping item (go to term, then run ping command)
 
 //want to make "go here" command
 //want to make "home" location function where they "follow" a set location but aren't strickly stuck to it if they get into combat, similar to following a player.
@@ -67,6 +77,8 @@ public class ZiMain : BasePlugin
     public static float _manualActionsHaste = 1f;
     public static float _manualActionsPriority = 5f;
     public static List<botAction> botActions = new();
+    public static List<PlayerBotActionBase> manualActions = new();
+    [Obsolete]
     public struct ZINetInfo
     {
 
@@ -159,7 +171,8 @@ public class ZiMain : BasePlugin
 
     }
     public static bool isManualAction(PlayerBotActionBase action)
-    {//TODO - This honestly might be fine.  But I'd love a more generic way that doesn't rely on typename.
+    {   //TODO - This honestly might be fine.  But I'd love a more generic way that doesn't rely on typename.
+        //TODO add external list of manual actions.  be sure to clean it when actions are terminated.
         string typeName = action.GetIl2CppType().Name;
         float haste = 0f;
         float prio = 0f;
@@ -169,13 +182,13 @@ public class ZiMain : BasePlugin
             haste = descriptor.Haste;
             prio = descriptor.Prio;
         }
-        if (typeName == "PlayerBotActionShareResourcePack")
+        else if (typeName == "PlayerBotActionShareResourcePack")
         {
             var descriptor = action.DescBase.Cast<PlayerBotActionShareResourcePack.Descriptor>();
             haste = descriptor.Haste;
             prio = descriptor.Prio;
         }
-        if (typeName == "PlayerBotActionAttack")
+        else if (typeName == "PlayerBotActionAttack")
         {
             var descriptor = action.DescBase.Cast<PlayerBotActionAttack.Descriptor>();
             haste = descriptor.Haste;
@@ -225,28 +238,28 @@ public class ZiMain : BasePlugin
             log.LogInfo($"access layers {descriptor.m_accessLayers}");
             string article = manualAction ? "the" : "a";
             string receverOrMyslef = descriptor.Receiver == bot.Agent ? "myself" : descriptor.Receiver.PlayerName;
-            log.LogInfo($"Got reciver or myself {receverOrMyslef}");
+            log.LogInfo($"Got receiver or myself {receverOrMyslef}");
             if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Successful)
-                sendChatMessage($"I gave {receverOrMyslef} {article} {descriptor.Item.PublicName}({ammoLeft}%).", bot.Agent);
+                sendChatMessage($"I gave {receverOrMyslef} {article} {descriptor.Item.PublicName} ({ammoLeft}%).", bot.Agent);
             else if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Failed)
-                sendChatMessage($"I coul't give {receverOrMyslef} {article} {descriptor.Item.PublicName}({ammoLeft}%).", bot.Agent);
+                sendChatMessage($"I coul't give {receverOrMyslef} {article} {descriptor.Item.PublicName} ({ammoLeft}%).", bot.Agent);
             else if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Interrupted)
-                sendChatMessage($"I can't give {receverOrMyslef} {article} {descriptor.Item.PublicName}({ammoLeft}%) right now.", bot.Agent);
+                sendChatMessage($"I can't give {receverOrMyslef} {article} {descriptor.Item.PublicName} ({ammoLeft}%) right now.", bot.Agent);
             else if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Aborted)
-                sendChatMessage($"I can't give {receverOrMyslef} {article} {descriptor.Item.PublicName}({ammoLeft}%) right now.", bot.Agent);
+                sendChatMessage($"I can't give {receverOrMyslef} {article} {descriptor.Item.PublicName} ({ammoLeft}%) right now.", bot.Agent);
             else if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Stopped)
-                sendChatMessage($"I can't give {receverOrMyslef} {article} {descriptor.Item.PublicName}({ammoLeft}%) right now.", bot.Agent);
+                sendChatMessage($"I can't give {receverOrMyslef} {article} {descriptor.Item.PublicName} ({ammoLeft}%) right now.", bot.Agent);
             else
-                sendChatMessage($"I can't give {receverOrMyslef} {article} {descriptor.Item.PublicName}({ammoLeft}%) status {action.DescBase.Status}.", bot.Agent);
+                sendChatMessage($"I can't give {receverOrMyslef} {article} {descriptor.Item.PublicName} ({ammoLeft}%) status {action.DescBase.Status}.", bot.Agent);
         }
     }
     public static void slowUpdate()
     {
         
     }
-    public static void sendChatMessage(string message,PlayerAgent sender = null, PlayerAgent reciver = null)
+    public static void sendChatMessage(string message,PlayerAgent sender = null, PlayerAgent receiver = null)
     {
-        PlayerChatManager.WantToSentTextMessage(sender != null ? sender : PlayerManager.GetLocalPlayerAgent(), message, reciver);
+        PlayerChatManager.WantToSentTextMessage(sender != null ? sender : PlayerManager.GetLocalPlayerAgent(), message, receiver);
     }
     [Obsolete]
 
@@ -257,15 +270,16 @@ public class ZiMain : BasePlugin
     }
 
     public static List<PlayerAIBot> GetBotList()
-    {//TODO this is bad there's got to be a better way.  Though it's pretty cheap regardless.
+    {
+        //TODO this is bad there's got to be a better way.  Though it's pretty cheap regardless.
+        //TODO add caching?
         List<PlayerAIBot> playerAiBots = new();
         var playerAgentsInLevel = PlayerManager.PlayerAgentsInLevel;
         foreach (var agent in playerAgentsInLevel)
         {
-            var aiBot = agent.gameObject.GetComponent<PlayerAIBot>();
-            if (aiBot != null)
+            if (agent.Owner.IsBot)
             {
-                playerAiBots.Add(aiBot);
+                playerAiBots.Add(agent.gameObject.GetComponent<PlayerAIBot>());
             }
         }
         return playerAiBots;
@@ -276,12 +290,14 @@ public class ZiMain : BasePlugin
     }
     public static Item TryGetItemInLevelFromItemData(pItemData itemData)
     {
+        //Do we need this?
         Item item;
         PlayerBackpackManager.TryGetItemInLevelFromItemData(itemData, out item);
         return item;
     }
     public static PlayerAgent GetAgentFrom_pStruct(SNetStructs.pPlayer player_struct)
     {
+        //Do we need this?
         if (!player_struct.TryGetPlayer(out SNet_Player player))
             return null;
         return player.PlayerAgent.TryCast<PlayerAgent>();
@@ -289,12 +305,14 @@ public class ZiMain : BasePlugin
 
     public static SNetStructs.pPlayer Get_pStructFromAgent(PlayerAgent agent)
     {
+        //Do we need this?
         SNetStructs.pPlayer player = new();
         player.SetPlayer(agent.Owner);
         return player;
     }
     public static PlayerAgent GetAgentFrom_pPlayer(SNetStructs.pPlayer player_struct)
     {
+        //Do we need this?
         if (!player_struct.TryGetPlayer(out SNet_Player player))
             return null;
         return player.PlayerAgent.TryCast<PlayerAgent>();
@@ -302,6 +320,7 @@ public class ZiMain : BasePlugin
 
     public static SNetStructs.pPlayer Get_pPlayerFromAgent(PlayerAgent agent)
     {
+        //Do we need this?
         SNetStructs.pPlayer player = new();
         player.SetPlayer(agent.Owner);
         return player;
@@ -316,22 +335,36 @@ public class ZiMain : BasePlugin
         log.LogInfo($"Networked message! botID: {info.botId} - pItemData: {info.item}");
         Item _item;
         PlayerBackpackManager.TryGetItemInLevelFromItemData(info.item, out _item);
-        //log.LogInfo($"Got _item {(_item == null ? "null" : _item.Pointer)}");
-        //ItemInLevel item = _item.gameObject.GetComponent<ItemInLevel>();
-        //log.LogInfo($"Got item {item} - {item.PublicName}");
-        //PlayerAgent bot = GetAgentFromId(info.botId).gameObject.GetComponent<PlayerAgent>();
-        //log.LogInfo($"got bot {bot} - {bot.PlayerName}");
     }
     public static void SendBotToPickupItem(PlayerAIBot bot, ItemInLevel item, PlayerAgent commander = null)
     {
 
     }
-    public static void SendBotToShareResourcePack(PlayerAIBot sender, PlayerAgent reciver, PlayerAgent commander = null)
+    public static void SendBotToShareResourcePackNew(PlayerAIBot aiBot, PlayerAgent receiver, PlayerAgent commander = null, ulong netsender = 0)
     {
-
+        float prio = 5f;
+        float haste = 1f;
+        BackpackItem backpackItem = null;
+        ZiMain.log.LogInfo($"{aiBot.Agent.PlayerName} was told by {commander?.PlayerName ?? "someone"} with netid {netsender} to try to share resource pack with new method to {receiver.PlayerName}");
+        var gotBackpackItem = aiBot.Backpack.HasBackpackItem(InventorySlot.ResourcePack) &&
+                              aiBot.Backpack.TryGetBackpackItem(InventorySlot.ResourcePack, out backpackItem);
+        if (!gotBackpackItem)
+            return;
+        var resourcePack = backpackItem.Instance.Cast<ItemEquippable>();
+        aiBot.Inventory.DoEquipItem(resourcePack);//is this needed?  Does the action not handle this?
+        PlayerBotActionShareResourcePack.Descriptor desc = new(aiBot)
+        {
+            Receiver = receiver,
+            Item = resourcePack,
+            Prio = prio,
+            Haste = haste,
+        };
+        float ammoLeft = aiBot.Backpack.AmmoStorage.GetAmmoInPack(AmmoType.ResourcePackRel);
+        sendChatMessage($"Sharing my {resourcePack.PublicName} ({ammoLeft}%) with {receiver.PlayerName}.");
+        aiBot.StartAction(desc);
     }
 
-    
+    [Obsolete]
     public static void SendBotToKillEnemyOld(String chosenBot, Agent enemy, PlayerBotActionAttack.StanceEnum stance = PlayerBotActionAttack.StanceEnum.All, PlayerBotActionAttack.AttackMeansEnum means = PlayerBotActionAttack.AttackMeansEnum.All, PlayerBotActionWalk.Descriptor.PostureEnum posture = PlayerBotActionWalk.Descriptor.PostureEnum.Stand)
     { //TODO - might change chosen bot to be a PlayerAiBot instead of a string.
       // - otherwise looks fine?
@@ -350,6 +383,7 @@ public class ZiMain : BasePlugin
         },
             "Added kill enemy action to " + bot.Agent.PlayerName, 0, bot.m_playerAgent.PlayerSlotIndex, 0, 0, enemy.m_replicator.Key + 1);
     }
+    [Obsolete]
     public static void SendBotToPickupItemOld(string chosenBot, ItemInLevel item)
     { //TODO - refactor all NetworkAPI usage
       //TODO - saving item types as ints?  there's got to be a better way.
@@ -395,7 +429,8 @@ public class ZiMain : BasePlugin
         ExecuteBotActionOld(bot, descriptor,
             "Added collect item action to " + bot.Agent.PlayerName, 3, bot.m_playerAgent.PlayerSlotIndex, itemtype, itemserial, 0);
     }
-    public static void SendBotToShareResourcePackOld(String sender, PlayerAgent reciver, PlayerAgent commander = null)
+    [Obsolete]
+    public static void SendBotToShareResourcePackOld(String sender, PlayerAgent receiver, PlayerAgent commander = null)
     { //TODO - might change chosen bot to be a PlayerAiBot instead of a string.
       // - otherwise looks fine?
         var bot = ZiMain.BotTable[sender];
@@ -406,7 +441,7 @@ public class ZiMain : BasePlugin
         {
             return;
         }
-        ZiMain.sendChatMessage($"Sharing {pack.Name} with: " + reciver.PlayerName, agent, commander != null ? commander : PlayerManager.GetLocalPlayerAgent());
+        ZiMain.sendChatMessage($"Sharing {pack.Name} with: " + receiver.PlayerName, agent, commander != null ? commander : PlayerManager.GetLocalPlayerAgent());
         BackpackItem backpackItem = null;
         var gotBackpackItem = bot.Backpack.HasBackpackItem(InventorySlot.ResourcePack) &&
                               bot.Backpack.TryGetBackpackItem(InventorySlot.ResourcePack, out backpackItem);
@@ -418,12 +453,12 @@ public class ZiMain : BasePlugin
 
         ZiMain.ExecuteBotActionOld(bot, new PlayerBotActionShareResourcePack.Descriptor(bot)
         {
-            Receiver = reciver,
+            Receiver = receiver,
             Item = resourcePack,
             Prio = _manualActionsPriority,
             Haste = _manualActionsHaste,
         },
-            "Added share resource action to " + bot.Agent.PlayerName, 4, bot.m_playerAgent.PlayerSlotIndex, 0, 0, reciver.m_replicator.Key + 1);
+            "Added share resource action to " + bot.Agent.PlayerName, 4, bot.m_playerAgent.PlayerSlotIndex, 0, 0, receiver.m_replicator.Key + 1);
     }
     public static void attackMyTarget(string bot, bool everyone = false)
     {
@@ -442,9 +477,9 @@ public class ZiMain : BasePlugin
             attackMonster(bot, monster);
         }
     }
-    //[Obsolete]
+    [Obsolete]
     public static void ExecuteBotActionOld(PlayerAIBot bot, PlayerBotActionBase.Descriptor descriptor, string message, int func, int slot, int itemtype, int itemserial, int agentid)
-    { //TODO refactor all NetworkAPI usage
+    { //TODO refactor all NetworkAPI usage -- IN PROGRESS
         if (SNet.IsMaster)
         {
             bot.StartAction(descriptor);
