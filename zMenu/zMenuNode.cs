@@ -548,7 +548,6 @@ namespace ZombieTweak2.zMenu
                     pressed = false;
                     UpdateOffset();
                 }
-                //TODO change color when held.
                 private void UpdateOffset()
                 {
                     node.ColorOffset = new Color(0,0,0);

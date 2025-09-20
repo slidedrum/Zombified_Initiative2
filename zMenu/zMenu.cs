@@ -137,7 +137,7 @@ namespace ZombieTweak2.zMenu
                     MoveInfrontOfCamera();
                 }
                 else
-                { //TODO move this into a listener so it can be disabled.
+                { //TODO move SetRelativePosition into a listener so it can be disabled.
                     var node = parrentMenu.GetNode(name);
                     SetRelativePosition(zMenuManager.mainCamera.Position - node.gameObject.transform.position);
                 }

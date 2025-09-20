@@ -18,48 +18,73 @@ using ZombieTweak2.zMenu;
 using ZombieTweak2.zNetworking;
 using static ZombieTweak2.zNetworking.pStructs;
 
-//toto priority: Re-create send bot to do manual action
+/*
+ == TODO == Priority: 
 
-//todo fix pickup action failing sometimes  -- DONE!  
-//todo change cancel to look up -- DONE
-//todo make look down select yourself -- DONE
-//todo make "i need health/ammo" quck action overide share permission
-//todo make smart select pick up turrets
-//todo fix bot extra data only updating when you look away
-//todo track down KeyNotFoundException: The given key was not present in the dictionary.
-//todo move methods arround to other classes that make more sense
-//todo handle bots joining/leaving or any other way the bot count can change mid mission.
-//todo customize resource share thresholds, or however that works. -- DONE
-//todo error when exiting q menu if radial menu is open
-//todo unheld selected might have problems.
-//todo double tap smart select on a bot to have them follow you.
-//todo move updateNodeThresholdDisplay and similar to the set methds not as node listeners.
-//todo add option to let bots open lockers
-//todo add per bot overides for individual share/pickup perms.
-//todo add sounds
-//todo add options menu with things like default states and key rebinding
-//todo add mele only restriction
-//todo when perms removed, remove any current actions that are no longer allowed
-//todo add quick settings part of the menu for things like "auto select followed bots" 
+ -- TODO -- DONE -- Re - create send bot to do manual action
+ -- TODO -- DONE -- fix pickup action failing sometimes
+ -- TODO -- DONE -- Change cancel to look up
+ -- TODO -- DONE -- make look down select yourself
+ -- TODO -- DONE -- Customize resource share thresholds, or however that works
+ -- TODO -- DONE -- Refactor all NetworkAPI usage
+ -- TODO -- DONE -- Make buttons change color when held
+ -- TODO -- Make system for lerping between to values over time.  Should be arbitrary vars and maybe even support method args somehow.
+ -- TODO -- Make "i need health/ammo" quck action overide share permission
+ -- TODO -- Make smart select pick up turrets
+ -- TODO -- Fix bot extra data only updating when you look away
+ -- TODO -- Move methods arround to other classes that make more sense
+ -- TODO -- Handle bots joining/leaving or any other way the bot count can change mid mission.
+ -- TODO -- Error when exiting q menu if radial menu is open
+ -- TODO -- Unheld selected might have problems.
+ -- TODO -- Double tap smart select on a bot to have them follow you.
+ -- TODO -- Move updateNodeThresholdDisplay and similar to the set methds not as node listeners.
+ -- TODO -- Add option to let bots open lockers
+ -- TODO -- Add per bot overides for individual share/pickup perms.
+ -- TODO -- Add sounds
+ -- TODO -- Add options menu with things like default states and key rebinding
+ -- TODO -- Add mele only restriction
+ -- TODO -- When perms removed, remove any current actions that are no longer allowed
+ -- TODO -- Add quick settings part of the menu for things like "auto select followed bots" 
+ -- TODO -- Add STFU button
+ -- TODO -- Add option for menue's to have seprate x/y scale.
+ -- TODO -- Add external list of manual actions.  be sure to clean it when actions are terminated.  add them from SendBotTo- methods.
+ -- TODO -- Use a string builder ZiMain.onActionRemoved
+ -- TODO -- Move/refactor  GetAgent and getpStruct methods in ZiMain
+ -- TODO -- Nullchecks in SendBotToShareResourcePack
+ -- TODO -- Clear out and remove PlayConfirmSound hook.
+ -- TODO -- Remake SendBotToKillEnemy method
+ -- TODO -- Move SetRelativePosition into a listener so it can be disabled.
+ -- TODO -- Add option to change menu close angle
+ -- TODO -- Make text parts in nodes private and add setters and getters for font stuff.
+ -- TODO -- Add menu title and subtitle. Use that for tooltips.
+ -- TODO -- Change the way scroll priority works to visual treat 0 prio as red and disabled
+ -- TODO -- Make updateNodePriorityDisplay and similar method's args order consistant
+ -- TODO -- Remove the flip/toggle selection nodes, and instead make hold action
+ -- TODO -- Add arange node offests and possible different node aragement types
+ -- TODO -- Add option to set selection to the bots that are following you.
+ -- TODO -- Add node ID system as it might be an issue if you have two nodes that have the same text for some reason.
+ -- TODO -- Inside pickup perms details menu make 5 item filters that you can switch between by scrolling on center node.
+            ALL - ENCOUNTERED - RESOURCES - PLACEABLES - THROWABLES - FAVORITES
+ -- TODO -- Set methods for text parts
+ -- TODO -- Come up with a better more consistant naming scheme for pStructs and encoding/decoding methods
+ -- TODO -- Make network packets only send after a 100ms delay, and send the most up to date value 100ms later.
+ -- TODO -- Make clients ask host for current value after every settings change to resolve dysync and conflicts.
+ -- TODO -- Send inventory sync command when bots run out of resources from a manual action?
 
-//todo refactor PlayConfirmSound hook to not be so dumb -- probably just going to remvoe support for q menu
+ -- TODO -- BUG -- When holding a node then look away, when you re-open menu node still highlighted.
 
-//want to make custom blacklist pickups - DONE
-//want to fix attack not always working
-//want to make attack wake room sometimes
-//want to make "clear room" command
-//want to completely re-write collection logic, not just priority logic
-//want to add new bot actions like hold position, look for resource type (in nearby rooms), ping item (go to term, then run ping command)
-//want to add chat commands for people who don't have the mod.
+want to make custom blacklist pickups - DONE
+want to fix attack not always working
+want to make attack wake room sometimes
+want to make "clear room" command
+want to completely re-write collection logic, not just priority logic
+want to add chat commands for people who don't have the mod.
+want to add new bot actions like hold position, look for resource type (in nearby rooms), ping item (go to term, then run ping command)
+want to make "go here" command
+want to make "home" location function where they "follow" a set location but aren't strickly stuck to it if they get into combat, similar to following a player.
 
-//want to make "go here" command
-//want to make "home" location function where they "follow" a set location but aren't strickly stuck to it if they get into combat, similar to following a player.
-
-//found bot commands in PUI_CommunicationMenu.execute
-//RootPlayerBotAction is where actions are chosen
-//if (item2.pItemData.itemID_gearCRC != 116U && item2.pItemData.itemID_gearCRC != 30U) is what says don't pick up.  hard coded.
-//ItemDataBlock.s_blockIDByName has all ids
-//RootPlayerBotAction.s_itemBasePrios has what bots can pick up
+found bot commands in PUI_CommunicationMenu.execute
+*/
 
 
 namespace Zombified_Initiative;
@@ -174,7 +199,7 @@ public class ZiMain : BasePlugin
 
     }
     public static bool isManualAction(PlayerBotActionBase action)
-    {   //TODO - This honestly might be fine.  But I'd love a more generic way that doesn't rely on typename.
+    {
         //TODO add external list of manual actions.  be sure to clean it when actions are terminated.
         string typeName = action.GetIl2CppType().Name;
         float haste = 0f;
@@ -293,14 +318,14 @@ public class ZiMain : BasePlugin
     }
     public static Item TryGetItemInLevelFromItemData(pItemData itemData)
     {
-        //Do we need this?
+        //Do we need this? This should probably move to pStructss
         Item item;
         PlayerBackpackManager.TryGetItemInLevelFromItemData(itemData, out item);
         return item;
     }
     public static PlayerAgent GetAgentFrom_pStruct(SNetStructs.pPlayer player_struct)
     {
-        //Do we need this?
+        //Do we need this? This should probably move to pStructs
         if (!player_struct.TryGetPlayer(out SNet_Player player))
             return null;
         return player.PlayerAgent.TryCast<PlayerAgent>();
@@ -314,14 +339,14 @@ public class ZiMain : BasePlugin
     }
     public static PlayerAgent GetAgentFrom_pPlayer(SNetStructs.pPlayer player_struct)
     {
-        //Do we need this?
+        //Do we need this? This should probably move to pStructs
         if (!player_struct.TryGetPlayer(out SNet_Player player))
             return null;
         return player.PlayerAgent.TryCast<PlayerAgent>();
     }
     public static SNetStructs.pPlayer Get_pPlayerFromAgent(PlayerAgent agent)
     {
-        //Do we need this?
+        //Do we need this? This should probably move to pStructs
         SNetStructs.pPlayer player = new();
         player.SetPlayer(agent.Owner);
         return player;
@@ -414,8 +439,8 @@ public class ZiMain : BasePlugin
     }
     [Obsolete]
     public static void SendBotToPickupItemOld(string chosenBot, ItemInLevel item)
-    { //TODO - refactor all NetworkAPI usage
-      //TODO - saving item types as ints?  there's got to be a better way.
+    { //TODO - refactor all NetworkAPI usage -- DONE
+      //TODO - saving item types as ints?  there's got to be a better way. (there is)
         int itemtype = 0;
         int itemserial = 0;
         PlayerAIBot bot = ZiMain.BotTable[chosenBot];
@@ -509,7 +534,7 @@ public class ZiMain : BasePlugin
     }
     [Obsolete]
     public static void ExecuteBotActionOld(PlayerAIBot bot, PlayerBotActionBase.Descriptor descriptor, string message, int func, int slot, int itemtype, int itemserial, int agentid)
-    { //TODO refactor all NetworkAPI usage -- IN PROGRESS
+    { //TODO refactor all NetworkAPI usage -- DONE
         if (SNet.IsMaster)
         {
             bot.StartAction(descriptor);
