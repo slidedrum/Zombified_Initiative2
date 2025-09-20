@@ -56,6 +56,11 @@ public class ZombifiedPatches
             //Do we have share perms?
             return false;
         }
+        if (!zSlideComputer.enabledResourceShares[itemID])
+        {
+            //Is this item dissabled?
+            return false;
+        }
         
 
         PlayerAmmoStorage ammoStorage = backpack.AmmoStorage;
@@ -274,7 +279,6 @@ public class ZombifiedPatches
         float minPriority = -1f;
         if (highestAmmoCap > 0.0f && otherAgents > 0)
         {
-
             maxOtherTotal = playerAgentsList.Count * highestAmmoCap;
             fillFactor = currentTotalAmmoOfOtherBotsNotThisBot / maxOtherTotal;
             minPriority = basePriority * priorityFloor;
@@ -334,7 +338,7 @@ public class ZombifiedPatches
     {
         string original = __instance.m_extraInfo;
         PlayerAgent agent = __instance.m_player;
-        if (!agent.Owner.IsBot)
+        if (agent == null || agent.Owner == null || !agent.Owner.IsBot)
             return;
         int playerID = agent.Owner.PlayerSlotIndex();//todo cache the ID somewhere
         bool allowedPickup = zSlideComputer.PickUpPerms[playerID];
