@@ -21,7 +21,7 @@ namespace ZombieTweak2.zMenu
         private static zMenu.zMenuNode selectedNode;
         public static FPSCamera mainCamera;
         private static bool menuWasOpen = false;
-        public static Color defaultColor { get; private set; } = new Color(0.25f, 0.25f, 0.25f, 1f);
+        public static Color defaultColor { get; private set; } = new Color(0.25f, 0.25f, 0.25f, 0.25f);
         public enum nodeEvent
         {
             // To add an event it must be added here, a flexible event must be created, it must be added in the eventMap, and given a place where it is invoked.

@@ -468,7 +468,13 @@ namespace ZombieTweak2.zMenu
                 List<TextPart> textParts = GetTextParts();
                 foreach (TextPart part in textParts)
                 {
-                    part.SetColor(color + ColorOffset);
+                    // Apply offset relative to the *current base color*, not stacked
+                    Color final = arg_Color;
+                    final.r += ColorOffset.r;
+                    final.g += ColorOffset.g;
+                    final.b += ColorOffset.b;
+                    final.a = arg_Color.a; // <-- preserve original alpha
+                    part.SetColor(final);
                 }
                 return this;
             }
@@ -517,7 +523,7 @@ namespace ZombieTweak2.zMenu
                 private zMenuNode node;
                 private bool selected = false;
                 private bool pressed = false;
-                private static Color selectedOffset = new Color(-0.1f, -0.1f, -0.1f);
+                private static Color selectedOffset = new Color(0.1f, 0.1f, 0.1f);
                 private static Color pressedOffset = new Color(0.3f, 0.2f, 0.5f);
 
                 public SelectionColorHandler(zMenuNode Node)

@@ -16,7 +16,7 @@ namespace ZombieTweak2.zMenu
 
         public static List<zMenu> botMenus;
 
-        public static Color selectedColor = new Color(0.25f, 0.16175f, 0.0f);
+        
         private static zMenu selectionMenu;
         private static zMenu actionMenu;
         public static zMenu permissionMenu;
@@ -279,6 +279,7 @@ namespace ZombieTweak2.zMenu
     {
         public static Dictionary<int, bool> botSelection = new();
         public static Dictionary<int, zMenu.zMenuNode> selectionBotNodes = new();
+        public static Color selectedColor = new Color(0.25f, 0.16175f, 0.0f);
         public static PlayerAIBot toggleBotSelection(PlayerAIBot bot)
         {
             if (checkForUntrackedBot(bot))
@@ -342,7 +343,7 @@ namespace ZombieTweak2.zMenu
             if (checkForUntrackedBot(bot))
                 return null;
             if (botSelection[bot.Agent.Owner.PlayerSlotIndex()])
-                node.SetColor(zMenus.selectedColor);
+                node.SetColor(selectedColor);
             else
                 node.SetColor(zMenuManager.defaultColor);
             return node;
