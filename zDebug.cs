@@ -16,7 +16,8 @@ using static ZombieTweak2.zNetworking.pStructs;
 namespace ZombieTweak2
 {
     public static class zDebug
-    {//This class is unused, but it's where i put all the stuff I need for debugging.
+    {
+        //This class is unused, but it's where i put all the stuff I need for debugging.
         private static GameObject debugSphere;
         public static Agent nofindagent;
         internal static void ShowDebugSphere(Vector3 position, float radius)
