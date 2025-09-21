@@ -1,8 +1,6 @@
 ﻿using GameData;
-using GTFO.API;
 using HarmonyLib;
 using Player;
-using SNetwork;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -305,33 +303,7 @@ public class ZombifiedPatches
         }
         return;
     }
-    [HarmonyPatch(typeof(PlayerAIBot), nameof(PlayerAIBot.SetEnabled))]
-    [HarmonyPostfix]
 
-    public static void AddComp(PlayerAIBot __instance, bool state)
-    {
-        if (!state) return;
-        if (!__instance.gameObject.GetComponent<zComputer>())
-        {
-            log.LogInfo($"adding zombified component to {__instance.Agent.PlayerName} ..");
-            var gaa = __instance.Agent.gameObject.AddComponent<zComputer>();
-            gaa.Initialize();
-            return;
-        }
-    }
-
-    [HarmonyPatch(typeof(PlayerAgent), nameof(PlayerAgent.OnDestroy))]
-    [HarmonyPrefix]
-
-    public static void DestroyMenu(PlayerAgent __instance)
-    {
-        var tempcomp = __instance.gameObject.GetComponent<zComputer>();
-        if (tempcomp != null)
-        {
-            log.LogInfo($"zombiebot leaving, buh byeeee");
-            tempcomp.started = false;
-        }
-    }
     [HarmonyPatch(typeof(PlaceNavMarkerOnGO), nameof(PlaceNavMarkerOnGO.UpdateExtraInfo))]
     [HarmonyPostfix]
     public static void UpdateExtraInfoPatch(PlaceNavMarkerOnGO __instance)
@@ -344,7 +316,6 @@ public class ZombifiedPatches
         bool allowedPickup = zSlideComputer.PickUpPerms[playerID];
         bool allowedShare = zSlideComputer.SharePerms[playerID];
         bool allowedMove = zSlideComputer.MovePerms[playerID];
-        zComputer zombie = agent.gameObject.GetComponent<zComputer>();
         if (original.Contains("Pickup:"))
         {
             bool dirty = false;
@@ -371,12 +342,10 @@ public class ZombifiedPatches
             //remove our custom info so it can be re added
             original = original.Substring(0, original.IndexOf("Pickup:")).TrimEnd(); //TODO detect actual end of our string instead of assuming this is the last thing for better compat.
         }
-        if (zombie != null) { 
-            string pickups = $"Pickup: <color=#FFA50066>{allowedPickup}</color>";
-            string share = $"Share: <color=#FFA50066>{allowedShare}</color>";
-            string move = $"Sentry: <color=#FFA50066>{!allowedMove}</color>";
-            __instance.m_extraInfo = original + "<color=#CCCCCC66><size=70%>\n" + pickups + "\n" + share + "\n" + move + "</size></color>";
-        }
+        string pickups = $"Pickup: <color=#FFA50066>{allowedPickup}</color>";
+        string share = $"Share: <color=#FFA50066>{allowedShare}</color>";
+        string move = $"Sentry: <color=#FFA50066>{!allowedMove}</color>";
+        __instance.m_extraInfo = original + "<color=#CCCCCC66><size=70%>\n" + pickups + "\n" + share + "\n" + move + "</size></color>";
     }
     [HarmonyPatch(typeof(PlayerBotActionBase), nameof(PlayerBotActionBase.CheckCollision))]
     [HarmonyPostfix]
@@ -442,122 +411,4 @@ public class ZombifiedPatches
         }
         return false;
     }
-    [HarmonyPatch(typeof(CommunicationMenu), nameof(CommunicationMenu.PlayConfirmSound))]
-    [HarmonyPrefix]
-
-    public static void PlayConfirmSound(CommunicationMenu __instance)
-    {
-        zComputer whocomp = null;
-        CommunicationNode node = ZiMain._menu.m_menu.CurrentNode;
-        if (node.IsLastNode)
-        {
-            String jee = TextDataBlock.GetBlock(node.TextId).English;
-            log.LogDebug($"teksti on " + jee);
-            String who = jee.Split(new char[] { ' ' })[0].Trim();
-            String wha = jee.Substring(who.Length).Trim();
-            log.LogDebug($"teksti on " + jee + ", who on " + who + " ja wha on " + wha);
-            if (wha == "attack my target")
-            {
-                bool everyone = who == "AllBots";
-                ZiMain.attackMyTarget(who, everyone);
-            }
-            //if (wha.Contains("pickup permission"))
-            //{
-            //    foreach (KeyValuePair<String, PlayerAIBot> bt in ZiMain.BotTable)
-            //    {
-            //        if (who == "AllBots" || who == bt.Key)
-            //        {
-            //            log.LogInfo($"{bt.Key} toggle resource pickups");
-            //            if (!SNet.IsMaster) NetworkAPI.InvokeEvent<ZiMain.ZINetInfo>("ZINetInfo", new ZiMain.ZINetInfo(2, bt.Value.m_playerAgent.PlayerSlotIndex, 0, 0, 0));
-            //            if (SNet.IsMaster)
-            //            {
-            //                whocomp = bt.Value.GetComponent<zComputer>();
-            //                if (whocomp.pickupaction != null) whocomp.pickupaction.DescBase.SetCompletionStatus(PlayerBotActionBase.Descriptor.StatusType.Failed);
-            //                whocomp.allowedpickups = !whocomp.allowedpickups;
-            //            }
-            //        }
-            //    }
-            //}
-
-            //if (wha.Contains("share permission"))
-            //{
-            //    foreach (KeyValuePair<String, PlayerAIBot> bt in ZiMain.BotTable)
-            //    {
-            //        if (who == "AllBots" || who == bt.Key)
-            //        {
-            //            log.LogInfo($"{bt.Key} toggle resource use");
-            //            if (!SNet.IsMaster) NetworkAPI.InvokeEvent<ZiMain.ZINetInfo>("ZINetInfo", new ZiMain.ZINetInfo(1, bt.Value.m_playerAgent.PlayerSlotIndex, 0, 0, 0));
-            //            if (SNet.IsMaster)
-            //            {
-            //                whocomp = bt.Value.GetComponent<zComputer>();
-            //                if (whocomp.shareaction != null) whocomp.shareaction.DescBase.SetCompletionStatus(PlayerBotActionBase.Descriptor.StatusType.Failed);
-            //                whocomp.allowedshare = !whocomp.allowedshare;
-            //            }
-            //        }
-            //    }
-            //}
-
-            if (wha == "clear command queue")
-            {
-                foreach (KeyValuePair<String, PlayerAIBot> bt in ZiMain.BotTable)
-                {
-                    if (who == "AllBots" || who == bt.Key)
-                    {
-                        log.LogInfo($"{bt.Key} stop action");
-                        if (!SNet.IsMaster) NetworkAPI.InvokeEvent<ZiMain.ZINetInfo>("ZINetInfo", new ZiMain.ZINetInfo(5, bt.Value.m_playerAgent.PlayerSlotIndex, 0, 0, 0));
-                        if (SNet.IsMaster)
-                        {
-                            whocomp = bt.Value.GetComponent<zComputer>();
-                            whocomp.PreventManualActions();
-                        }
-                    }
-                }
-            }
-
-            if (wha == "pickup resource under my aim")
-            {
-                log.LogInfo($"bot " + who + " pickup resource");
-                var item = zSearch.GetItemUnderPlayerAim();
-                if (item != null)
-                    SendBotToPickupItemOld(who, item);
-            }
-
-            if (wha == "supply resource (aimed or me)")
-            {
-                log.LogInfo($"bot " + who + " share resource");
-                ZiMain.SendBotToShareResourcePackOld(who, zSearch.GetHumanUnderPlayerAim());
-            }
-
-            if (wha.Contains("sentry mode"))
-            {
-                if (who == "AllBots")
-                {
-                    log.LogInfo("all bots sentry mode");
-                    foreach (KeyValuePair<String, PlayerAIBot> bt in ZiMain.BotTable)
-                    {
-                        var zombie = bt.Value.GetComponent<zComputer>();
-                        zombie.allowedmove = !zombie.allowedmove;
-                        if (zombie.allowedmove == true)
-                        {
-                            zombie.followaction.DescBase.Status = PlayerBotActionBase.Descriptor.StatusType.None;
-                            zombie.travelaction.DescBase.Status = PlayerBotActionBase.Descriptor.StatusType.None;
-                            zombie.updateExtraInfo();
-                        }
-                    }
-                }
-                else
-                {
-                    log.LogInfo($"bot " + who + " sentry mode");
-                    var zombie = BotTable[who].GetComponent<zComputer>();
-                    zombie.allowedmove = !BotTable[who].GetComponent<zComputer>().allowedmove;
-                    if (zombie.allowedmove == true)
-                    { 
-                        zombie.followaction.DescBase.Status = PlayerBotActionBase.Descriptor.StatusType.None;
-                        zombie.travelaction.DescBase.Status = PlayerBotActionBase.Descriptor.StatusType.None;
-                        zombie.updateExtraInfo();
-                    }
-                }
-            }
-        } // if islastnode
-    } // playconfirm
 } // zombifiedpatches

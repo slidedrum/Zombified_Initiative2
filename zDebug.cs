@@ -1,11 +1,7 @@
 ﻿using Agents;
 using GameData;
-using GTFO.API;
 using LevelGeneration;
 using Player;
-using SNetwork;
-using System;
-using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using ZombieTweak2.zMenu;
@@ -244,45 +240,6 @@ namespace ZombieTweak2
                 bestAction = __instance.m_shareResourceAction;
             }
             return false;
-        }
-        private static void OLDsetPickupPermission(string bot, bool allowed)
-        { //TODO - figure out network stuff and refactor this. Right now I'm a little scared to touch this because I can't test it.
-            foreach (KeyValuePair<String, PlayerAIBot> iBotTable in ZiMain.BotTable)
-            {
-                string botName = iBotTable.Key;
-                PlayerAIBot playerAIBot = iBotTable.Value;
-                if (bot == botName)
-                {
-                    ZiMain.log.LogInfo($"{botName} pickup perm set to {allowed}");
-                    if (!SNet.IsMaster) NetworkAPI.InvokeEvent<ZiMain.ZINetInfo>("ZINetInfo", new ZiMain.ZINetInfo(2, playerAIBot.m_playerAgent.PlayerSlotIndex, 0, 0, 0));
-                    if (SNet.IsMaster)
-                    {
-                        zComputer botComp = playerAIBot.GetComponent<zComputer>();
-                        if (botComp.pickupaction != null) botComp.pickupaction.DescBase.SetCompletionStatus(PlayerBotActionBase.Descriptor.StatusType.Failed);
-                        botComp.allowedpickups = allowed;
-                    }
-                }
-            }
-        }
-        private static void OLDtogglePickupPermission(string bot, bool everyone = false)
-        { //TODO - rework so it doesn't need a for loop
-          //TODO - remove everyone arg
-            foreach (KeyValuePair<String, PlayerAIBot> iBotTable in ZiMain.BotTable)
-            {
-                string botName = iBotTable.Key;
-                PlayerAIBot playerAIBot = iBotTable.Value;
-                if (everyone || bot == botName)
-                {
-                    ZiMain.log.LogInfo($"{botName} toggle resource pickups");
-                    if (!SNet.IsMaster) NetworkAPI.InvokeEvent<ZiMain.ZINetInfo>("ZINetInfo", new ZiMain.ZINetInfo(2, playerAIBot.m_playerAgent.PlayerSlotIndex, 0, 0, 0));
-                    if (SNet.IsMaster)
-                    {
-                        zComputer botComp = playerAIBot.GetComponent<zComputer>();
-                        if (botComp.pickupaction != null) botComp.pickupaction.DescBase.SetCompletionStatus(PlayerBotActionBase.Descriptor.StatusType.Failed);
-                        botComp.allowedpickups = !botComp.allowedpickups;
-                    }
-                }
-            }
         }
         private static void TestReciveSetItemPrioDisableNetwork(ulong sender, uint id, bool allowed)
         {

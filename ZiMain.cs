@@ -3,7 +3,6 @@ using BepInEx;
 using BepInEx.Logging;
 using BepInEx.Unity.IL2CPP;
 using Enemies;
-using Gear;
 using GTFO.API;
 using HarmonyLib;
 using Il2CppInterop.Runtime.Injection;
@@ -194,7 +193,6 @@ public class ZiMain : BasePlugin
 
     public static float _manualActionsHaste = 1f;
     public static float _manualActionsPriority = 5f;
-    public static List<botAction> botActions = new();
     public static List<PlayerBotActionBase> manualActions = new();
     [Obsolete]
     public struct ZINetInfo
@@ -218,7 +216,7 @@ public class ZiMain : BasePlugin
             log.LogInfo($"sent a package {func} - {slot} - {itemtype} - {itemserial} - {agentid}");
         }
     }
-
+    [Obsolete]
     public struct ZIInfo
     {
         public int FUNC;
@@ -244,10 +242,9 @@ public class ZiMain : BasePlugin
     {
         Harmony m_Harmony = new Harmony("ZombieController");
         m_Harmony.PatchAll();
-        ClassInjector.RegisterTypeInIl2Cpp<zComputer>();
         ClassInjector.RegisterTypeInIl2Cpp<zUpdater>();
         ClassInjector.RegisterTypeInIl2Cpp<zCameraEvents>();
-        var ZombieController = AddComponent<zController>();
+        //var ZombieController = AddComponent<zController>();
 
         //NetworkAPI.RegisterEvent<ZINetInfo>(ZINetInfo.NetworkIdentity, zController.ReceiveZINetInfo);
         //NetworkAPI.RegisterEvent<ZISendBotToPickupItemInfo>("sendBotToPickupItem", SendBotToPickupItem);
@@ -261,9 +258,9 @@ public class ZiMain : BasePlugin
         NetworkAPI.RegisterEvent<pPickupItemInfo>           ("RequestToPickupItem",             zNetworking.ReciveRequestToPickupItem);
         NetworkAPI.RegisterEvent<pShareResourceInfo>        ("RequestToShareResourcePack",      zNetworking.ReciveRequestToShareResource);
 
-        LG_Factory.add_OnFactoryBuildDone((Action)ZombieController.OnFactoryBuildDone);
+        //LG_Factory.add_OnFactoryBuildDone((Action)ZombieController.OnFactoryBuildDone);
         LG_Factory.add_OnFactoryBuildDone((Action)zSlideComputer.Init);
-        EventAPI.OnExpeditionStarted += ZombieController.Initialize;
+        //EventAPI.OnExpeditionStarted += ZombieController.Initialize;
         log = Log;
         zActionSub.addOnRemoved((Action<PlayerAIBot, PlayerBotActionBase>)onActionRemoved);
         zActionSub.addOnAdded((Action<PlayerAIBot, PlayerBotActionBase>)onActionAdded);
@@ -530,83 +527,7 @@ public class ZiMain : BasePlugin
         },
             "Added kill enemy action to " + bot.Agent.PlayerName, 0, bot.m_playerAgent.PlayerSlotIndex, 0, 0, enemy.m_replicator.Key + 1);
     }
-    [Obsolete]
-    public static void SendBotToPickupItemOld(string chosenBot, ItemInLevel item)
-    { //TODO - refactor all NetworkAPI usage -- DONE
-      //TODO - saving item types as ints?  there's got to be a better way. (there is)
-        int itemtype = 0;
-        int itemserial = 0;
-        PlayerAIBot bot = ZiMain.BotTable[chosenBot];
-        if (bot == null)
-            return;
-
-
-
-
-
-        //int botId = GetIdFromAgent(bot.Agent);
-        //pItemData itemData = item.pItemData;
-        //ZISendBotToPickupItemInfo info = new ZISendBotToPickupItemInfo
-        //{
-        //    botId = botId,
-        //    item = itemData
-        //};
-        //SendBotToPickupItem(0, info);
-
-
-
-
-        var res = item.TryCast<ResourcePackPickup>();
-        if (res != null && res.m_packType == eResourceContainerSpawnType.AmmoWeapon) itemtype = 1;
-        if (res != null && res.m_packType == eResourceContainerSpawnType.AmmoTool) itemtype = 2;
-        if (res != null && res.m_packType == eResourceContainerSpawnType.Health) itemtype = 3;
-        if (res != null && res.m_packType == eResourceContainerSpawnType.Disinfection) itemtype = 4;
-        if (res != null) itemserial = res.m_serialNumber;
-        var descriptor = new PlayerBotActionCollectItem.Descriptor(bot)
-        {
-            TargetItem = item,
-            TargetContainer = item.container,
-            TargetPosition = item.transform.position,
-            Prio = _manualActionsPriority,
-            Haste = _manualActionsHaste,
-        };
-        var task = new botAction(bot, item, item.container, item.transform.position, _manualActionsPriority, _manualActionsHaste, "Added collect item action to " + bot.Agent.PlayerName, 4, bot.m_playerAgent.PlayerSlotIndex, itemtype, itemserial, 0, 0, descriptor);
-        botActions.Add(task);
-        log.LogInfo("added to botactions list, total " + botActions.Count);
-        ExecuteBotActionOld(bot, descriptor,
-            "Added collect item action to " + bot.Agent.PlayerName, 3, bot.m_playerAgent.PlayerSlotIndex, itemtype, itemserial, 0);
-    }
-    [Obsolete]
-    public static void SendBotToShareResourcePackOld(String sender, PlayerAgent receiver, PlayerAgent commander = null)
-    { //TODO - might change chosen bot to be a PlayerAiBot instead of a string.
-      // - otherwise looks fine?
-        var bot = ZiMain.BotTable[sender];
-        PlayerAgent agent = bot.m_playerAgent;
-        if (bot == null)
-            return;
-        if (!bot.Backpack.TryGetBackpackItem(InventorySlot.ResourcePack, out BackpackItem pack))
-        {
-            return;
-        }
-        ZiMain.sendChatMessage($"Sharing {pack.Name} with: " + receiver.PlayerName, agent, commander != null ? commander : PlayerManager.GetLocalPlayerAgent());
-        BackpackItem backpackItem = null;
-        var gotBackpackItem = bot.Backpack.HasBackpackItem(InventorySlot.ResourcePack) &&
-                              bot.Backpack.TryGetBackpackItem(InventorySlot.ResourcePack, out backpackItem);
-        if (!gotBackpackItem)
-            return;
-
-        var resourcePack = backpackItem.Instance.Cast<ItemEquippable>();
-        bot.Inventory.DoEquipItem(resourcePack);
-
-        ZiMain.ExecuteBotActionOld(bot, new PlayerBotActionShareResourcePack.Descriptor(bot)
-        {
-            Receiver = receiver,
-            Item = resourcePack,
-            Prio = _manualActionsPriority,
-            Haste = _manualActionsHaste,
-        },
-            "Added share resource action to " + bot.Agent.PlayerName, 4, bot.m_playerAgent.PlayerSlotIndex, 0, 0, receiver.m_replicator.Key + 1);
-    }
+    
     [Obsolete]
     public static void attackMyTarget(string bot, bool everyone = false)
     {
