@@ -84,6 +84,7 @@ using static ZombieTweak2.zNetworking.pStructs;
  -- TODO -- Investigate what is causing first letter of bot name to mess up with other mods (Arhcive essentials?)
  -- TODO -- Investigate compat with BetterBots.  Seems to break pickup blocking?
  -- TODO -- In smart select, add some leeway for very close objects, maybe inside of 2 units lerp between max angle of given, and 180 at 0 units.
+ -- TODO -- Remake attack my target methods and put it under actions.
 
 share with placed turrets
 todo menu breaks when loading checkpoint
