@@ -70,9 +70,85 @@ using static ZombieTweak2.zNetworking.pStructs;
  -- TODO -- Make network packets only send after a 100ms delay, and send the most up to date value 100ms later.
  -- TODO -- Make clients ask host for current value after every settings change to resolve dysync and conflicts.
  -- TODO -- Send inventory sync command when bots run out of resources from a manual action?
+share with placed turrets
+todo menu breaks when loading checkpoint
+Investigate bots not picking up held items like turbines
+Something breaks with essensials and better bots
+[Error  :Il2CppInterop] Exception in IL2CPP-to-Managed trampoline, not passing it to il2cpp: Il2CppInterop.Runtime.Il2CppException: System.NullReferenceException: Object reference not set to an instance of an object.
+--- BEGIN IL2CPP STACK TRACE ---
+System.NullReferenceException: Object reference not set to an instance of an object.
+
+--- END IL2CPP STACK TRACE ---
+
+   at Il2CppInterop.Runtime.Il2CppException.RaiseExceptionIfNecessary(IntPtr returnedException) in /home/runner/work/Il2CppInterop/Il2CppInterop/Il2CppInterop.Runtime/Il2CppException.cs:line 36
+   at UnityEngine.Component.get_transform()
+   at ZombieTweak2.zMenu.zMenu.MoveInfrontOfCamera()
+   at ZombieTweak2.zMenu.zMenu.Open()
+   at ZombieTweak2.zMenu.zMenuManager.Update()
+   at ZombieTweak2.FlexibleEvent.Invoke()
+   at ZombieTweak2.zUpdater.Update()
+   at Trampoline_VoidThisZombieTweak2.zUpdaterUpdate(IntPtr , Il2CppMethodInfo* )
+[Error  :Il2CppInterop] Exception in IL2CPP-to-Managed trampoline, not passing it to il2cpp: Il2CppInterop.Runtime.Il2CppException: System.NullReferenceException: Object reference not set to an instance of an object.
+--- BEGIN IL2CPP STACK TRACE ---
+System.NullReferenceException: Object reference not set to an instance of an object.
+
+--- END IL2CPP STACK TRACE ---
+
+   at Il2CppInterop.Runtime.Il2CppException.RaiseExceptionIfNecessary(IntPtr returnedException) in /home/runner/work/Il2CppInterop/Il2CppInterop/Il2CppInterop.Runtime/Il2CppException.cs:line 36
+   at UnityEngine.Component.get_transform()
+   at ZombieTweak2.zMenu.zMenu.MoveInfrontOfCamera()
+   at ZombieTweak2.zMenu.zMenu.Open()
+   at ZombieTweak2.zMenu.zMenuManager.Update()
+   at ZombieTweak2.FlexibleEvent.Invoke()
+   at ZombieTweak2.zUpdater.Update()
+   at Trampoline_VoidThisZombieTweak2.zUpdaterUpdate(IntPtr , Il2CppMethodInfo* )
+[Error  :Il2CppInterop] Exception in IL2CPP-to-Managed trampoline, not passing it to il2cpp: Il2CppInterop.Runtime.Il2CppException: System.NullReferenceException: Object reference not set to an instance of an object.
+--- BEGIN IL2CPP STACK TRACE ---
+System.NullReferenceException: Object reference not set to an instance of an object.
+
+--- END IL2CPP STACK TRACE ---
+
+   at Il2CppInterop.Runtime.Il2CppException.RaiseExceptionIfNecessary(IntPtr returnedException) in /home/runner/work/Il2CppInterop/Il2CppInterop/Il2CppInterop.Runtime/Il2CppException.cs:line 36
+   at UnityEngine.Component.get_transform()
+   at ZombieTweak2.zMenu.zMenu.MoveInfrontOfCamera()
+   at ZombieTweak2.zMenu.zMenu.Open()
+   at ZombieTweak2.zMenu.zMenuManager.Update()
+   at ZombieTweak2.FlexibleEvent.Invoke()
+   at ZombieTweak2.zUpdater.Update()
+   at Trampoline_VoidThisZombieTweak2.zUpdaterUpdate(IntPtr , Il2CppMethodInfo* )
+[Error  :Il2CppInterop] Exception in IL2CPP-to-Managed trampoline, not passing it to il2cpp: Il2CppInterop.Runtime.Il2CppException: System.NullReferenceException: Object reference not set to an instance of an object.
+--- BEGIN IL2CPP STACK TRACE ---
+System.NullReferenceException: Object reference not set to an instance of an object.
+
+--- END IL2CPP STACK TRACE ---
+
+   at Il2CppInterop.Runtime.Il2CppException.RaiseExceptionIfNecessary(IntPtr returnedException) in /home/runner/work/Il2CppInterop/Il2CppInterop/Il2CppInterop.Runtime/Il2CppException.cs:line 36
+   at UnityEngine.Component.get_transform()
+   at ZombieTweak2.zMenu.zMenu.MoveInfrontOfCamera()
+   at ZombieTweak2.zMenu.zMenu.Open()
+   at ZombieTweak2.zMenu.zMenuManager.Update()
+   at ZombieTweak2.FlexibleEvent.Invoke()
+   at ZombieTweak2.zUpdater.Update()
+   at Trampoline_VoidThisZombieTweak2.zUpdaterUpdate(IntPtr , Il2CppMethodInfo* )
+[Error  :Il2CppInterop] Exception in IL2CPP-to-Managed trampoline, not passing it to il2cpp: Il2CppInterop.Runtime.Il2CppException: System.NullReferenceException: Object reference not set to an instance of an object.
+--- BEGIN IL2CPP STACK TRACE ---
+System.NullReferenceException: Object reference not set to an instance of an object.
+
+--- END IL2CPP STACK TRACE ---
+
+   at Il2CppInterop.Runtime.Il2CppException.RaiseExceptionIfNecessary(IntPtr returnedException) in /home/runner/work/Il2CppInterop/Il2CppInterop/Il2CppInterop.Runtime/Il2CppException.cs:line 36
+   at UnityEngine.Component.get_transform()
+   at ZombieTweak2.zMenu.zMenu.MoveInfrontOfCamera()
+   at ZombieTweak2.zMenu.zMenu.Open()
+   at ZombieTweak2.zMenu.zMenuManager.Update()
+   at ZombieTweak2.FlexibleEvent.Invoke()
+   at ZombieTweak2.zUpdater.Update()
+   at Trampoline_VoidThisZombieTweak2.zUpdaterUpdate(IntPtr , Il2CppMethodInfo* )
+
 
  -- TODO -- BUG -- When holding a node then look away, when you re-open menu node still highlighted.
 
+Want to make combine resource mod
 want to make custom blacklist pickups - DONE
 want to fix attack not always working
 want to make attack wake room sometimes

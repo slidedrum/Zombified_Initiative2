@@ -79,14 +79,14 @@ namespace ZombieTweak2.zMenu
             parrentMenu = arg_ParrentMenu;
             Close();
             eventMap = new Dictionary<zMenuManager.menuEvent, FlexibleEvent>(){ //I think all invokes are covered?  Might be missing one.
-                    { zMenuManager.menuEvent.OnOpened, OnOpened },
-                    { zMenuManager.menuEvent.WhileOpened, WhileOpened },
-                    { zMenuManager.menuEvent.OnClosed, OnClosed },
-                    { zMenuManager.menuEvent.WhileClosed, WhileClosed },
-                    { zMenuManager.menuEvent.OnSelected, OnSelected },
-                    { zMenuManager.menuEvent.WhileSelected, WhileSelected },
-                    { zMenuManager.menuEvent.OnDeselected, OnDeselected },
-                    { zMenuManager.menuEvent.WhileDeselected, WhileDeselected }};
+                                    { zMenuManager.menuEvent.OnOpened, OnOpened },
+                                    { zMenuManager.menuEvent.WhileOpened, WhileOpened },
+                                    { zMenuManager.menuEvent.OnClosed, OnClosed },
+                                    { zMenuManager.menuEvent.WhileClosed, WhileClosed },
+                                    { zMenuManager.menuEvent.OnSelected, OnSelected },
+                                    { zMenuManager.menuEvent.WhileSelected, WhileSelected },
+                                    { zMenuManager.menuEvent.OnDeselected, OnDeselected },
+                                    { zMenuManager.menuEvent.WhileDeselected, WhileDeselected }};
         }
         public void UpdatePosition()
         {
