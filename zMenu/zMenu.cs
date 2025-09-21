@@ -94,14 +94,6 @@ namespace ZombieTweak2.zMenu
         }
         public void Update()
         {
-        }
-        public void Lateupdate()
-        {
-        }
-        public void PreRender()
-        {
-            UpdatePosition();
-            FaceCamera();
             if (gameObject.activeInHierarchy)
                 WhileOpened.Invoke();
             else
@@ -115,6 +107,14 @@ namespace ZombieTweak2.zMenu
                 WhileSelected.Invoke();
             else
                 WhileDeselected.Invoke();
+        }
+        public void Lateupdate()
+        {
+        }
+        public void PreRender()
+        {
+            UpdatePosition();
+            FaceCamera();
         }
         public zMenu Close()
         {

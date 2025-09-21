@@ -142,7 +142,7 @@ namespace Zombified_Initiative
             Ray ray = new Ray(source.position, source.forward);
             if (Physics.Raycast(ray, out RaycastHit hit, rayDistance))
             {
-                zDebug.ShowDebugSphere(hit.point, searchRadius);
+                //zDebug.ShowDebugSphere(hit.point, searchRadius);
                 return GetObjectsWithComponentInRadius<T>(hit.point, searchRadius);
             }
             return new List<GameObject>();
