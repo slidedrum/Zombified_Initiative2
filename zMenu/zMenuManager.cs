@@ -1,4 +1,6 @@
-﻿using Player;
+﻿using FluffyUnderware.DevTools.Extensions;
+using Player;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
@@ -83,6 +85,12 @@ namespace ZombieTweak2.zMenu
             playerInControll = FocusStateManager.CurrentState == eFocusState.FPS || FocusStateManager.CurrentState == eFocusState.Dead || FocusStateManager.CurrentState == eFocusState.FPS_CommunicationDialog;
             if (playerInControll)
             {
+                if (mainCamera == null)
+                {
+                    //Did the menus get messed up by something?  Like re-loading a checkpoint?  Reset them, and remake them.
+                    ClearAllMenus();
+                    zMenus.CreateMenus();
+                }
                 bool menuOpen = currentMenu != null;
                 if (menuOpen)
                 {
@@ -192,16 +200,22 @@ namespace ZombieTweak2.zMenu
             }
         }
 
-        public static void OnFactoryBuildDone() {
+        public static void SetupCamera() {
             mainCamera = PlayerManager.GetLocalPlayerAgent().FPSCamera;
-
             zCameraEvents cameraEvents = mainCamera.gameObject.AddComponent<zCameraEvents>();
             cameraEvents.onPreRender.Listen(zMenuManager.PreRender);
-
             menuParrent = new GameObject("menus");// GuiManager.PlayerLayer.WardenObjectives.transform.parent.gameObject;//GameObject.Find(menuParrentPath);
             mainMenu = new zMenu("Main");
             mainMenu.centerNode.AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, CloseAllMenues);
             registerMenu(mainMenu);
+        }
+
+        public static void ClearAllMenus()
+        {
+            menues.Clear();
+            mainCamera = null;
+            menuParrent?.Destroy();
+            SetupCamera();
         }
     }
 }

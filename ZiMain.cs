@@ -18,7 +18,7 @@ using ZombieTweak2.zNetworking;
 using static ZombieTweak2.zNetworking.pStructs;
 
 /*
- == TODO == Priority: 
+ == TODO == Priority: todo menu breaks when loading checkpoint
 
  -- TODO -- DONE -- Re - create send bot to do manual action
  -- TODO -- DONE -- fix pickup action failing sometimes
@@ -87,7 +87,7 @@ using static ZombieTweak2.zNetworking.pStructs;
  -- TODO -- Remake attack my target methods and put it under actions.
 
 share with placed turrets
-todo menu breaks when loading checkpoint
+
 Investigate bots not picking up held items like turbines
 Something breaks with essensials and better bots
 [Error  :Il2CppInterop] Exception in IL2CPP-to-Managed trampoline, not passing it to il2cpp: Il2CppInterop.Runtime.Il2CppException: System.NullReferenceException: Object reference not set to an instance of an object.
@@ -176,6 +176,7 @@ want to make "go here" command
 want to make "home" location function where they "follow" a set location but aren't strickly stuck to it if they get into combat, similar to following a player.
 
 found bot commands in PUI_CommunicationMenu.execute
+public enum eGameEvent might be useful
 */
 
 
@@ -259,7 +260,7 @@ public class ZiMain : BasePlugin
         NetworkAPI.RegisterEvent<pPickupItemInfo>           ("RequestToPickupItem",             zNetworking.ReciveRequestToPickupItem);
         NetworkAPI.RegisterEvent<pShareResourceInfo>        ("RequestToShareResourcePack",      zNetworking.ReciveRequestToShareResource);
 
-        //LG_Factory.add_OnFactoryBuildDone((Action)ZombieController.OnFactoryBuildDone);
+        //LG_Factory.add_OnFactoryBuildDone((Action)ZombieController.SetupCamera);
         LG_Factory.add_OnFactoryBuildDone((Action)zSlideComputer.Init);
         //EventAPI.OnExpeditionStarted += ZombieController.Initialize;
         log = Log;
@@ -273,7 +274,7 @@ public class ZiMain : BasePlugin
             zUpdater.onLateUpdate.Listen(zMenuManager.LateUpdate);
             zUpdater.onUpdate.Listen(zSmartSelect.update);
         };
-        LG_Factory.add_OnFactoryBuildDone((Action)zMenuManager.OnFactoryBuildDone);
+        LG_Factory.add_OnFactoryBuildDone((Action)zMenuManager.SetupCamera);
         LG_Factory.add_OnFactoryBuildDone((Action)zMenus.CreateMenus);
         
     }
