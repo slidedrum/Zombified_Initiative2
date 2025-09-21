@@ -125,7 +125,7 @@ namespace ZombieTweak2.zMenu
                     var oldValue = _color;
                     _color = value;
                     if (oldValue != value)
-                        I_SetColor(_color);
+                        SetColor(_color);
                 }
             }
 
@@ -138,7 +138,7 @@ namespace ZombieTweak2.zMenu
                     var oldValue = _colorOffset;
                     _colorOffset = value;
                     if (oldValue != value)
-                        I_SetColor(_color);
+                        SetColor(_color);
                 }
             }
             public GameObject gameObject;
@@ -150,6 +150,27 @@ namespace ZombieTweak2.zMenu
 
             public zMenuNode(string arg_Name, zMenu arg_parrentMenu, FlexibleMethodDefinition arg_Callback)
             {
+
+                eventMap = new Dictionary<zMenuManager.nodeEvent, FlexibleEvent>(){
+                    { zMenuManager.nodeEvent.OnPressed, OnPressed },
+                    { zMenuManager.nodeEvent.WhilePressed, WhilePressed },
+                    { zMenuManager.nodeEvent.OnUnpressed, OnUnpressed },
+                    { zMenuManager.nodeEvent.OnUnpressedSelected, OnUnpressedSelected },
+                    { zMenuManager.nodeEvent.WhileUnpressed, WhileUnpressed },
+                    { zMenuManager.nodeEvent.OnSelected, OnSelected },
+                    { zMenuManager.nodeEvent.WhileSelected, WhileSelected },
+                    { zMenuManager.nodeEvent.OnDeselected, OnDeselected },
+                    { zMenuManager.nodeEvent.WhileDeselected, WhileDeselected },
+                    { zMenuManager.nodeEvent.OnDoubleTapped, OnDoubleTapped },
+                    { zMenuManager.nodeEvent.OnTapped, OnTapped },
+                    { zMenuManager.nodeEvent.OnHeld, OnHeld },
+                    { zMenuManager.nodeEvent.WhileHeld, WhileHeld },
+                    { zMenuManager.nodeEvent.OnHeldSelected, OnHeldSelected },
+                    { zMenuManager.nodeEvent.WhileHeldSelected, WhileHeldSelected },
+                    { zMenuManager.nodeEvent.OnHeldImmediate, OnHeldImmediate },
+                    { zMenuManager.nodeEvent.OnHeldImmediateSelected, OnHeldImmediateSelected },
+                    { zMenuManager.nodeEvent.OnTappedExclusive, OnTappedExclusive },
+                };
                 gameObject = new GameObject($"zMenuNode {arg_Name}");
                 gameObject.transform.SetParent(arg_parrentMenu.getCanvas().transform, false);
 
@@ -182,34 +203,13 @@ namespace ZombieTweak2.zMenu
 
                 text = arg_Name;
 
-                eventMap = new Dictionary<zMenuManager.nodeEvent, FlexibleEvent>(){
-                    { zMenuManager.nodeEvent.OnPressed, OnPressed },
-                    { zMenuManager.nodeEvent.WhilePressed, WhilePressed },
-                    { zMenuManager.nodeEvent.OnUnpressed, OnUnpressed },
-                    { zMenuManager.nodeEvent.OnUnpressedSelected, OnUnpressedSelected },
-                    { zMenuManager.nodeEvent.WhileUnpressed, WhileUnpressed },
-                    { zMenuManager.nodeEvent.OnSelected, OnSelected },
-                    { zMenuManager.nodeEvent.WhileSelected, WhileSelected },
-                    { zMenuManager.nodeEvent.OnDeselected, OnDeselected },
-                    { zMenuManager.nodeEvent.WhileDeselected, WhileDeselected },
-                    { zMenuManager.nodeEvent.OnDoubleTapped, OnDoubleTapped },
-                    { zMenuManager.nodeEvent.OnTapped, OnTapped },
-                    { zMenuManager.nodeEvent.OnHeld, OnHeld },
-                    { zMenuManager.nodeEvent.WhileHeld, WhileHeld },
-                    { zMenuManager.nodeEvent.OnHeldSelected, OnHeldSelected },
-                    { zMenuManager.nodeEvent.WhileHeldSelected, WhileHeldSelected },
-                    { zMenuManager.nodeEvent.OnHeldImmediate, OnHeldImmediate },
-                    { zMenuManager.nodeEvent.OnHeldImmediateSelected, OnHeldImmediateSelected },
-                    { zMenuManager.nodeEvent.OnTappedExclusive, OnTappedExclusive },
-                };
 
                 selectionColorHandler = new SelectionColorHandler(this);
                 AddListener(zMenuManager.nodeEvent.OnSelected, selectionColorHandler.onSelected);
                 AddListener(zMenuManager.nodeEvent.OnDeselected, selectionColorHandler.OnDeselected);
                 AddListener(zMenuManager.nodeEvent.OnPressed, selectionColorHandler.OnPressed);
                 AddListener(zMenuManager.nodeEvent.OnUnpressed, selectionColorHandler.OnUnpressed);
-
-
+                parrentMenu.AddListener(zMenuManager.menuEvent.OnClosed, selectionColorHandler.onClosed);
             }
             public zMenuNode Update()
             {
@@ -463,28 +463,18 @@ namespace ZombieTweak2.zMenu
                 suffix = arg_Suffix ?? string.Empty;
                 return this;
             }
-            public zMenuNode I_SetColor(Color arg_Color)
-            {
-                List<TextPart> textParts = GetTextParts();
-                foreach (TextPart part in textParts)
-                {
-                    // Apply offset relative to the *current base color*, not stacked
-                    Color final = arg_Color;
-                    final.r += ColorOffset.r;
-                    final.g += ColorOffset.g;
-                    final.b += ColorOffset.b;
-                    final.a = arg_Color.a; // <-- preserve original alpha
-                    part.SetColor(final);
-                }
-                return this;
-            }
             public zMenuNode SetColor(Color arg_Color)
             {
                 color = arg_Color;
                 List<TextPart> textParts = GetTextParts();
                 foreach (TextPart part in textParts) 
-                { 
-                    part.SetColor(color + ColorOffset);
+                {
+                    Color final = arg_Color;
+                    final.r += ColorOffset.r;
+                    final.g += ColorOffset.g;
+                    final.b += ColorOffset.b;
+                    final.a = arg_Color.a;
+                    part.SetColor(final);
                 }
                 return this;
             }
@@ -529,6 +519,12 @@ namespace ZombieTweak2.zMenu
                 public SelectionColorHandler(zMenuNode Node)
                 {
                     node = Node;
+                }
+                internal void onClosed()
+                {
+                    selected = false;
+                    pressed = false;
+                    UpdateOffset();
                 }
 
                 internal void onSelected()

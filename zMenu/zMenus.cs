@@ -63,7 +63,7 @@ namespace ZombieTweak2.zMenu
             pickupDetailsSubmenu.centerNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, zSlideComputer.ResetAllItemPrio);
             pickupDetailsSubmenu.centerNode.AddListener(zMenuManager.nodeEvent.OnTapped, pickupDetailsSubmenu.parrentMenu.Open);
             PermissionsMenuClass.setUpItemNodes(pickupDetailsSubmenu);
-            pickupDetailsSubmenu.radius = 35;
+            pickupDetailsSubmenu.radius = 22;
             selectionMenu.AddListener(zMenuManager.menuEvent.OnOpened, UpdateIndicatorForNode, selectionMenu.centerNode, SelectionMenuClass.botSelection);
             permissionMenu.AddListener(zMenuManager.menuEvent.OnOpened, UpdateIndicatorForNode, permissionMenu.centerNode, SelectionMenuClass.botSelection);
             permissionMenu.AddListener(zMenuManager.menuEvent.OnOpened, UpdateIndicatorForNode, pickupNode, zSlideComputer.PickUpPerms);
@@ -225,6 +225,7 @@ namespace ZombieTweak2.zMenu
                 node.fullTextPart.SetScale(1f, 1f);
                 node.subtitlePart.SetScale(0.75f, 0.75f);
                 node.titlePart.SetScale(0.5f, 0.5f);
+                node.SetSize(0.75f);
             }
         }
         public static void updateNodePriorityDisplay(zMenu.zMenuNode node, uint itemID)

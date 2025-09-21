@@ -57,13 +57,22 @@ namespace ZombieTweak2.zMenu
         private FlexibleEvent WhileDeselected = new();
 
         //settings
-        private Vector3 canvasScale = new Vector3(0.02f, 0.02f, 0.02f);
+        private Vector3 canvasScale = new Vector3(0.003f, 0.003f, 0.003f); //Really small because it's really close to the camera.
         public float radius = 20f;
         private Color textColor = zMenuManager.defaultColor;
         private zMenuNode selectedNode;
 
         public zMenu(string arg_Name, zMenu arg_ParrentMenu = null)
         {
+            eventMap = new Dictionary<zMenuManager.menuEvent, FlexibleEvent>(){ //I think all invokes are covered?  Might be missing one.
+                                    { zMenuManager.menuEvent.OnOpened, OnOpened },
+                                    { zMenuManager.menuEvent.WhileOpened, WhileOpened },
+                                    { zMenuManager.menuEvent.OnClosed, OnClosed },
+                                    { zMenuManager.menuEvent.WhileClosed, WhileClosed },
+                                    { zMenuManager.menuEvent.OnSelected, OnSelected },
+                                    { zMenuManager.menuEvent.WhileSelected, WhileSelected },
+                                    { zMenuManager.menuEvent.OnDeselected, OnDeselected },
+                                    { zMenuManager.menuEvent.WhileDeselected, WhileDeselected }};
             nodes = new OrderedSet<zMenuNode>();
             name = arg_Name;
             gameObject = new GameObject($"zMenu {name}");
@@ -77,15 +86,6 @@ namespace ZombieTweak2.zMenu
             centerNode = new zMenuNode(name, this, onClose).SetTitle(arg_ParrentMenu != null ? arg_ParrentMenu.name : "Close");
             parrentMenu = arg_ParrentMenu;
             Close();
-            eventMap = new Dictionary<zMenuManager.menuEvent, FlexibleEvent>(){ //I think all invokes are covered?  Might be missing one.
-                                    { zMenuManager.menuEvent.OnOpened, OnOpened },
-                                    { zMenuManager.menuEvent.WhileOpened, WhileOpened },
-                                    { zMenuManager.menuEvent.OnClosed, OnClosed },
-                                    { zMenuManager.menuEvent.WhileClosed, WhileClosed },
-                                    { zMenuManager.menuEvent.OnSelected, OnSelected },
-                                    { zMenuManager.menuEvent.WhileSelected, WhileSelected },
-                                    { zMenuManager.menuEvent.OnDeselected, OnDeselected },
-                                    { zMenuManager.menuEvent.WhileDeselected, WhileDeselected }};
         }
         public void UpdatePosition()
         {
@@ -242,7 +242,7 @@ namespace ZombieTweak2.zMenu
         }
         public zMenu MoveInfrontOfCamera()
         {
-            Vector3 position = zMenuManager.mainCamera.Position + zMenuManager.mainCamera.transform.forward * 1f;
+            Vector3 position = zMenuManager.mainCamera.Position + zMenuManager.mainCamera.transform.forward * 0.25f;
             return SetRelativePosition(zMenuManager.mainCamera.Position - position);
         }
         public zMenu FaceCamera(bool menuOnly = false)
