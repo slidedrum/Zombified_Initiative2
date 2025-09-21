@@ -28,10 +28,21 @@ using static ZombieTweak2.zNetworking.pStructs;
  -- TODO -- DONE -- Customize resource share thresholds, or however that works
  -- TODO -- DONE -- Refactor all NetworkAPI usage
  -- TODO -- DONE -- Make buttons change color when held
+ -- TODO -- DONE -- Customizable resource share thresholds
+ -- TODO -- DONE -- Block individual resource shares
+ -- TODO -- Investigate if using playerslotindex as an ID is problematic when number of bots changes.  Swtich to some other ID if needed.
+ -- TODO -- When blocking actions (resource pickup/share/etc) chaeck if any existing actions exist, and cancel them instantly.
+ -- TOOD -- When sharing resources, if someone else is already giving the target the same item, don't double up.
+ -- TODO -- Replace selected bots system with global settings, and then bot spesific overides.
+ -- TODO -- Dynamically remove the bot selection/overide menu when there is only 1 bot.
+ -- TODO -- Remove ReceiveZINetInfo completely.
+ -- TODO -- Remove zlogger enterly.
+ -- TODO -- Refactor FlexibleEvent to use args=[] instead of a new arg.  this lets me have optional args for more functonality.
  -- TODO -- Make system for lerping between to values over time.  Should be arbitrary vars and maybe even support method args somehow.
  -- TODO -- Make "i need health/ammo" quck action overide share permission
  -- TODO -- Make smart select pick up turrets
  -- TODO -- Fix bot extra data only updating when you look away
+ -- TODO -- Detect end of extra info string instead of assuming this is the last thing for better compat with other mods.
  -- TODO -- Move methods arround to other classes that make more sense
  -- TODO -- Handle bots joining/leaving or any other way the bot count can change mid mission.
  -- TODO -- Error when exiting q menu if radial menu is open
@@ -70,6 +81,11 @@ using static ZombieTweak2.zNetworking.pStructs;
  -- TODO -- Make network packets only send after a 100ms delay, and send the most up to date value 100ms later.
  -- TODO -- Make clients ask host for current value after every settings change to resolve dysync and conflicts.
  -- TODO -- Send inventory sync command when bots run out of resources from a manual action?
+ -- TODO -- Investigate what is causing recolor of some menu elements with other mods (Archive essentials?)
+ -- TODO -- Investigate what is causing first letter of bot name to mess up with other mods (Arhcive essentials?)
+ -- TODO -- Investigate compat with BetterBots.  Seems to break pickup blocking?
+ -- TODO -- In smart select, add some leeway for very close objects, maybe inside of 2 units lerp between max angle of given, and 180 at 0 units.
+
 share with placed turrets
 todo menu breaks when loading checkpoint
 Investigate bots not picking up held items like turbines
