@@ -1,8 +1,10 @@
 ﻿using Player;
 using System.Collections.Generic;
 using System.Linq;
+using TMPro;
 using UnityEngine;
 using Zombified_Initiative;
+using static AK.SWITCHES;
 
 namespace ZombieTweak2.zMenu
 {
@@ -179,14 +181,27 @@ namespace ZombieTweak2.zMenu
                 }
             }
         }
-        public static void OnFactoryBuildDone()
+        public static void PreRender()
         {
+            if (playerInControll)
+            {
+                if (currentMenu != null)
+                {
+                    currentMenu.PreRender();
+                }
+            }
+        }
+
+        public static void OnFactoryBuildDone() {
             mainCamera = PlayerManager.GetLocalPlayerAgent().FPSCamera;
+
+            zCameraEvents cameraEvents = mainCamera.gameObject.AddComponent<zCameraEvents>();
+            cameraEvents.onPreRender.Listen(zMenuManager.PreRender);
+
             menuParrent = new GameObject("menus");// GuiManager.PlayerLayer.WardenObjectives.transform.parent.gameObject;//GameObject.Find(menuParrentPath);
             mainMenu = new zMenu("Main");
             mainMenu.centerNode.AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, CloseAllMenues);
             registerMenu(mainMenu);
-
         }
     }
 }

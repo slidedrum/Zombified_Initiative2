@@ -175,9 +175,9 @@ namespace ZombieTweak2.zMenu
                 fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
                 fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
 
-                titlePart = new TextPart(this, $"{title}").SetScale(0.50f, 0.50f).SetColor(new Color(0.2f, 0.2f, 0.2f, 1f));
+                titlePart = new TextPart(this, $"{title}").SetScale(0.75f, 0.75f).SetColor(new Color(0.2f, 0.2f, 0.2f, 1f));
                 fullTextPart = new TextPart(this, $"{text}");
-                subtitlePart = new TextPart(this, $"{title}").SetScale(0.25f, 0.25f).SetColor(new Color(0.1f, 0.1f, 0.1f, 1f));
+                subtitlePart = new TextPart(this, $"{title}").SetScale(0.75f, 0.75f).SetColor(new Color(0.1f, 0.1f, 0.1f, 1f));
                 descriptionPart = new TextPart(this, description);
 
                 text = arg_Name;

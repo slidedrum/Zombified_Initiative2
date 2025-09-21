@@ -57,9 +57,8 @@ namespace ZombieTweak2.zMenu
         private FlexibleEvent WhileDeselected = new();
 
         //settings
-        private Vector2 canvasSize = new Vector2(1000, 1000);
-        private Vector3 canvasScale = new Vector3(0.002f, 0.002f, 0.002f);
-        public float radius = 125f;
+        private Vector3 canvasScale = new Vector3(0.02f, 0.02f, 0.02f);
+        public float radius = 20f;
         private Color textColor = zMenuManager.defaultColor;
         private zMenuNode selectedNode;
 
@@ -95,6 +94,12 @@ namespace ZombieTweak2.zMenu
         }
         public void Update()
         {
+        }
+        public void Lateupdate()
+        {
+        }
+        public void PreRender()
+        {
             UpdatePosition();
             FaceCamera();
             if (gameObject.activeInHierarchy)
@@ -110,10 +115,6 @@ namespace ZombieTweak2.zMenu
                 WhileSelected.Invoke();
             else
                 WhileDeselected.Invoke();
-        }
-        public void Lateupdate()
-        {
-
         }
         public zMenu Close()
         {
@@ -191,7 +192,7 @@ namespace ZombieTweak2.zMenu
             GameObject textGO = new GameObject("DebugText");
             textGO.transform.SetParent(canvas.transform, false);
 
-            TextMeshProUGUI tmp = textGO.AddComponent<TextMeshProUGUI>();
+            TextMeshPro tmp = textGO.AddComponent<TextMeshPro>();
             tmp.text = $"Hello from {name}";
             tmp.fontSize = 24;
             tmp.alignment = TextAlignmentOptions.Center;
@@ -214,10 +215,9 @@ namespace ZombieTweak2.zMenu
             canvas.worldCamera = Camera.main;
 
             var scaler = canvasGO.AddComponent<CanvasScaler>();
-            scaler.dynamicPixelsPerUnit = 10000f;
+            scaler.dynamicPixelsPerUnit = 10f;
 
             RectTransform rect = canvasGO.GetComponent<RectTransform>();
-            rect.sizeDelta = canvasSize; // size in "pixels"
             rect.localPosition = Vector3.zero;      // center inside menu
             rect.localScale = canvasScale;  // scale down so it’s not huge
             gameObject.transform.position = zMenuManager.mainCamera.Position + zMenuManager.mainCamera.transform.forward * 1f;
