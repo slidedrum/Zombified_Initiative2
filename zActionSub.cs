@@ -11,7 +11,7 @@ namespace Zombified_Initiative
         public static List<Action<PlayerAIBot, PlayerBotActionBase>> onAdded = new();
         public static List<Action<PlayerAIBot, PlayerBotActionBase>> onRemoved = new();
         public static Dictionary<int, List<PlayerBotActionBase>> botActionMap = new();
-        public static void update()
+        public static void Update()
         {
             //there's got to be a better way to get all bots.
             List<PlayerAIBot> playerAiBots = ZiMain.GetBotList();

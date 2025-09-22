@@ -64,7 +64,7 @@ namespace Zombified_Initiative
             Item,
             Other,
         }
-        internal static void update()
+        internal static void Update()
         {
             bool ready = (FocusStateManager.CurrentState == eFocusState.FPS || FocusStateManager.CurrentState == eFocusState.Dead);
             if (!ready) return;

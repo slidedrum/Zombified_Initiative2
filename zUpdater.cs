@@ -62,7 +62,7 @@ namespace ZombieTweak2
 
     public class zCameraEvents : MonoBehaviour
     {
-        // This class handles update loops tied to the camera, specifically the Unity callbacks: OnPreRender, OnPreCull, etc...
+        // This class handles Update loops tied to the camera, specifically the Unity callbacks: OnPreRender, OnPreCull, etc...
         // This behaviour is separate to zUpdater as it must be added to the FPSCamera which isn't available immediately on game load.
 
         public FlexibleEvent onPreRender = new();

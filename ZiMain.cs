@@ -178,10 +178,6 @@ public class ZiMain : BasePlugin
         m_Harmony.PatchAll();
         ClassInjector.RegisterTypeInIl2Cpp<zUpdater>();
         ClassInjector.RegisterTypeInIl2Cpp<zCameraEvents>();
-        //var ZombieController = AddComponent<zController>();
-
-        //NetworkAPI.RegisterEvent<ZINetInfo>(ZINetInfo.NetworkIdentity, zController.ReceiveZINetInfo);
-        //NetworkAPI.RegisterEvent<ZISendBotToPickupItemInfo>("sendBotToPickupItem", SendBotToPickupItem);
 
         NetworkAPI.RegisterEvent<pItemPrioDisable>          ("SetItemPrioDisable",              zNetworking.ReciveSetItemPrioDisable);
         NetworkAPI.RegisterEvent<pItemPrio>                 ("SetItemPrio",                     zNetworking.ReciveSetItemPrio);
@@ -191,9 +187,6 @@ public class ZiMain : BasePlugin
         NetworkAPI.RegisterEvent<pPickupPermission>         ("SetPickupPermission",             zNetworking.ReciveSetPickupPermission);
         NetworkAPI.RegisterEvent<pPickupItemInfo>           ("RequestToPickupItem",             zNetworking.ReciveRequestToPickupItem);
         NetworkAPI.RegisterEvent<pShareResourceInfo>        ("RequestToShareResourcePack",      zNetworking.ReciveRequestToShareResource);
-
-        //LG_Factory.add_OnFactoryBuildDone((Action)ZombieController.SetupCamera);
-
         //EventAPI.OnExpeditionStarted += ZombieController.Initialize;
         log = Log;
         zActionSub.addOnRemoved((Action<PlayerAIBot, PlayerBotActionBase>)onActionRemoved);
@@ -203,9 +196,9 @@ public class ZiMain : BasePlugin
         {
             zUpdater.CreateInstance();
             zUpdater.onUpdate.Listen(zMenuManager.Update);
+            zUpdater.onUpdate.Listen(zSmartSelect.Update);
+            zUpdater.onUpdate.Listen(zActionSub.Update);
             zUpdater.onLateUpdate.Listen(zMenuManager.LateUpdate);
-            zUpdater.onUpdate.Listen(zSmartSelect.update);
-            zUpdater.onUpdate.Listen(zActionSub.update);
         };
         LG_Factory.add_OnFactoryBuildDone((Action)zSlideComputer.Init);
         LG_Factory.add_OnFactoryBuildDone((Action)zMenuManager.SetupCamera);
@@ -266,7 +259,8 @@ public class ZiMain : BasePlugin
                 InventorySlot slot = descriptor.TargetItem.ItemDataBlock.inventorySlot;
                 AmmoType ammoType = slot == InventorySlot.Consumable ? AmmoType.CurrentConsumable : slot == InventorySlot.ResourcePack ? AmmoType.ResourcePackRel : AmmoType.None;
                 float ammoLeft = bot.Backpack.AmmoStorage.GetAmmoInPack(ammoType);
-                sendChatMessage($"I collected {article} {descriptor.TargetItem.PublicName} ({ammoLeft}).", bot.Agent);
+                string typeUsesPercent = slot == InventorySlot.ResourcePack ? "%" : "";
+                sendChatMessage($"I collected {article} {descriptor.TargetItem.PublicName} ({ammoLeft}{typeUsesPercent}).", bot.Agent);
             }
             else if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Failed)
                 sendChatMessage($"I coul't get {article} {descriptor.TargetItem.PublicName}.", bot.Agent);
