@@ -18,7 +18,7 @@ using ZombieTweak2.zNetworking;
 using static ZombieTweak2.zNetworking.pStructs;
 
 /*
- == TODO == Priority: Investigate bots not picking up held items like turbines
+ == TODO == Priority: 
 
  -- TODO -- DONE -- Re - create send bot to do manual action
  -- TODO -- DONE -- fix pickup action failing sometimes
@@ -30,6 +30,7 @@ using static ZombieTweak2.zNetworking.pStructs;
  -- TODO -- DONE -- Customizable resource share thresholds
  -- TODO -- DONE -- Block individual resource shares
  -- TODO -- DONE -- Menu breaks when loading checkpoint
+ -- TODO -- DONE -- Add support for carrying items like turbines
  -- TODO -- Investigate if using playerslotindex as an ID is problematic when number of bots changes.  Swtich to some other ID if needed.
  -- TODO -- When blocking actions (resource pickup/share/etc) chaeck if any existing actions exist, and cancel them instantly.
  -- TOOD -- When sharing resources, if someone else is already giving the target the same item, don't double up.
@@ -90,6 +91,7 @@ using static ZombieTweak2.zNetworking.pStructs;
  -- TODO -- make fulltextpart position perfectly match on submenus even when line len of title/subtitle doesn't match.
  -- TODO -- handle bots spamming chat with the same message over and over (usually failed to do thing)
  -- TODO -- Make bots ping items they find even if they don't pick them up.
+ -- TODO -- Do this https://discord.com/channels/782438773690597389/783918553626836992/1311512608263901267
 
 share with placed turrets
 
@@ -118,6 +120,7 @@ namespace Zombified_Initiative;
 
 [BepInDependency("dev.gtfomodding.gtfo-api")]
 [BepInPlugin("com.hirnukuono.zombified_initiative", "Zombified Initiative", "0.9.6")]
+[BepInDependency("com.east.bb", BepInDependency.DependencyFlags.SoftDependency)]
 public class ZiMain : BasePlugin
 { //this class should contain all methods to call actions, any helpers to faciliate that, and inital setup,
     public static ManualLogSource log;
@@ -130,6 +133,9 @@ public class ZiMain : BasePlugin
     public static float _manualActionsHaste = 1f;
     public static float _manualActionsPriority = 5f;
     public static List<PlayerBotActionBase> manualActions = new();
+
+    public static bool HasBetterBots { get; private set; }
+
     [Obsolete]
     public struct ZINetInfo
     {
@@ -176,6 +182,7 @@ public class ZiMain : BasePlugin
 
     public override void Load()
     {
+        HasBetterBots = IL2CPPChainloader.Instance.Plugins.ContainsKey("com.east.bb");
         Harmony m_Harmony = new Harmony("ZombieController");
         m_Harmony.PatchAll();
         ClassInjector.RegisterTypeInIl2Cpp<zUpdater>();

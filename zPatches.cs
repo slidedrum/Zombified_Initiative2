@@ -1,9 +1,13 @@
-﻿using GameData;
+﻿using BetterBots.Components;
+using GameData;
 using HarmonyLib;
+using Il2CppInterop.Runtime.InteropTypes.Arrays;
+using Il2CppInterop.Runtime.Runtime;
 using Player;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 using ZombieTweak2;
 using static Zombified_Initiative.ZiMain;
@@ -59,7 +63,14 @@ public class ZombifiedPatches
             //Is this item dissabled?
             return false;
         }
-        
+
+
+        if (ZiMain.HasBetterBots && CheckBetterBotsDanger(__instance.m_agent.gameObject))
+        {
+            return false; // skip sharing if bot is in danger
+        }
+
+
 
         PlayerAmmoStorage ammoStorage = backpack.AmmoStorage;
         float ammoutCanGivePercent = ammoStorage.ResourcePackAmmo.CostOfBullet / ammoStorage.ResourcePackAmmo.AmmoMaxCap;
@@ -170,17 +181,35 @@ public class ZombifiedPatches
         }
         return false;
     }
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static bool CheckBetterBotsDanger(GameObject agentGO)
+    {
+        BotRecorder component = agentGO.GetComponent<BotRecorder>();
+        if (component != null)
+        {
+            return component.IsInDangerousSituation();
+        }
+        return false;
+    }
 
-
+    private static PlayerBotActionBase.Descriptor originalBestAction;
     [HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.UpdateActionCollectItem))]
     [HarmonyPrefix]
-    public static bool UpdateActionCollectItem(RootPlayerBotAction __instance)
+    [HarmonyPriority(Priority.First)] //Needed for betterbots compat
+    public static void FirstUpdateActionCollectItem(RootPlayerBotAction __instance, ref PlayerBotActionBase.Descriptor bestAction)
+    {
+        originalBestAction = bestAction;
+    }
+
+    [HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.UpdateActionCollectItem))]
+    [HarmonyPostfix]
+    [HarmonyPriority(Priority.Last)] //Needed for betterbots compat
+    public static void UpdateActionCollectItem(RootPlayerBotAction __instance, ref PlayerBotActionBase.Descriptor bestAction)
     {
         if (!zSlideComputer.GetPickupPermission(__instance.m_agent.Owner.PlayerSlotIndex()))
         {
-            return false;
+            bestAction = originalBestAction;
         }
-        return true;
     }
 
     public static float newPrio = 0f;
@@ -351,6 +380,7 @@ public class ZombifiedPatches
     [HarmonyPostfix]
     public static void CheckCollisionPatch(PlayerBotActionBase __instance, PlayerBotActionBase.Descriptor desc, bool __result)
     {
+        //WTF is this?  Just a debug thing?
         if (__result)
         {
             string botName;
@@ -380,7 +410,6 @@ public class ZombifiedPatches
             string actionType = (desc != null && desc.ActionBase != null) ? desc.ActionBase.GetIl2CppType().Name : "desc.ActionBase is NULL";
             if (instanceType == "INSTANCE IS NULL" || instanceType == "PlayerBotActionCollectItem")
                 ZiMain.log.LogWarning($"Action collision! botName={botName}, instanceType={instanceType}, actionType={actionType}");
-
         }
     }
 

@@ -31,4 +31,10 @@
 		<Obfuscate>True</Obfuscate>
 		<DefineConstants>RELEASE</DefineConstants>
 	</PropertyGroup>
+
+	<ItemGroup>
+	  <Reference Include="BetterBots">
+	    <HintPath>..\..\..\..\..\AppData\Roaming\r2modmanPlus-local\GTFO\profiles\Pancake\BetterBots.dll</HintPath>
+	  </Reference>
+	</ItemGroup>
 </Project>
