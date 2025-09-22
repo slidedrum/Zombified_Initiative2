@@ -115,6 +115,26 @@ public class ZombifiedPatches
             if (zSlideComputer.resourceThresholds.ContainsKey(itemID))
             {
                 int baseThreshold = zSlideComputer.resourceThresholds[itemID];
+                foreach (var agent in PlayerManager.PlayerAgentsInLevel)
+                {
+                    //Check if any other bots are giving the same target the same resource
+                    if (!agent.Owner.IsBot)
+                        continue;
+                    PlayerAIBot aiBot = agent.gameObject.GetComponent<PlayerAIBot>();
+                    foreach (var action in aiBot.Actions)
+                    {
+                        if (action.GetIl2CppType().Name == "PlayerBotActionShareResourcePack")
+                        {
+                            var descriptor = action.DescBase.Cast<PlayerBotActionShareResourcePack.Descriptor>();
+                            if (descriptor.Item.ItemDataBlock.persistentID == itemID
+                                && descriptor.Receiver.CharacterID == candidateAgent.CharacterID)
+                            {
+                                //if other bots are sharing that resource, reduce threshold so nothing is wasted
+                                baseThreshold -= (int)ammoStorage.ResourcePackAmmo.CostOfBullet;
+                            }
+                        }
+                    }
+                }
                 float clampedThreshold = Mathf.Clamp01(baseThreshold / 100f);
                 float lowerThreshold = Mathf.Lerp(0f, 0.98f, clampedThreshold);
                 threshHold = Math.Min(lowerThreshold + ammoutCanGivePercent,0.98f);
