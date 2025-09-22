@@ -3,6 +3,7 @@ using Player;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using UnityEngine;
 using Zombified_Initiative;
 
@@ -95,6 +96,7 @@ namespace ZombieTweak2.zMenu
                 int id = bot.Key;
                 PlayerManager.TryGetPlayerAgent(ref id, out agent);
                 string name = agent.PlayerName;
+                name = Regex.Replace(name, "<[^>]+>", "");
                 sbSubtitle += name[0];
                 sbSubtitle += endcolor;
                 if (bot.Key != last.Key)
