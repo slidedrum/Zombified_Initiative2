@@ -138,7 +138,8 @@ namespace ZombieTweak2.zMenu
                     MoveInfrontOfCamera();
                 }
                 else
-                { //TODO move SetRelativePosition into a listener so it can be disabled.
+                { 
+                    //TODO move SetRelativePosition into a listener so it can be disabled.
                     var node = parrentMenu.GetNode(name);
                     SetRelativePosition(zMenuManager.mainCamera.Position - node.gameObject.transform.position);
                 }
@@ -225,6 +226,7 @@ namespace ZombieTweak2.zMenu
         }
         public zMenu ArrangeNodes()
         {
+            //TODO add alt variants of arrange nodes
             int count = nodes.Count;
             for (int i = 0; i < count; i++)
             {
