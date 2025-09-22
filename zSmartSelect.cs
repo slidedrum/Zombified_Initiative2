@@ -4,6 +4,7 @@ using Player;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using ZombieTweak2;
 
 namespace Zombified_Initiative
 {
@@ -219,10 +220,33 @@ namespace Zombified_Initiative
             if (lookingAt.type != objectType.PlayerAgent || lookingAt.type == objectType.None)
                 return;
             PlayerAgent agent = lookingAt.gobject.GetComponent<PlayerAgent>();
-            if (!agent.Owner.IsBot)
-                return;
+
             if (lookingAt.gobject != null)
             {
+                var botName = agent.PlayerName;
+                var botId = agent.CharacterID;
+                uint voiceID = 0u;
+                if (botName.ToUpper().Contains("BISHOP")) 
+                {
+                    voiceID = AK.EVENTS.PLAY_ADDRESSBISHOPIRRITATED01;
+                }
+                if (botName.ToUpper().Contains("DAUDA"))
+                {
+                    voiceID = AK.EVENTS.PLAY_ADDRESSDAUDAIRRITATED01;
+                }
+                if (botName.ToUpper().Contains("HACKET"))
+                {
+                    voiceID = AK.EVENTS.PLAY_ADDRESSHACKETTIRRITATED01;
+                }
+                if (botName.ToUpper().Contains("WOODS"))
+                {
+                    voiceID = AK.EVENTS.PLAY_ADDRESSWOODSIRRITATED01;
+                }
+                PlayerVoiceManager.WantToSay(localPlayer.CharacterID, voiceID);
+                if (!agent.Owner.IsBot)
+                    return;
+                FlexibleMethodDefinition barkback = new FlexibleMethodDefinition(PlayerVoiceManager.WantToSay,[botId, AK.EVENTS.PLAY_CL_YES]); //yes
+                zUpdater.InvokeStatic(barkback, 1f);
                 ZiMain.sendChatMessage("I'm ready", agent, localPlayer);
                 selection.setBot(lookingAt.gobject);
             }

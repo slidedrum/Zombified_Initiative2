@@ -113,6 +113,7 @@ want to make "home" location function where they "follow" a set location but are
 
 found bot commands in PUI_CommunicationMenu.execute
 public enum eGameEvent might be useful
+sounds are in namespace AK public class EVENTS
 */
 
 
@@ -424,7 +425,7 @@ public class ZiMain : BasePlugin
             Prio = prio,
         };
         sendChatMessage($"Carrying {item._PublicName_k__BackingField}", aiBot.Agent, commander);
-
+        PlayerVoiceManager.WantToSay(aiBot.Agent.CharacterID, AK.EVENTS.PLAY_CL_WILLDO); //will do
         aiBot.StartAction(desc);
     }
     public static void SendBotToPickupItem(PlayerAIBot aiBot, ItemInLevel item, PlayerAgent commander = null, ulong netsender = 0)
@@ -462,6 +463,9 @@ public class ZiMain : BasePlugin
             Prio = prio,
             Haste = haste,
         };
+        PlayerVoiceManager.WantToSay(commander.CharacterID, AK.EVENTS.PLAY_CL_GRABTHEITEM);
+        FlexibleMethodDefinition barkback = new FlexibleMethodDefinition(PlayerVoiceManager.WantToSay, [aiBot.Agent.CharacterID, AK.EVENTS.PLAY_CL_WILLDO]);
+        zUpdater.InvokeStatic(barkback, 1f);
         sendChatMessage($"Picking up {item.PublicName}",aiBot.Agent,commander);
         aiBot.StartAction(desc);
     }
@@ -499,6 +503,7 @@ public class ZiMain : BasePlugin
         };
         float ammoLeft = aiBot.Backpack.AmmoStorage.GetAmmoInPack(AmmoType.ResourcePackRel);
         sendChatMessage($"Sharing my {resourcePack.PublicName} ({ammoLeft}%) with {receiver.PlayerName}.",aiBot.Agent,commander);
+        PlayerVoiceManager.WantToSay(aiBot.Agent.CharacterID, AK.EVENTS.PLAY_CL_WILLDO);
         aiBot.StartAction(desc);
     }
 
