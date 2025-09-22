@@ -88,6 +88,8 @@ using static ZombieTweak2.zNetworking.pStructs;
  -- TODO -- Remake attack my target methods and put it under actions.
  -- TODO -- Add alt variants of arrangeNodes
  -- TODO -- make fulltextpart position perfectly match on submenus even when line len of title/subtitle doesn't match.
+ -- TODO -- handle bots spamming chat with the same message over and over (usually failed to do thing)
+ -- TODO -- Make bots ping items they find even if they don't pick them up.
 
 share with placed turrets
 
@@ -249,10 +251,26 @@ public class ZiMain : BasePlugin
     { //TODO - Use a string builder
         string typeName = action.GetIl2CppType().Name;
         bool manualAction = isManualAction(action);
-        if (typeName == "PlayerBotActionCollectItem")
+        if (typeName == "PlayerBotActionCarryExpeditionItem")
+        {
+            //This actually triggers when they drop the item.
+            var descriptor = action.DescBase.Cast<PlayerBotActionCarryExpeditionItem.Descriptor>();
+            log.LogInfo($"{bot.Agent.PlayerName} completed collect {descriptor.TargetItem._PublicName_k__BackingField} task with status: {action.DescBase.Status}  access layers {descriptor.m_accessLayers}");
+            sendChatMessage($"I put down the {descriptor.TargetItem._PublicName_k__BackingField}.", bot.Agent);
+            //What happens when the temp drop it out of combat?  Does that trigger here?
+        }
+        else if (typeName == "PlayerBotActionCollectItem")
         {
             var descriptor = action.DescBase.Cast<PlayerBotActionCollectItem.Descriptor>();
-            log.LogInfo($"{bot.Agent.PlayerName} completed collect {descriptor.TargetItem.PublicName} task with status: {action.DescBase.Status}  access layers {descriptor.m_accessLayers}");
+            var carrycore = descriptor.TargetItem.gameObject.GetComponent<CarryItemPickup_Core>();
+            string publicName = descriptor.TargetItem.PublicName;
+            string actionName = "collected";
+            if (carrycore != null)
+            {
+                publicName = descriptor.TargetItem._PublicName_k__BackingField;
+                actionName = "picked up";
+            }
+            log.LogInfo($"{bot.Agent.PlayerName} completed collect {publicName} task with status: {action.DescBase.Status}  access layers {descriptor.m_accessLayers}");
             string article = manualAction ? "the" : "a";
             if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Successful)
             {
@@ -260,20 +278,23 @@ public class ZiMain : BasePlugin
                 AmmoType ammoType = slot == InventorySlot.Consumable ? AmmoType.CurrentConsumable : slot == InventorySlot.ResourcePack ? AmmoType.ResourcePackRel : AmmoType.None;
                 float ammoLeft = bot.Backpack.AmmoStorage.GetAmmoInPack(ammoType);
                 string typeUsesPercent = slot == InventorySlot.ResourcePack ? "%" : "";
-                sendChatMessage($"I collected {article} {descriptor.TargetItem.PublicName} ({ammoLeft}{typeUsesPercent}).", bot.Agent);
+                string ammocount = "";
+                if (ammoLeft > 0)
+                    ammocount = " (" + ammoLeft + typeUsesPercent + ")";
+                sendChatMessage($"I {actionName} {article} {publicName}{ammocount}.", bot.Agent);
             }
             else if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Failed)
-                sendChatMessage($"I coul't get {article} {descriptor.TargetItem.PublicName}.", bot.Agent);
+                sendChatMessage($"I coul't get {article} {publicName}.", bot.Agent);
             else if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Interrupted)
-                sendChatMessage($"I can't get {article} {descriptor.TargetItem.PublicName} right now.", bot.Agent);
+                sendChatMessage($"I can't get {article} {publicName} right now.", bot.Agent);
             else if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Aborted)
-                sendChatMessage($"I can't get {article} {descriptor.TargetItem.PublicName} right now.", bot.Agent);
+                sendChatMessage($"I can't get {article} {publicName} right now.", bot.Agent);
             else if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Stopped)
-                sendChatMessage($"I can't get {article} {descriptor.TargetItem.PublicName} right now.", bot.Agent);
+                sendChatMessage($"I can't get {article} {publicName} right now.", bot.Agent);
             else
-                sendChatMessage($"I can't get {article} {descriptor.TargetItem.PublicName} status {action.DescBase.Status}.", bot.Agent);
+                sendChatMessage($"I can't get {article} {publicName} status {action.DescBase.Status}.", bot.Agent);
         }
-        if (typeName == "PlayerBotActionShareResourcePack")
+        else if (typeName == "PlayerBotActionShareResourcePack")
         {
             log.LogInfo("PlayerBotActionShareResourcePack removed");
             var descriptor = action.DescBase.Cast<PlayerBotActionShareResourcePack.Descriptor>();
@@ -371,8 +392,37 @@ public class ZiMain : BasePlugin
         player.SetPlayer(agent.Owner);
         return player;
     }
+    public static void SendBotToCarryItem(PlayerAIBot aiBot, CarryItemPickup_Core item, PlayerAgent commander = null, ulong netsender = 0)
+    {
+        //todo add to manual action list for refrence later.
+        //TODO split this up into it's own netaction instead of piggybacking on sendbottopickupitem.
+        if (!SNet.IsMaster) //Are we a client?
+        {
+            if (netsender != 0) //Is this request coming from a different client?
+                return;
+            //request host
+            pPickupItemInfo info = new pPickupItemInfo();
+            info.item.replicatorRef.SetID(item.GetComponent<LG_PickupItem_Sync>().m_stateReplicator.Replicator); //TODO Nullcheck?
+            //info.item = pStructs.Get_pStructFromRefrence(item);
+            info.playerAgent = pStructs.Get_pStructFromRefrence(aiBot.Agent);
+            info.commander = pStructs.Get_pStructFromRefrence(commander); //This might be a problem in commander is null?  Not sure. TODO look into it.
+            NetworkAPI.InvokeEvent<pPickupItemInfo>("RequestToPickupItem", info);
+            return;
+        }
+        log.LogInfo($"{commander.PlayerName} is sending {aiBot.Agent.PlayerName} to carry {item._PublicName_k__BackingField} with the new method");
+        float prio = 4f;
+        PlayerBotActionCarryExpeditionItem.Descriptor desc = new(aiBot)
+        {
+            TargetItem = item,
+            Prio = prio,
+        };
+        sendChatMessage($"Carrying {item._PublicName_k__BackingField}", aiBot.Agent, commander);
+
+        aiBot.StartAction(desc);
+    }
     public static void SendBotToPickupItem(PlayerAIBot aiBot, ItemInLevel item, PlayerAgent commander = null, ulong netsender = 0)
     {
+
         //todo add to manual action list for refrence later.
         if (!SNet.IsMaster) //Are we a client?
         {
@@ -385,6 +435,13 @@ public class ZiMain : BasePlugin
             info.playerAgent = pStructs.Get_pStructFromRefrence(aiBot.Agent);
             info.commander = pStructs.Get_pStructFromRefrence(commander); //This might be a problem in commander is null?  Not sure. TODO look into it.
             NetworkAPI.InvokeEvent<pPickupItemInfo>("RequestToPickupItem", info);
+            return;
+        }
+        //Is this an item we should carry?
+        var carrycore = item.gameObject.GetComponent<CarryItemPickup_Core>();
+        if (carrycore != null)
+        {
+            SendBotToCarryItem(aiBot, carrycore, commander, netsender);
             return;
         }
         log.LogInfo($"{commander.PlayerName} is sending {aiBot.Agent.PlayerName} to pick up {item.PublicName} with the new method");
