@@ -31,8 +31,8 @@ using static ZombieTweak2.zNetworking.pStructs;
  -- TODO -- DONE -- Block individual resource shares
  -- TODO -- DONE -- Menu breaks when loading checkpoint
  -- TODO -- DONE -- Add support for carrying items like turbines
+ -- TODO -- DONE -- When blocking actions (resource pickup/share/etc) chaeck if any existing actions exist, and cancel them instantly.
  -- TODO -- Investigate if using playerslotindex as an ID is problematic when number of bots changes.  Swtich to some other ID if needed.
- -- TODO -- When blocking actions (resource pickup/share/etc) chaeck if any existing actions exist, and cancel them instantly.
  -- TOOD -- When sharing resources, if someone else is already giving the target the same item, don't double up.
  -- TODO -- Replace selected bots system with global settings, and then bot spesific overides.
  -- TODO -- Dynamically remove the bot selection/overide menu when there is only 1 bot.
@@ -110,6 +110,7 @@ want to add chat commands for people who don't have the mod.
 want to add new bot actions like hold position, look for resource type (in nearby rooms), ping item (go to term, then run ping command)
 want to make "go here" command
 want to make "home" location function where they "follow" a set location but aren't strickly stuck to it if they get into combat, similar to following a player.
+want to make it so bots will open doors to get back to the person they are folling if they have to.
 
 found bot commands in PUI_CommunicationMenu.execute
 public enum eGameEvent might be useful
