@@ -185,19 +185,19 @@ public class ZombifiedPatches
 
     public static float newPrio = 0f;
     [HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.GetItemPrio))]
-    [HarmonyPostfix]
-    public static void GetItemPrio(RootPlayerBotAction __instance, InventorySlot itemSlot, uint itemID, ref float __result)
+    [HarmonyPrefix]
+    public static bool GetItemPrio(RootPlayerBotAction __instance, InventorySlot itemSlot, uint itemID, ref float __result)
     {
         //This is a full re-implentation of the original method.  But without the hard coded values.
         //This approach allows me to support arbitrary item pickups not normally in the list, without breaking the logic.
         //Theoretically if there are a bunch of new items in the list, they could get into a "hot potato" loop.  but I'm calling that a "known shippable" for now.
         
-        var originalResult = __result;
+        //var originalResult = __result;
         __result = 0f;
         if (!zSlideComputer.GetPickupPermission(__instance.m_agent.Owner.PlayerSlotIndex()))
-            return;
+            return false;
         if (!zSlideComputer.enabledItemPrios.ContainsKey(itemID) || !zSlideComputer.enabledItemPrios[itemID])
-            return;
+            return false;
         ItemDataBlock itemDataBlock;
         if (ItemDataBlock.s_blockByID.ContainsKey(itemID))
         {
@@ -206,12 +206,12 @@ public class ZombifiedPatches
         else
         {
             ZiMain.log.LogError($"Tried to get priority for unknow id: {itemID}");
-            return;
+            return false;
         }
         if (!RootPlayerBotAction.s_itemBasePrios.ContainsKey(itemID))
         {
             ZiMain.log.LogWarning($"Tried to get priority for unmapped item: ({itemID}){itemDataBlock.name} in {itemSlot}");
-            return;
+            return false;
         }
         __result = 0f;
         float basePriority = RootPlayerBotAction.s_itemBasePrios[itemID];
@@ -287,21 +287,21 @@ public class ZombifiedPatches
         {
             __result = basePriority;
         }
-        if (Math.Abs(__result - originalResult) > 5)
-        { 
-            //Leaving this as a prefix for a bit to make sure this actually works.
-            ZiMain.log.LogWarning($"Priority: {__result} vs {originalResult}");
-            ZiMain.log.LogMessage($"Foundme: {foundMe}");
-            ZiMain.log.LogMessage($"otherAgents count: {otherAgents}");
-            ZiMain.log.LogMessage($"highestAmmoCap: {highestAmmoCap}");
-            ZiMain.log.LogMessage($"currentTotalAmmo: {currentTotalAmmoOfOtherBotsNotThisBot}");
-            ZiMain.log.LogMessage($"basePriority: {basePriority}");
-            ZiMain.log.LogMessage($"priorityFloor: {priorityFloor}");
-            ZiMain.log.LogMessage($"maxOtherTotal: {maxOtherTotal}");
-            ZiMain.log.LogMessage($"fillFactor: {fillFactor}");
-            ZiMain.log.LogMessage($"minPriority: {minPriority}");
-        }
-        return;
+        //if (Math.Abs(__result - originalResult) > 5)
+        //{ 
+        //    //Leaving this as a prefix for a bit to make sure this actually works.
+        //    ZiMain.log.LogWarning($"Priority: {__result} vs {originalResult}");
+        //    ZiMain.log.LogMessage($"Foundme: {foundMe}");
+        //    ZiMain.log.LogMessage($"otherAgents count: {otherAgents}");
+        //    ZiMain.log.LogMessage($"highestAmmoCap: {highestAmmoCap}");
+        //    ZiMain.log.LogMessage($"currentTotalAmmo: {currentTotalAmmoOfOtherBotsNotThisBot}");
+        //    ZiMain.log.LogMessage($"basePriority: {basePriority}");
+        //    ZiMain.log.LogMessage($"priorityFloor: {priorityFloor}");
+        //    ZiMain.log.LogMessage($"maxOtherTotal: {maxOtherTotal}");
+        //    ZiMain.log.LogMessage($"fillFactor: {fillFactor}");
+        //    ZiMain.log.LogMessage($"minPriority: {minPriority}");
+        //}
+        return false;
     }
 
     [HarmonyPatch(typeof(PlaceNavMarkerOnGO), nameof(PlaceNavMarkerOnGO.UpdateExtraInfo))]

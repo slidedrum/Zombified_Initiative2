@@ -193,7 +193,7 @@ public class ZiMain : BasePlugin
         NetworkAPI.RegisterEvent<pShareResourceInfo>        ("RequestToShareResourcePack",      zNetworking.ReciveRequestToShareResource);
 
         //LG_Factory.add_OnFactoryBuildDone((Action)ZombieController.SetupCamera);
-        LG_Factory.add_OnFactoryBuildDone((Action)zSlideComputer.Init);
+
         //EventAPI.OnExpeditionStarted += ZombieController.Initialize;
         log = Log;
         zActionSub.addOnRemoved((Action<PlayerAIBot, PlayerBotActionBase>)onActionRemoved);
@@ -205,7 +205,9 @@ public class ZiMain : BasePlugin
             zUpdater.onUpdate.Listen(zMenuManager.Update);
             zUpdater.onLateUpdate.Listen(zMenuManager.LateUpdate);
             zUpdater.onUpdate.Listen(zSmartSelect.update);
+            zUpdater.onUpdate.Listen(zActionSub.update);
         };
+        LG_Factory.add_OnFactoryBuildDone((Action)zSlideComputer.Init);
         LG_Factory.add_OnFactoryBuildDone((Action)zMenuManager.SetupCamera);
         LG_Factory.add_OnFactoryBuildDone((Action)zMenus.CreateMenus);
         

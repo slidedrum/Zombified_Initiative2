@@ -87,9 +87,10 @@ namespace ZombieTweak2.zMenu
             {
                 if (mainCamera == null)
                 {
-                    //Did the menus get messed up by something?  Like re-loading a checkpoint?  Reset them, and remake them.
+                    //Menus and stuff got broken, proably by checkpoints.  this probably should't go in menumanager, but whatever for now.
                     ClearAllMenus();
                     zMenus.CreateMenus();
+                    zSlideComputer.Init();
                 }
                 bool menuOpen = currentMenu != null;
                 if (menuOpen)
