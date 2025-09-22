@@ -123,6 +123,9 @@ namespace Zombified_Initiative
             ret.gobject = lookingAt;
             switch (lookingAt)
             {
+                case null:
+                    ret.type = objectType.None;
+                    break;
                 case var go when go == agentImLookingAt:
                     ret.type = objectType.PlayerAgent;
                     break;
@@ -131,9 +134,6 @@ namespace Zombified_Initiative
                     break;
                 case var go when go == itemImLookingAt:
                     ret.type = objectType.Item;
-                    break;
-                case null:
-                    ret.type = objectType.None;
                     break;
                 default:
                     ret.type = objectType.Other;
@@ -216,7 +216,7 @@ namespace Zombified_Initiative
                 selection.setBot(null);
                 return;
             }
-            if (lookingAt.type != objectType.PlayerAgent)
+            if (lookingAt.type != objectType.PlayerAgent || lookingAt.type == objectType.None)
                 return;
             PlayerAgent agent = lookingAt.gobject.GetComponent<PlayerAgent>();
             if (!agent.Owner.IsBot)
