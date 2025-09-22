@@ -5,6 +5,7 @@ using Player;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using ZombieTweak2.zMenu;
 using ZombieTweak2.zNetworking;
 using Zombified_Initiative;
@@ -263,7 +264,6 @@ namespace ZombieTweak2
             }
             return false;
         }
-
         public static void ToggleResourceSharePermission(uint itemID)
         {
             if (!enabledResourceShares.ContainsKey(itemID))
@@ -424,6 +424,27 @@ namespace ZombieTweak2
                 SetPickupPermission(bot.Key,!majority);
             }
         }
+        public static void RemoveActionsOfType(PlayerAgent agent, Type actionType)
+        {
+            //todo add more variants of this method with different arguments
+            if (!typeof(PlayerBotActionBase).IsAssignableFrom(actionType))
+                return;
+            if (!agent.Owner.IsBot)
+                return;
+            List<PlayerBotActionBase> actionsToRemove = new List<PlayerBotActionBase>();
+            PlayerAIBot aiBot = agent.gameObject.GetComponent<PlayerAIBot>();
+            foreach (var action in aiBot.Actions)
+            {
+                if (action.GetIl2CppType().Name == actionType.Name)
+                {
+                    actionsToRemove.Add(action);
+                }
+            }
+            foreach (var action in actionsToRemove)
+            {
+                aiBot.StopAction(action.DescBase);
+            }
+        }
         public static void SetSharePermission(int playerID, bool allowed, ulong netSender = 0)
         {
             if (!SharePerms.ContainsKey(playerID))
@@ -440,6 +461,9 @@ namespace ZombieTweak2
             }
             ZiMain.log.LogMessage($"Setting share perm for id {playerID} to {allowed}");
             SharePerms[playerID] = allowed;
+            PlayerManager.TryGetPlayerAgent(ref playerID, out var agent);
+            if (agent != null)
+                RemoveActionsOfType(agent, typeof(PlayerBotActionShareResourcePack));
         }
         public static void SetPickupPermission(int playerID, bool allowed, ulong netSender = 0)
         {
@@ -457,6 +481,9 @@ namespace ZombieTweak2
             }
             ZiMain.log.LogMessage($"Setting pickup perm for id {playerID} to {allowed}");
             PickUpPerms[playerID] = allowed;
+            PlayerManager.TryGetPlayerAgent(ref playerID, out var agent);
+            if (agent != null)
+                RemoveActionsOfType(agent, typeof(PlayerBotActionCollectItem));
         }
         public static void SetPickupPermission(PlayerAIBot bot, bool allowed)
         {
