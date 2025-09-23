@@ -170,6 +170,7 @@ namespace Zombified_Initiative
                     }
                 case objectType.PlayerAgent:
                     {
+                        //todo refactor this to be more consistant and easy to read
                         ZiMain.log.LogInfo($"Looking at new agent {lookingAt.gobject.name}");
                         GameObject selectedBotObject = selection.getBotGobject();
                         PlayerAgent receiver = lookingAt.gobject.GetComponent<PlayerAgent>();
@@ -180,16 +181,19 @@ namespace Zombified_Initiative
                 case objectType.EnemyAgent:
                     {
                         ZiMain.log.LogInfo($"Looking at new enemy {lookingAt.gobject.name}");
-                        PlayerAgent bot = selection.getBotGobject().GetComponent<PlayerAgent>();
+                        GameObject selectedBotObject = selection.getBotGobject();
+                        PlayerAgent bot = selectedBotObject.GetComponent<PlayerAgent>();
+                        PlayerAIBot aiBot = selectedBotObject.GetComponent<PlayerAIBot>();
                         ZiMain.sendChatMessage("Attacking enemy", bot, localPlayer);
-                        ZiMain.SendBotToKillEnemyOld(bot.PlayerName, lookingAt.gobject.GetComponent<EnemyAgent>());
+                        ZiMain.SendBotToKillEnemy(aiBot, lookingAt.gobject.GetComponent<EnemyAgent>(),localPlayer);
                         break;
                     }
                 case objectType.Item:
                     {
                         ZiMain.log.LogInfo($"Looking at new item {lookingAt.gobject.name}");
-                        PlayerAgent agent = selection.getBotGobject().GetComponent<PlayerAgent>();
-                        PlayerAIBot aiBot = selection.getBotGobject().GetComponent<PlayerAIBot>();
+                        GameObject selectedBotObject = selection.getBotGobject();
+                        PlayerAgent agent = selectedBotObject.GetComponent<PlayerAgent>();
+                        PlayerAIBot aiBot = selectedBotObject.GetComponent<PlayerAIBot>();
                         ItemInLevel pickup = lookingAt.gobject.GetComponent<ItemInLevel>();
                         ZiMain.SendBotToPickupItem(aiBot, pickup,localPlayer);
                         break;

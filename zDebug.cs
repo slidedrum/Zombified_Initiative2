@@ -2,6 +2,7 @@
 using GameData;
 using LevelGeneration;
 using Player;
+using System;
 using System.Linq;
 using UnityEngine;
 using ZombieTweak2.zMenu;
@@ -42,6 +43,74 @@ namespace ZombieTweak2
 
             debugSphere.transform.position = position;
             debugSphere.transform.localScale = Vector3.one * (radius * 2f); // scale to match search radius
+        }
+        private static void printallbotactionpriorities()
+        {
+            var allAgents = PlayerManager.PlayerAgentsInLevel;
+            foreach (var agent in allAgents)
+            {
+                if (!agent.Owner.IsBot)
+                    continue;
+
+                var aiBot = agent.gameObject.GetComponent<PlayerAIBot>();
+                if (aiBot == null)
+                    continue;
+
+                ZiMain.log.LogInfo(agent.PlayerName);
+
+                var rootAction = aiBot.Actions[0].Cast<RootPlayerBotAction>(); ;
+                if (rootAction == null)
+                    continue;
+
+                Type currentType = rootAction.GetType();
+
+                // Walk up the inheritance chain to get all fields and properties
+                while (currentType != null && currentType != typeof(object))
+                {
+                    // Fields
+                    var fields = currentType.GetFields(
+                        System.Reflection.BindingFlags.Public |
+                        System.Reflection.BindingFlags.NonPublic |
+                        System.Reflection.BindingFlags.Instance |
+                        System.Reflection.BindingFlags.DeclaredOnly);
+
+                    foreach (var field in fields)
+                    {
+                        if (typeof(PlayerBotActionBase.Descriptor).IsAssignableFrom(field.FieldType))
+                        {
+                            var descriptor = field.GetValue(rootAction) as PlayerBotActionBase.Descriptor;
+                            if (descriptor != null)
+                                ZiMain.log.LogInfo($"\t - {field.Name}: {descriptor.Prio}");
+                        }
+                    }
+
+                    // Properties
+                    var properties = currentType.GetProperties(
+                        System.Reflection.BindingFlags.Public |
+                        System.Reflection.BindingFlags.NonPublic |
+                        System.Reflection.BindingFlags.Instance |
+                        System.Reflection.BindingFlags.DeclaredOnly);
+
+                    foreach (var prop in properties)
+                    {
+                        if (typeof(PlayerBotActionBase.Descriptor).IsAssignableFrom(prop.PropertyType))
+                        {
+                            try
+                            {
+                                var descriptor = prop.GetValue(rootAction, null) as PlayerBotActionBase.Descriptor;
+                                if (descriptor != null)
+                                    ZiMain.log.LogInfo($"\t - {prop.Name}: {descriptor.Prio}");
+                            }
+                            catch
+                            {
+                                // Some IL2CPP properties may throw when accessed via reflection
+                            }
+                        }
+                    }
+
+                    currentType = currentType.BaseType;
+                }
+            }
         }
         private static void printAllNames()
         {

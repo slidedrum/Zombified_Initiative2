@@ -70,7 +70,6 @@ namespace ZombieTweak2.zNetworking
             }
             return botSelection;
         }
-        [Obsolete]
         internal static void reciveTogglePickupPermission(ulong sender, pStructs.pBotSelections info)
         {
             ZiMain.log.LogInfo($"Recived toggle perm wiht pbotsends {info.data}");

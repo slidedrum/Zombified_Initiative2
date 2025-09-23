@@ -6,11 +6,13 @@ using Enemies;
 using GTFO.API;
 using HarmonyLib;
 using Il2CppInterop.Runtime.Injection;
+using Il2CppSystem.Security.Cryptography;
 using LevelGeneration;
 using Player;
 using SNetwork;
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 using ZombieTweak2;
 using ZombieTweak2.zMenu;
@@ -32,6 +34,7 @@ using static ZombieTweak2.zNetworking.pStructs;
  -- TODO -- DONE -- Menu breaks when loading checkpoint
  -- TODO -- DONE -- Add support for carrying items like turbines
  -- TODO -- DONE -- When blocking actions (resource pickup/share/etc) chaeck if any existing actions exist, and cancel them instantly.
+ -- TODO -- DONE -- Make bots call out with voicelines when you quick select them.
  -- TODO -- Investigate if using playerslotindex as an ID is problematic when number of bots changes.  Swtich to some other ID if needed.
  -- TOOD -- When sharing resources, if someone else is already giving the target the same item, don't double up.
  -- TODO -- Replace selected bots system with global settings, and then bot spesific overides.
@@ -91,7 +94,7 @@ using static ZombieTweak2.zNetworking.pStructs;
  -- TODO -- make fulltextpart position perfectly match on submenus even when line len of title/subtitle doesn't match.
  -- TODO -- handle bots spamming chat with the same message over and over (usually failed to do thing)
  -- TODO -- Make bots ping items they find even if they don't pick them up.
- -- TODO -- Do this https://discord.com/channels/782438773690597389/783918553626836992/1311512608263901267
+
 
 share with placed turrets
 
@@ -134,7 +137,7 @@ public class ZiMain : BasePlugin
 
     public static float _manualActionsHaste = 1f;
     public static float _manualActionsPriority = 5f;
-    public static List<PlayerBotActionBase> manualActions = new();
+    public static List<PlayerBotActionBase.Descriptor> manualActions = new();
 
     public static bool HasBetterBots { get; private set; }
 
@@ -228,38 +231,36 @@ public class ZiMain : BasePlugin
     {
 
     }
-    public static bool isManualAction(PlayerBotActionBase action)
+    public static bool isManualAction(PlayerBotActionBase.Descriptor descriptor)
     {
         //TODO add external list of manual actions.  be sure to clean it when actions are terminated.
-        string typeName = action.GetIl2CppType().Name;
-        float haste = 0f;
-        float prio = 0f;
-        if (typeName == "PlayerBotActionCollectItem")
+        foreach (var desc in manualActions)
         {
-            var descriptor = action.DescBase.Cast<PlayerBotActionCollectItem.Descriptor>();
-            haste = descriptor.Haste;
-            prio = descriptor.Prio;
+            if (desc.Pointer == descriptor.Pointer)
+                return true;
         }
-        else if (typeName == "PlayerBotActionShareResourcePack")
-        {
-            var descriptor = action.DescBase.Cast<PlayerBotActionShareResourcePack.Descriptor>();
-            haste = descriptor.Haste;
-            prio = descriptor.Prio;
-        }
-        else if (typeName == "PlayerBotActionAttack")
-        {
-            var descriptor = action.DescBase.Cast<PlayerBotActionAttack.Descriptor>();
-            haste = descriptor.Haste;
-            prio = descriptor.Prio;
-        }
-        if (haste == _manualActionsHaste && prio == _manualActionsPriority) return true;
         return false;
     }
+
 
     public static void onActionRemoved(PlayerAIBot bot , PlayerBotActionBase action)
     { //TODO - Use a string builder
         string typeName = action.GetIl2CppType().Name;
-        bool manualAction = isManualAction(action);
+        bool manualAction = isManualAction(action.DescBase);
+        if (manualAction)
+        {
+            PlayerBotActionBase.Descriptor actionToRemove = null;
+            foreach (var desc in manualActions)
+            {
+                if (desc.Pointer == action.DescBase.Pointer)
+                {
+                    actionToRemove = desc;
+                    break;
+                }
+            }
+            if (actionToRemove != null)
+                manualActions.Remove(actionToRemove);
+        }
         if (typeName == "PlayerBotActionCarryExpeditionItem")
         {
             //This actually triggers when they drop the item.
@@ -330,6 +331,13 @@ public class ZiMain : BasePlugin
             else
                 sendChatMessage($"I can't give {receverOrMyslef} {article} {descriptor.Item.PublicName} ({ammoLeft}%) status {action.DescBase.Status}.", bot.Agent);
         }
+        else if (typeName == "PlayerBotActionAttack")
+        {
+            if (manualAction)
+            {
+                bot.Actions[0].Cast<RootPlayerBotAction>().m_followLeaderAction.Prio = 14;
+            }
+        }
     }
     public static void slowUpdate()
     {
@@ -339,14 +347,6 @@ public class ZiMain : BasePlugin
     {
         PlayerChatManager.WantToSentTextMessage(sender != null ? sender : PlayerManager.GetLocalPlayerAgent(), message, receiver);
     }
-    [Obsolete]
-
-    public static void attackMonster(string bot, EnemyAgent monster)
-    {
-        log.LogInfo($"bot " + bot + " attack");
-        SendBotToKillEnemyOld(bot, monster, PlayerBotActionAttack.StanceEnum.All, PlayerBotActionAttack.AttackMeansEnum.All, PlayerBotActionWalk.Descriptor.PostureEnum.Stand);
-    }
-
     public static List<PlayerAIBot> GetBotList()
     {
         //TODO this is bad there's got to be a better way.  Though it's pretty cheap regardless.
@@ -362,9 +362,25 @@ public class ZiMain : BasePlugin
         }
         return playerAiBots;
     }
-    public static void SendBotTokillEnemy(PlayerAIBot bot, Agent enemy, PlayerBotActionAttack.StanceEnum stance = PlayerBotActionAttack.StanceEnum.All, PlayerBotActionAttack.AttackMeansEnum means = PlayerBotActionAttack.AttackMeansEnum.All, PlayerBotActionWalk.Descriptor.PostureEnum posture = PlayerBotActionWalk.Descriptor.PostureEnum.Stand, PlayerAgent commander = null)
+    public static float attackPrio = 5f;
+    public static float attackHaste = 0.1f;
+    public static void SendBotToKillEnemy(PlayerAIBot aiBot, Agent enemy, PlayerAgent commander = null, PlayerBotActionAttack.StanceEnum stance = PlayerBotActionAttack.StanceEnum.Avoid, PlayerBotActionAttack.AttackMeansEnum means = PlayerBotActionAttack.AttackMeansEnum.Melee, PlayerBotActionWalk.Descriptor.PostureEnum posture = PlayerBotActionWalk.Descriptor.PostureEnum.Crouch)
     {
-
+        var descriptor = new PlayerBotActionAttack.Descriptor(aiBot)
+        {
+            Stance = stance,
+            Means = means,
+            Posture = posture,
+            TargetAgent = enemy,
+            Prio = attackPrio,
+            Haste = attackHaste,
+        };
+        aiBot.Actions[0].Cast<RootPlayerBotAction>().m_followLeaderAction.Prio = attackPrio - 1;
+        manualActions.Add(descriptor);
+        sendChatMessage($"Killing the {enemy.name}.", aiBot.Agent, commander);
+        //TODO figure out how to make them slow walk instead of sprint.
+        PlayerVoiceManager.WantToSay(aiBot.Agent.CharacterID, AK.EVENTS.PLAY_CL_WILLDO);
+        aiBot.StartAction(descriptor);
     }
     public static Item TryGetItemInLevelFromItemData(pItemData itemData)
     {
@@ -427,6 +443,7 @@ public class ZiMain : BasePlugin
         };
         sendChatMessage($"Carrying {item._PublicName_k__BackingField}", aiBot.Agent, commander);
         PlayerVoiceManager.WantToSay(aiBot.Agent.CharacterID, AK.EVENTS.PLAY_CL_WILLDO); //will do
+        manualActions.Add(desc);
         aiBot.StartAction(desc);
     }
     public static void SendBotToPickupItem(PlayerAIBot aiBot, ItemInLevel item, PlayerAgent commander = null, ulong netsender = 0)
@@ -468,6 +485,7 @@ public class ZiMain : BasePlugin
         FlexibleMethodDefinition barkback = new FlexibleMethodDefinition(PlayerVoiceManager.WantToSay, [aiBot.Agent.CharacterID, AK.EVENTS.PLAY_CL_WILLDO]);
         zUpdater.InvokeStatic(barkback, 1f);
         sendChatMessage($"Picking up {item.PublicName}",aiBot.Agent,commander);
+        manualActions.Add(desc);
         aiBot.StartAction(desc);
     }
     public static void SendBotToShareResourcePack(PlayerAIBot aiBot, PlayerAgent receiver, PlayerAgent commander = null, ulong netsender = 0)
@@ -508,53 +526,8 @@ public class ZiMain : BasePlugin
         aiBot.StartAction(desc);
     }
 
-    [Obsolete]
-    public static void SendBotToKillEnemyOld(String chosenBot, Agent enemy, PlayerBotActionAttack.StanceEnum stance = PlayerBotActionAttack.StanceEnum.All, PlayerBotActionAttack.AttackMeansEnum means = PlayerBotActionAttack.AttackMeansEnum.All, PlayerBotActionWalk.Descriptor.PostureEnum posture = PlayerBotActionWalk.Descriptor.PostureEnum.Stand)
-    { //TODO - might change chosen bot to be a PlayerAiBot instead of a string.
-      // - otherwise looks fine?
-        var bot = ZiMain.BotTable[chosenBot];
-        if (bot == null)
-            return;
 
-        ExecuteBotActionOld(bot, new PlayerBotActionAttack.Descriptor(bot)
-        {
-            Stance = stance,
-            Means = means,
-            Posture = posture,
-            TargetAgent = enemy,
-            Prio = _manualActionsPriority,
-            Haste = _manualActionsHaste,
-        },
-            "Added kill enemy action to " + bot.Agent.PlayerName, 0, bot.m_playerAgent.PlayerSlotIndex, 0, 0, enemy.m_replicator.Key + 1);
-    }
     
-    [Obsolete]
-    public static void attackMyTarget(string bot, bool everyone = false)
-    {
-        var monster = zSearch.GetMonsterUnderPlayerAim();
-        if (monster == null) return;
-        if (everyone)
-        {
-            log.LogInfo("all bots attack");
-            foreach (var iBot in ZiMain.BotTable.Keys)
-            {
-                attackMonster(iBot, monster);
-            }
-        }
-        else
-        {
-            attackMonster(bot, monster);
-        }
-    }
-    [Obsolete]
-    public static void ExecuteBotActionOld(PlayerAIBot bot, PlayerBotActionBase.Descriptor descriptor, string message, int func, int slot, int itemtype, int itemserial, int agentid)
-    { //TODO refactor all NetworkAPI usage -- DONE
-        if (SNet.IsMaster)
-        {
-            bot.StartAction(descriptor);
-            log.LogInfo(message);
-        }
-        if (!SNet.IsMaster) NetworkAPI.InvokeEvent<ZiMain.ZINetInfo>("ZINetInfo", new ZiMain.ZINetInfo(func, slot, itemtype, itemserial, agentid));
-    }
+
 
 } // plugin

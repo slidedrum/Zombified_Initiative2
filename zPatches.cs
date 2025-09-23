@@ -396,6 +396,7 @@ public class ZombifiedPatches
         string move = $"Sentry: <color=#FFA50066>{!allowedMove}</color>";
         __instance.m_extraInfo = original + "<color=#CCCCCC66><size=70%>\n" + pickups + "\n" + share + "\n" + move + "</size></color>";
     }
+
     [HarmonyPatch(typeof(PlayerBotActionBase), nameof(PlayerBotActionBase.CheckCollision))]
     [HarmonyPostfix]
     public static void CheckCollisionPatch(PlayerBotActionBase __instance, PlayerBotActionBase.Descriptor desc, bool __result)
