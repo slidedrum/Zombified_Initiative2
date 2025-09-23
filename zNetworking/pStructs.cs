@@ -108,7 +108,12 @@ namespace ZombieTweak2.zNetworking
             public uint id;
             public int threshold;
         }
-
+        public struct pAttackEnemyInfo
+        {
+            public pEnemyAgent enemy;
+            public pPlayerAgent aiBot;
+            public pPlayerAgent commander;
+        }
         internal struct pPickupItemInfo
         {
             public pItemData item;

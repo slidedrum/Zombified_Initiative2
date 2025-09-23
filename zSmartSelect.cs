@@ -184,7 +184,6 @@ namespace Zombified_Initiative
                         GameObject selectedBotObject = selection.getBotGobject();
                         PlayerAgent bot = selectedBotObject.GetComponent<PlayerAgent>();
                         PlayerAIBot aiBot = selectedBotObject.GetComponent<PlayerAIBot>();
-                        ZiMain.sendChatMessage("Attacking enemy", bot, localPlayer);
                         ZiMain.SendBotToKillEnemy(aiBot, lookingAt.gobject.GetComponent<EnemyAgent>(),localPlayer);
                         break;
                     }

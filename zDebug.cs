@@ -1,4 +1,5 @@
 ﻿using Agents;
+using Enemies;
 using GameData;
 using LevelGeneration;
 using Player;
@@ -367,6 +368,14 @@ namespace ZombieTweak2
             info.receiver = pStructs.Get_pStructFromRefrence(receiver);
             info.commander = pStructs.Get_pStructFromRefrence(PlayerManager.GetLocalPlayerAgent());
             zNetworking.zNetworking.ReciveRequestToShareResource(netSender, info);
+        }
+        private static void TestReciveRequestSendBotToKillEnemyNetwork(ulong netSender, PlayerAgent aiBot, EnemyAgent enemy)
+        {
+            pStructs.pAttackEnemyInfo info = new pStructs.pAttackEnemyInfo();
+            info.aiBot = pStructs.Get_pStructFromRefrence(aiBot);
+            info.enemy = pStructs.Get_pStructFromRefrence(enemy);
+            info.commander = pStructs.Get_pStructFromRefrence(PlayerManager.GetLocalPlayerAgent());
+            zNetworking.zNetworking.ReciveRequestToKillEnemy(netSender, info);
         }
     }
 }

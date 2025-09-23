@@ -2,11 +2,13 @@
 using BepInEx;
 using BepInEx.Logging;
 using BepInEx.Unity.IL2CPP;
+using Dissonance.Networking.Client;
 using Enemies;
 using FluffyUnderware.DevTools;
 using GTFO.API;
 using HarmonyLib;
 using Il2CppInterop.Runtime.Injection;
+using Il2CppSystem.Reflection;
 using Il2CppSystem.Security.Cryptography;
 using LevelGeneration;
 using Player;
@@ -96,6 +98,7 @@ using static ZombieTweak2.zNetworking.pStructs;
  -- TODO -- make fulltextpart position perfectly match on submenus even when line len of title/subtitle doesn't match.
  -- TODO -- handle bots spamming chat with the same message over and over (usually failed to do thing)
  -- TODO -- Make bots ping items they find even if they don't pick them up.
+ -- TODO -- Make chances for bots waking sleepers when attempting to kill them configurable
 
 
 share with placed turrets
@@ -159,6 +162,8 @@ public class ZiMain : BasePlugin
         NetworkAPI.RegisterEvent<pPickupPermission>         ("SetPickupPermission",             zNetworking.ReciveSetPickupPermission);
         NetworkAPI.RegisterEvent<pPickupItemInfo>           ("RequestToPickupItem",             zNetworking.ReciveRequestToPickupItem);
         NetworkAPI.RegisterEvent<pShareResourceInfo>        ("RequestToShareResourcePack",      zNetworking.ReciveRequestToShareResource);
+        NetworkAPI.RegisterEvent<pAttackEnemyInfo>          ("RequestToKillEnemy",              zNetworking.ReciveRequestToKillEnemy);
+
         //EventAPI.OnExpeditionStarted += ZombieController.Initialize;
         log = Log;
         zActionSub.addOnRemoved((Action<PlayerAIBot, PlayerBotActionBase>)onActionRemoved);
@@ -306,7 +311,7 @@ public class ZiMain : BasePlugin
                 PlayerBotActionAttack.Descriptor attackAction = null;
                 foreach (var mAction in manualActions)
                 {
-                    var type = mAction.GetIl2CppType(); // e.g., Descriptor
+                    var type = mAction.GetIl2CppType();
                     string name = type.DeclaringType != null ? type.DeclaringType.Name : type.Name;
 
                     if (name.Contains("PlayerBotActionAttack"))
@@ -368,8 +373,20 @@ public class ZiMain : BasePlugin
     }
     public static float attackPrio = 5f;
     public static float attackHaste = 0.5f;
-    public static void SendBotToKillEnemy(PlayerAIBot aiBot, Agent enemy, PlayerAgent commander = null, PlayerBotActionAttack.StanceEnum stance = PlayerBotActionAttack.StanceEnum.All, PlayerBotActionAttack.AttackMeansEnum means = PlayerBotActionAttack.AttackMeansEnum.Melee, PlayerBotActionWalk.Descriptor.PostureEnum posture = PlayerBotActionWalk.Descriptor.PostureEnum.Crouch)
+    public static void SendBotToKillEnemy(PlayerAIBot aiBot, EnemyAgent enemy, PlayerAgent commander = null, ulong netsender = 0, PlayerBotActionAttack.StanceEnum stance = PlayerBotActionAttack.StanceEnum.All, PlayerBotActionAttack.AttackMeansEnum means = PlayerBotActionAttack.AttackMeansEnum.Melee, PlayerBotActionWalk.Descriptor.PostureEnum posture = PlayerBotActionWalk.Descriptor.PostureEnum.Crouch)
     {
+        if (!SNet.IsMaster) //Are we a client?
+        {
+            if (netsender != 0) //Is this request coming from a different client?
+                return;
+            //request host
+            pAttackEnemyInfo info = new pAttackEnemyInfo();
+            info.enemy = pStructs.Get_pStructFromRefrence(enemy);
+            info.aiBot = pStructs.Get_pStructFromRefrence(aiBot.Agent);
+            info.commander = pStructs.Get_pStructFromRefrence(commander); //This might be a problem in commander is null?  Not sure. TODO look into it.
+            NetworkAPI.InvokeEvent<pAttackEnemyInfo>("RequestToKillEnemy", info);
+            return;
+        }
         var descriptor = new PlayerBotActionAttack.Descriptor(aiBot)
         {
             Stance = stance,
@@ -382,7 +399,7 @@ public class ZiMain : BasePlugin
         aiBot.Actions[0].Cast<RootPlayerBotAction>().m_followLeaderAction.Prio = attackPrio - 1;
         manualActions.Add(descriptor);
         sendChatMessage($"Killing the {enemy.name}.", aiBot.Agent, commander);
-        //TODO figure out how to make them slow walk instead of sprint.
+        //TODO figure out how to make them crouch instead of stand.
         PlayerVoiceManager.WantToSay(aiBot.Agent.CharacterID, AK.EVENTS.PLAY_CL_WILLDO);
         aiBot.StartAction(descriptor);
     }

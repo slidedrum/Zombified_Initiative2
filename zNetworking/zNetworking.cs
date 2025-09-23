@@ -1,4 +1,5 @@
-﻿using LevelGeneration;
+﻿using Enemies;
+using LevelGeneration;
 using Player;
 using SNetwork;
 using System;
@@ -209,6 +210,30 @@ namespace ZombieTweak2.zNetworking
             }
             PlayerAIBot aiBot = sender.gameObject.GetComponent<PlayerAIBot>();
             ZiMain.SendBotToShareResourcePack(aiBot, receiver, commander, netSender);
+        }
+
+        internal static void ReciveRequestToKillEnemy(ulong netSender, pStructs.pAttackEnemyInfo info)
+        {
+            ZiMain.log.LogInfo("Recived request to kill enemy!");
+            if (!SNet.IsMaster)
+                return;
+            PlayerAgent aiBotAgent = pStructs.Get_RefFrom_pStruct(info.aiBot);
+            PlayerAgent commander = pStructs.Get_RefFrom_pStruct(info.commander);
+            EnemyAgent enemy = pStructs.Get_RefFrom_pStruct(info.enemy);
+
+            if (aiBotAgent == null || enemy == null || commander == null)
+            {
+                ZiMain.log.LogError("Invalid request to share resource: aiBot, reciver or enemy is null.");
+                return;
+            }
+            ZiMain.log.LogInfo($"{commander.PlayerName} wants to tell {aiBotAgent.PlayerName} to kill an enemy.");
+            if (!aiBotAgent.Owner.IsBot)
+            {
+                ZiMain.log.LogWarning("Invalid request to pickup item, You can't tell a player what to do.");
+                return;
+            }
+            PlayerAIBot aiBot = aiBotAgent.gameObject.GetComponent<PlayerAIBot>();
+            ZiMain.SendBotToKillEnemy(aiBot, enemy, commander, netSender);
         }
     }
 }
