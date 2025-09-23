@@ -1,4 +1,5 @@
 ﻿using BetterBots.Components;
+using Enemies;
 using GameData;
 using Gear;
 using HarmonyLib;
@@ -10,7 +11,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.UIElements;
 using ZombieTweak2;
+using static Player.PlayerBotActionAttack;
 using static Zombified_Initiative.ZiMain;
 
 namespace Zombified_Initiative;
@@ -434,7 +437,9 @@ public class ZombifiedPatches
                 ZiMain.log.LogWarning($"Action collision! botName={botName}, instanceType={instanceType}, actionType={actionType}");
         }
     }
+    public static Dictionary<int, float> lastTimeCheckedForWakeUp = new();
 
+    public static int wakeChancePerSecond = 60;
     [HarmonyPatch(typeof(PlayerBotActionMelee), nameof(PlayerBotActionMelee.UpdateTravelAction))]
     [HarmonyPrefix]
     public static bool UpdateTravelAction(PlayerBotActionMelee __instance)
@@ -453,7 +458,6 @@ public class ZombifiedPatches
             }
             return false;
         }
-
         GameObject targetObject = null;
 
         // Determine target: either the agent's GameObject or a preset target
@@ -489,12 +493,35 @@ public class ZombifiedPatches
             {
                 __instance.m_travelAction.DestinationObject = targetObject;
                 __instance.m_travelAction.Haste = __instance.m_desc.Haste;
+                var attackAction = __instance.m_bot.Actions[0].Cast<RootPlayerBotAction>().m_attackAction;
+                var attackActionDescriptor = attackAction?.Cast<PlayerBotActionAttack.Descriptor>();
+                if (!attackAction?.IsTerminated() ?? false && attackActionDescriptor != null)
+                {
+                    __instance.m_travelAction.WalkPosture = attackActionDescriptor.Posture;
+                }
                 if (targetObject != null && targetObject.transform != null)
                 {
                     Vector3 pos = targetObject.transform.position;
                     __instance.m_lastTravelToPosition = pos;
                 }
             }
+        }
+        if (targetObject != null && targetObject.transform != null && ZiMain.isManualAction(__instance.m_descBase))
+        {
+            if (!lastTimeCheckedForWakeUp.ContainsKey(__instance.m_bot.GetInstanceID()))
+            {
+                lastTimeCheckedForWakeUp[__instance.m_bot.GetInstanceID()] = Time.time;
+                return false;
+            }
+            if (Time.time - lastTimeCheckedForWakeUp[__instance.m_bot.GetInstanceID()] > 1f)
+            {
+                lastTimeCheckedForWakeUp[__instance.m_bot.GetInstanceID()] = Time.time;
+                if (rng.Next(0, wakeChancePerSecond) == 0)
+                {
+                    ZiMain.wakeUpRoom(__instance.m_bot, targetObject);
+                }
+            }
+
         }
         return false;
     }
@@ -579,6 +606,7 @@ public class ZombifiedPatches
             descriptor.Haste = __instance.m_desc.Haste;
             descriptor.Force = 0.75f;
             descriptor.Strike = strike;
+
 
             // Set target agent and (optionally) target game object
             descriptor.TargetAgent = __instance.m_currentAttackOption.TargetAgent;

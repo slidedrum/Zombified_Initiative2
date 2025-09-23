@@ -3,6 +3,7 @@ using BepInEx;
 using BepInEx.Logging;
 using BepInEx.Unity.IL2CPP;
 using Enemies;
+using FluffyUnderware.DevTools;
 using GTFO.API;
 using HarmonyLib;
 using Il2CppInterop.Runtime.Injection;
@@ -17,6 +18,7 @@ using UnityEngine.SceneManagement;
 using ZombieTweak2;
 using ZombieTweak2.zMenu;
 using ZombieTweak2.zNetworking;
+using static Player.PlayerBotActionAttack;
 using static ZombieTweak2.zNetworking.pStructs;
 
 /*
@@ -138,52 +140,8 @@ public class ZiMain : BasePlugin
     public static float _manualActionsHaste = 1f;
     public static float _manualActionsPriority = 5f;
     public static List<PlayerBotActionBase.Descriptor> manualActions = new();
-
+    public static System.Random rng = new System.Random();
     public static bool HasBetterBots { get; private set; }
-
-    [Obsolete]
-    public struct ZINetInfo
-    {
-
-        // funktio assign target 0
-        // funktio unassign target 1
-        // funktio assignaim 2
-        // funktio unassignaim 3
-        // funktio fireguns 4
-        public static string NetworkIdentity { get => nameof(ZINetInfo); }
-        public int FUNC;
-        public int SLOT;
-        public int ITEMTYPE;
-        public int ITEMSERIAL;
-        public int AGENTID;
-
-        public ZINetInfo(int func, int slot, int itemtype, int itemserial, int agentid) : this()
-        {
-            FUNC = func; SLOT = slot; ITEMTYPE = itemtype; ITEMSERIAL = itemserial;  AGENTID = agentid; 
-            log.LogInfo($"sent a package {func} - {slot} - {itemtype} - {itemserial} - {agentid}");
-        }
-    }
-    [Obsolete]
-    public struct ZIInfo
-    {
-        public int FUNC;
-        public int SLOT;
-        public int ITEMTYPE;
-        public int ITEMSERIAL;
-        public int AGENTID;
-        public ZIInfo(int func, int slot, int itemtype, int itemserial, int agentid) : this()
-        {
-            FUNC = func; SLOT = slot; ITEMTYPE = itemtype; ITEMSERIAL = itemserial; AGENTID = agentid;
-        }
-        public ZIInfo(ZINetInfo network) : this()
-        {
-            FUNC = network.FUNC;
-            SLOT = network.SLOT;
-            ITEMTYPE = network.ITEMTYPE;
-            ITEMSERIAL = network.ITEMSERIAL;
-            AGENTID = network.AGENTID;
-        }
-    }
 
     public override void Load()
     {
@@ -233,12 +191,22 @@ public class ZiMain : BasePlugin
     }
     public static bool isManualAction(PlayerBotActionBase.Descriptor descriptor)
     {
-        //TODO add external list of manual actions.  be sure to clean it when actions are terminated.
+        if (descriptor == null) return false;
+        if (manualActions == null) return false;
+
         foreach (var desc in manualActions)
         {
+            if (desc == null) continue; // just in case
+
             if (desc.Pointer == descriptor.Pointer)
                 return true;
         }
+
+        if (descriptor.ParentActionBase != null)
+        {
+            return isManualAction(descriptor.ParentActionBase.DescBase);
+        }
+
         return false;
     }
 
@@ -331,6 +299,34 @@ public class ZiMain : BasePlugin
             else
                 sendChatMessage($"I can't give {receverOrMyslef} {article} {descriptor.Item.PublicName} ({ammoLeft}%) status {action.DescBase.Status}.", bot.Agent);
         }
+        else if (typeName == "PlayerBotActionTravel")
+        {
+            if (manualAction)
+            {
+                PlayerBotActionAttack.Descriptor attackAction = null;
+                foreach (var mAction in manualActions)
+                {
+                    var type = mAction.GetIl2CppType(); // e.g., Descriptor
+                    string name = type.DeclaringType != null ? type.DeclaringType.Name : type.Name;
+
+                    if (name.Contains("PlayerBotActionAttack"))
+                    {
+                        attackAction = mAction.Cast<PlayerBotActionAttack.Descriptor>();
+                        break;
+                    }
+                }
+                if (attackAction != null && !attackAction.IsTerminated())
+                {
+                    if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Successful)
+                    {
+                        if (rng.Next(0, 20) == 0)
+                        {
+                            wakeUpRoom(bot, attackAction.TargetAgent.gameObject);
+                        }
+                    }
+                }
+            }
+        }
         else if (typeName == "PlayerBotActionAttack")
         {
             if (manualAction)
@@ -338,6 +334,14 @@ public class ZiMain : BasePlugin
                 bot.Actions[0].Cast<RootPlayerBotAction>().m_followLeaderAction.Prio = 14;
             }
         }
+    }
+    public static void wakeUpRoom(PlayerAIBot aiBot, GameObject enemyGo)
+    {
+        var locomotionTarget = enemyGo.GetComponent<EnemyLocomotion>();
+        var enemy = enemyGo.GetComponent<EnemyAgent>();
+        locomotionTarget.ChangeState(ES_StateEnum.HibernateWakeUp); //Somehow this can cause an unkillable enemy??
+        enemy.PropagateTargetFull(enemy);
+        SendBotToKillEnemy(aiBot, enemy);
     }
     public static void slowUpdate()
     {
@@ -363,8 +367,8 @@ public class ZiMain : BasePlugin
         return playerAiBots;
     }
     public static float attackPrio = 5f;
-    public static float attackHaste = 0.1f;
-    public static void SendBotToKillEnemy(PlayerAIBot aiBot, Agent enemy, PlayerAgent commander = null, PlayerBotActionAttack.StanceEnum stance = PlayerBotActionAttack.StanceEnum.Avoid, PlayerBotActionAttack.AttackMeansEnum means = PlayerBotActionAttack.AttackMeansEnum.Melee, PlayerBotActionWalk.Descriptor.PostureEnum posture = PlayerBotActionWalk.Descriptor.PostureEnum.Crouch)
+    public static float attackHaste = 0.5f;
+    public static void SendBotToKillEnemy(PlayerAIBot aiBot, Agent enemy, PlayerAgent commander = null, PlayerBotActionAttack.StanceEnum stance = PlayerBotActionAttack.StanceEnum.All, PlayerBotActionAttack.AttackMeansEnum means = PlayerBotActionAttack.AttackMeansEnum.Melee, PlayerBotActionWalk.Descriptor.PostureEnum posture = PlayerBotActionWalk.Descriptor.PostureEnum.Crouch)
     {
         var descriptor = new PlayerBotActionAttack.Descriptor(aiBot)
         {
