@@ -386,7 +386,7 @@ namespace ZombieTweak2
             GameObject observer = PlayerManager.GetLocalPlayerAgent().FPSCamera.gameObject;
             Transform menuTransform = zMenuManager.mainMenu.gameObject.transform;
             GameObject target = zSearch.GetClosestObjectInLookDirection(menuTransform, zSearch.GetGameObjectsWithLookDirection<EnemyAgent>(menuTransform), 180f);
-            VisibilityVisualizer.checkForObject(observer, target);
+            zVisiblityManager2.CheckForObject(observer, target);
         }
     }
 }

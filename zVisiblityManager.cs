@@ -42,8 +42,8 @@ namespace ZombieTweak2
             _tex = new Texture2D(50, 50, TextureFormat.RGB24, false);
 
             // Solid white material for rendering target
-            _solidGreen = new Material(Shader.Find("Unlit/Color"));
-            _solidGreen.color = Color.white;
+            _solidWhite = new Material(Shader.Find("Unlit/Color"));
+            _solidWhite.color = Color.white;
 
             _litWhite = new Material(Shader.Find("Standard"));
             _litWhite.color = Color.white;
@@ -85,7 +85,7 @@ namespace ZombieTweak2
             {
                 Material[] mats = new Material[renderer.materials.Length];
                 for (int i = 0; i < mats.Length; i++)
-                    mats[i] = _solidGreen;
+                    mats[i] = _solidWhite;
                 renderer.materials = mats; // use instance materials
             }
 
