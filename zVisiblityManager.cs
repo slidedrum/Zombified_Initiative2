@@ -14,6 +14,7 @@ namespace ZombieTweak2
         private static RenderTexture _rt;
         private static Texture2D _tex;
         private static Material _solidWhite;
+        private static Material _litWhite; // reacts to lighting
 
         // Quads for visualization
         private static GameObject _fullQuad;
@@ -43,6 +44,11 @@ namespace ZombieTweak2
             // Solid white material for rendering target
             _solidWhite = new Material(Shader.Find("Unlit/Color"));
             _solidWhite.color = Color.white;
+
+            _litWhite = new Material(Shader.Find("Standard"));
+            _litWhite.color = Color.white;
+            _litWhite.SetFloat("_Glossiness", 0f); // optional: remove specular/shininess
+            _litWhite.SetFloat("_Metallic", 0f);   // optional: keep fully diffuse
 
             // Material for quads
             _quadMat = new Material(Shader.Find("Unlit/Texture"));
@@ -130,6 +136,16 @@ namespace ZombieTweak2
             //    renderer.Key.enabled = renderer.Value;
 
             // ---- PASS 2: Target + Environment ----
+
+            // Swap to lit white material for second pass
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                Material[] mats = new Material[renderers[i].materials.Length];
+                for (int j = 0; j < mats.Length; j++)
+                    mats[j] = _litWhite;
+                renderers[i].materials = mats;
+            }
+
             _observerCam.cullingMask = ~0; // everything
             _observerCam.clearFlags = CameraClearFlags.Skybox; // or keep original
             _observerCam.allowHDR = false;
@@ -139,8 +155,7 @@ namespace ZombieTweak2
             visibleTex.ReadPixels(new Rect(0, 0, _rt.width, _rt.height), 0, 0);
             visibleTex.Apply();
 
-            // Apply first pass as mask
-            //ApplyMask(visibleTex, fullTex);
+
 
             int visiblePixels = CountWhitePixels(visibleTex);
 
@@ -153,7 +168,8 @@ namespace ZombieTweak2
             for (int i = 0; i < renderers.Length; i++)
                 renderers[i].materials = oldMats[i];
 
-
+            // Apply first pass as mask
+            ApplyMask(visibleTex, fullTex);
 
             _visibleQuad.gameObject.SetActive(true);
             _fullQuad.gameObject.SetActive(true);
@@ -171,15 +187,15 @@ namespace ZombieTweak2
             fullTex.SetPixels32(pixels);
             fullTex.Apply();
 
-            pixels = visibleTex.GetPixels32();
-            for (int i = 0; i < pixels.Length; i++)
-            {
-                pixels[i].r = (byte)(pixels[i].r * 0.25f);
-                pixels[i].g = (byte)(pixels[i].g * 0.25f);
-                pixels[i].b = (byte)(pixels[i].b * 0.25f);
-            }
-            visibleTex.SetPixels32(pixels);
-            visibleTex.Apply();
+            //pixels = visibleTex.GetPixels32();
+            //for (int i = 0; i < pixels.Length; i++)
+            //{
+            //    pixels[i].r = (byte)(pixels[i].r * 0.25f);
+            //    pixels[i].g = (byte)(pixels[i].g * 0.25f);
+            //    pixels[i].b = (byte)(pixels[i].b * 0.25f);
+            //}
+            //visibleTex.SetPixels32(pixels);
+            //visibleTex.Apply();
 
             // Display quads in front of target (billboard toward observer)
             Vector3 offset = observer.transform.forward * 0.5f; // distance in front of observer
@@ -261,7 +277,7 @@ namespace ZombieTweak2
 
             for (int i = 0; i < visPixels.Length; i++)
             {
-                if (maskPixels[i].r < 200) // if first texture is not white
+                if (maskPixels[i] != Color.white) // if first texture is not white
                     visPixels[i] = Color.black;
             }
 
