@@ -39,12 +39,25 @@ using static ZombieTweak2.zNetworking.pStructs;
  -- TODO -- DONE -- Add support for carrying items like turbines
  -- TODO -- DONE -- When blocking actions (resource pickup/share/etc) chaeck if any existing actions exist, and cancel them instantly.
  -- TODO -- DONE -- Make bots call out with voicelines when you quick select them.
+ -- TODO -- DONE -- want to make "clear room" command
+ -- TODO -- DONE -- want to make custom blacklist pickups
+ -- TODO -- DONE -- want to fix attack not always working
+ -- TODO -- DONE -- want to make attack wake room sometimes
+ -- TOOD -- DONE -- Not perfect. When sharing resources, if someone else is already giving the target the same item, don't double up.  Can still happen, but much less likely.
+ -- TODO -- DONE -- Remake attack my target methods and put it under actions.
+ -- TODO -- DONE -- Investigate what is causing recolor of some menu elements with other mods (Archive essentials?)
+ -- TODO -- DONE -- Investigate what is causing first letter of bot name to mess up with other mods (Arhcive essentials?)
+ -- TODO -- DONE -- Investigate compat with BetterBots.  Seems to break pickup blocking?
+ -- TODO -- DONE -- Clear out and remove PlayConfirmSound hook.
+ -- TODO -- DONE -- Remake SendBotToKillEnemy metho
+ -- TODO -- DONE -- Remove ReceiveZINetInfo completely.
+ -- TODO -- DONE -- Remove zlogger enterly.
+ -- TODO -- DONE -- Add external list of manual actions.  be sure to clean it when actions are terminated.  add them from SendBotTo- methods.
+ -- TODO -- DONE -- When perms removed, remove any current actions that are no longer allowed
+ -- TODO -- PARTIALLY DONE -- Add sounds
  -- TODO -- Investigate if using playerslotindex as an ID is problematic when number of bots changes.  Swtich to some other ID if needed.
- -- TOOD -- When sharing resources, if someone else is already giving the target the same item, don't double up.
  -- TODO -- Replace selected bots system with global settings, and then bot spesific overides.
  -- TODO -- Dynamically remove the bot selection/overide menu when there is only 1 bot.
- -- TODO -- Remove ReceiveZINetInfo completely.
- -- TODO -- Remove zlogger enterly.
  -- TODO -- Refactor FlexibleEvent to use args=[] instead of a new arg.  this lets me have optional args for more functonality.
  -- TODO -- Make system for lerping between to values over time.  Should be arbitrary vars and maybe even support method args somehow.
  -- TODO -- Make "i need health/ammo" quck action overide share permission
@@ -54,29 +67,24 @@ using static ZombieTweak2.zNetworking.pStructs;
  -- TODO -- Move methods arround to other classes that make more sense
  -- TODO -- Handle bots joining/leaving or any other way the bot count can change mid mission.
  -- TODO -- Error when exiting q menu if radial menu is open
- -- TODO -- Unheld selected might have problems.
+ -- TODO -- Unheld selected node event might have problems.
  -- TODO -- Double tap smart select on a bot to have them follow you.
  -- TODO -- Move updateNodeThresholdDisplay and similar to the set methds not as node listeners.
  -- TODO -- Add option to let bots open lockers
  -- TODO -- Add per bot overides for individual share/pickup perms.
- -- TODO -- Add sounds
  -- TODO -- Add options menu with things like default states and key rebinding
  -- TODO -- Add mele only restriction
- -- TODO -- When perms removed, remove any current actions that are no longer allowed
  -- TODO -- Add quick settings part of the menu for things like "auto select followed bots" 
  -- TODO -- Add STFU button
  -- TODO -- Add option for menue's to have seprate x/y scale.
- -- TODO -- Add external list of manual actions.  be sure to clean it when actions are terminated.  add them from SendBotTo- methods.
  -- TODO -- Use a string builder ZiMain.onActionRemoved
  -- TODO -- Move/refactor  GetAgent and getpStruct methods in ZiMain
  -- TODO -- Nullchecks in SendBotToShareResourcePack
- -- TODO -- Clear out and remove PlayConfirmSound hook.
- -- TODO -- Remake SendBotToKillEnemy method
  -- TODO -- Move SetRelativePosition into a listener so it can be disabled.
  -- TODO -- Add option to change menu close angle
  -- TODO -- Make text parts in nodes private and add setters and getters for font stuff.
  -- TODO -- Add menu title and subtitle. Use that for tooltips.
- -- TODO -- Change the way scroll priority works to visual treat 0 prio as red and disabled
+ -- TODO -- Change the way scroll priority works to visualy treat 0 prio as red and disabled
  -- TODO -- Make updateNodePriorityDisplay and similar method's args order consistant
  -- TODO -- Remove the flip/toggle selection nodes, and instead make hold action
  -- TODO -- Add arange node offests and possible different node aragement types
@@ -89,30 +97,20 @@ using static ZombieTweak2.zNetworking.pStructs;
  -- TODO -- Make network packets only send after a 100ms delay, and send the most up to date value 100ms later.
  -- TODO -- Make clients ask host for current value after every settings change to resolve dysync and conflicts.
  -- TODO -- Send inventory sync command when bots run out of resources from a manual action?
- -- TODO -- Investigate what is causing recolor of some menu elements with other mods (Archive essentials?)
- -- TODO -- Investigate what is causing first letter of bot name to mess up with other mods (Arhcive essentials?)
- -- TODO -- Investigate compat with BetterBots.  Seems to break pickup blocking?
  -- TODO -- In smart select, add some leeway for very close objects, maybe inside of 2 units lerp between max angle of given, and 180 at 0 units.
- -- TODO -- Remake attack my target methods and put it under actions.
- -- TODO -- Add alt variants of arrangeNodes
  -- TODO -- make fulltextpart position perfectly match on submenus even when line len of title/subtitle doesn't match.
  -- TODO -- handle bots spamming chat with the same message over and over (usually failed to do thing)
  -- TODO -- Make bots ping items they find even if they don't pick them up.
  -- TODO -- Make chances for bots waking sleepers when attempting to kill them configurable
-
-
-share with placed turrets
-
-
-Something breaks with essensials and better bots
-
+ -- TODO -- Make clear room command handle special enemies differently.
+ -- TODO -- Make clear room command only know about eneimes someone has seen.
+ -- TODO -- share with placed turrets
  -- TODO -- BUG -- When holding a node then look away, when you re-open menu node still highlighted.
 
 Want to make combine resource mod
-want to make custom blacklist pickups - DONE
-want to fix attack not always working
-want to make attack wake room sometimes
-want to make "clear room" command
+
+
+
 want to completely re-write collection logic, not just priority logic
 want to add chat commands for people who don't have the mod.
 want to add new bot actions like hold position, look for resource type (in nearby rooms), ping item (go to term, then run ping command)
