@@ -42,8 +42,8 @@ namespace ZombieTweak2
             _tex = new Texture2D(50, 50, TextureFormat.RGB24, false);
 
             // Solid white material for rendering target
-            _solidWhite = new Material(Shader.Find("Unlit/Color"));
-            _solidWhite.color = Color.white;
+            _solidGreen = new Material(Shader.Find("Unlit/Color"));
+            _solidGreen.color = Color.white;
 
             _litWhite = new Material(Shader.Find("Standard"));
             _litWhite.color = Color.white;
@@ -85,20 +85,9 @@ namespace ZombieTweak2
             {
                 Material[] mats = new Material[renderer.materials.Length];
                 for (int i = 0; i < mats.Length; i++)
-                    mats[i] = _solidWhite;
+                    mats[i] = _solidGreen;
                 renderer.materials = mats; // use instance materials
             }
-
-            //Disable all other renderers except the target temporarily:
-            //Dictionary<Renderer,bool> otherRenderers = new Dictionary<Renderer,bool>();
-            //foreach (Renderer renderer in GameObject.FindObjectsOfType<Renderer>())
-            //{
-            //    if (!renderer.gameObject.transform.IsChildOf(target.transform))
-            //    {
-            //        otherRenderers[renderer] = renderer.enabled;
-            //        renderer.enabled = false;
-            //    }
-            //}
 
             _visibleQuad.gameObject.SetActive(false);
             _fullQuad.gameObject.SetActive(false);
@@ -131,9 +120,6 @@ namespace ZombieTweak2
 
             // Restore original layers
             RestoreOriginalLayers(originalLayers);
-            // Restore renderers
-            //foreach (var renderer in otherRenderers)
-            //    renderer.Key.enabled = renderer.Value;
 
             // ---- PASS 2: Target + Environment ----
 
