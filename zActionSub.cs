@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ZombieTweak2;
+using static RootMotion.FinalIK.IKSolverVR;
 
 namespace Zombified_Initiative
 {
@@ -11,6 +13,7 @@ namespace Zombified_Initiative
         public static List<Action<PlayerAIBot, PlayerBotActionBase>> onAdded = new();
         public static List<Action<PlayerAIBot, PlayerBotActionBase>> onRemoved = new();
         public static Dictionary<int, List<PlayerBotActionBase>> botActionMap = new();
+        public static Dictionary<IntPtr, FlexibleEvent> actionCallbacks = new Dictionary<IntPtr, FlexibleEvent>();
         public static void Update()
         {
             //there's got to be a better way to get all bots.
@@ -64,6 +67,20 @@ namespace Zombified_Initiative
                 action(bot, botAction);
             }
         }
+        public static void addOnTerminated(PlayerBotActionBase.Descriptor descriptor, FlexibleMethodDefinition method)
+        {
+            var newArgs = new object[method.args.Length + 1];
+            method.args.CopyTo(newArgs, 0);
+            newArgs[method.args.Length] = descriptor;
+            method.args = newArgs;
+            if (actionCallbacks.ContainsKey(descriptor.Pointer))
+            {
+                actionCallbacks[descriptor.Pointer].Listen(method);
+                return;
+            }
+            actionCallbacks[descriptor.Pointer] = new FlexibleEvent();
+            actionCallbacks[descriptor.Pointer].Listen(method);
+        }
     }
     public class Il2CppActionComparer : IEqualityComparer<PlayerBotActionBase>
     {
@@ -79,4 +96,5 @@ namespace Zombified_Initiative
             return obj.Pointer.GetHashCode();
         }
     }
+
 }

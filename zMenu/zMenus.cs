@@ -79,6 +79,7 @@ namespace ZombieTweak2.zMenu
             ShareMenuClass.setUpPackNodes(shareDetailsSubmenu);
 
             permissionMenu.AddNode("Move");
+            actionMenu.AddNode("ClearRoom", ZiMain.SendBotToClearCurrentRoom);
         }
         public static zMenu.zMenuNode UpdateIndicatorForNode(zMenu.zMenuNode node, Dictionary<int, bool> selectionPickUpPerms)
         {

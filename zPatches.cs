@@ -24,6 +24,17 @@ public class ZombifiedPatches
     //This file contains all harmony patches.
     //Might split this up later if there gets to be too many of them.
 
+    [HarmonyPatch(typeof(PlayerBotActionBase.Descriptor), nameof(PlayerBotActionBase.Descriptor.InternalOnTerminated))]
+    [HarmonyPostfix]
+    public static void InternalOnTerminated(PlayerBotActionBase.Descriptor __instance)
+    {
+        if (zActionSub.actionCallbacks.ContainsKey(__instance.Pointer))
+        {
+            zActionSub.actionCallbacks[__instance.Pointer].Invoke();
+        }
+    }
+
+
     [HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.UpdateActionShareResoursePack))]
     [HarmonyPrefix]
     public static bool UpdateActionShareResoursePack(RootPlayerBotAction __instance, ref PlayerBotActionBase.Descriptor bestAction)
@@ -439,7 +450,7 @@ public class ZombifiedPatches
     }
     public static Dictionary<int, float> lastTimeCheckedForWakeUp = new();
 
-    public static int wakeChancePerSecond = 60;
+    
     [HarmonyPatch(typeof(PlayerBotActionMelee), nameof(PlayerBotActionMelee.UpdateTravelAction))]
     [HarmonyPrefix]
     public static bool UpdateTravelAction(PlayerBotActionMelee __instance)
@@ -519,6 +530,7 @@ public class ZombifiedPatches
                 if (rng.Next(0, wakeChancePerSecond) == 0)
                 {
                     ZiMain.wakeUpRoom(__instance.m_bot, targetObject);
+                    __instance.DescBase.SetCompletionStatus(PlayerBotActionBase.Descriptor.StatusType.Failed);
                 }
             }
 
@@ -591,6 +603,7 @@ public class ZombifiedPatches
         if (__instance.m_meleeAction == null)
         {
             var descriptor = new PlayerBotActionMelee.Descriptor(__instance.m_bot);
+
             descriptor.ParentActionBase = __instance;
             descriptor.Prio = __instance.m_desc.Prio;
 
@@ -623,8 +636,12 @@ public class ZombifiedPatches
             if (__instance.m_bot != null && __instance.m_bot.RequestAction(descriptor))
             {
                 __instance.m_meleeAction = descriptor;
+                if (ZiMain.isManualAction(descriptor))
+                {
+                    FlexibleMethodDefinition callback = new FlexibleMethodDefinition(CheckForWakeChance, [__instance.m_bot, descriptor.TargetAgent.gameObject]);
+                    zActionSub.addOnTerminated(descriptor, callback);
+                }
             }
-
             return;
         }
 

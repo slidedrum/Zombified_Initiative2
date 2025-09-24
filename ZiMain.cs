@@ -146,6 +146,9 @@ public class ZiMain : BasePlugin
     public static System.Random rng = new System.Random();
     public static bool HasBetterBots { get; private set; }
 
+    public static int approachWakeChance = 5;
+    public static int wakeChancePerSecond = 20;
+
     public override void Load()
     {
         HasBetterBots = IL2CPPChainloader.Instance.Plugins.ContainsKey("com.east.bb");
@@ -304,47 +307,58 @@ public class ZiMain : BasePlugin
             else
                 sendChatMessage($"I can't give {receverOrMyslef} {article} {descriptor.Item.PublicName} ({ammoLeft}%) status {action.DescBase.Status}.", bot.Agent);
         }
-        else if (typeName == "PlayerBotActionTravel")
-        {
-            if (manualAction)
-            {
-                PlayerBotActionAttack.Descriptor attackAction = null;
-                foreach (var mAction in manualActions)
-                {
-                    var type = mAction.GetIl2CppType();
-                    string name = type.DeclaringType != null ? type.DeclaringType.Name : type.Name;
+        //else if (typeName == "PlayerBotActionTravel")
+        //{
+        //    if (manualAction)
+        //    {
+        //        PlayerBotActionAttack.Descriptor attackAction = null;
+        //        foreach (var mAction in manualActions)
+        //        {
+        //            var type = mAction.GetIl2CppType();
+        //            string name = type.DeclaringType != null ? type.DeclaringType.Name : type.Name;
 
-                    if (name.Contains("PlayerBotActionAttack"))
-                    {
-                        attackAction = mAction.Cast<PlayerBotActionAttack.Descriptor>();
-                        break;
-                    }
-                }
-                if (attackAction != null && !attackAction.IsTerminated())
-                {
-                    if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Successful)
-                    {
-                        if (rng.Next(0, 20) == 0)
-                        {
-                            wakeUpRoom(bot, attackAction.TargetAgent.gameObject);
-                        }
-                    }
-                }
-            }
-        }
+        //            if (name.Contains("PlayerBotActionAttack"))
+        //            {
+        //                attackAction = mAction.Cast<PlayerBotActionAttack.Descriptor>();
+        //                break;
+        //            }
+        //        }
+        //        if (attackAction != null && !attackAction.IsTerminated())
+        //        {
+        //            if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Successful)
+        //            {
+        //                if (rng.Next(0, 5) == 0)
+        //                {
+        //                    wakeUpRoom(bot, attackAction.TargetAgent.gameObject);
+        //                    action.DescBase.SetCompletionStatus(PlayerBotActionBase.Descriptor.StatusType.Failed);
+        //                }
+        //            }
+        //        }
+        //    }
+        //}
         else if (typeName == "PlayerBotActionAttack")
         {
             if (manualAction)
             {
-                bot.Actions[0].Cast<RootPlayerBotAction>().m_followLeaderAction.Prio = 14;
+                //TODO make this happen on combat instead.
+                //bot.Actions[0].Cast<RootPlayerBotAction>().m_followLeaderAction.Prio = 14;
             }
         }
+    }
+    
+    public static void CheckForWakeChance(PlayerAIBot aiBot, GameObject enemyGo, PlayerBotActionBase.Descriptor descriptor)
+    {
+        if (enemyGo == null)
+            return;
+        if (rng.Next(0, approachWakeChance) != 0)
+            return;
+        wakeUpRoom(aiBot, enemyGo);
     }
     public static void wakeUpRoom(PlayerAIBot aiBot, GameObject enemyGo)
     {
         var locomotionTarget = enemyGo.GetComponent<EnemyLocomotion>();
         var enemy = enemyGo.GetComponent<EnemyAgent>();
-        locomotionTarget.ChangeState(ES_StateEnum.HibernateWakeUp); //Somehow this can cause an unkillable enemy??
+        //locomotionTarget.ChangeState(ES_StateEnum.HibernateWakeUp); //Somehow this can cause an unkillable enemy??
         enemy.PropagateTargetFull(enemy);
         SendBotToKillEnemy(aiBot, enemy);
     }
@@ -373,19 +387,20 @@ public class ZiMain : BasePlugin
     }
     public static float attackPrio = 5f;
     public static float attackHaste = 0.5f;
-    public static void SendBotToKillEnemy(PlayerAIBot aiBot, EnemyAgent enemy, PlayerAgent commander = null, ulong netsender = 0, PlayerBotActionAttack.StanceEnum stance = PlayerBotActionAttack.StanceEnum.All, PlayerBotActionAttack.AttackMeansEnum means = PlayerBotActionAttack.AttackMeansEnum.Melee, PlayerBotActionWalk.Descriptor.PostureEnum posture = PlayerBotActionWalk.Descriptor.PostureEnum.Crouch)
+    public static PlayerBotActionAttack.Descriptor SendBotToKillEnemy(PlayerAIBot aiBot, EnemyAgent enemy, PlayerAgent commander = null, ulong netsender = 0, PlayerBotActionAttack.StanceEnum stance = PlayerBotActionAttack.StanceEnum.All, PlayerBotActionAttack.AttackMeansEnum means = PlayerBotActionAttack.AttackMeansEnum.Melee, PlayerBotActionWalk.Descriptor.PostureEnum posture = PlayerBotActionWalk.Descriptor.PostureEnum.Crouch)
     {
+
         if (!SNet.IsMaster) //Are we a client?
         {
             if (netsender != 0) //Is this request coming from a different client?
-                return;
+                return null;
             //request host
             pAttackEnemyInfo info = new pAttackEnemyInfo();
             info.enemy = pStructs.Get_pStructFromRefrence(enemy);
             info.aiBot = pStructs.Get_pStructFromRefrence(aiBot.Agent);
             info.commander = pStructs.Get_pStructFromRefrence(commander); //This might be a problem in commander is null?  Not sure. TODO look into it.
             NetworkAPI.InvokeEvent<pAttackEnemyInfo>("RequestToKillEnemy", info);
-            return;
+            return null;
         }
         var descriptor = new PlayerBotActionAttack.Descriptor(aiBot)
         {
@@ -398,10 +413,11 @@ public class ZiMain : BasePlugin
         };
         aiBot.Actions[0].Cast<RootPlayerBotAction>().m_followLeaderAction.Prio = attackPrio - 1;
         manualActions.Add(descriptor);
-        sendChatMessage($"Killing the {enemy.name}.", aiBot.Agent, commander);
+        sendChatMessage($"Killing the {enemy.EnemyData.name}.", aiBot.Agent, commander);
         //TODO figure out how to make them crouch instead of stand.
         PlayerVoiceManager.WantToSay(aiBot.Agent.CharacterID, AK.EVENTS.PLAY_CL_WILLDO);
         aiBot.StartAction(descriptor);
+        return descriptor;
     }
     public static Item TryGetItemInLevelFromItemData(pItemData itemData)
     {
@@ -546,7 +562,57 @@ public class ZiMain : BasePlugin
         PlayerVoiceManager.WantToSay(aiBot.Agent.CharacterID, AK.EVENTS.PLAY_CL_WILLDO);
         aiBot.StartAction(desc);
     }
+    public static void SendBotToClearCurrentRoom(PlayerAIBot aiBot = null, PlayerAgent commander = null, ulong netsender = 0, PlayerBotActionBase.Descriptor arg_descriptor = null)
+    {
+        
+        if (arg_descriptor != null && arg_descriptor.Status != PlayerBotActionBase.Descriptor.StatusType.Successful)
+        {
+            log.LogInfo($"Unsucsefull last kill {arg_descriptor.Status}");
+            return;
+        }
+        if (commander == null)
+            commander = PlayerManager.GetLocalPlayerAgent();
+        var allEnemies = commander.CourseNode.m_enemiesInNode;
+        if (aiBot == null)
+        {
+            PlayerAgent closestBot = null;
+            float closestBotDistnace = float.MaxValue;
+            foreach (var botCandidate in PlayerManager.PlayerAgentsInLevel)
+            {
+                if (!botCandidate.Owner.IsBot)
+                    continue;
+                float distanceToBot = (commander.gameObject.transform.position - botCandidate.gameObject.transform.position).sqrMagnitude;
+                if (distanceToBot < closestBotDistnace)
+                {
+                    closestBotDistnace = distanceToBot;
+                    closestBot = botCandidate;
+                }
+            }
+            if (closestBot == null)
+                return;
+            aiBot = closestBot.gameObject.GetComponent<PlayerAIBot>();
+        }
+        if (allEnemies.Count <= 0)
+        {
+            sendChatMessage("I have killed all enemies in the room", aiBot.gameObject.GetComponent<PlayerAgent>(), commander);
+            return;
+        }
 
+        EnemyAgent closestEnemy = null;
+        float closestEnemyDistnace = float.MaxValue;
+        foreach (var enemy in allEnemies)
+        {
+            float distanceToEnemy = (aiBot.gameObject.transform.position - enemy.gameObject.transform.position).sqrMagnitude;
+            if (distanceToEnemy < closestEnemyDistnace)
+            {
+                closestEnemyDistnace = distanceToEnemy;
+                closestEnemy = enemy;
+            }
+        }
+        var descriptor = SendBotToKillEnemy(aiBot, closestEnemy, commander);
+        FlexibleMethodDefinition callback = new(SendBotToClearCurrentRoom,[aiBot,commander, netsender]);
+        zActionSub.addOnTerminated(descriptor, callback);
+    }
 
     
 
