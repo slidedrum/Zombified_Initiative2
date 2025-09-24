@@ -1,93 +1,18 @@
-﻿using Enemies;
-using Il2CppInterop.Runtime.InteropTypes.Arrays;
+﻿using AIGraph;
 using LevelGeneration;
-using Player;
-using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using ZombieTweak2;
+using ZombieTweak2.zMenu;
 
 namespace Zombified_Initiative
 {
     public static class zSearch
     {
         //this class is for finding stuff inside the world.
-        
-        #region obsolete
-        [Obsolete]
-        public static RaycastHit? RaycastHit()
-        {
-            if (Physics.Raycast(Camera.current.ScreenPointToRay(Input.mousePosition), out var hitInfo))
-                return hitInfo;
-            return null;
-        }
+        public static OrderedSet<FoundObject> FoundObjects;
 
-        [Obsolete]
-        public static Il2CppStructArray<RaycastHit> RaycastHits()
-        {
-            return Physics.RaycastAll(Camera.current.ScreenPointToRay(Input.mousePosition));
-        }
-        [Obsolete]
-        public static ItemInLevel GetItemUnderPlayerAim()
-        {
-            return GetComponentUnderPlayerAim<ItemInLevel>
-                (item => "Found item: " + item.PublicName);
-        }
-        [Obsolete]
-        public static PlayerAgent GetHumanUnderPlayerAim()
-        {
-            var playerAIBot = GetComponentUnderPlayerAim<PlayerAIBot>
-                (bot => "Found bot: " + bot.Agent.PlayerName);
-            if (playerAIBot != null)
-                return playerAIBot.Agent;
-
-            var otherPlayerAgent = GetComponentUnderPlayerAim<PlayerAgent>
-                (player => "Found other player: " + player.PlayerName);
-            if (otherPlayerAgent != null)
-                return otherPlayerAgent;
-
-            var localPlayerAgent = PlayerManager.GetLocalPlayerAgent();
-            ZiMain.log.LogInfo("Found local player: " + localPlayerAgent.PlayerName);
-            return localPlayerAgent;
-        }
-        [Obsolete]
-        public static EnemyAgent GetMonsterUnderPlayerAim()
-        {
-            return GetComponentUnderPlayerAim<EnemyAgent>
-                (enemy => "Found monster: " + enemy.EnemyData.name, false);
-        }
-        [Obsolete]
-        public static T GetComponentUnderPlayerAim<T>(System.Func<T, string> message, bool raycastAll = true) where T : class
-        {
-            if (raycastAll)
-            {
-                foreach (var raycastHit in RaycastHits())
-                {
-                    var component = raycastHit.collider.GetComponentInParent<T>();
-                    if (component == null)
-                        continue;
-
-                    ZiMain.log.LogInfo(message(component));
-                    return component;
-                }
-            }
-            else
-            {
-                var raycastHit = RaycastHit();
-                if (raycastHit.HasValue)
-                {
-                    var component = raycastHit.Value.collider.GetComponentInParent<T>();
-                    if (component == null)
-                        return null;
-
-                    ZiMain.log.LogInfo(message(component));
-                    return component;
-                }
-            }
-
-            return null;
-        }
-        #endregion
         public static GameObject GetClosestObjectInLookDirection(Transform baseTransform,List<GameObject> candidates,float maxAngle = 180f, Vector3? candidateOffset = null, Vector3? baseOffset = null)
         {
             //TODO add some optional leeway for very close objects
@@ -147,5 +72,16 @@ namespace Zombified_Initiative
             }
             return new List<GameObject>();
         }
+        public static void Update() 
+        { 
+            
+        }
+    }
+    public struct FoundObject 
+    {
+        public GameObject gameObject;
+        public AIG_CourseNode courseNode;
+        public LG_Zone zone;
+        public LG_Area area;
     }
 }

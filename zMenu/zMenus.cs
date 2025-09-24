@@ -19,6 +19,7 @@ namespace ZombieTweak2.zMenu
 
         
         private static zMenu selectionMenu;
+        private static zMenu debugMenu;
         private static zMenu actionMenu;
         public static zMenu permissionMenu;
         private static zMenu pickupDetailsSubmenu;
@@ -29,11 +30,13 @@ namespace ZombieTweak2.zMenu
 
         public static void CreateMenus()
         {
+            
             selectionMenu = zMenuManager.createMenu("Bot selection", zMenuManager.mainMenu);
             actionMenu = zMenuManager.createMenu("Actions", zMenuManager.mainMenu);
             permissionMenu = zMenuManager.createMenu("Permissions", zMenuManager.mainMenu);
             pickupDetailsSubmenu = zMenuManager.createMenu("Pickups", permissionMenu, false);
             shareDetailsSubmenu = zMenuManager.createMenu("Share", permissionMenu, false);
+            debugMenu = zMenuManager.createMenu("debug", zMenuManager.mainMenu);
             //todo remove the flip/toggle nodes, and instead make hold action
             selectionMenu.AddNode("Toggle all", SelectionMenuClass.SelectionToggleAllBots).AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, UpdateIndicatorForNode, selectionMenu.centerNode, SelectionMenuClass.botSelection);
             selectionMenu.AddNode("Flip all", SelectionMenuClass.SelectionFlipAllBots).AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, UpdateIndicatorForNode, selectionMenu.centerNode, SelectionMenuClass.botSelection);
@@ -80,6 +83,8 @@ namespace ZombieTweak2.zMenu
 
             permissionMenu.AddNode("Move");
             actionMenu.AddNode("ClearRoom", ZiMain.SendBotToClearCurrentRoom);
+
+            debugMenu.AddNode("ChecVis", zDebug.debugCheckViz);
         }
         public static zMenu.zMenuNode UpdateIndicatorForNode(zMenu.zMenuNode node, Dictionary<int, bool> selectionPickUpPerms)
         {

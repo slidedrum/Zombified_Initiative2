@@ -1,9 +1,12 @@
 ﻿using Agents;
+using AIGraph;
 using Enemies;
 using GameData;
+using Il2CppInterop.Runtime;
 using LevelGeneration;
 using Player;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using ZombieTweak2.zMenu;
@@ -376,6 +379,14 @@ namespace ZombieTweak2
             info.enemy = pStructs.Get_pStructFromRefrence(enemy);
             info.commander = pStructs.Get_pStructFromRefrence(PlayerManager.GetLocalPlayerAgent());
             zNetworking.zNetworking.ReciveRequestToKillEnemy(netSender, info);
+        }
+        internal static void debugCheckViz()
+        {
+            Il2CppSystem.Collections.Generic.List<EnemyAgent> il2cppnearbyEnemies = new();;
+            GameObject observer = PlayerManager.GetLocalPlayerAgent().FPSCamera.gameObject;
+            Transform menuTransform = zMenuManager.mainMenu.gameObject.transform;
+            GameObject target = zSearch.GetClosestObjectInLookDirection(menuTransform, zSearch.GetGameObjectsWithLookDirection<EnemyAgent>(menuTransform), 180f);
+            VisibilityVisualizer.checkForObject(observer, target);
         }
     }
 }
