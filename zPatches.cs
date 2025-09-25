@@ -1,14 +1,17 @@
-﻿using BetterBots.Components;
+﻿using AIGraph;
+using BetterBots.Components;
 using Enemies;
 using GameData;
 using Gear;
 using HarmonyLib;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using Il2CppInterop.Runtime.Runtime;
+using LevelGeneration;
 using Player;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -33,8 +36,246 @@ public class ZombifiedPatches
             zActionSub.actionCallbacks[__instance.Pointer].Invoke();
         }
     }
+    //[HarmonyPatch(typeof(PlayerManager), nameof(PlayerManager.OnObjectHighlighted))]
+    //[HarmonyPrefix]
+    //public static void OnObjectHighlighted(PlayerManager __instance, AIG_CourseNode courseNode, GameObject go)
+    //{
+    //    //if (!PlayerManager.Current.BotAIData.ObjectsToHighlight.ContainsKey(courseNode))
+    //    //    PlayerManager.Current.MapHighlightableObjects(courseNode);
+    //    ZiMain.log.LogInfo($"Pinged {go.name}");
+    //    if (PlayerManager.Current.BotAIData.ObjectsToHighlight[courseNode].Contains(go))
+    //        ZiMain.log.LogInfo($"Bot pingable {go.name}");
+    //}
+    //[HarmonyPatch(typeof(LG_ResourceContainer_Storage), nameof(LG_ResourceContainer_Storage.SetPickupInteractions))]
+    //[HarmonyPostfix]
+    //public static void SetPickupInteractions(LG_ResourceContainer_Storage __instance, float wait, bool active)
+    //{
+    //    if (!active)
+    //        return;
+    //    var node = __instance.m_core.SpawnNode;
+    //    if (!PlayerManager.Current.BotAIData.ObjectsToHighlight.ContainsKey(node))
+    //        PlayerManager.Current.MapHighlightableObjects(node);
+    //    foreach (var pickup in __instance.PickupInteractions)
+    //    {
+    //        if (pickup?.gameObject == null) continue;
+    //        PlayerManager.Current.BotAIData.ObjectsToHighlight[node].Add(pickup.gameObject);
+    //        ZiMain.log.LogInfo($"Added to pings {pickup.gameObject.name}");
+    //    }
+    //}
+    //[HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.UpdateActionHighlight))]
+    //[HarmonyPostfix]
+    //public static void UpdateActionHighlight(RootPlayerBotAction __instance, ref PlayerBotActionBase.Descriptor bestAction)
+    //{
+    //    if (!__instance.m_highlightAction.IsTerminated())
+    //    {
+    //        return;
+    //    }
+    //    __instance.m_highlightAction.Prio = RootPlayerBotAction.m_prioSettings.Highlight;
+    //    if (!RootPlayerBotAction.CompareActionPrios(__instance.m_highlightAction, bestAction))
+    //    {
+    //        return;
+    //    }
+    //    if (__instance.m_bot.IsActionForbidden(__instance.m_highlightAction))
+    //    {
+    //        return;
+    //    }
+    //    AIG_CourseNode courseNode = __instance.m_agent.CourseNode;
+    //    Il2CppSystem.Collections.Generic.List<GameObject> list = PlayerManager.Current.MapHighlightableObjects(courseNode);
+    //    GameObject gameObject = null;
+    //    Vector3 position = __instance.m_agent.Position;
+    //    Vector3 vector = Vector3.zero;
+    //    float num = RootPlayerBotAction.s_highlightSearchDistance * RootPlayerBotAction.s_highlightSearchDistance;
+    //    PlayerBotActionHighlight.Descriptor.TargetTypeEnum targetTypeEnum = PlayerBotActionHighlight.Descriptor.TargetTypeEnum.Door;
+    //    for (int i = 0; i < list.Count; i++)
+    //    {
+    //        GameObject candidateObject = list[i];
+    //        if (candidateObject == null) 
+    //        {
+    //            //list.RemoveAt(i--);
+    //            continue;
+    //        }
+    //        Vector3 vector2 = candidateObject.transform.position - position;
+    //        float sqrMagnitude = vector2.sqrMagnitude;
+    //        ZiMain.log.LogInfo($"ping candidate: {candidateObject.name}");
+    //        //if (sqrMagnitude > num || __instance.IsAnyHumanPlayerNear(candidateObject.transform.position, 0.1f))
+    //        //    continue;
+    //        RootPlayerBotAction.s_tempObjReservation.CharacterID = __instance.m_agent.CharacterID;
+    //        RootPlayerBotAction.s_tempObjReservation.Object = candidateObject;
+    //        Vector3 vector3 = candidateObject.transform.position;
+    //        if (PlayerManager.Current.IsObjectReserved(RootPlayerBotAction.s_tempObjReservation))
+    //            continue;
 
 
+    //        vector = candidateObject.transform.position;
+    //        gameObject = candidateObject;
+    //        break;
+    //        if (false)
+    //        {
+    //            LG_Gate gateComponenet = candidateObject.GetComponentInParent<LG_Gate>();
+    //            PlayerBotActionHighlight.Descriptor.TargetTypeEnum targetTypeEnum2;
+    //            targetTypeEnum2 = PlayerBotActionHighlight.Descriptor.TargetTypeEnum.Terminal;
+    //            if (gateComponenet != null)
+    //            {
+    //                if (!PlayerBotActionUseEnemyScanner.Descriptor.CheckGateNeedsScanning(gateComponenet))
+    //                {
+    //                    list.RemoveAt(i--);
+    //                    continue;
+    //                }
+    //                if (!__instance.GetPositionInFrontOfGate(gateComponenet, vector2, __instance.DescBase.Prio, out vector3))
+    //                {
+    //                    continue;
+    //                }
+    //                targetTypeEnum2 = PlayerBotActionHighlight.Descriptor.TargetTypeEnum.Door;
+    //            }
+    //            else
+    //            {
+    //                LG_ResourceContainer_Storage storageComponenet = candidateObject.GetComponentInParent<LG_ResourceContainer_Storage>();
+    //                if (storageComponenet != null)
+    //                {
+    //                    LG_WeakResourceContainer component = storageComponenet.gameObject.GetComponent<LG_WeakResourceContainer>();
+    //                    if (component == null || component.ISOpen)
+    //                    {
+    //                        list.RemoveAt(i--);
+    //                        continue;
+    //                    }
+    //                    vector3 = candidateObject.transform.position - candidateObject.transform.up * RootPlayerBotAction.s_highlightStandDistance;
+    //                    if (!__instance.SnapPositionToNav(vector3, out vector3))
+    //                    {
+    //                        continue;
+    //                    }
+    //                    RootPlayerBotAction.s_tempPosReservation.CharacterID = __instance.m_agent.CharacterID;
+    //                    RootPlayerBotAction.s_tempPosReservation.Position = vector3;
+    //                    if (PlayerManager.Current.IsPositionReserved(RootPlayerBotAction.s_tempPosReservation))
+    //                    {
+    //                        continue;
+    //                    }
+    //                    targetTypeEnum2 = PlayerBotActionHighlight.Descriptor.TargetTypeEnum.Container;
+    //                }
+    //                else
+    //                {
+    //                    LG_ComputerTerminal terminalComponent = candidateObject.GetComponentInParent<LG_ComputerTerminal>();
+    //                    if (terminalComponent != null)
+    //                    {
+    //                        Vector3 forward = terminalComponent.m_CameraAlign.forward;
+    //                        forward.Set(-forward.x, 0f, -forward.z);
+    //                        forward.Normalize();
+    //                        vector3 = candidateObject.transform.position + forward * 1.5f;
+    //                        targetTypeEnum2 = PlayerBotActionHighlight.Descriptor.TargetTypeEnum.Terminal;
+    //                    }
+    //                    else
+    //                    {
+    //                        targetTypeEnum2 = PlayerBotActionHighlight.Descriptor.TargetTypeEnum.Terminal;
+    //                        Transform current = candidateObject.transform;
+    //                        int depth = 0;
+    //                        LG_WeakResourceContainer rootContainer = null;
+    //                        while (current != null && depth < 7)
+    //                        {
+    //                            rootContainer = current.GetComponent<LG_WeakResourceContainer>();
+    //                            if (rootContainer != null)
+    //                                break;
+    //                            current = current.parent;
+    //                            depth++;
+    //                        }
+    //                        if (rootContainer == null)
+    //                            continue;
+    //                        vector3 = rootContainer.transform.position - rootContainer.transform.up * RootPlayerBotAction.s_highlightStandDistance;
+    //                    }
+    //                }
+    //            }
+    //            float prio = __instance.m_highlightAction.Prio;
+    //            if (__instance.m_bot.ApplyRestrictionsToRootPosition(ref vector3, ref prio))
+    //                continue;
+    //            Vector3 vector4 = candidateObject.transform.position + Vector3.up * 0.3f;
+    //            RaycastHit raycastHit;
+    //            if (__instance.m_bot.CanSeePosition(__instance.m_agent.EyePosition, vector4, LayerManager.MASK_WORLD, out raycastHit) || raycastHit.transform.gameObject == candidateObject || raycastHit.transform.IsChildOf(candidateObject.transform.parent.transform) || candidateObject.transform.IsChildOf(raycastHit.transform))
+    //            {
+    //                gameObject = candidateObject;
+    //                targetTypeEnum = targetTypeEnum2;
+    //                num = sqrMagnitude;
+    //                vector = vector3;
+    //            }
+    //        }
+    //    }
+    //    if (gameObject != null)
+    //    {
+    //        __instance.m_highlightAction.TargetType = targetTypeEnum;
+    //        __instance.m_highlightAction.TargetGO = gameObject;
+    //        __instance.m_highlightAction.TargetPosition = vector;
+    //        __instance.m_highlightAction.CourseNode = courseNode;
+    //        bestAction = __instance.m_highlightAction;
+    //    }
+    //}
+    //[HarmonyPatch(typeof(PlayerBotActionHighlight), nameof(PlayerBotActionHighlight.MoveOut))]
+    //[HarmonyPrefix]
+    //private static bool MoveOut(PlayerBotActionHighlight __instance)
+    //{
+
+    //    // Get the Type for the Descriptor class
+    //    Type descriptorType = typeof(PlayerBotActionHighlight.Descriptor);
+
+    //    // Get the private static field
+    //    FieldInfo fieldInfo = descriptorType.GetField(
+    //        "NativeMethodInfoPtr_OnTravelActionEvent_Public_Void_Descriptor_0",
+    //        BindingFlags.NonPublic | BindingFlags.Static
+    //    );
+
+    //    if (fieldInfo == null)
+    //    {
+    //        throw new Exception("Field not found!");
+    //    }
+
+    //    // Read the IntPtr value from the static field
+    //    IntPtr methodPtr = (IntPtr)fieldInfo.GetValue(null);
+    //    PlayerBotActionTravel.Descriptor descriptor = new PlayerBotActionTravel.Descriptor(__instance.m_bot)
+    //    {
+    //        ParentActionBase = __instance,
+    //        Prio = __instance.m_desc.Prio,
+    //        EventDelegate = new PlayerBotActionBase.Descriptor.EventDelegateFunc(methodPtr),
+    //        Haste = 0.5f,
+    //        Radius = 10f,
+    //        Persistent = false,
+    //        RadiusHeightTolerance = 3f,
+    //        DestinationType = PlayerBotActionTravel.Descriptor.DestinationEnum.Position,
+    //        DestinationPos = __instance.m_desc.TargetPosition
+    //    };
+    //    if (__instance.m_bot.RequestAction(descriptor))
+    //    {
+    //        __instance.m_travelAction = descriptor;
+    //        __instance.SetState(PlayerBotActionHighlight.State.Move);
+    //        return false;
+    //    }
+    //    __instance.m_desc.SetCompletionStatus(PlayerBotActionBase.Descriptor.StatusType.Failed);
+    //    return false;
+    //}
+    //[HarmonyPatch(typeof(PlayerBotActionHighlight), nameof(PlayerBotActionHighlight.VerifyTarget))]
+    //[HarmonyPrefix]
+    //private static bool VerifyTarget(PlayerBotActionHighlight __instance, ref bool __result)
+    //{
+    //    if (__instance.m_desc.TargetGO == null)
+    //    {
+    //        __result = false;
+    //        return false;
+    //    }
+    //    if (__instance.IsAnyHumanPlayerNear(__instance.m_desc.TargetGO.transform.position, 3f))
+    //    {
+    //        __result = false;
+    //        return false;
+    //    }
+    //    if (!PlayerManager.Current.IsObjectHighlightable(__instance.m_desc.CourseNode, __instance.m_desc.TargetGO))
+    //    {
+    //        __result = false;
+    //        return false;
+    //    }
+    //    __result = true;
+    //    return false;
+    //}
+    //[HarmonyPatch(typeof(PlayerBotActionHighlight), nameof(PlayerBotActionHighlight.DetermineLookAtPosition))]
+    //[HarmonyPrefix]
+    //public static bool DetermineLookAtPosition(PlayerBotActionHighlight __instance)
+    //{
+    //    __instance.m_lookAtPosition = __instance.m_desc.TargetGO.transform.position;
+    //    return false;
+    //}
     [HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.UpdateActionShareResoursePack))]
     [HarmonyPrefix]
     public static bool UpdateActionShareResoursePack(RootPlayerBotAction __instance, ref PlayerBotActionBase.Descriptor bestAction)
