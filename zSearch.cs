@@ -1,6 +1,8 @@
-﻿using AIGraph;
+﻿using Agents;
+using AIGraph;
 using Enemies;
 using FluffyUnderware.Curvy.Generator;
+using FluffyUnderware.DevTools.Extensions;
 using Il2CppSystem.Linq.Expressions;
 using LevelGeneration;
 using Player;
@@ -9,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.AI;
 using ZombieTweak2;
 using ZombieTweak2.zMenu;
 
@@ -19,6 +22,7 @@ namespace Zombified_Initiative
         //this class is for finding stuff inside the world.
         public static Dictionary<int,FindableObject> FindableObjects = new();
         public static float foundDistance = 10f;
+        
 
         public static GameObject GetClosestObjectInLookDirection(Transform baseTransform,List<GameObject> candidates,float maxAngle = 180f, Vector3? candidateOffset = null, Vector3? baseOffset = null)
         {
@@ -208,6 +212,294 @@ namespace Zombified_Initiative
         public AIG_CourseNode courseNode;
         public Type type;
         public bool found;
+    }
+    
+    public class VisitNode
+    {
+        public static float VisitNodeDistance = 2f;
+        private static float FuzzyVisitNodeDistance = (VisitNodeDistance * 1.4f);
+        public static HashSet<VisitNode> AllNodes = new ();
+        public static Dictionary<Vector2Int, HashSet<VisitNode>> nodeGrid = new();
+        public static HashSet<GameObject> debugCubes = new();
+        public GameObject debugCube;
+        public HashSet<GameObject> SampleDebugCubes = new();
+        public Vector3 position;
+        public HashSet<VisitNode> conntectedNodes = new ();
+        public NavMeshHit hit = new();
+        private Vector2Int cell;
+
+        public static void Update()
+        {
+            foreach(PlayerAgent agent in PlayerManager.PlayerAgentsInLevel)
+            {
+                if (agent == null)
+                    continue;
+                if (agent.Owner.refSessionMode != SNetwork.eReplicationMode.Playing)
+                    continue;
+                int charId = agent.CharacterID;
+                var NearbyNodes = GetNearByNodes(agent.Position, VisitNodeDistance);
+                if (NearbyNodes.Count == 0)
+                    new VisitNode(agent.Position);
+            }
+        }
+
+        public static HashSet<VisitNode> GetNearByNodes(Vector3 position, float searchRadius = -1)
+        {
+            var ret = new HashSet<VisitNode>();
+
+            // central cell for the query position
+            var cell = new Vector2Int(
+                Mathf.FloorToInt(position.x / VisitNodeDistance),
+                Mathf.FloorToInt(position.z / VisitNodeDistance)
+            );
+
+            // compute how many cells we must check to cover the radius
+            if (searchRadius <= 0)
+                searchRadius = FuzzyVisitNodeDistance;
+            int cellRadius = Mathf.CeilToInt(searchRadius / VisitNodeDistance);
+            if (cellRadius < 1) cellRadius = 1; // at least check neighbors
+
+            // collect candidates from the necessary grid cells
+            var nearbyCandidates = new HashSet<VisitNode>();
+            for (int dx = -cellRadius; dx <= cellRadius; dx++)
+            {
+                for (int dy = -cellRadius; dy <= cellRadius; dy++)
+                {
+                    var neighborCell = new Vector2Int(cell.x + dx, cell.y + dy);
+                    if (nodeGrid.TryGetValue(neighborCell, out var nodes) && nodes != null)
+                        nearbyCandidates.UnionWith(nodes);
+                }
+            }
+
+            // filter by true linear distance
+            foreach (var node in nearbyCandidates)
+            {
+                if (node == null) continue;
+                if (Vector3.Distance(node.position, position) <= searchRadius)
+                    ret.Add(node);
+            }
+
+            return ret;
+        }
+        public HashSet<VisitNode> GetNearByNodes()
+        {
+            return GetNearByNodes(position);
+        }
+        public static VisitNode GetNearestNode(Vector3 position)
+        {
+            HashSet<VisitNode> nearbyNodes = GetNearByNodes(position);
+            VisitNode nearestNode = null;
+            float nearestDistance = float.MaxValue;
+
+            foreach (var node in nearbyNodes)
+            {
+                if (node == null)
+                    continue;
+
+                float distance = Vector3.Distance(node.position, position);
+                if (distance < nearestDistance)
+                {
+                    nearestDistance = distance;
+                    nearestNode = node;
+                }
+            }
+
+            return nearestNode;
+        }
+        public VisitNode(Vector3 Position)
+        {
+            hit = new NavMeshHit();
+            NavMesh.SamplePosition(Position, out hit, 3f, -1);
+            position = Position;
+            AllNodes.Add(this);
+
+            cell = new Vector2Int(
+                Mathf.FloorToInt(position.x / VisitNodeDistance),
+                Mathf.FloorToInt(position.z / VisitNodeDistance)
+            );
+
+            // ensure cell exists and add this node
+            if (!nodeGrid.TryGetValue(cell, out var set))
+            {
+                set = new HashSet<VisitNode>();
+                nodeGrid[cell] = set;
+            }
+            set.Add(this);
+
+            // find neighbors (query uses the snapped position)
+            var nearby = GetNearByNodes(position, FuzzyVisitNodeDistance * 2);
+            // be sure we don't treat ourselves as a neighbor
+            nearby.Remove(this);
+
+            foreach (var node in nearby)
+            {
+                node.UpdateDebugCubeColor();
+                if (node == null || !CanNavigateBetween(node.position, position))
+                    continue;
+                conntectedNodes.Add(node);
+                node.conntectedNodes.Add(this);
+            }
+
+            addDebugCube();
+            UpdateDebugCubeColor();
+        }
+        public static bool CanNavigateBetween(Vector3 start, Vector3 end, int areaMask = -1)
+        {
+            if (NavMesh.SamplePosition(start, out NavMeshHit startHit, 1.0f, areaMask) &&
+                NavMesh.SamplePosition(end, out NavMeshHit endHit, 1.0f, areaMask))
+            {
+                NavMeshPath path = new NavMeshPath();
+                bool pathFound = NavMesh.CalculatePath(startHit.position, endHit.position, areaMask, path);
+                return pathFound && path.status == NavMeshPathStatus.PathComplete;
+            }
+
+            // Either start or end is not on the NavMesh
+            return false;
+        }
+        public void UpdateDebugCubeColor()
+        {
+            if (debugCube == null)
+                return;
+
+            Renderer rend = debugCube.GetComponent<Renderer>();
+            if (rend == null)
+                return;
+
+            // Green if there's unexplored nearby, red if not
+            if (HasUnexploredAreaNearby())
+                rend.material.color = Color.green;
+            else
+                rend.material.color = Color.red;
+        }
+        public void addDebugCube()
+        {
+            // Create a small cube for the node
+            GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            GameObject.Destroy(cube.GetComponent<Collider>());
+            cube.transform.localScale = Vector3.one * 0.1f;
+            cube.transform.position = position + Vector3.up * 1f;
+            Renderer cubeRend = cube.GetComponent<Renderer>();
+            if (cubeRend != null)
+                cubeRend.material.color = Color.green;
+            debugCubes.Add(cube);
+            debugCube = cube;
+        }
+        public void addSampleDebugCube(Vector3 pos, HashSet<VisitNode> nearbyNodes, Color color)
+        {
+            // Create a small cube for the sample
+            GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            GameObject.Destroy(cube.GetComponent<Collider>());
+            cube.transform.localScale = Vector3.one * 0.05f;
+            Vector3 sampleWorldPos = pos + Vector3.up * 0.5f;
+            cube.transform.position = sampleWorldPos;
+            Renderer cubeRend = cube.GetComponent<Renderer>();
+            if (cubeRend != null)
+                cubeRend.material.color = color;
+
+            // CreateLine helper uses actual world positions and parents the line to the sample cube
+            void CreateLine(Vector3 startWorld, Vector3 endWorld, Color baseColor)
+            {
+                GameObject lineObj = new GameObject("DebugLine");
+                lineObj.transform.SetParent(cube.transform, worldPositionStays: true); // parent to cube
+
+                LineRenderer lr = lineObj.AddComponent<LineRenderer>();
+                lr.useWorldSpace = true; // we will set world-space positions
+                lr.positionCount = 2;
+                lr.SetPosition(0, startWorld);
+                lr.SetPosition(1, endWorld);
+
+                // Very thin line
+                lr.startWidth = 0.01f;
+                lr.endWidth = 0.01f;
+
+                // Simple transparent material
+                lr.material = new Material(Shader.Find("Sprites/Default"));
+                Color c = baseColor;
+                c.a = 0.2f;               // 0.2 transparency
+                lr.startColor = c;
+                lr.endColor = c;
+
+                // Optional: smooth caps
+                lr.numCapVertices = 2;
+            }
+
+            // Line to base node (white)
+            Vector3 baseNodeLineEnd = (debugCube != null) ? debugCube.transform.position : (this.position + Vector3.up * 1f);
+            CreateLine(sampleWorldPos, baseNodeLineEnd, Color.white);
+
+            // Lines to nearby nodes (brown)
+            Color brown = new Color(0.6f, 0.3f, 0.1f);
+            foreach (var node in nearbyNodes)
+            {
+                if (node == null) continue;
+                Vector3 nodeLineEnd = (node.debugCube != null) ? node.debugCube.transform.position : (node.position + Vector3.up * 1f);
+                CreateLine(sampleWorldPos, nodeLineEnd, brown);
+            }
+
+            // (optional) keep track of sample cube if you need to destroy it later:
+            SampleDebugCubes.Add(cube);
+        }
+        public bool HasUnexploredAreaNearby()
+        {
+            foreach (var cube in SampleDebugCubes)
+            {
+                GameObject.Destroy(cube);
+            }
+            int sampleCount = 8;
+            float radius = FuzzyVisitNodeDistance * 1.5f;
+            for (int i = 0; i < sampleCount; i++)
+            {
+                // Angle around the circle
+                float angle = i * Mathf.PI * 2 / sampleCount;
+                Vector3 samplePos = position + new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle)) * radius;
+
+                // First, check if any nodes are near the sample point
+                var nearbyNodes = GetNearByNodes(samplePos);
+                if (nearbyNodes.Count == 0)
+                {
+                    //addSampleDebugCube(samplePos, conntectedNodes, Color.grey);
+                    // No nodes found; try to find nearest nav position
+                    if (NavMesh.SamplePosition(samplePos, out NavMeshHit hit, 3f, -1))
+                    {
+                        // Check again near the hit position
+                        nearbyNodes = GetNearByNodes(hit.position);
+                        if (nearbyNodes.Count == 0)
+                        {
+                            Vector3 AdjustPositionUp(Vector3 pos, float maxLift = 0.5f, float step = 0.05f)
+                            {
+                                RaycastHit hitInfo;
+                                float lifted = 0f;
+                                while (lifted <= maxLift)
+                                {
+                                    if (!Physics.CheckSphere(pos, 0.1f)) // Check if position is free
+                                        return pos;
+                                    pos.y += step;
+                                    lifted += step;
+                                }
+                                return pos; // return last position even if obstructed
+                            }
+
+                            // Lift hit position and node position
+                            Vector3 liftedHitPos = AdjustPositionUp(hit.position);
+                            Vector3 liftedNodePos = AdjustPositionUp(position);
+
+                            float rayDistance = Vector3.Distance(liftedHitPos, liftedNodePos);
+                            Vector3 direction = (liftedNodePos - liftedHitPos).normalized;
+
+                            if (!Physics.Raycast(liftedHitPos, direction, rayDistance) && CanNavigateBetween(liftedHitPos, liftedNodePos))
+                            {
+                                // No obstruction between lifted positions
+                                addSampleDebugCube(hit.position, nearbyNodes, Color.black);
+                                return true;
+                            }
+                        }
+                    }
+                }
+                //addSampleDebugCube(samplePos, conntectedNodes, Color.blue);
+            }
+            // All sampled points have nearby nodes; nothing unexplored
+            return false;
+        }
     }
 
 }
