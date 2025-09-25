@@ -1,5 +1,9 @@
 ﻿using AIGraph;
+using Enemies;
+using FluffyUnderware.Curvy.Generator;
 using LevelGeneration;
+using Player;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -11,7 +15,9 @@ namespace Zombified_Initiative
     public static class zSearch
     {
         //this class is for finding stuff inside the world.
-        public static OrderedSet<FoundObject> FoundObjects;
+        public static Dictionary<int,FoundObject> FoundObjects = new();
+        public static Dictionary<int,FoundObject> UnfoundObjects = new();
+        public static float foundDistance = 5f;
 
         public static GameObject GetClosestObjectInLookDirection(Transform baseTransform,List<GameObject> candidates,float maxAngle = 180f, Vector3? candidateOffset = null, Vector3? baseOffset = null)
         {
@@ -73,15 +79,60 @@ namespace Zombified_Initiative
             return new List<GameObject>();
         }
         public static void Update() 
-        { 
-            
+        {
+            return;
+            foreach(var agent in PlayerManager.PlayerAgentsInLevel)
+            {
+                Updatefinds(agent);
+            }
+        }
+        public static void Updatefinds(PlayerAgent agent)
+        {
+            AIG_CourseNode node = agent.CourseNode;
+            if (node == null)
+                return;
+            var zone = node.m_zone;
+            var area = node.m_area;
+            Il2CppSystem.Collections.Generic.List<EnemyAgent> enemyAgents = new();
+            AIG_CourseNode.GetEnemiesInNodes(node, 2, enemyAgents);
+            int temp = agent.gameObject.GetInstanceID();
+            foreach (var enemy in enemyAgents)
+            {
+                int instanceId = enemy.gameObject.GetInstanceID();
+                FoundObject found = new FoundObject { gameObject = enemy.gameObject, courseNode = node, type = typeof(EnemyAgent) };
+                if (Vector3.Distance(enemy.Position,agent.Position) < foundDistance)
+                {
+                    FoundObjects[instanceId] = found;
+                    if (UnfoundObjects.ContainsKey(instanceId))
+                    {
+                        ZiMain.log.LogInfo($"Found object! {enemy.EnemyData._name_k__BackingField}");
+                        UnfoundObjects.Remove(instanceId);
+                    }
+                }
+                else if (!FoundObjects.ContainsKey(instanceId))
+                {
+                    UnfoundObjects[instanceId] = found;
+                }
+            }
+            List<int> objectToRemove = new List<int>();
+            foreach(var obj in FoundObjects)
+                if (!obj.Value.gameObject.activeInHierarchy)
+                    objectToRemove.Add(obj.Key);
+            foreach(var index in objectToRemove)
+                FoundObjects.Remove(index);
+            objectToRemove = new List<int>();
+            foreach (var obj in UnfoundObjects)
+                if (!obj.Value.gameObject.activeInHierarchy)
+                    objectToRemove.Add(obj.Key);
+            foreach (var index in objectToRemove)
+                UnfoundObjects.Remove(index);
         }
     }
-    public struct FoundObject 
+    public struct FoundObject
     {
         public GameObject gameObject;
         public AIG_CourseNode courseNode;
-        public LG_Zone zone;
-        public LG_Area area;
+        public Type type;
     }
+
 }
