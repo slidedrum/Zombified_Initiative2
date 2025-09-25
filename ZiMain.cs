@@ -177,6 +177,7 @@ public class ZiMain : BasePlugin
             zUpdater.onUpdate.Listen(zSmartSelect.Update);
             zUpdater.onUpdate.Listen(zActionSub.Update);
             zUpdater.onUpdate.Listen(zSearch.Update);
+            zUpdater.onUpdate.Listen(zDebug.debugUpdate);
             zUpdater.onLateUpdate.Listen(zMenuManager.LateUpdate);
         };
         LG_Factory.add_OnFactoryBuildDone((Action)zSlideComputer.Init);

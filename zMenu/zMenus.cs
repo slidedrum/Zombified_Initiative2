@@ -85,6 +85,7 @@ namespace ZombieTweak2.zMenu
             actionMenu.AddNode("ClearRoom", ZiMain.SendBotToClearCurrentRoom);
 
             debugMenu.AddNode("ChecVis", zDebug.debugCheckViz);
+            //debugMenu.AddNode("Toggle ChecVis", zDebug.toggleVisCheck);
         }
         public static zMenu.zMenuNode UpdateIndicatorForNode(zMenu.zMenuNode node, Dictionary<int, bool> selectionPickUpPerms)
         {

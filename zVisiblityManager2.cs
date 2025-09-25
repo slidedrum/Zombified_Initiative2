@@ -5,6 +5,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.PostProcessing;
 using ZombieTweak2.zMenu;
 
 namespace ZombieTweak2
@@ -30,6 +32,7 @@ namespace ZombieTweak2
             GameObject camObj = new GameObject("ObserverCam");
             camObj.hideFlags = HideFlags.HideAndDontSave;
             _observerCam = camObj.AddComponent<Camera>();
+            _observerCam.CopyFrom(Camera.main);
             _observerCam.enabled = false;
             _observerCam.clearFlags = CameraClearFlags.SolidColor;
             _observerCam.backgroundColor = Color.black;
@@ -38,9 +41,8 @@ namespace ZombieTweak2
             _observerCam.farClipPlane = 1000f;
 
             // Low-res RT
-            _renderTexture = new RenderTexture(512, 512, 16, RenderTextureFormat.ARGB32);
+            _renderTexture = new RenderTexture(32, 32, 16, RenderTextureFormat.ARGB32);
             _observerCam.targetTexture = _renderTexture;
-            _tex = new Texture2D(512, 512, TextureFormat.RGB24, false);
 
             // Solid white material for rendering target
             _solidWhite = new Material(Shader.Find("Unlit/Color"));
@@ -106,9 +108,9 @@ namespace ZombieTweak2
             int tempLayer = 31; // choose an unused layer
             SetLayerRecursively(target, tempLayer);
             _observerCam.cullingMask = 1 << tempLayer;
-            _observerCam.clearFlags = CameraClearFlags.SolidColor;
-            _observerCam.backgroundColor = Color.black;
-            _observerCam.allowHDR = false;
+            //_observerCam.clearFlags = CameraClearFlags.SolidColor;
+            //_observerCam.backgroundColor = Color.black;
+            //_observerCam.allowHDR = false;
             _observerCam.Render();
             visiblityTexture = new Texture2D(_renderTexture.width, _renderTexture.height, TextureFormat.RGB24, false);
             RenderTexture.active = _renderTexture;
@@ -122,9 +124,9 @@ namespace ZombieTweak2
             //CREATE QUAD FOR visiblityTexture INFRONT OF AND TO THE LEFT OF observer
 
             _observerCam.cullingMask = ~0; // everything
-            _observerCam.clearFlags = CameraClearFlags.Skybox; // or keep original
+            //_observerCam.clearFlags = CameraClearFlags.Skybox; // or keep original
             _observerCam.Render();
-            _observerCam.allowHDR = true;
+            //_observerCam.allowHDR = true;
             int numQuads = 0;
             foreach (Color color in colorsToCheck)
             {
