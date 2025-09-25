@@ -242,7 +242,6 @@ namespace Zombified_Initiative
                     new VisitNode(agent.Position);
             }
         }
-
         public static HashSet<VisitNode> GetNearByNodes(Vector3 position, float searchRadius = -1)
         {
             var ret = new HashSet<VisitNode>();
@@ -341,7 +340,6 @@ namespace Zombified_Initiative
             }
 
             addDebugCube();
-            UpdateDebugCubeColor();
         }
         public static bool CanNavigateBetween(Vector3 start, Vector3 end, int areaMask = -1)
         {
@@ -383,6 +381,7 @@ namespace Zombified_Initiative
                 cubeRend.material.color = Color.green;
             debugCubes.Add(cube);
             debugCube = cube;
+            UpdateDebugCubeColor();
         }
         public void addSampleDebugCube(Vector3 pos, HashSet<VisitNode> nearbyNodes, Color color)
         {
@@ -447,54 +446,99 @@ namespace Zombified_Initiative
             }
             int sampleCount = 8;
             float radius = FuzzyVisitNodeDistance * 1.5f;
+            int indexOffset = UnityEngine.Random.Range(0, sampleCount);
             for (int i = 0; i < sampleCount; i++)
             {
+                int rotatedIndex = (i + indexOffset) % sampleCount;
                 // Angle around the circle
-                float angle = i * Mathf.PI * 2 / sampleCount;
+                float angle = rotatedIndex * Mathf.PI * 2f / sampleCount;
                 Vector3 samplePos = position + new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle)) * radius;
 
                 // First, check if any nodes are near the sample point
                 var nearbyNodes = GetNearByNodes(samplePos);
-                if (nearbyNodes.Count == 0)
+                if (nearbyNodes.Count != 0)
+                    continue;
+                //addSampleDebugCube(samplePos, conntectedNodes, Color.grey);
+                // No nodes found; try to find nearest nav position
+                if (!NavMesh.SamplePosition(samplePos, out NavMeshHit hit, 3f, -1))
+                    continue;
+                // Check again near the hit position
+                nearbyNodes = GetNearByNodes(hit.position);
+                if (nearbyNodes.Count != 0)
+                    continue;
+                bool AdjustPositionUp(Vector3 pos, out Vector3 result, float maxLift = 1.5f, float step = 0.05f)
                 {
-                    //addSampleDebugCube(samplePos, conntectedNodes, Color.grey);
-                    // No nodes found; try to find nearest nav position
-                    if (NavMesh.SamplePosition(samplePos, out NavMeshHit hit, 3f, -1))
+                    // Attempt to get player capsule
+                    var controller = PlayerManager.GetLocalPlayerAgent()?.PlayerCharacterController?.m_characterController;
+
+                    if (controller == null)
                     {
-                        // Check again near the hit position
-                        nearbyNodes = GetNearByNodes(hit.position);
-                        if (nearbyNodes.Count == 0)
+                        ZiMain.log.LogWarning("AdjustPositionUp: PlayerCharacterController not found, falling back to sphere check.");
+                        float lifted = 0f;
+                        while (lifted <= maxLift)
                         {
-                            Vector3 AdjustPositionUp(Vector3 pos, float maxLift = 0.5f, float step = 0.05f)
+                            if (!Physics.CheckSphere(pos, 0.1f))
                             {
-                                RaycastHit hitInfo;
-                                float lifted = 0f;
-                                while (lifted <= maxLift)
-                                {
-                                    if (!Physics.CheckSphere(pos, 0.1f)) // Check if position is free
-                                        return pos;
-                                    pos.y += step;
-                                    lifted += step;
-                                }
-                                return pos; // return last position even if obstructed
-                            }
-
-                            // Lift hit position and node position
-                            Vector3 liftedHitPos = AdjustPositionUp(hit.position);
-                            Vector3 liftedNodePos = AdjustPositionUp(position);
-
-                            float rayDistance = Vector3.Distance(liftedHitPos, liftedNodePos);
-                            Vector3 direction = (liftedNodePos - liftedHitPos).normalized;
-
-                            if (!Physics.Raycast(liftedHitPos, direction, rayDistance) && CanNavigateBetween(liftedHitPos, liftedNodePos))
-                            {
-                                // No obstruction between lifted positions
-                                addSampleDebugCube(hit.position, nearbyNodes, Color.black);
+                                result = pos;
                                 return true;
                             }
+                            pos.y += step;
+                            lifted += step;
                         }
+
+                        result = pos;
+                        return false;
                     }
+
+                    float radius = controller.radius;
+                    float height = controller.height;
+                    Vector3 centerOffset = controller.center;
+
+                    var playerCollider = controller; // the capsule to ignore
+                    float liftedCapsule = 0f;
+
+                    while (liftedCapsule <= maxLift)
+                    {
+                        Vector3 capsuleBottom = pos + centerOffset - Vector3.up * (height / 2f - radius);
+                        Vector3 capsuleTop = pos + centerOffset + Vector3.up * (height / 2f - radius);
+
+                        // Check if capsule overlaps anything excluding the player
+                        Collider[] hits = Physics.OverlapCapsule(capsuleBottom, capsuleTop, radius, ~0, QueryTriggerInteraction.Ignore);
+                        bool blocked = hits.Any(c => c != playerCollider);
+
+                        if (!blocked)
+                        {
+                            result = pos;
+                            return true;
+                        }
+
+                        pos.y += step;
+                        liftedCapsule += step;
+                    }
+
+                    result = pos;
+                    return false;
                 }
+
+                // Lift hit position and node position
+                Vector3 liftedHitPos = new();
+                if (!AdjustPositionUp(hit.position, out liftedHitPos))
+                    continue;
+                Vector3 liftedNodePos = new();
+                if (!AdjustPositionUp(position, out liftedNodePos))
+                    continue;
+
+                float rayDistance = Vector3.Distance(liftedHitPos, liftedNodePos);
+                Vector3 direction = (liftedNodePos - liftedHitPos).normalized;
+                //!Physics.Raycast(liftedHitPos, direction, rayDistance) && 
+                if (CanNavigateBetween(liftedHitPos, liftedNodePos))
+                {
+                    // No obstruction between lifted positions
+                    addSampleDebugCube(hit.position, nearbyNodes, Color.black);
+                    return true;
+                }
+
+
                 //addSampleDebugCube(samplePos, conntectedNodes, Color.blue);
             }
             // All sampled points have nearby nodes; nothing unexplored
