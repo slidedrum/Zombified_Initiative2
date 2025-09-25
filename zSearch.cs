@@ -1,8 +1,10 @@
 ﻿using AIGraph;
 using Enemies;
 using FluffyUnderware.Curvy.Generator;
+using Il2CppSystem.Linq.Expressions;
 using LevelGeneration;
 using Player;
+using PlayFab.AdminModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,9 +17,8 @@ namespace Zombified_Initiative
     public static class zSearch
     {
         //this class is for finding stuff inside the world.
-        public static Dictionary<int,FoundObject> FoundObjects = new();
-        public static Dictionary<int,FoundObject> UnfoundObjects = new();
-        public static float foundDistance = 5f;
+        public static Dictionary<int,FindableObject> FindableObjects = new();
+        public static float foundDistance = 10f;
 
         public static GameObject GetClosestObjectInLookDirection(Transform baseTransform,List<GameObject> candidates,float maxAngle = 180f, Vector3? candidateOffset = null, Vector3? baseOffset = null)
         {
@@ -80,59 +81,133 @@ namespace Zombified_Initiative
         }
         public static void Update() 
         {
-            return;
             foreach(var agent in PlayerManager.PlayerAgentsInLevel)
             {
+                UpdateFindables(agent);
                 Updatefinds(agent);
+                CleanFindables(agent);
             }
         }
-        public static void Updatefinds(PlayerAgent agent)
+        public static List<ItemInLevel> GetItemsFromLocker(LG_ResourceContainer_Storage storage)
         {
+            List<ItemInLevel> ret = new();
+            var interactions = storage.PickupInteractions;
+            foreach (Interact_Base interaction in interactions)
+            {
+                Transform current = interaction.gameObject.transform;
+                int depth = 0;
+                ItemInLevel item = null;
+                while (current != null && depth < 7)
+                {
+                    item = current.GetComponent<ItemInLevel>();
+                    if (item != null)
+                        break;
+                    current = current.parent;
+                    depth++;
+                }
+                if (item == null)
+                    continue;
+                ret.Add(item);
+            }
+            return ret;
+        }
+        public static void UpdateFindables(PlayerAgent agent)
+        {
+            //update enemy findables
             AIG_CourseNode node = agent.CourseNode;
             if (node == null)
                 return;
-            var zone = node.m_zone;
-            var area = node.m_area;
             Il2CppSystem.Collections.Generic.List<EnemyAgent> enemyAgents = new();
             AIG_CourseNode.GetEnemiesInNodes(node, 2, enemyAgents);
-            int temp = agent.gameObject.GetInstanceID();
             foreach (var enemy in enemyAgents)
             {
                 int instanceId = enemy.gameObject.GetInstanceID();
-                FoundObject found = new FoundObject { gameObject = enemy.gameObject, courseNode = node, type = typeof(EnemyAgent) };
-                if (Vector3.Distance(enemy.Position,agent.Position) < foundDistance)
+                if (FindableObjects.ContainsKey(instanceId))
+                    continue;
+                FindableObject findable = new FindableObject { gameObject = enemy.gameObject, courseNode = node, type = typeof(EnemyAgent), found = false};
+                FindableObjects[instanceId] = findable;
+            }
+            //update locker findables
+            Il2CppSystem.Collections.Generic.List<LG_ResourceContainer_Storage> lockers = new();
+            lockers = node.MetaData.StorageContainers;
+            foreach (var locker in lockers)
+            {
+                int instanceId = locker.gameObject.GetInstanceID();
+                if (!FindableObjects.ContainsKey(instanceId))
                 {
-                    FoundObjects[instanceId] = found;
-                    if (UnfoundObjects.ContainsKey(instanceId))
+                    FindableObject findable = new FindableObject { gameObject = locker.gameObject, courseNode = node, type = typeof(LG_ResourceContainer_Storage), found = false };
+                    FindableObjects[instanceId] = findable;
+                }
+                //update item findables
+                LG_WeakResourceContainer Container = locker.gameObject.GetComponent<LG_WeakResourceContainer>();
+                if (Container != null && Container.ISOpen)
+                {
+                    LG_ResourceContainer_Storage storage = Container.gameObject.GetComponent<LG_ResourceContainer_Storage>();
+                    if (storage == null)
+                        continue;
+                    var items = GetItemsFromLocker(storage);
+                    foreach (ItemInLevel item in items)
                     {
-                        ZiMain.log.LogInfo($"Found object! {enemy.EnemyData._name_k__BackingField}");
-                        UnfoundObjects.Remove(instanceId);
+                        
+                        if (item == null)
+                            continue;
+                        instanceId = item.GetInstanceID();
+                        if (FindableObjects.ContainsKey(instanceId))
+                        {
+                            uint currentId = FindableObjects[instanceId].gameObject.GetComponent<ItemInLevel>().ItemDataBlock.persistentID;
+                            uint newId = item.ItemDataBlock.persistentID;
+                            if (currentId == newId)
+                            {
+                                continue;
+                            }
+                        }
+                        FindableObject itemFindable = new FindableObject { gameObject = item.gameObject, courseNode = node, type = typeof(ItemInLevel), found = false};
+                        FindableObjects[instanceId] = itemFindable;
                     }
                 }
-                else if (!FoundObjects.ContainsKey(instanceId))
+            }
+        }
+        private static int totalFound = 0;
+        public static void Updatefinds(PlayerAgent agent)
+        {
+            totalFound = 0;
+            AIG_CourseNode node = agent.CourseNode;
+            if (node == null)
+                return;
+            foreach (var kvp in FindableObjects)
+            {
+                int instanceId = kvp.Key;
+                FindableObject findable = kvp.Value;
+                if (findable.found == true)
                 {
-                    UnfoundObjects[instanceId] = found;
+                    totalFound++;
+                    continue;
+                }
+                GameObject gameObject = findable.gameObject;
+                if (Vector3.Distance(findable.gameObject.transform.position, agent.Position) < foundDistance)
+                {
+                    findable.found = true;
+                    totalFound++;
+                    ZiMain.log.LogInfo($"Found object {findable.type}! {gameObject.name}");
                 }
             }
+        }
+        public static void CleanFindables(PlayerAgent agent)
+        {
             List<int> objectToRemove = new List<int>();
-            foreach(var obj in FoundObjects)
-                if (!obj.Value.gameObject.activeInHierarchy)
-                    objectToRemove.Add(obj.Key);
-            foreach(var index in objectToRemove)
-                FoundObjects.Remove(index);
-            objectToRemove = new List<int>();
-            foreach (var obj in UnfoundObjects)
+            foreach (var obj in FindableObjects)
                 if (!obj.Value.gameObject.activeInHierarchy)
                     objectToRemove.Add(obj.Key);
             foreach (var index in objectToRemove)
-                UnfoundObjects.Remove(index);
+                FindableObjects.Remove(index);
         }
     }
-    public struct FoundObject
+    public class FindableObject
     {
         public GameObject gameObject;
         public AIG_CourseNode courseNode;
         public Type type;
+        public bool found;
     }
 
 }
