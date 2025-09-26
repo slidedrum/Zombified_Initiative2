@@ -23,7 +23,7 @@ namespace Zombified_Initiative
         //this class is for finding stuff inside the world.
         public static Dictionary<int,FindableObject> FindableObjects = new();
         public static float foundDistance = 10f;
-        
+        private static PlayerAgent localPlayer = null;
 
         public static GameObject GetClosestObjectInLookDirection(Transform baseTransform,List<GameObject> candidates,float maxAngle = 180f, Vector3? candidateOffset = null, Vector3? baseOffset = null)
         {
@@ -86,7 +86,17 @@ namespace Zombified_Initiative
         }
         public static void Update() 
         {
-            foreach(var agent in PlayerManager.PlayerAgentsInLevel)
+            if (localPlayer == null)
+                localPlayer = PlayerManager.GetLocalPlayerAgent();
+            if (localPlayer == null)
+                return;
+            if (localPlayer.Owner.refSessionMode != SNetwork.eReplicationMode.Playing)
+            {
+                if (FindableObjects.Count > 0)
+                    FindableObjects.Clear();
+                return;
+            }
+            foreach (var agent in PlayerManager.PlayerAgentsInLevel)
             {
                 UpdateFindables(agent);
                 Updatefinds(agent);
