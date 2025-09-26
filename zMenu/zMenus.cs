@@ -6,6 +6,8 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEngine;
 using Zombified_Initiative;
+using static Il2CppSystem.Linq.Expressions.Interpreter.NullableMethodCallInstruction;
+using static ZombieTweak2.zMenu.DebugMenuClass;
 
 namespace ZombieTweak2.zMenu
 {
@@ -21,6 +23,7 @@ namespace ZombieTweak2.zMenu
         private static zMenu selectionMenu;
         private static zMenu debugMenu;
         private static zMenu debugNodeMenu;
+        private static zMenu debugNodeSettingsMenu;
         private static zMenu actionMenu;
         public static zMenu permissionMenu;
         private static zMenu pickupDetailsSubmenu;
@@ -39,6 +42,7 @@ namespace ZombieTweak2.zMenu
             shareDetailsSubmenu = zMenuManager.createMenu("Share", permissionMenu, false);
             debugMenu = zMenuManager.createMenu("debug", zMenuManager.mainMenu);
             debugNodeMenu = zMenuManager.createMenu("Nodes", debugMenu);
+            debugNodeSettingsMenu = zMenuManager.createMenu("Settings", debugNodeMenu);
             //todo remove the flip/toggle nodes, and instead make hold action
             selectionMenu.AddNode("Toggle all", SelectionMenuClass.SelectionToggleAllBots).AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, UpdateIndicatorForNode, selectionMenu.centerNode, SelectionMenuClass.botSelection);
             selectionMenu.AddNode("Flip all", SelectionMenuClass.SelectionFlipAllBots).AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, UpdateIndicatorForNode, selectionMenu.centerNode, SelectionMenuClass.botSelection);
@@ -93,6 +97,23 @@ namespace ZombieTweak2.zMenu
             debugNodeMenu.AddNode("Toggle Nodes", zDebug.ToggleNodes);
             debugNodeMenu.AddNode("Toggle Connections", zDebug.ToggleConnections);
             debugNodeMenu.AddNode("Toggle Node Info", zDebug.ToggleNodeInfo);
+
+            var gridSizeNode = debugNodeSettingsMenu.AddNode("Grid Size");
+            gridSizeNode.AddListener(zMenuManager.nodeEvent.WhileSelected, DebugMenuClass.ChangeValueBasedOnMouseWheel, [DebugValueToChange.NodeGridSize, gridSizeNode,1f]);
+            gridSizeNode.SetSubtitle($"{zVisitedManager.NodeGridSize}");
+            var mapGridSizeNode = debugNodeSettingsMenu.AddNode("Map Grid Size");
+            mapGridSizeNode.AddListener(zMenuManager.nodeEvent.WhileSelected, DebugMenuClass.ChangeValueBasedOnMouseWheel, [DebugValueToChange.NodeMapSize, mapGridSizeNode]);
+            mapGridSizeNode.SetSubtitle($"{zVisitedManager.NodeMapGridSize}");
+            var visitDistanceNode = debugNodeSettingsMenu.AddNode("Visit distnace");
+            visitDistanceNode.AddListener(zMenuManager.nodeEvent.WhileSelected, DebugMenuClass.ChangeValueBasedOnMouseWheel, [DebugValueToChange.NodeVisitDistance, visitDistanceNode,0.5f]);
+            visitDistanceNode.SetSubtitle($"{zVisitedManager.NodeVisitDistance}");
+            var propigationAmmountNode = debugNodeSettingsMenu.AddNode("Propigation ammount");
+            propigationAmmountNode.AddListener(zMenuManager.nodeEvent.WhileSelected, DebugMenuClass.ChangeValueBasedOnMouseWheel, [DebugValueToChange.PropigationAmmount, propigationAmmountNode, 1f]);
+            propigationAmmountNode.SetSubtitle($"{zVisitedManager.propigationAmmount}");
+            var propigationSameCountNode = debugNodeSettingsMenu.AddNode("Propigation sample count");
+            propigationSameCountNode.AddListener(zMenuManager.nodeEvent.WhileSelected, DebugMenuClass.ChangeValueBasedOnMouseWheel, [DebugValueToChange.PropigationSampleCount, propigationSameCountNode, 1f]);
+            propigationSameCountNode.SetSubtitle($"{zVisitedManager.propigationSampleCount}");
+
 
 
             //debugMenu.AddNode("Toggle ChecVis", zDebug.toggleVisCheck);
@@ -204,6 +225,55 @@ namespace ZombieTweak2.zMenu
             float currentThreshold = zSlideComputer.GetResourceThreshold(itemID);
             zSlideComputer.SetResourceThreshold(itemID, Math.Clamp((int)currentThreshold + (normalizedScroll * increment), 0,100));
             updateNodeThresholdDisplay(node, itemID);
+        }
+    }
+    public static class DebugMenuClass
+    {
+        public enum DebugValueToChange
+        {
+            NodeGridSize,
+            NodeMapSize,
+            NodeVisitDistance,
+            PropigationAmmount,
+            PropigationSampleCount,
+        }
+        public static void ChangeValueBasedOnMouseWheel(DebugValueToChange valueToChange, zMenu.zMenuNode node, float increment = 0.1f)
+        {
+            if (node == null || !node.gameObject.activeInHierarchy)
+                return;
+            float scroll = Input.GetAxis("Mouse ScrollWheel");
+            int normalizedScroll = (int)Mathf.Sign(scroll);
+            if (scroll == 0f)
+                return;
+            float offset = normalizedScroll * increment;
+            float value = 0;
+            switch (valueToChange)
+            {
+                case DebugValueToChange.NodeMapSize:
+                    zVisitedManager.SetNodeMapGridSize((int)offset + zVisitedManager.NodeMapGridSize);
+                    value = zVisitedManager.NodeMapGridSize;
+                    break;
+                case DebugValueToChange.NodeGridSize:
+                    zVisitedManager.SetNodeGridSize(offset + zVisitedManager.NodeGridSize);
+                    value = zVisitedManager.NodeGridSize;
+                    break;
+                case DebugValueToChange.NodeVisitDistance:
+                    zVisitedManager.SetNodeVisitDistance(offset + zVisitedManager.NodeVisitDistance);
+                    value = zVisitedManager.NodeVisitDistance;
+                    break;
+                case DebugValueToChange.PropigationAmmount:
+                    zVisitedManager.SetPropigationAmmount((int)offset + zVisitedManager.propigationAmmount);
+                    value = zVisitedManager.propigationAmmount;
+                    break;
+                case DebugValueToChange.PropigationSampleCount:
+                    zVisitedManager.SetPropigationSampleCount((int)offset + zVisitedManager.propigationSampleCount);
+                    value = zVisitedManager.propigationSampleCount;
+                    break;
+                default:
+                    Debug.LogWarning("Unknown DebugValueToChange: " + valueToChange);
+                    break;
+            }
+            node.SetSubtitle($"{value}");
         }
     }
     public static class PermissionsMenuClass

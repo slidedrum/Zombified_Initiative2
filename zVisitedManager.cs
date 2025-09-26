@@ -1,44 +1,73 @@
-﻿using FluffyUnderware.DevTools.Extensions;
-using Player;
+﻿using Player;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.AI;
-using UnityEngine.Rendering;
 using Zombified_Initiative;
-using static AIDangerZone;
-using static RootMotion.FinalIK.AimPoser;
-using static ZombieTweak2.zVisitedManager;
 
 namespace ZombieTweak2
 {
     public static class zVisitedManager
     {
-        public const int NodeMapGridSize = 10;
-        public const float NodeGridSize = 1f;
-        public const float NodeVisitDistance = 10f;
+        public static int NodeMapGridSize = 10;
+        public static float NodeGridSize = 2.5f;
+        public static float NodeVisitDistance = 10f;
         public static Dictionary<Vector3Int, HashSet<VisitNode>> NodeMap = new();
         private static bool setup = false;
-        private static List<PlayerAgent> agents;
-        private static List<PlayerAgent> botAgents;
+        private static List<PlayerAgent> agents = new();
+        private static List<PlayerAgent> botAgents = new();
         private const int areaMask = 1 << 0;
         internal static OrderedSet<VisitNode> nodesThatNeedConnectionChecks = new();
         internal static OrderedSet<nodeToCreate> nodesToCreate = new();
         private static int conectionCheckIndex = 0;
         private static int connectionChecksPerFrame = 1;
         private static int nodesCreatedPerFrame = 1;
+        public static int propigationAmmount = 5;
+        public static int propigationSampleCount = 16;
         internal static bool debug = false;
         internal static bool debugText = false;
         internal static bool debugLines = false;
         private static PlayerAgent localPlayer;
         public static Vector3[] CapsuleCorners;
-        public static int propigationSampleCount = 16;
         public static HashSet<VisitNode> allnodes = new();
 
-        public static void Setup()
+        public static void SetNodeMapGridSize(int size)
+        {
+            if (size < 1) size = 1;
+            NodeMapGridSize = size;
+            setup = false;
+            Setup(true);
+        }
+        public static void SetNodeGridSize(float size)
+        {
+            if (size < 0.1f) size = 0.1f;
+            NodeGridSize = (float)Math.Round(size, 1); ;
+            setup = false;
+            Setup(true);
+        }
+        public static void SetNodeVisitDistance(float size)
+        {
+            if (size < 0.1f) size = 0.1f;
+            NodeVisitDistance = (float)Math.Round(size, 1);
+            setup = false;
+            Setup(true);
+        }
+        public static void SetPropigationAmmount(int distance)
+        {
+            if (distance < 0) distance = 0;
+            propigationAmmount = distance;
+            setup = false;
+            Setup(true);
+        }
+        public static void SetPropigationSampleCount(int count)
+        {
+            if (count < 4) count = 4;
+            propigationSampleCount = count;
+            setup = false;
+            Setup(true);
+        }
+        public static void Setup(bool instantNodePropigation = false)
         {
             if (setup) 
                 return;
@@ -53,8 +82,22 @@ namespace ZombieTweak2
             }
             CapsuleCorners = GetCapsuleCorners();
             NodeMap.Clear();
+            var _debug = debug;
+            var _debugText = debugText;
+            var _debugLines = debugLines;
+            debug = false;
+            debugText = false;
+            debugLines = false;
+            foreach (var node in allnodes)
+                node.UpdateDebugVisuals();
+            allnodes.Clear();
+            debug = _debug;
+            debugText = _debugText;
+            debugLines = _debugLines;
+            nodesThatNeedConnectionChecks.Clear();
+            nodesToCreate.Clear();
             agents = PlayerManager.PlayerAgentsInLevel.ToArray().ToList();
-            botAgents = new();
+            botAgents.Clear();
             foreach (PlayerAgent agent in agents)
             {
                 if (agent.Owner.IsBot)
@@ -63,6 +106,18 @@ namespace ZombieTweak2
                 }
             }
             setup = true;
+            if (instantNodePropigation)
+            {
+                foreach (var agent in agents)
+                {
+                    var node = CreateNodeOnNavMesh(agent.Position);
+                    if (node != null)
+                    {
+                        node.Propigate(propigationAmmount);
+                        node.UpdateDebugVisuals();
+                    }
+                }
+            }
         }
         public static void SetDebug(bool? debug = null, bool? text = null, bool? lines = null)
         {
@@ -148,7 +203,7 @@ namespace ZombieTweak2
                 foreach (VisitNode node in visitableNodes)
                 {
                     node.Discover();
-                    node.Propigate(5);
+                    node.Propigate(propigationAmmount);
                     node.UpdateDebugVisuals();
                 }
             }
@@ -164,6 +219,8 @@ namespace ZombieTweak2
             {
                 if (nodesThatNeedConnectionChecks.Count > 0)
                 {
+                    if (conectionCheckIndex >= nodesThatNeedConnectionChecks.Count)
+                        conectionCheckIndex = 0;
                     var node1ToCheck = nodesThatNeedConnectionChecks[conectionCheckIndex];
                     var node2ToCheck = node1ToCheck.nearbyNodesToCheckIfConnected.FirstOrDefault();
                     if (node2ToCheck != null)
@@ -194,8 +251,7 @@ namespace ZombieTweak2
                             node1ToCheck.ConnectNode(node2ToCheck);
                     }
                     conectionCheckIndex++;
-                    if (conectionCheckIndex >= nodesThatNeedConnectionChecks.Count)
-                        conectionCheckIndex = 0;
+
                 }
                 else
                     break;
