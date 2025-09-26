@@ -499,5 +499,20 @@ namespace ZombieTweak2
             FlexibleMethodDefinition callback = new (SendBotToExplore, [bot]);
             zActionSub.addOnTerminated(descriptor, callback);
         }
+
+        internal static void ToggleNodes()
+        {
+            zVisitedManager.SetDebug(debug: !zVisitedManager.debug);
+        }
+
+        internal static void ToggleConnections()
+        {
+            zVisitedManager.SetDebug(lines: !zVisitedManager.debugLines);
+        }
+
+        internal static void ToggleNodeInfo()
+        {
+            zVisitedManager.SetDebug(text: !zVisitedManager.debugText);
+        }
     }
 }

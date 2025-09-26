@@ -1,4 +1,5 @@
-﻿using Player;
+﻿using FluffyUnderware.DevTools.Extensions;
+using Player;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,7 +17,7 @@ namespace ZombieTweak2
 {
     public static class zVisitedManager
     {
-        public const int NodeMapGridSize = 4;
+        public const int NodeMapGridSize = 10;
         public const float NodeGridSize = 1f;
         public const float NodeVisitDistance = 10f;
         public static Dictionary<Vector3Int, HashSet<VisitNode>> NodeMap = new();
@@ -27,12 +28,15 @@ namespace ZombieTweak2
         internal static OrderedSet<VisitNode> nodesThatNeedConnectionChecks = new();
         internal static OrderedSet<nodeToCreate> nodesToCreate = new();
         private static int conectionCheckIndex = 0;
-        private const int connectionChecksPerFrame = 5;
-        private const int nodesCreatedPerFrame = 5;
-        private static bool debug = true;
+        private static int connectionChecksPerFrame = 1;
+        private static int nodesCreatedPerFrame = 1;
+        internal static bool debug = false;
+        internal static bool debugText = false;
+        internal static bool debugLines = false;
         private static PlayerAgent localPlayer;
         public static Vector3[] CapsuleCorners;
         public static int propigationSampleCount = 16;
+        public static HashSet<VisitNode> allnodes = new();
 
         public static void Setup()
         {
@@ -59,6 +63,20 @@ namespace ZombieTweak2
                 }
             }
             setup = true;
+        }
+        public static void SetDebug(bool? debug = null, bool? text = null, bool? lines = null)
+        {
+            if (debug.HasValue)
+                zVisitedManager.debug = debug.Value;
+
+            if (text.HasValue)
+                zVisitedManager.debugText = text.Value;
+
+            if (lines.HasValue)
+                zVisitedManager.debugLines = lines.Value;
+
+            foreach (var node in allnodes)
+                node.UpdateDebugVisuals();
         }
         public class nodeToCreate
         {
@@ -104,6 +122,7 @@ namespace ZombieTweak2
         }
         public static void MapNode(VisitNode node)
         {
+            allnodes.Add(node);
             var gridPos = node.GetGridPosition();
             if (!NodeMap.ContainsKey(gridPos))
                 NodeMap[gridPos] = new();
@@ -130,7 +149,7 @@ namespace ZombieTweak2
                 {
                     node.Discover();
                     node.Propigate(5);
-                    node.UpdateDebugCube();
+                    node.UpdateDebugVisuals();
                 }
             }
             for (int i = 0; i < nodesCreatedPerFrame && i < nodesToCreate.Count; i++)
@@ -296,7 +315,7 @@ namespace ZombieTweak2
             //    return null;
             //}
             var node = new VisitNode(hit.position, true);
-            node.UpdateDebugCube();
+            node.UpdateDebugVisuals();
             return node;
         }
         public static Vector3Int GetGridPosition(Vector3 pos)
@@ -447,6 +466,7 @@ namespace ZombieTweak2
                     zVisitedManager.nodesThatNeedConnectionChecks.Add(this);
                 }
             }
+
         }
         public HashSet<VisitNode> getUnexploredNodes()
         {
@@ -500,7 +520,7 @@ namespace ZombieTweak2
             if (depth <= propigated)
                 return;
             propigated = depth;
-            UpdateDebugCube();
+            UpdateDebugVisuals();
             if (CheckedNodes == null)
                 CheckedNodes = new();
             if (CheckedNodes.Contains(this))
@@ -542,100 +562,132 @@ namespace ZombieTweak2
             }
         }
 
-        public void CreateDebugCube()
+        public void UpdateDebugVisuals()
         {
-            if (DebugObject != null)
-                return;
-
-            DebugObject = new GameObject($"VisitNode_Debug_{GetHashCode()}");
-            DebugObject.transform.position = position + Vector3.up * 0.25f;
-
-            // Cube visual
-            var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            cube.transform.SetParent(DebugObject.transform, false);
-            cube.transform.localPosition = Vector3.zero;
-            cube.transform.localScale = Vector3.one * 0.1f;
-
-            // Disable cube physics
-            var col = cube.GetComponent<Collider>();
-            if (col != null)
-                UnityEngine.Object.Destroy(col);
-
-            // TextMesh on top
-            var textObj = new GameObject("PropigatedText");
-            textObj.transform.SetParent(DebugObject.transform, false);
-            textObj.transform.localPosition = Vector3.up * 0.15f;
-
-            var textMesh = textObj.AddComponent<TextMesh>();
-            textMesh.text = propigated.ToString();
-            textMesh.fontSize = 32;
-            textMesh.characterSize = 0.05f;
-            textMesh.anchor = TextAnchor.MiddleCenter;
-            textMesh.alignment = TextAlignment.Center;
-            textMesh.color = Color.white;
-        }
-
-        public void UpdateDebugCube()
-        {
-            if (DebugObject == null)
-                CreateDebugCube();
-
-            // Update cube color
-            var cube = DebugObject.GetComponentInChildren<MeshRenderer>();
-            if (cube != null)
+            // --- Early out: debug disabled, clean up and return ---
+            if (!zVisitedManager.debug)
             {
-                if (cube.material == null)
-                    cube.material = new Material(Shader.Find("Standard"));
-                cube.material.color = discovered ? Color.green : Color.red;
-            }
-
-            // Update text
-            var textMesh = DebugObject.GetComponentInChildren<TextMesh>();
-            if (textMesh != null)
-            {
-                textMesh.text = propigated.ToString();
-            }
-
-            foreach (var connectedNode in connectedNodes)
-            {
-                if (connectedNode == null)
-                    continue;
-
-                // Check if the connected node already has a line to this node
-                if (connectedNode.connectionLines != null && connectedNode.connectionLines.ContainsKey(this))
-                    continue; // Skip, line already exists
-
-                // Check if line already exists from this node to connectedNode
-                if (!connectionLines.TryGetValue(connectedNode, out var lr) || lr == null)
+                if (DebugObject != null)
                 {
-                    // Create a new GameObject to hold the LineRenderer
-                    GameObject lineObj = new GameObject($"Line_{GetHashCode()}_{connectedNode.GetHashCode()}");
-                    lineObj.transform.SetParent(DebugObject.transform, false);
+                    UnityEngine.Object.Destroy(DebugObject);
+                    DebugObject = null;
+                }
+                return;
+            }
 
-                    lr = lineObj.AddComponent<LineRenderer>();
-                    lr.positionCount = 2;
-                    lr.startWidth = 0.05f;
-                    lr.endWidth = 0.05f;
-                    lr.material = new Material(Shader.Find("Unlit/Color"));
-                    lr.material.color = new Color(0.2f,0.2f,0f);
-                    lr.useWorldSpace = true;
+            // --- Ensure DebugObject exists ---
+            if (DebugObject == null)
+            {
+                DebugObject = new GameObject($"VisitNode_Debug_{GetHashCode()}");
+                DebugObject.transform.position = position + Vector3.up * 0.25f;
 
-                    connectionLines[connectedNode] = lr;
+                // Create cube
+                var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                cube.transform.SetParent(DebugObject.transform, false);
+                cube.transform.localPosition = Vector3.zero;
+                cube.transform.localScale = Vector3.one * 0.1f;
+
+                // Disable cube physics
+                var col = cube.GetComponent<Collider>();
+                if (col != null)
+                    UnityEngine.Object.Destroy(col);
+            }
+
+            // --- Update cube color ---
+            var cubeRenderer = DebugObject.GetComponentInChildren<MeshRenderer>();
+            if (cubeRenderer != null)
+            {
+                if (cubeRenderer.material == null)
+                    cubeRenderer.material = new Material(Shader.Find("Standard"));
+                cubeRenderer.material.color = discovered ? Color.green : Color.red;
+            }
+
+            // --- Debug text ---
+            var debugText = DebugObject.transform.Find("PropigatedText")?.gameObject;
+            if (zVisitedManager.debugText)
+            {
+                TextMesh textMesh;
+                if (debugText == null)
+                {
+                    debugText = new GameObject("PropigatedText");
+                    debugText.transform.SetParent(DebugObject.transform, false);
+                    debugText.transform.localPosition = Vector3.up * 0.15f;
+
+                    textMesh = debugText.AddComponent<TextMesh>();
+                    textMesh.fontSize = 32;
+                    textMesh.characterSize = 0.05f;
+                    textMesh.anchor = TextAnchor.MiddleCenter;
+                    textMesh.alignment = TextAlignment.Center;
+                    textMesh.color = Color.white;
+                }
+                else
+                {
+                    textMesh = debugText.GetComponent<TextMesh>();
                 }
 
-                // Update positions every frame
-                lr.SetPosition(0, position + Vector3.up * 0.25f);
-                lr.SetPosition(1, connectedNode.position + Vector3.up * 0.25f);
+                if (textMesh != null)
+                    textMesh.text = propigated.ToString();
+            }
+            else
+            {
+                if (debugText != null)
+                    UnityEngine.Object.Destroy(debugText);
             }
 
-            // Optionally: remove any lines for nodes no longer navicable
-            var toRemove = connectionLines.Keys.Where(n => !connectedNodes.Contains(n)).ToList();
-            foreach (var key in toRemove)
+            // --- Debug lines ---
+            if (zVisitedManager.debugLines)
             {
-                if (connectionLines[key] != null)
-                    UnityEngine.Object.Destroy(connectionLines[key].gameObject);
-                connectionLines.Remove(key);
+                foreach (var connectedNode in connectedNodes)
+                {
+                    if (connectedNode == null)
+                        continue;
+
+                    // Skip if other node already has a line to this one
+                    if (connectedNode.connectionLines != null &&
+                        connectedNode.connectionLines.ContainsKey(this))
+                        continue;
+
+                    // Create new line if missing
+                    if (!connectionLines.TryGetValue(connectedNode, out var lr) || lr == null)
+                    {
+                        GameObject lineObj = new GameObject($"Line_{GetHashCode()}_{connectedNode.GetHashCode()}");
+                        lineObj.transform.SetParent(DebugObject.transform, false);
+
+                        lr = lineObj.AddComponent<LineRenderer>();
+                        lr.positionCount = 2;
+                        lr.startWidth = 0.05f;
+                        lr.endWidth = 0.05f;
+                        lr.material = new Material(Shader.Find("Unlit/Color"));
+                        lr.material.color = new Color(0.1f, 0.1f, 0f, 0.2f);
+                        lr.useWorldSpace = true;
+
+                        connectionLines[connectedNode] = lr;
+                    }
+
+                    // Update line positions
+                    lr.SetPosition(0, position + Vector3.up * 0.25f);
+                    lr.SetPosition(1, connectedNode.position + Vector3.up * 0.25f);
+                }
+
+                // Remove lines for nodes no longer connected
+                var toRemove = connectionLines.Keys.Where(n => !connectedNodes.Contains(n)).ToList();
+                foreach (var key in toRemove)
+                {
+                    if (connectionLines[key] != null)
+                        UnityEngine.Object.Destroy(connectionLines[key].gameObject);
+                    connectionLines.Remove(key);
+                }
+            }
+            else
+            {
+                foreach (var lr in connectionLines.Values)
+                {
+                    if (lr != null)
+                        UnityEngine.Object.Destroy(lr.gameObject);
+                }
+                connectionLines.Clear();
             }
         }
+
     }
 }

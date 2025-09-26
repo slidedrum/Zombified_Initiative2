@@ -20,6 +20,7 @@ namespace ZombieTweak2.zMenu
         
         private static zMenu selectionMenu;
         private static zMenu debugMenu;
+        private static zMenu debugNodeMenu;
         private static zMenu actionMenu;
         public static zMenu permissionMenu;
         private static zMenu pickupDetailsSubmenu;
@@ -37,6 +38,7 @@ namespace ZombieTweak2.zMenu
             pickupDetailsSubmenu = zMenuManager.createMenu("Pickups", permissionMenu, false);
             shareDetailsSubmenu = zMenuManager.createMenu("Share", permissionMenu, false);
             debugMenu = zMenuManager.createMenu("debug", zMenuManager.mainMenu);
+            debugNodeMenu = zMenuManager.createMenu("Nodes", debugMenu);
             //todo remove the flip/toggle nodes, and instead make hold action
             selectionMenu.AddNode("Toggle all", SelectionMenuClass.SelectionToggleAllBots).AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, UpdateIndicatorForNode, selectionMenu.centerNode, SelectionMenuClass.botSelection);
             selectionMenu.AddNode("Flip all", SelectionMenuClass.SelectionFlipAllBots).AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, UpdateIndicatorForNode, selectionMenu.centerNode, SelectionMenuClass.botSelection);
@@ -87,7 +89,11 @@ namespace ZombieTweak2.zMenu
             debugMenu.AddNode("ChecVis", zDebug.debugCheckViz);
             debugMenu.AddNode("Find unexplored", zDebug.MarkUnexploredArea);
             debugMenu.AddNode("SendBotToExplore", zDebug.SendClosestBotToExplore);
-            debugMenu.AddNode("Node I'm looking at", zDebug.GetNodeImLookingAT, [zMenuManager.mainMenu.gameObject.transform]);
+            debugNodeMenu.AddNode("Node I'm looking at", zDebug.GetNodeImLookingAT, [zMenuManager.mainMenu.gameObject.transform]);
+            debugNodeMenu.AddNode("Toggle Nodes", zDebug.ToggleNodes);
+            debugNodeMenu.AddNode("Toggle Connections", zDebug.ToggleConnections);
+            debugNodeMenu.AddNode("Toggle Node Info", zDebug.ToggleNodeInfo);
+
 
             //debugMenu.AddNode("Toggle ChecVis", zDebug.toggleVisCheck);
 
