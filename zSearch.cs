@@ -231,7 +231,7 @@ namespace Zombified_Initiative
         public HashSet<VisitNode> conntectedNodes = new ();
         public NavMeshHit hit = new();
         private Vector2Int cell;
-        public static int propigationAmmount = 10;
+        public static int propigationAmmount = 30;
         public static Vector3 getUnexploredLocation(Vector3 position)
         {
             VisitNode startingNode = GetNearestNode(position);
@@ -297,16 +297,14 @@ namespace Zombified_Initiative
                 {
                     new VisitNode(agent.Position, propigationAmmount);
                 }
-                else
+                NearbyNodes = GetNearByNodes(agent.Position, VisitNodeDistance * 10);
+                foreach (var node in NearbyNodes)
                 {
-                    foreach (var node in NearbyNodes)
+                    if (!node.explored)
                     {
-                        if (!node.explored)
-                        {
-                            node.explored = true;
-                            node.propigate(propigationAmmount);
-                            node.UpdateDebugCube(false);
-                        }
+                        node.explored = true;
+                        node.propigate(propigationAmmount);
+                        node.UpdateDebugCube(false);
                     }
                 }
             }

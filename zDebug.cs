@@ -400,7 +400,7 @@ namespace ZombieTweak2
         {
             if (playerAgent == null)
                 playerAgent = PlayerManager.GetLocalPlayerAgent();
-            var Unexplored = VisitNode.getUnexploredLocation(playerAgent.Position);
+            var Unexplored = Zombified_Initiative.VisitNode.getUnexploredLocation(playerAgent.Position);
             if (Unexplored == playerAgent.Position || Unexplored == Vector3.zero)
                 return;
             CreatePing(Unexplored);
@@ -442,12 +442,46 @@ namespace ZombieTweak2
             ZiMain.sendChatMessage("Okay here I go exploring!", botAgent, playerAgent);
             SendBotToExplore(bot);
         }
+
+        internal static VisitNode GetNodeImLookingAT(Transform lookTransform)
+        {
+            if (lookTransform == null)
+                return null;
+
+            // Raycast from the transform's position in its forward direction
+            if (!Physics.Raycast(lookTransform.position, lookTransform.forward, out RaycastHit hit, 100f))
+                return null;
+
+            // Get nearby nodes at hit point
+            HashSet<VisitNode> nearbyNodes = zVisitedManager.GetNearByNodes(hit.point, zVisitedManager.NodeVisitDistance);
+            if (nearbyNodes.Count == 0)
+                return null;
+
+            // Convert VisitNodes to GameObjects for candidate list
+            List<GameObject> candidates = nearbyNodes.Select(n => n.DebugObject ?? new GameObject()).ToList();
+
+            // Use the helper to find the closest object in the look direction
+            GameObject closestObj = zSearch.GetClosestObjectInLookDirection(
+                lookTransform,
+                candidates,
+                maxAngle: 180f
+            );
+
+            // Find corresponding VisitNode
+            var node = nearbyNodes.FirstOrDefault(n => n.DebugObject == closestObj);
+
+            if (node != null)
+                CreatePing(node.position);
+
+            return node;
+        }
+
         internal static void SendBotToExplore(PlayerAIBot bot, PlayerBotActionTravel.Descriptor desc = null)
         {
             if (desc != null && desc.Status != PlayerBotActionBase.Descriptor.StatusType.Successful)
                 return;
             PlayerAgent agent = bot.Agent;
-            var Unexplored = VisitNode.getUnexploredLocation(agent.Position);
+            var Unexplored = Zombified_Initiative.VisitNode.getUnexploredLocation(agent.Position);
             if (Unexplored == agent.Position || Unexplored == Vector3.zero)
                 return;
             CreatePing(Unexplored);

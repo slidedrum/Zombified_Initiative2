@@ -87,6 +87,7 @@ namespace ZombieTweak2.zMenu
             debugMenu.AddNode("ChecVis", zDebug.debugCheckViz);
             debugMenu.AddNode("Find unexplored", zDebug.MarkUnexploredArea);
             debugMenu.AddNode("SendBotToExplore", zDebug.SendClosestBotToExplore);
+            debugMenu.AddNode("Node I'm looking at", zDebug.GetNodeImLookingAT, [zMenuManager.mainMenu.gameObject.transform]);
 
             //debugMenu.AddNode("Toggle ChecVis", zDebug.toggleVisCheck);
 
