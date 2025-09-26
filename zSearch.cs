@@ -227,9 +227,11 @@ namespace Zombified_Initiative
         public HashSet<GameObject> SampleDebugCubes = new();
         public Vector3 position;
         public bool explored = false;
+        public int propigated = 0;
         public HashSet<VisitNode> conntectedNodes = new ();
         public NavMeshHit hit = new();
         private Vector2Int cell;
+        public static int propigationAmmount = 10;
         public static Vector3 getUnexploredLocation(Vector3 position)
         {
             VisitNode startingNode = GetNearestNode(position);
@@ -293,7 +295,7 @@ namespace Zombified_Initiative
                 var NearbyNodes = GetNearByNodes(agent.Position, VisitNodeDistance);
                 if (NearbyNodes.Count == 0)
                 {
-                    new VisitNode(agent.Position, 3);
+                    new VisitNode(agent.Position, propigationAmmount);
                 }
                 else
                 {
@@ -302,7 +304,8 @@ namespace Zombified_Initiative
                         if (!node.explored)
                         {
                             node.explored = true;
-                            node.UpdateDebugCube();
+                            node.propigate(propigationAmmount);
+                            node.UpdateDebugCube(false);
                         }
                     }
                 }
@@ -373,6 +376,7 @@ namespace Zombified_Initiative
         }
         public VisitNode(Vector3 Position, int proigate = 0)
         {
+            
             hit = new NavMeshHit();
             NavMesh.SamplePosition(Position, out hit, 3f, -1);
             position = Position;
@@ -404,7 +408,8 @@ namespace Zombified_Initiative
                 conntectedNodes.Add(node);
                 node.conntectedNodes.Add(this);
             }
-            HasUnexploredAreaNearby(proigate);
+            CheckSamplesNearby(proigate);
+            propigated = Math.Max(proigate, propigated);
             addDebugCube();
         }
         public static int areaMask = 1 << 0; // Default walkable area
@@ -421,33 +426,66 @@ namespace Zombified_Initiative
             // Either start or end is not on the NavMesh
             return false;
         }
-        public void UpdateDebugCube()
+        public void UpdateDebugCube(bool explore = true)
         {
             if (debugCube == null)
                 return;
             Renderer rend = debugCube.GetComponent<Renderer>();
             if (rend == null)
                 return;
-            HasUnexploredAreaNearby();
+            if (explore)
+                CheckSamplesNearby();
             // Green if there's unexplored nearby, red if not
             if (explored)
                 rend.material.color = Color.green;
             else
                 rend.material.color = Color.red;
+            // Update propigated text
+            Transform textTransform = debugCube.transform.Find("PropigatedText");
+            if (textTransform != null)
+            {
+                TextMesh textMesh = textTransform.GetComponent<TextMesh>();
+                if (textMesh != null)
+                {
+                    textMesh.text = propigated.ToString();
+                }
+                else 
+                {                                    
+                    ZiMain.log.LogWarning("UpdateDebugCube: TextMesh component not found on PropigatedText.");
+                }
+            }
+            else
+            {
+                ZiMain.log.LogWarning("UpdateDebugCube: PropigatedText not found.");
+            }
         }
         public void addDebugCube()
         {
-            // Create a small cube for the node
             GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
             GameObject.Destroy(cube.GetComponent<Collider>());
             cube.transform.localScale = Vector3.one * 0.1f;
             cube.transform.position = position + Vector3.up * 1f;
+
             Renderer cubeRend = cube.GetComponent<Renderer>();
             if (cubeRend != null)
                 cubeRend.material.color = Color.green;
+
             debugCubes.Add(cube);
             debugCube = cube;
-            UpdateDebugCube();
+
+            // Add a TextMesh above the cube
+            GameObject textObj = new GameObject("PropigatedText");
+            textObj.transform.SetParent(debugCube.transform);
+            textObj.transform.localPosition = Vector3.up * 0.25f;
+
+            TextMesh textMesh = textObj.AddComponent<TextMesh>();
+            textMesh.characterSize = 0.1f;
+            textMesh.anchor = TextAnchor.LowerCenter;
+            textMesh.alignment = TextAlignment.Center;
+            textMesh.color = new Color(0.2f, 0.2f, 0.2f);
+            textMesh.text = propigated.ToString();
+
+            UpdateDebugCube(); // Make sure color and text are correct
         }
         public void addSampleDebugCube(Vector3 pos, HashSet<VisitNode> nearbyNodes, Color color)
         {
@@ -504,14 +542,44 @@ namespace Zombified_Initiative
             // (optional) keep track of sample cube if you need to destroy it later:
             SampleDebugCubes.Add(cube);
         }
-        public bool HasUnexploredAreaNearby(int propigate = 0)
+        public void propigate(int depth, HashSet<VisitNode> visited = null)
+        {
+            if (depth <= 0)
+                return;
+
+            if (visited == null)
+                visited = new HashSet<VisitNode>();
+
+            // Skip nodes we've already processed this cycle
+            if (visited.Contains(this))
+                return;
+
+            visited.Add(this);
+
+            // Update this node's depth
+            propigated = Math.Max(depth, propigated);
+            UpdateDebugCube();
+
+            // Check samples around this node — this will handle new node creation
+            CheckSamplesNearby(depth - 1);
+
+            // Propagate to connected nodes
+            HashSet<VisitNode> nearbynodes = GetNearByNodes();
+            foreach (var node in nearbynodes)
+            {
+                node.propigate(depth - 1, visited);
+            }
+        }
+        public bool CheckSamplesNearby(int propigate = 0)
         {
             foreach (var cube in SampleDebugCubes)
             {
                 GameObject.Destroy(cube);
             }
+            //if (propigate < propigated)
+            //    return UnexploredLocation != Vector3.zero;
             int sampleCount = 8;
-            float radius = FuzzyVisitNodeDistance * 1.5f;
+            float radius = VisitNodeDistance;
             int indexOffset = UnityEngine.Random.Range(0, sampleCount);
             UnexploredLocation = Vector3.zero;
             for (int i = 0; i < sampleCount; i++)
@@ -521,40 +589,9 @@ namespace Zombified_Initiative
                 float angle = rotatedIndex * Mathf.PI * 2f / sampleCount;
                 Vector3 samplePos = position + new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle)) * radius;
 
-                // First, check if any nodes are near the sample point
-                var nearbyNodes = GetNearByNodes(samplePos);
-                bool foundUnexplored = false;
-                foreach (var node in nearbyNodes)
-                {
-                    if (!node.explored)
-                    {
-                        UnexploredLocation = node.position;
-                        foundUnexplored = true;
-                        break; // use the first unexplored node nearby
-                    }
-                }
-
-                if (foundUnexplored)
-                    continue; // skip the rest of this sample
-                //addSampleDebugCube(samplePos, conntectedNodes, Color.grey);
-                // No nodes found; try to find nearest nav position
                 if (!NavMesh.SamplePosition(samplePos, out NavMeshHit hit, 3f, -1))
                     continue;
-                // Check again near the hit position
-                nearbyNodes = GetNearByNodes(hit.position);
-                foundUnexplored = false;
-                foreach (var node in nearbyNodes)
-                {
-                    if (!node.explored)
-                    {
-                        UnexploredLocation = node.position;
-                        foundUnexplored = true;
-                        break; // use the first unexplored node nearby
-                    }
-                }
 
-                if (foundUnexplored)
-                    continue; // skip the rest of this sample
                 bool AdjustPositionUp(Vector3 pos, out Vector3 result, float maxLift = 1.5f, float step = 0.05f)
                 {
                     // Attempt to get player capsule
@@ -616,19 +653,20 @@ namespace Zombified_Initiative
                 Vector3 liftedNodePos = new();
                 if (!AdjustPositionUp(position, out liftedNodePos))
                     continue;
-
+                var nearbyNodes = GetNearByNodes(liftedHitPos, VisitNodeDistance);
                 float rayDistance = Vector3.Distance(liftedHitPos, liftedNodePos);
                 Vector3 direction = (liftedNodePos - liftedHitPos).normalized;
-                //!Physics.Raycast(liftedHitPos, direction, rayDistance) && 
+                //!Physics.Raycast(liftedHitPos, direction, rayDistance)
                 if (CanNavigateBetween(liftedHitPos, liftedNodePos))
                 {
                     // No obstruction between lifted positions
-                    addSampleDebugCube(hit.position, nearbyNodes, Color.black);
-                    UnexploredLocation = hit.position;
-                    if (propigate > 0 && nearbyNodes.Count == 0)
-                        new VisitNode(hit.position, propigate - 1);
+                    //addSampleDebugCube(hit.position, nearbyNodes, Color.black);
+                    UnexploredLocation = liftedHitPos;
+                    if (nearbyNodes.Count == 0 && propigate > 0)
+                    {
+                        new VisitNode(liftedHitPos, propigate - 1);
+                    }
                 }
-                //addSampleDebugCube(samplePos, conntectedNodes, Color.blue);
             }
             return UnexploredLocation != Vector3.zero;
         }
