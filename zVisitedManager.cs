@@ -21,11 +21,11 @@ namespace ZombieTweak2
         internal static OrderedSet<VisitNode> nodesThatNeedConnectionChecks = new();
         internal static OrderedSet<nodeToCreate> nodesToCreate = new();
         private static int conectionCheckIndex = 0;
-        private static int connectionChecksPerFrame = 1;
-        private static int nodesCreatedPerFrame = 1;
-        public static int propigationAmmount = 5;
-        public static int propigationSampleCount = 16;
-        internal static bool debug = false;
+        internal static int connectionChecksPerFrame = 2;
+        internal static int nodesCreatedPerFrame = 5;
+        public static int propigationAmmount = 3;
+        public static int propigationSampleCount = 32;
+        internal static bool debugCube = false;
         internal static bool debugText = false;
         internal static bool debugLines = false;
         private static PlayerAgent localPlayer;
@@ -82,16 +82,16 @@ namespace ZombieTweak2
             }
             CapsuleCorners = GetCapsuleCorners();
             NodeMap.Clear();
-            var _debug = debug;
+            var _debug = debugCube;
             var _debugText = debugText;
             var _debugLines = debugLines;
-            debug = false;
+            debugCube = false;
             debugText = false;
             debugLines = false;
             foreach (var node in allnodes)
                 node.UpdateDebugVisuals();
             allnodes.Clear();
-            debug = _debug;
+            debugCube = _debug;
             debugText = _debugText;
             debugLines = _debugLines;
             nodesThatNeedConnectionChecks.Clear();
@@ -122,7 +122,7 @@ namespace ZombieTweak2
         public static void SetDebug(bool? debug = null, bool? text = null, bool? lines = null)
         {
             if (debug.HasValue)
-                zVisitedManager.debug = debug.Value;
+                zVisitedManager.debugCube = debug.Value;
 
             if (text.HasValue)
                 zVisitedManager.debugText = text.Value;
@@ -620,8 +620,8 @@ namespace ZombieTweak2
 
         public void UpdateDebugVisuals()
         {
-            // --- Early out: debug disabled, clean up and return ---
-            if (!zVisitedManager.debug)
+            // Early out if all debug options are off
+            if (!zVisitedManager.debugCube && !zVisitedManager.debugText && !zVisitedManager.debugLines)
             {
                 if (DebugObject != null)
                 {
@@ -631,45 +631,57 @@ namespace ZombieTweak2
                 return;
             }
 
-            // --- Ensure DebugObject exists ---
+            // Ensure DebugObject exists
             if (DebugObject == null)
             {
                 DebugObject = new GameObject($"VisitNode_Debug_{GetHashCode()}");
                 DebugObject.transform.position = position + Vector3.up * 0.25f;
-
-                // Create cube
-                var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                cube.transform.SetParent(DebugObject.transform, false);
-                cube.transform.localPosition = Vector3.zero;
-                cube.transform.localScale = Vector3.one * 0.1f;
-
-                // Disable cube physics
-                var col = cube.GetComponent<Collider>();
-                if (col != null)
-                    UnityEngine.Object.Destroy(col);
             }
 
-            // --- Update cube color ---
-            var cubeRenderer = DebugObject.GetComponentInChildren<MeshRenderer>();
-            if (cubeRenderer != null)
+            // --- Cube ---
+            var cubeObj = DebugObject.transform.Find("Cube")?.gameObject;
+            if (zVisitedManager.debugCube)
             {
-                if (cubeRenderer.material == null)
-                    cubeRenderer.material = new Material(Shader.Find("Standard"));
-                cubeRenderer.material.color = discovered ? Color.green : Color.red;
+                if (cubeObj == null)
+                {
+                    cubeObj = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    cubeObj.name = "Cube";
+                    cubeObj.transform.SetParent(DebugObject.transform, false);
+                    cubeObj.transform.localPosition = Vector3.zero;
+                    cubeObj.transform.localScale = Vector3.one * 0.1f;
+
+                    // Disable cube physics
+                    var col = cubeObj.GetComponent<Collider>();
+                    if (col != null)
+                        UnityEngine.Object.Destroy(col);
+                }
+
+                var cubeRenderer = cubeObj.GetComponent<MeshRenderer>();
+                if (cubeRenderer != null)
+                {
+                    if (cubeRenderer.material == null)
+                        cubeRenderer.material = new Material(Shader.Find("Standard"));
+                    cubeRenderer.material.color = discovered ? Color.green : Color.red;
+                }
+            }
+            else
+            {
+                if (cubeObj != null)
+                    UnityEngine.Object.Destroy(cubeObj);
             }
 
-            // --- Debug text ---
-            var debugText = DebugObject.transform.Find("PropigatedText")?.gameObject;
+            // --- Text ---
+            var textObj = DebugObject.transform.Find("PropigatedText")?.gameObject;
             if (zVisitedManager.debugText)
             {
                 TextMesh textMesh;
-                if (debugText == null)
+                if (textObj == null)
                 {
-                    debugText = new GameObject("PropigatedText");
-                    debugText.transform.SetParent(DebugObject.transform, false);
-                    debugText.transform.localPosition = Vector3.up * 0.15f;
+                    textObj = new GameObject("PropigatedText");
+                    textObj.transform.SetParent(DebugObject.transform, false);
+                    textObj.transform.localPosition = Vector3.up * 0.15f;
 
-                    textMesh = debugText.AddComponent<TextMesh>();
+                    textMesh = textObj.AddComponent<TextMesh>();
                     textMesh.fontSize = 32;
                     textMesh.characterSize = 0.05f;
                     textMesh.anchor = TextAnchor.MiddleCenter;
@@ -678,7 +690,7 @@ namespace ZombieTweak2
                 }
                 else
                 {
-                    textMesh = debugText.GetComponent<TextMesh>();
+                    textMesh = textObj.GetComponent<TextMesh>();
                 }
 
                 if (textMesh != null)
@@ -686,24 +698,20 @@ namespace ZombieTweak2
             }
             else
             {
-                if (debugText != null)
-                    UnityEngine.Object.Destroy(debugText);
+                if (textObj != null)
+                    UnityEngine.Object.Destroy(textObj);
             }
 
-            // --- Debug lines ---
+            // --- Lines ---
             if (zVisitedManager.debugLines)
             {
                 foreach (var connectedNode in connectedNodes)
                 {
-                    if (connectedNode == null)
-                        continue;
+                    if (connectedNode == null) continue;
 
-                    // Skip if other node already has a line to this one
                     if (connectedNode.connectionLines != null &&
-                        connectedNode.connectionLines.ContainsKey(this))
-                        continue;
+                        connectedNode.connectionLines.ContainsKey(this)) continue;
 
-                    // Create new line if missing
                     if (!connectionLines.TryGetValue(connectedNode, out var lr) || lr == null)
                     {
                         GameObject lineObj = new GameObject($"Line_{GetHashCode()}_{connectedNode.GetHashCode()}");
@@ -720,7 +728,6 @@ namespace ZombieTweak2
                         connectionLines[connectedNode] = lr;
                     }
 
-                    // Update line positions
                     lr.SetPosition(0, position + Vector3.up * 0.25f);
                     lr.SetPosition(1, connectedNode.position + Vector3.up * 0.25f);
                 }
@@ -744,6 +751,7 @@ namespace ZombieTweak2
                 connectionLines.Clear();
             }
         }
+
 
     }
 }

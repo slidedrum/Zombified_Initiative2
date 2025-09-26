@@ -502,7 +502,7 @@ namespace ZombieTweak2
 
         internal static void ToggleNodes()
         {
-            zVisitedManager.SetDebug(debug: !zVisitedManager.debug);
+            zVisitedManager.SetDebug(debug: !zVisitedManager.debugCube);
         }
 
         internal static void ToggleConnections()

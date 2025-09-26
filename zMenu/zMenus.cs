@@ -97,12 +97,12 @@ namespace ZombieTweak2.zMenu
             debugNodeMenu.AddNode("Toggle Nodes", zDebug.ToggleNodes);
             debugNodeMenu.AddNode("Toggle Connections", zDebug.ToggleConnections);
             debugNodeMenu.AddNode("Toggle Node Info", zDebug.ToggleNodeInfo);
-
+            debugNodeSettingsMenu.radius = 30;
             var gridSizeNode = debugNodeSettingsMenu.AddNode("Grid Size");
-            gridSizeNode.AddListener(zMenuManager.nodeEvent.WhileSelected, DebugMenuClass.ChangeValueBasedOnMouseWheel, [DebugValueToChange.NodeGridSize, gridSizeNode,1f]);
+            gridSizeNode.AddListener(zMenuManager.nodeEvent.WhileSelected, DebugMenuClass.ChangeValueBasedOnMouseWheel, [DebugValueToChange.NodeGridSize, gridSizeNode,0.1f]);
             gridSizeNode.SetSubtitle($"{zVisitedManager.NodeGridSize}");
             var mapGridSizeNode = debugNodeSettingsMenu.AddNode("Map Grid Size");
-            mapGridSizeNode.AddListener(zMenuManager.nodeEvent.WhileSelected, DebugMenuClass.ChangeValueBasedOnMouseWheel, [DebugValueToChange.NodeMapSize, mapGridSizeNode]);
+            mapGridSizeNode.AddListener(zMenuManager.nodeEvent.WhileSelected, DebugMenuClass.ChangeValueBasedOnMouseWheel, [DebugValueToChange.NodeMapSize, mapGridSizeNode,1f]);
             mapGridSizeNode.SetSubtitle($"{zVisitedManager.NodeMapGridSize}");
             var visitDistanceNode = debugNodeSettingsMenu.AddNode("Visit distnace");
             visitDistanceNode.AddListener(zMenuManager.nodeEvent.WhileSelected, DebugMenuClass.ChangeValueBasedOnMouseWheel, [DebugValueToChange.NodeVisitDistance, visitDistanceNode,0.5f]);
@@ -113,6 +113,12 @@ namespace ZombieTweak2.zMenu
             var propigationSameCountNode = debugNodeSettingsMenu.AddNode("Propigation sample count");
             propigationSameCountNode.AddListener(zMenuManager.nodeEvent.WhileSelected, DebugMenuClass.ChangeValueBasedOnMouseWheel, [DebugValueToChange.PropigationSampleCount, propigationSameCountNode, 1f]);
             propigationSameCountNode.SetSubtitle($"{zVisitedManager.propigationSampleCount}");
+            var nodesPerFrameNode = debugNodeSettingsMenu.AddNode("Nodes per frame");
+            nodesPerFrameNode.AddListener(zMenuManager.nodeEvent.WhileSelected, DebugMenuClass.ChangeValueBasedOnMouseWheel, [DebugValueToChange.NodesCreatedPerFrame, nodesPerFrameNode, 1f]);
+            nodesPerFrameNode.SetSubtitle($"{zVisitedManager.nodesCreatedPerFrame}");
+            var connectionChecksPerFrameNode = debugNodeSettingsMenu.AddNode("Connections per frame");
+            connectionChecksPerFrameNode.AddListener(zMenuManager.nodeEvent.WhileSelected, DebugMenuClass.ChangeValueBasedOnMouseWheel, [DebugValueToChange.connectionChecksPerFrame, connectionChecksPerFrameNode, 1f]);
+            connectionChecksPerFrameNode.SetSubtitle($"{zVisitedManager.connectionChecksPerFrame}");
 
 
 
@@ -236,6 +242,8 @@ namespace ZombieTweak2.zMenu
             NodeVisitDistance,
             PropigationAmmount,
             PropigationSampleCount,
+            NodesCreatedPerFrame,
+            connectionChecksPerFrame,
         }
         public static void ChangeValueBasedOnMouseWheel(DebugValueToChange valueToChange, zMenu.zMenuNode node, float increment = 0.1f)
         {
@@ -268,6 +276,14 @@ namespace ZombieTweak2.zMenu
                 case DebugValueToChange.PropigationSampleCount:
                     zVisitedManager.SetPropigationSampleCount((int)offset + zVisitedManager.propigationSampleCount);
                     value = zVisitedManager.propigationSampleCount;
+                    break;
+                case DebugValueToChange.NodesCreatedPerFrame:
+                    zVisitedManager.nodesCreatedPerFrame = Math.Max((int)offset + zVisitedManager.nodesCreatedPerFrame,1);
+                    value = zVisitedManager.nodesCreatedPerFrame;
+                    break;
+                case DebugValueToChange.connectionChecksPerFrame:
+                    zVisitedManager.connectionChecksPerFrame = Math.Max((int)offset + zVisitedManager.connectionChecksPerFrame,1);
+                    value = zVisitedManager.connectionChecksPerFrame;
                     break;
                 default:
                     Debug.LogWarning("Unknown DebugValueToChange: " + valueToChange);

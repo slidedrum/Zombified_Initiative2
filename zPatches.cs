@@ -657,7 +657,7 @@ public class ZombifiedPatches
     [HarmonyPostfix]
     public static void CheckCollisionPatch(PlayerBotActionBase __instance, PlayerBotActionBase.Descriptor desc, bool __result)
     {
-        //WTF is this?  Just a debug thing?
+        //WTF is this?  Just a debugCube thing?
         if (__result)
         {
             string botName;
