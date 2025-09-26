@@ -237,19 +237,25 @@ namespace Zombified_Initiative
 
             return startingNode.getUnexploredLocation();
         }
-        public Vector3 getUnexploredLocation(HashSet<VisitNode> visited = null)
+        public Vector3 getUnexploredLocation()
+        {
+            HashSet<VisitNode> visited = new HashSet<VisitNode>();
+            return getUnexploredLocation(ref visited);
+        }
+        public Vector3 getUnexploredLocation(ref HashSet<VisitNode> visited)
         {
             if (UnexploredLocation != Vector3.zero)
                 return UnexploredLocation;
 
             if (visited == null)
                 visited = new HashSet<VisitNode>();
-            if (visited.Count > 10) // arbitrary large number
+            visited.Add(this);
+            if (visited.Count > 100) // arbitrary large number
             {
-                ZiMain.log.LogWarning("Too many nodes visited, breaking recursion to prevent stack overflow.");
+                ZiMain.log.LogWarning("Everything nearby has been explored");
                 return Vector3.zero;
             }
-            visited.Add(this);
+
 
             // Shuffle connected nodes
             List<VisitNode> shuffledNodes = new(conntectedNodes);
@@ -267,7 +273,7 @@ namespace Zombified_Initiative
                 if (visited.Contains(node) || node == this)
                     continue;
 
-                Vector3 ret = node.getUnexploredLocation(visited);
+                Vector3 ret = node.getUnexploredLocation(ref visited);
                 if (ret != Vector3.zero)
                     return ret;
             }
@@ -387,7 +393,8 @@ namespace Zombified_Initiative
 
             addDebugCube();
         }
-        public static bool CanNavigateBetween(Vector3 start, Vector3 end, int areaMask = -1)
+        public static int areaMask = 1 << 0; // Default walkable area
+        public static bool CanNavigateBetween(Vector3 start, Vector3 end)
         {
             if (NavMesh.SamplePosition(start, out NavMeshHit startHit, 1.0f, areaMask) &&
                 NavMesh.SamplePosition(end, out NavMeshHit endHit, 1.0f, areaMask))
