@@ -14,6 +14,7 @@ using UnityEngine;
 using UnityEngine.AI;
 using ZombieTweak2;
 using ZombieTweak2.zMenu;
+using static RootMotion.FinalIK.AimPoser;
 
 namespace Zombified_Initiative
 {
@@ -221,13 +222,58 @@ namespace Zombified_Initiative
         public static HashSet<VisitNode> AllNodes = new ();
         public static Dictionary<Vector2Int, HashSet<VisitNode>> nodeGrid = new();
         public static HashSet<GameObject> debugCubes = new();
+        public Vector3 UnexploredLocation = Vector3.zero;
         public GameObject debugCube;
         public HashSet<GameObject> SampleDebugCubes = new();
         public Vector3 position;
         public HashSet<VisitNode> conntectedNodes = new ();
         public NavMeshHit hit = new();
         private Vector2Int cell;
+        public static Vector3 getUnexploredLocation(Vector3 position)
+        {
+            VisitNode startingNode = GetNearestNode(position);
+            if (startingNode == null)
+                return position;
 
+            return startingNode.getUnexploredLocation();
+        }
+        public Vector3 getUnexploredLocation(HashSet<VisitNode> visited = null)
+        {
+            if (UnexploredLocation != Vector3.zero)
+                return UnexploredLocation;
+
+            if (visited == null)
+                visited = new HashSet<VisitNode>();
+            if (visited.Count > 10) // arbitrary large number
+            {
+                ZiMain.log.LogWarning("Too many nodes visited, breaking recursion to prevent stack overflow.");
+                return Vector3.zero;
+            }
+            visited.Add(this);
+
+            // Shuffle connected nodes
+            List<VisitNode> shuffledNodes = new(conntectedNodes);
+            for (int i = shuffledNodes.Count - 1; i > 0; i--)
+            {
+                int j = UnityEngine.Random.Range(0, i + 1);
+                var temp = shuffledNodes[i];
+                shuffledNodes[i] = shuffledNodes[j];
+                shuffledNodes[j] = temp;
+            }
+
+
+            foreach (VisitNode node in shuffledNodes)
+            {
+                if (visited.Contains(node) || node == this)
+                    continue;
+
+                Vector3 ret = node.getUnexploredLocation(visited);
+                if (ret != Vector3.zero)
+                    return ret;
+            }
+
+            return Vector3.zero;
+        }
         public static void Update()
         {
             foreach(PlayerAgent agent in PlayerManager.PlayerAgentsInLevel)
@@ -535,6 +581,7 @@ namespace Zombified_Initiative
                 {
                     // No obstruction between lifted positions
                     addSampleDebugCube(hit.position, nearbyNodes, Color.black);
+                    UnexploredLocation = hit.position;
                     return true;
                 }
 
@@ -542,6 +589,7 @@ namespace Zombified_Initiative
                 //addSampleDebugCube(samplePos, conntectedNodes, Color.blue);
             }
             // All sampled points have nearby nodes; nothing unexplored
+            UnexploredLocation = Vector3.zero;
             return false;
         }
     }

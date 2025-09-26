@@ -396,6 +396,20 @@ namespace ZombieTweak2
         {
             checkVis = set;
         }
+        internal static void MarkUnexploredArea(PlayerAgent playerAgent = null)
+        {
+            if (playerAgent == null)
+                playerAgent = PlayerManager.GetLocalPlayerAgent();
+            var Unexplored = VisitNode.getUnexploredLocation(playerAgent.Position);
+            if (Unexplored == playerAgent.Position || Unexplored == Vector3.zero)
+                return;
+            CreatePing(Unexplored);
+        }
+        internal static void CreatePing(Vector3 pos)
+        {
+            var localPlayer = PlayerManager.GetLocalPlayerAgent();
+            GuiManager.AttemptSetPlayerPingStatus(localPlayer, true, pos);
+        }
         internal static void debugUpdate() 
         {
             if (checkVis)
@@ -404,6 +418,52 @@ namespace ZombieTweak2
                 GameObject target = zSearch.GetClosestObjectInLookDirection(observer.transform, zSearch.GetGameObjectsWithLookDirection<EnemyAgent>(observer.transform), 180f);
                 zVisiblityManager2.CheckForObject(observer, target);
             }
+        }
+        internal static void SendClosestBotToExplore()
+        {
+            PlayerAgent playerAgent = PlayerManager.GetLocalPlayerAgent();
+            PlayerAIBot bot = null;
+            PlayerAgent botAgent = null;
+            float closestDistance = float.MaxValue;
+            foreach (var agent in PlayerManager.PlayerAgentsInLevel)
+            {
+                if (!agent.Owner.IsBot || !agent.Alive)
+                    continue;
+                float distance = Vector3.Distance(agent.Position, playerAgent.Position);
+                if (distance < closestDistance)
+                {
+                    closestDistance = distance;
+                    botAgent = agent;
+                    bot = agent.gameObject.GetComponent<PlayerAIBot>();
+                }
+            }
+            if (bot == null)
+                return;
+            ZiMain.sendChatMessage("Okay here I go exploring!", botAgent, playerAgent);
+            SendBotToExplore(bot);
+        }
+        internal static void SendBotToExplore(PlayerAIBot bot, PlayerBotActionTravel.Descriptor desc = null)
+        {
+            if (desc != null && desc.Status != PlayerBotActionBase.Descriptor.StatusType.Successful)
+                return;
+            PlayerAgent agent = bot.Agent;
+            var Unexplored = VisitNode.getUnexploredLocation(agent.Position);
+            if (Unexplored == agent.Position || Unexplored == Vector3.zero)
+                return;
+            CreatePing(Unexplored);
+            PlayerBotActionTravel.Descriptor descriptor = new(bot)
+            {
+                DestinationPos = Unexplored,
+                Haste = 0.5f,
+                WalkPosture = PlayerBotActionWalk.Descriptor.PostureEnum.None,
+                Radius = 0.1f,
+                DestinationType = PlayerBotActionTravel.Descriptor.DestinationEnum.Position,
+                Persistent = false,
+                Prio = 15,
+            };
+            bot.StartAction(descriptor);
+            FlexibleMethodDefinition callback = new (SendBotToExplore, [bot]);
+            zActionSub.addOnTerminated(descriptor, callback);
         }
     }
 }
