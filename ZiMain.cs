@@ -1,15 +1,10 @@
-﻿using Agents;
-using BepInEx;
+﻿using BepInEx;
 using BepInEx.Logging;
 using BepInEx.Unity.IL2CPP;
-using Dissonance.Networking.Client;
 using Enemies;
-using FluffyUnderware.DevTools;
 using GTFO.API;
 using HarmonyLib;
 using Il2CppInterop.Runtime.Injection;
-using Il2CppSystem.Reflection;
-using Il2CppSystem.Security.Cryptography;
 using LevelGeneration;
 using Player;
 using SNetwork;
@@ -20,7 +15,6 @@ using UnityEngine.SceneManagement;
 using ZombieTweak2;
 using ZombieTweak2.zMenu;
 using ZombieTweak2.zNetworking;
-using static Player.PlayerBotActionAttack;
 using static ZombieTweak2.zNetworking.pStructs;
 
 /*

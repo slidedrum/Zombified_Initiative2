@@ -1,18 +1,21 @@
 ﻿using HarmonyLib;
 using Player;
 using System.Collections.Generic;
+using TMPro;
 using ZombieTweak2.zRootBotPlayerAction.BaseActionWrappers;
 using Zombified_Initiative;
+using static Il2CppSystem.Globalization.CultureInfo;
 
 namespace ZombieTweak2.zRootBotPlayerAction
 {
     public class RootPlayerBotActionData
     {
-        public List<ICustomPlayerBotActionBase.IDescriptor> allActions = new();
+        public OrderedSet<ICustomPlayerBotActionBase.IDescriptor> allActions = new();
     }
     [HarmonyPatch]
-    public class RootActionRewritePatch
+    public static class RootActionRewritePatch
     {
+        internal static readonly Dictionary<int, RootPlayerBotActionData> RootActionDataStore = new();
         internal static RootPlayerBotActionData GetOrCreateData(PlayerBotActionBase botBase)
         {
             int botId = botBase.m_bot.GetInstanceID();
@@ -23,11 +26,10 @@ namespace ZombieTweak2.zRootBotPlayerAction
             }
             return data;
         }
-        internal static readonly Dictionary<int, RootPlayerBotActionData> RootActionDataStore = new();
 
         [HarmonyPatch(typeof(RootPlayerBotAction.Descriptor), nameof(RootPlayerBotAction.Descriptor.CreateAction))]
         [HarmonyPrefix]
-        public static bool CreateAction(RootPlayerBotAction.Descriptor __instance,ref PlayerBotActionBase __result)
+        public static bool CreateAction(RootPlayerBotAction.Descriptor __instance, ref PlayerBotActionBase __result)
         {
             // Can't hook the constructor directly for some reason, so hook the method that calls the constructor and call my wrapper instead.
             // Might flip back to hooking the constructor if I can figure out how.
@@ -61,6 +63,17 @@ namespace ZombieTweak2.zRootBotPlayerAction
                 __instance.StartAction(bestAction);
             }
             __result = !__instance.IsActive();
+            return false;
+        }
+        [HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.Stop))]
+        [HarmonyPrefix]
+        public static bool Stop(RootPlayerBotAction __instance)
+        {
+            var data = GetOrCreateData(__instance);
+            foreach (var actionDesc in data.allActions)
+            {
+                __instance.SafeStopAction((PlayerBotActionBase.Descriptor)actionDesc);
+            }
             return false;
         }
     }

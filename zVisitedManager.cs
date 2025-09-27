@@ -39,6 +39,8 @@ namespace ZombieTweak2
             if (searched == null)
                 searched = new();
             var node = GetNearestNode(position);
+            if (node == null)
+                return null;
             return node.FindUnexplored(depth,maxDepth,searched);
         }
 

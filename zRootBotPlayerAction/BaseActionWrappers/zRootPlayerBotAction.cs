@@ -2,13 +2,16 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using ZombieTweak2.zRootBotPlayerAction.CustomActions;
 
 namespace ZombieTweak2.zRootBotPlayerAction.BaseActionWrappers
 {
     internal class zRootPlayerBotAction : RootPlayerBotAction
     {
+        
         public zRootPlayerBotAction(Descriptor desc) : base(desc)
         {
             var data = RootActionRewritePatch.GetOrCreateData(this);
@@ -46,7 +49,7 @@ namespace ZombieTweak2.zRootBotPlayerAction.BaseActionWrappers
             this.m_highlightAction = m_highlightAction;
             data.allActions.Add(m_highlightAction);
 
-            var m_useEnemyScannerAction = new zPlayerBotActionUseEnemyScanner.Descriptor(this.m_bot);
+            var m_useEnemyScannerAction = new zPlayerBotActionUseEnemyScanner.Descriptor(this.m_bot); // Something is wrong with this, bots don't scan.
             this.m_useEnemyScannerAction = m_useEnemyScannerAction;
             data.allActions.Add(m_useEnemyScannerAction);
 
@@ -67,7 +70,8 @@ namespace ZombieTweak2.zRootBotPlayerAction.BaseActionWrappers
             m_evadeAction.PrioPrecaution = RootPlayerBotAction.m_prioSettings.EvadeProjectilePrecaution;
             this.m_evadeAction = m_evadeAction;
             data.allActions.Add(m_evadeAction);
-
+            //zPlayerBotActionExplore.Descriptor ExploreACtion = new zPlayerBotActionExplore.Descriptor(this.m_bot);
+            //data.allActions.Add((zPlayerBotActionExplore.Descriptor)ExploreACtion);
         }
     }
 }
