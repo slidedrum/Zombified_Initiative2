@@ -9,8 +9,7 @@ namespace ZombieTweak2
 {
     internal class zPlayerBotActionFollow : PlayerBotActionFollow, ICustomPlayerBotActionBase
     {
-        private zPlayerBotActionIdle.Descriptor descriptor;
-
+        public Descriptor descriptor;
         public new class Descriptor : PlayerBotActionFollow.Descriptor, ICustomPlayerBotActionBase.IDescriptor
         {
             public ICustomPlayerBotActionBase m_customBase { get; set; }
@@ -26,7 +25,8 @@ namespace ZombieTweak2
         public zPlayerBotActionFollow(Descriptor desc) : base(desc)
         {
             desc.m_customBase = this;
-            m_desc = m_descBase as PlayerBotActionFollow.Descriptor;
+            descriptor = desc;
+            m_desc = m_descBase as Descriptor;
         }
 
         public void compareAction(RootPlayerBotAction root, ref PlayerBotActionBase.Descriptor bestAction)

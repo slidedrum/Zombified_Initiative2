@@ -7,6 +7,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using ZombieTweak2.zRootBotPlayerAction.BaseActionWrappers;
 using Zombified_Initiative;
 
 namespace ZombieTweak2.zRootBotPlayerAction
@@ -45,11 +46,12 @@ namespace ZombieTweak2.zRootBotPlayerAction
             //hurt action is handled somewhere else?  Might need to find it?  Or maybe it's unused now?  Who knows.
 
             data.allActions.Clear();
-            var m_idleAction = new zPlayerBotActionIdle.Descriptor(__instance.m_bot);
+
+            var m_idleAction = new zPlayerBotActionIdle.Descriptor(__instance.m_bot); // Create the action wrapper
             m_idleAction.PrioFreezeForTwitcher = RootPlayerBotAction.m_prioSettings.IdleFreezeForTwitcher;
-            __instance.m_idleAction = m_idleAction;
-            data.allActions.Add(m_idleAction);
-            
+            __instance.m_idleAction = m_idleAction; // Assign it to the instance
+            data.allActions.Add(m_idleAction); // Add it to our custom list
+            // Repeat
             var m_followLeaderAction = new zPlayerBotActionFollow.Descriptor(__instance.m_bot);
             __instance.m_followLeaderAction = m_followLeaderAction;
             data.allActions.Add(m_followLeaderAction);
@@ -58,7 +60,10 @@ namespace ZombieTweak2.zRootBotPlayerAction
             __instance.m_useBioscanAction = m_useBioscanAction;
             data.allActions.Add(m_useBioscanAction);
 
-            __instance.m_useBioscanAction =         new PlayerBotActionUseBioscan.Descriptor        (__instance.m_bot);
+            var m_attackAction = new zPlayerBotActionAttack.Descriptor(__instance.m_bot);
+            __instance.m_attackAction = m_attackAction;
+            data.allActions.Add(m_attackAction);
+
             __instance.m_attackAction =             new PlayerBotActionAttack.Descriptor            (__instance.m_bot);
             __instance.m_reviveAction =             new PlayerBotActionRevive.Descriptor            (__instance.m_bot);
             __instance.m_unlockAction =             new PlayerBotActionUnlock.Descriptor            (__instance.m_bot); 
@@ -71,7 +76,6 @@ namespace ZombieTweak2.zRootBotPlayerAction
             __instance.RefreshGearAvailability();
             
             
-            data.allActions.Add(__instance.m_useBioscanAction);
             data.allActions.Add(__instance.m_attackAction);
             data.allActions.Add(__instance.m_reviveAction);
             data.allActions.Add(__instance.m_unlockAction);
