@@ -1,7 +1,5 @@
 ﻿using HarmonyLib;
-using Il2CppSystem.Security.Cryptography;
 using Player;
-using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using ZombieTweak2.zRootBotPlayerAction.BaseActionWrappers;
@@ -12,6 +10,7 @@ namespace ZombieTweak2.zRootBotPlayerAction
     public class RootPlayerBotActionData
     {
         public List<ICustomPlayerBotActionBase.IDescriptor> allActions = new();
+        public bool constructed = false;
     }
     [HarmonyPatch]
     public class RootActionRewritePatch
