@@ -21,17 +21,16 @@ namespace ZombieTweak2.zRootBotPlayerAction.BaseActionWrappers
             {
                 return new zPlayerBotActionAttack(this);
             }
+            public void compareAction(RootPlayerBotAction root, ref PlayerBotActionBase.Descriptor bestAction)
+            {
+                root.UpdateActionAttack(ref bestAction);
+            }
         }
         public zPlayerBotActionAttack(Descriptor desc) : base(desc)
         {
             desc.m_customBase = this;
             descriptor = desc;
             m_desc = m_descBase as Descriptor;
-        }
-
-        public void compareAction(RootPlayerBotAction root, ref PlayerBotActionBase.Descriptor bestAction)
-        {
-            root.UpdateActionAttack(ref bestAction);
         }
     }
 }

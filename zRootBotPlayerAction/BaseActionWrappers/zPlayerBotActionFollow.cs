@@ -16,6 +16,10 @@ namespace ZombieTweak2
             {
                 return new zPlayerBotActionFollow(this);
             }
+            public void compareAction(RootPlayerBotAction root, ref PlayerBotActionBase.Descriptor bestAction)
+            {
+                root.UpdateActionFollowPlayer(ref bestAction);
+            }
         }
         public zPlayerBotActionFollow(Descriptor desc) : base(desc)
         {
@@ -24,10 +28,7 @@ namespace ZombieTweak2
             m_desc = m_descBase as Descriptor;
         }
 
-        public void compareAction(RootPlayerBotAction root, ref PlayerBotActionBase.Descriptor bestAction)
-        {
-            root.UpdateActionFollowPlayer(ref bestAction);
-        }
+
     }
 
 }

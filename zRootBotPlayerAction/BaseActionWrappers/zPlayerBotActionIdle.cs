@@ -16,6 +16,10 @@ namespace ZombieTweak2
             {
                 return new zPlayerBotActionIdle(this);
             }
+            public void compareAction(RootPlayerBotAction root, ref PlayerBotActionBase.Descriptor bestAction)
+            {
+                root.UpdateActionIdle(ref bestAction);
+            }
         }
         public zPlayerBotActionIdle(Descriptor desc) : base(desc)
         {
@@ -24,10 +28,7 @@ namespace ZombieTweak2
             m_desc = m_descBase as Descriptor;
         }
 
-        public void compareAction(RootPlayerBotAction root, ref PlayerBotActionBase.Descriptor bestAction)
-        {
-            root.UpdateActionIdle(ref bestAction);
-        }
+
     }
 
 }

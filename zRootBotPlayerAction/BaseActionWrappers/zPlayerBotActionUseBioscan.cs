@@ -16,6 +16,10 @@ namespace ZombieTweak2.zRootBotPlayerAction.BaseActionWrappers
             {
                 return new zPlayerBotActionUseBioscan(this);
             }
+            public void compareAction(RootPlayerBotAction root, ref PlayerBotActionBase.Descriptor bestAction)
+            {
+                root.UpdateActionUseBioscan(ref bestAction);
+            }
         }
         public zPlayerBotActionUseBioscan(Descriptor desc) : base(desc)
         {
@@ -23,9 +27,6 @@ namespace ZombieTweak2.zRootBotPlayerAction.BaseActionWrappers
             descriptor = desc;
             m_desc = m_descBase as Descriptor;
         }
-        public void compareAction(RootPlayerBotAction root, ref PlayerBotActionBase.Descriptor bestAction)
-        {
-            root.UpdateActionUseBioscan(ref bestAction);
-        }
+
     }
 }

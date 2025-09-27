@@ -21,6 +21,10 @@ namespace ZombieTweak2.zRootBotPlayerAction.BaseActionWrappers
             {
                 return new zPlayerBotActionCollectItem(this);
             }
+            public void compareAction(RootPlayerBotAction root, ref PlayerBotActionBase.Descriptor bestAction)
+            {
+                root.UpdateActionCollectItem(ref bestAction);
+            }
         }
         public zPlayerBotActionCollectItem(Descriptor desc) : base(desc)
         {
@@ -29,9 +33,6 @@ namespace ZombieTweak2.zRootBotPlayerAction.BaseActionWrappers
             m_desc = m_descBase as Descriptor;
         }
 
-        public void compareAction(RootPlayerBotAction root, ref PlayerBotActionBase.Descriptor bestAction)
-        {
-            root.UpdateActionCollectItem(ref bestAction);
-        }
+
     }
 }

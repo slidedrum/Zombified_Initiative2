@@ -9,7 +9,6 @@ namespace ZombieTweak2.zRootBotPlayerAction
     public class RootPlayerBotActionData
     {
         public List<ICustomPlayerBotActionBase.IDescriptor> allActions = new();
-        public bool constructed = false;
     }
     [HarmonyPatch]
     public class RootActionRewritePatch
@@ -35,7 +34,10 @@ namespace ZombieTweak2.zRootBotPlayerAction
             __result = new zRootPlayerBotAction(__instance);
             return false;
         }
-
+        public static bool BaseUpdate(RootPlayerBotAction __instance)
+        {
+            return !__instance.IsActive(); //this is really dumb but this is what the base game does. /shrug
+        }
         [HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.Update))]
         [HarmonyPrefix]
         public static bool Update(RootPlayerBotAction __instance, ref bool __result)
@@ -43,17 +45,23 @@ namespace ZombieTweak2.zRootBotPlayerAction
             if (!ZiMain.newRootBotPlayerAction)
                 return true;
             var data = GetOrCreateData(__instance);
-            return true;
+            if (BaseUpdate(__instance))
+            {
+                __result = true;
+                return false;
+            }
+            __instance.RefreshGearAvailability();
+            PlayerBotActionBase.Descriptor bestAction = null;
+            foreach (var actionDesc in data.allActions)
+            {
+                actionDesc.compareAction(__instance, ref bestAction);
+            }
+            if (bestAction != null)
+            {
+                __instance.StartAction(bestAction);
+            }
+            __result = !__instance.IsActive();
+            return false;
         }
     }
 }
-//__result = __instance.IsActive();
-////if (base.Update())
-//var baseUpdate = AccessTools.Method(typeof(PlayerBotActionBase), "Update");
-//bool baseResult = (bool)baseUpdate.Invoke(__instance, null);
-//if (baseResult)
-//{
-//    __result = true;
-//    return false; // skip original
-//}
-//return false;

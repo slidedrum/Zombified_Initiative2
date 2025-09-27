@@ -21,6 +21,10 @@ namespace ZombieTweak2.zRootBotPlayerAction.BaseActionWrappers
             {
                 return new zPlayerBotActionUseEnemyScanner(this);
             }
+            public void compareAction(RootPlayerBotAction root, ref PlayerBotActionBase.Descriptor bestAction)
+            {
+                root.UpdateActionUseEnemyScanner(ref bestAction);
+            }
         }
         public zPlayerBotActionUseEnemyScanner(Descriptor desc) : base(desc)
         {
@@ -28,9 +32,6 @@ namespace ZombieTweak2.zRootBotPlayerAction.BaseActionWrappers
             descriptor = desc;
             m_desc = m_descBase as Descriptor;
         }
-        public void compareAction(RootPlayerBotAction root, ref PlayerBotActionBase.Descriptor bestAction)
-        {
-            root.UpdateActionUseEnemyScanner(ref bestAction);
-        }
+
     }
 }

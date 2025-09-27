@@ -21,6 +21,11 @@ namespace ZombieTweak2.zRootBotPlayerAction.BaseActionWrappers
             {
                 return new zPlayerBotActionEvadeProjectile(this);
             }
+
+            public void compareAction(RootPlayerBotAction root, ref PlayerBotActionBase.Descriptor bestAction)
+            {
+                root.UpdateActionFollowPlayer(ref bestAction);
+            }
         }
         public zPlayerBotActionEvadeProjectile(Descriptor desc) : base(desc)
         {
@@ -29,9 +34,5 @@ namespace ZombieTweak2.zRootBotPlayerAction.BaseActionWrappers
             m_desc = m_descBase as Descriptor;
         }
 
-        public void compareAction(RootPlayerBotAction root, ref PlayerBotActionBase.Descriptor bestAction)
-        {
-            root.UpdateActionFollowPlayer(ref bestAction);
-        }
     }
 }

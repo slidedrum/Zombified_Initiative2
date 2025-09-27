@@ -13,7 +13,8 @@ namespace ZombieTweak2
         {
             // You must also overide CreateAction in your descriptor to return your custom action type
             ICustomPlayerBotActionBase m_customBase { get; set; }
+            void compareAction(RootPlayerBotAction root, ref PlayerBotActionBase.Descriptor bestAction);
         }
-        void compareAction(RootPlayerBotAction root, ref PlayerBotActionBase.Descriptor bestAction);
+        
     }
 }
