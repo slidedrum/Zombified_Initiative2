@@ -1,9 +1,6 @@
 ﻿using HarmonyLib;
-using Il2CppSystem.Security.Cryptography;
 using Player;
-using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using ZombieTweak2.zRootBotPlayerAction.BaseActionWrappers;
 using Zombified_Initiative;
 
@@ -12,6 +9,7 @@ namespace ZombieTweak2.zRootBotPlayerAction
     public class RootPlayerBotActionData
     {
         public List<ICustomPlayerBotActionBase.IDescriptor> allActions = new();
+        public bool constructed = false;
     }
     [HarmonyPatch]
     public class RootActionRewritePatch
@@ -33,6 +31,7 @@ namespace ZombieTweak2.zRootBotPlayerAction
         public static bool CreateAction(RootPlayerBotAction.Descriptor __instance,ref PlayerBotActionBase __result)
         {
             // Can't hook the constructor directly for some reason, so hook the method that calls the constructor and call my wrapper instead.
+            // Might flip back to hooking the constructor if I can figure out how.
             __result = new zRootPlayerBotAction(__instance);
             return false;
         }
@@ -46,7 +45,6 @@ namespace ZombieTweak2.zRootBotPlayerAction
             var data = GetOrCreateData(__instance);
             return true;
         }
-
     }
 }
 //__result = __instance.IsActive();
