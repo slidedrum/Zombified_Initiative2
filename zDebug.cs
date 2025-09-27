@@ -481,9 +481,10 @@ namespace ZombieTweak2
             if (desc != null && desc.Status != PlayerBotActionBase.Descriptor.StatusType.Successful)
                 return;
             PlayerAgent agent = bot.Agent;
-            var Unexplored = Zombified_Initiative.VisitNode.getUnexploredLocation(agent.Position);
-            if (Unexplored == agent.Position || Unexplored == Vector3.zero)
+            var UnexploredNode = zVisitedManager.GetUnexploredLocation(agent.Position);
+            if (UnexploredNode == null)
                 return;
+            Vector3 Unexplored = UnexploredNode.position;
             CreatePing(Unexplored);
             PlayerBotActionTravel.Descriptor descriptor = new(bot)
             {

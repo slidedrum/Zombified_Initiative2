@@ -106,6 +106,7 @@ using static ZombieTweak2.zNetworking.pStructs;
  -- TODO -- Make clear room command only know about eneimes someone has seen.
  -- TODO -- share with placed turrets
  -- TODO -- BUG -- When holding a node then look away, when you re-open menu node still highlighted.
+ -- TODO -- Make "don't pick up this item" context command that lets bots pick up things, but not this spesific item/locker.
 
 Want to make combine resource mod
 

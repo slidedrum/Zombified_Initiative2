@@ -28,9 +28,19 @@ namespace ZombieTweak2
         internal static bool debugCube = false;
         internal static bool debugText = false;
         internal static bool debugLines = false;
+        internal static int unexploredMaxDepth = 50;
         private static PlayerAgent localPlayer;
         public static Vector3[] CapsuleCorners;
         public static HashSet<VisitNode> allnodes = new();
+        public static VisitNode GetUnexploredLocation(Vector3 position, int depth = 0,int maxDepth = 0, OrderedSet<VisitNode> searched = null)
+        {
+            if (maxDepth == 0)
+                maxDepth = unexploredMaxDepth;
+            if (searched == null)
+                searched = new();
+            var node = GetNearestNode(position);
+            return node.FindUnexplored(depth,maxDepth,searched);
+        }
 
         public static void SetNodeMapGridSize(int size)
         {
@@ -417,6 +427,28 @@ namespace ZombieTweak2
             }
             return false;
         }
+        public static VisitNode GetNearestNode(Vector3 position, float searchRadius = 0)
+        {
+            var NearbyNodes = GetNearByNodes(position, searchRadius);
+            if (NearbyNodes.Count == 0)
+                return null;
+            float closestDistance = float.MaxValue;
+            VisitNode nearestNode = null;
+            foreach(var node in  NearbyNodes)
+            {
+                var distance = Vector3.Distance(node.position, position);
+                if (distance < closestDistance)
+                {
+                    closestDistance = distance;
+                    nearestNode = node;
+                }
+                if (distance < NodeGridSize)
+                {
+                    break;
+                }
+            }
+            return nearestNode;
+        }
         public static HashSet<VisitNode> GetNearByNodes(Vector3 position, float searchRadius = 0)
         {
             HashSet<VisitNode> nearbyNodes = new();
@@ -507,7 +539,7 @@ namespace ZombieTweak2
         public bool discovered = false;
         public int propigated = 0;
         public HashSet<VisitNode> nearbyNodes = new();
-        public HashSet<VisitNode> connectedNodes = new();
+        public OrderedSet<VisitNode> connectedNodes = new();
         public HashSet<VisitNode> nearbyNodesToCheckIfConnected = new();
         private Dictionary<VisitNode, LineRenderer> connectionLines = new();
 
@@ -530,9 +562,9 @@ namespace ZombieTweak2
             }
 
         }
-        public HashSet<VisitNode> getUnexploredNodes()
+        public OrderedSet<VisitNode> getUnexploredNodes()
         {
-            HashSet<VisitNode> unexploredNodes = new();
+            OrderedSet<VisitNode> unexploredNodes = new();
             foreach (var node in connectedNodes)
             {
                 if (!node.discovered)
@@ -758,6 +790,37 @@ namespace ZombieTweak2
             }
         }
 
-
+        internal VisitNode FindUnexplored(int depth = 0, int maxDepth = 0, OrderedSet<VisitNode> searched = null)
+        {
+            if (maxDepth == 0)
+                maxDepth = zVisitedManager.unexploredMaxDepth;
+            if (searched == null)
+                searched = new();
+            OrderedSet<VisitNode> unexploredConnections = getUnexploredNodes();
+            if (unexploredConnections.Count > 0)
+                return unexploredConnections[UnityEngine.Random.Range(0, unexploredConnections.Count)];
+            else if (depth < maxDepth)
+            {
+                var ViableNodes = connectedNodes.Except(searched).ToList();
+                if (ViableNodes.Count() == 0)
+                    return null;
+                List<VisitNode> shuffledNodes = new(ViableNodes);
+                for (int i = shuffledNodes.Count - 1; i > 0; i--)
+                {
+                    int j = UnityEngine.Random.Range(0, i + 1);
+                    var temp = shuffledNodes[i];
+                    shuffledNodes[i] = shuffledNodes[j];
+                    shuffledNodes[j] = temp;
+                }
+                foreach (var node in shuffledNodes)
+                {
+                    searched.Add(node);
+                    var result = node.FindUnexplored(depth + 1, maxDepth, searched);
+                    if (result != null)
+                        return result;
+                }
+            }
+            return null;
+        }
     }
 }
