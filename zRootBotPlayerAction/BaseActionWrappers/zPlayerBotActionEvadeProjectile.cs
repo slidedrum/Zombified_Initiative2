@@ -1,23 +1,28 @@
 ﻿using Player;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace ZombieTweak2
+namespace ZombieTweak2.zRootBotPlayerAction.BaseActionWrappers
 {
-    internal class zPlayerBotActionFollow : PlayerBotActionFollow, ICustomPlayerBotActionBase
+    internal class zPlayerBotActionEvadeProjectile : PlayerBotActionEvadeProjectile, ICustomPlayerBotActionBase
     {
         public Descriptor descriptor;
-        public new class Descriptor : PlayerBotActionFollow.Descriptor, ICustomPlayerBotActionBase.IDescriptor
+        public new class Descriptor : PlayerBotActionEvadeProjectile.Descriptor, ICustomPlayerBotActionBase.IDescriptor
         {
             public ICustomPlayerBotActionBase m_customBase { get; set; }
             public Descriptor(PlayerAIBot bot) : base(bot)
             {
-                m_customBase = new zPlayerBotActionFollow(this);
+                m_customBase = new zPlayerBotActionEvadeProjectile(this);
             }
             public override PlayerBotActionBase CreateAction()
             {
-                return new zPlayerBotActionFollow(this);
+                return new zPlayerBotActionEvadeProjectile(this);
             }
         }
-        public zPlayerBotActionFollow(Descriptor desc) : base(desc)
+        public zPlayerBotActionEvadeProjectile(Descriptor desc) : base(desc)
         {
             desc.m_customBase = this;
             descriptor = desc;
@@ -29,5 +34,4 @@ namespace ZombieTweak2
             root.UpdateActionFollowPlayer(ref bestAction);
         }
     }
-
 }

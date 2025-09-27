@@ -43,12 +43,15 @@ namespace ZombieTweak2.zRootBotPlayerAction
             __instance.m_gearAvailability = new RootPlayerBotAction.GearAvailability();
             __instance.m_desc = __instance.m_descBase as RootPlayerBotAction.Descriptor;
 
-            //hurt action is handled somewhere else?  Might need to find it?  Or maybe it's unused now?  Who knows.
-
             data.allActions.Clear();
+
+            //hurt action is handled somewhere else?  Might need to find it?  Or maybe it's unused now?  Who knows.
 
             var m_idleAction = new zPlayerBotActionIdle.Descriptor(__instance.m_bot); // Create the action wrapper
             m_idleAction.PrioFreezeForTwitcher = RootPlayerBotAction.m_prioSettings.IdleFreezeForTwitcher;
+            m_idleAction.PrioFreezeForInteraction = RootPlayerBotAction.m_prioSettings.IdleFreezeForInteraction;
+            m_idleAction.PrioLook = RootPlayerBotAction.m_prioSettings.IdleLook;
+            m_idleAction.PrioPrepareAction = RootPlayerBotAction.m_prioSettings.IdlePrepare;
             __instance.m_idleAction = m_idleAction; // Assign it to the instance
             data.allActions.Add(m_idleAction); // Add it to our custom list
             // Repeat
@@ -64,27 +67,42 @@ namespace ZombieTweak2.zRootBotPlayerAction
             __instance.m_attackAction = m_attackAction;
             data.allActions.Add(m_attackAction);
 
-            __instance.m_attackAction =             new PlayerBotActionAttack.Descriptor            (__instance.m_bot);
-            __instance.m_reviveAction =             new PlayerBotActionRevive.Descriptor            (__instance.m_bot);
-            __instance.m_unlockAction =             new PlayerBotActionUnlock.Descriptor            (__instance.m_bot); 
-            __instance.m_highlightAction =          new PlayerBotActionHighlight.Descriptor         (__instance.m_bot);
-            __instance.m_useEnemyScannerAction =    new PlayerBotActionUseEnemyScanner.Descriptor   (__instance.m_bot);
-            __instance.m_tagEnemiesAction =         new PlayerBotActionUseEnemyScanner.Descriptor   (__instance.m_bot);
-            __instance.m_collectItemAction =        new PlayerBotActionCollectItem.Descriptor       (__instance.m_bot);
-            __instance.m_shareResourceAction =      new PlayerBotActionShareResourcePack.Descriptor (__instance.m_bot);
-            __instance.m_evadeAction =              new PlayerBotActionEvadeProjectile.Descriptor   (__instance.m_bot);
+            var m_reviveAction = new zPlayerBotActionRevive.Descriptor(__instance.m_bot);
+            __instance.m_reviveAction = m_reviveAction;
+            data.allActions.Add(m_reviveAction);
+
+            var m_unlockAction = new zPlayerBotActionUnlock.Descriptor(__instance.m_bot);
+            __instance.m_unlockAction = m_unlockAction;
+            data.allActions.Add(m_unlockAction);
+
+            var m_highlightAction = new zPlayerBotActionHighlight.Descriptor(__instance.m_bot);
+            __instance.m_highlightAction = m_highlightAction;
+            data.allActions.Add(m_highlightAction);
+
+            var m_useEnemyScannerAction = new zPlayerBotActionUseEnemyScanner.Descriptor(__instance.m_bot);
+            __instance.m_useEnemyScannerAction = m_useEnemyScannerAction;
+            data.allActions.Add(m_useEnemyScannerAction);
+
+            var m_tagEnemiesAction = new zPlayerBotActionUseEnemyScanner.Descriptor(__instance.m_bot); // resued same class for some reason.  Create another one?
+            __instance.m_tagEnemiesAction = m_tagEnemiesAction;
+            data.allActions.Add(m_tagEnemiesAction);
+
+            var m_collectItemAction = new zPlayerBotActionCollectItem.Descriptor(__instance.m_bot);
+            __instance.m_collectItemAction = m_collectItemAction;
+            data.allActions.Add(m_collectItemAction);
+
+            var m_shareResourceAction = new zPlayerBotActionShareResourcePack.Descriptor(__instance.m_bot);
+            __instance.m_shareResourceAction = m_shareResourceAction;
+            data.allActions.Add(m_shareResourceAction);
+
+            var m_evadeAction = new zPlayerBotActionEvadeProjectile.Descriptor(__instance.m_bot);
+            m_evadeAction.PrioLook = RootPlayerBotAction.m_prioSettings.EvadeProjectileLook;
+            m_evadeAction.PrioPrecaution = RootPlayerBotAction.m_prioSettings.EvadeProjectilePrecaution;
+            __instance.m_evadeAction = m_evadeAction;
+            data.allActions.Add(m_evadeAction);
+
             __instance.RefreshGearAvailability();
             
-            
-            data.allActions.Add(__instance.m_attackAction);
-            data.allActions.Add(__instance.m_reviveAction);
-            data.allActions.Add(__instance.m_unlockAction);
-            data.allActions.Add(__instance.m_highlightAction);
-            data.allActions.Add(__instance.m_useEnemyScannerAction);
-            data.allActions.Add(__instance.m_tagEnemiesAction);
-            data.allActions.Add(__instance.m_collectItemAction);
-            data.allActions.Add(__instance.m_shareResourceAction);
-            data.allActions.Add(__instance.m_evadeAction);
             return false;
         }
 
@@ -92,6 +110,7 @@ namespace ZombieTweak2.zRootBotPlayerAction
         [HarmonyPrefix]
         public static bool Update(RootPlayerBotAction __instance, ref bool __result)
         {
+            return true;
             if (!ZiMain.newRootBotPlayerAction)
                 return true;
             RootActionDataStore.TryGetValue(__instance, out var __data); //Get our custom data

@@ -1,25 +1,30 @@
 ﻿using Player;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace ZombieTweak2.zRootBotPlayerAction.BaseActionWrappers
 {
-    internal class zPlayerBotActionUseBioscan : PlayerBotActionUseBioscan, ICustomPlayerBotActionBase
+    internal class zPlayerBotActionUseEnemyScanner : PlayerBotActionUseEnemyScanner, ICustomPlayerBotActionBase
     {
         public Descriptor descriptor;
-        public new class Descriptor : PlayerBotActionUseBioscan.Descriptor, ICustomPlayerBotActionBase.IDescriptor
+        public new class Descriptor : PlayerBotActionUseEnemyScanner.Descriptor, ICustomPlayerBotActionBase.IDescriptor
         {
             public Descriptor(PlayerAIBot bot) : base(bot)
             {
-                m_customBase = new zPlayerBotActionUseBioscan(this);
+                m_customBase = new zPlayerBotActionUseEnemyScanner(this);
             }
             public ICustomPlayerBotActionBase m_customBase { get; set; }
             public override PlayerBotActionBase CreateAction()
             {
-                var action = new zPlayerBotActionUseBioscan(this);
+                var action = new zPlayerBotActionUseEnemyScanner(this);
                 m_customBase = action;
                 return action;
             }
         }
-        public zPlayerBotActionUseBioscan(Descriptor desc) : base(desc)
+        public zPlayerBotActionUseEnemyScanner(Descriptor desc) : base(desc)
         {
             desc.m_customBase = this;
             descriptor = desc;
@@ -27,7 +32,7 @@ namespace ZombieTweak2.zRootBotPlayerAction.BaseActionWrappers
         }
         public void compareAction(RootPlayerBotAction root, ref PlayerBotActionBase.Descriptor bestAction)
         {
-            root.UpdateActionUseBioscan(ref bestAction);
+            root.UpdateActionUseEnemyScanner(ref bestAction);
         }
     }
 }
