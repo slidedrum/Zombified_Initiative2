@@ -12,7 +12,7 @@ namespace ZombieTweak2
             {
                 //m_customBase = new zPlayerBotActionFollow(this);
             }
-            public override PlayerBotActionBase CreateAction()
+            public override zPlayerBotActionFollow CreateAction()
             {
                 return new zPlayerBotActionFollow(this);
             }

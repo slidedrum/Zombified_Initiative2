@@ -17,7 +17,7 @@ namespace ZombieTweak2.zRootBotPlayerAction.BaseActionWrappers
             {
                 //m_customBase = new zPlayerBotActionEvadeProjectile(this);
             }
-            public override PlayerBotActionBase CreateAction()
+            public override zPlayerBotActionEvadeProjectile CreateAction()
             {
                 return new zPlayerBotActionEvadeProjectile(this);
             }

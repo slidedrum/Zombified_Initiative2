@@ -17,7 +17,7 @@ namespace ZombieTweak2.zRootBotPlayerAction.BaseActionWrappers
             {
                 //m_customBase = new zPlayerBotActionAttack(this);
             }
-            public override PlayerBotActionBase CreateAction()
+            public override zPlayerBotActionAttack CreateAction()
             {
                 return new zPlayerBotActionAttack(this);
             }

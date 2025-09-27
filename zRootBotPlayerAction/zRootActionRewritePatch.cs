@@ -1,12 +1,8 @@
 ﻿using HarmonyLib;
-using Il2CppSystem.Data.Common;
 using Player;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 using ZombieTweak2.zRootBotPlayerAction.BaseActionWrappers;
 using Zombified_Initiative;
 
@@ -15,34 +11,24 @@ namespace ZombieTweak2.zRootBotPlayerAction
     public class RootPlayerBotActionData
     {
         public List<ICustomPlayerBotActionBase.IDescriptor> allActions = new();
+        public bool constructed = false;
     }
     [HarmonyPatch]
     public class RootActionRewritePatch
     {
-        private static readonly ConditionalWeakTable<RootPlayerBotAction, RootPlayerBotActionData> RootActionDataStore = new();
-
         [HarmonyPatch(typeof(RootPlayerBotAction), MethodType.Constructor, new Type[] { typeof(RootPlayerBotAction.Descriptor) })]
         [HarmonyPrefix]
         public static bool RootCtor(RootPlayerBotAction __instance, RootPlayerBotAction.Descriptor desc)
         {
-            if (!ZiMain.newRootBotPlayerAction)
-                return true;
-            // Might need some curvy fluffy underwear or something?
+            return false;
+        }
+        private static readonly ConditionalWeakTable<RootPlayerBotAction, RootPlayerBotActionData> RootActionDataStore = new();
+        public static void Construct(RootPlayerBotAction __instance)
+        {
+            // We can't patch the real Construct, so we do this instead.
             // initalize our custom data
-            RootActionDataStore.Add(__instance, new RootPlayerBotActionData());
-            if (!RootActionDataStore.TryGetValue(__instance, out var data))
-                return true; // fallback if something went wrong
-
-            // Call the base constructor manually
-            var baseCtor = AccessTools.Constructor(
-                typeof(PlayerBotActionBase),
-                new Type[] { typeof(PlayerBotActionBase.Descriptor) }
-            );
-            baseCtor.Invoke(__instance, new object[] { desc });
-
-            __instance.m_gearAvailability = new RootPlayerBotAction.GearAvailability();
-            __instance.m_desc = __instance.m_descBase as RootPlayerBotAction.Descriptor;
-
+            var data = RootActionDataStore.GetValue(__instance, _ => new RootPlayerBotActionData());
+            data.constructed = true;
             data.allActions.Clear();
 
             //hurt action is handled somewhere else?  Might need to find it?  Or maybe it's unused now?  Who knows.
@@ -99,22 +85,22 @@ namespace ZombieTweak2.zRootBotPlayerAction
             m_evadeAction.PrioLook = RootPlayerBotAction.m_prioSettings.EvadeProjectileLook;
             m_evadeAction.PrioPrecaution = RootPlayerBotAction.m_prioSettings.EvadeProjectilePrecaution;
             __instance.m_evadeAction = m_evadeAction;
-            data.allActions.Add(m_evadeAction);
 
-            __instance.RefreshGearAvailability();
-            
-            return false;
+            data.allActions.Add(m_evadeAction);
         }
 
         [HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.Update))]
         [HarmonyPrefix]
         public static bool Update(RootPlayerBotAction __instance, ref bool __result)
         {
-            return true;
             if (!ZiMain.newRootBotPlayerAction)
                 return true;
-            RootActionDataStore.TryGetValue(__instance, out var __data); //Get our custom data
-
+            var data = RootActionDataStore.GetValue(__instance, _ => new RootPlayerBotActionData());
+            if (!data.constructed)
+            {
+                Construct(__instance);
+            }
+            return true;
             __result = __instance.IsActive();
             //if (base.Update())
             var baseUpdate = AccessTools.Method(typeof(PlayerBotActionBase), "Update");
@@ -124,8 +110,6 @@ namespace ZombieTweak2.zRootBotPlayerAction
                 __result = true;
                 return false; // skip original
             }
-
-
             return false;
         }
 

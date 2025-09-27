@@ -12,11 +12,9 @@ namespace ZombieTweak2
                 //m_customBase = new zPlayerBotActionIdle(this);
             }
             public ICustomPlayerBotActionBase m_customBase { get; set; }
-            public override PlayerBotActionBase CreateAction()
+            public override zPlayerBotActionIdle CreateAction()
             {
-                var action = new zPlayerBotActionIdle(this);
-                m_customBase = action;
-                return action;
+                return new zPlayerBotActionIdle(this);
             }
         }
         public zPlayerBotActionIdle(Descriptor desc) : base(desc)
