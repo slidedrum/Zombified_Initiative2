@@ -7,8 +7,9 @@ namespace ZombieTweak2
         public Descriptor descriptor;
         public new class Descriptor : PlayerBotActionIdle.Descriptor, ICustomPlayerBotActionBase.IDescriptor
         {
-            public Descriptor(PlayerAIBot bot) : base(bot) {
-                m_customBase = new zPlayerBotActionIdle(this);
+            public Descriptor(PlayerAIBot bot) : base(bot) 
+            {
+                //m_customBase = new zPlayerBotActionIdle(this);
             }
             public ICustomPlayerBotActionBase m_customBase { get; set; }
             public override PlayerBotActionBase CreateAction()

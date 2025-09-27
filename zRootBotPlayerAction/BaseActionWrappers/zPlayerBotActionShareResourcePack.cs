@@ -14,7 +14,7 @@ namespace ZombieTweak2.zRootBotPlayerAction.BaseActionWrappers
         {
             public Descriptor(PlayerAIBot bot) : base(bot)
             {
-                m_customBase = new zPlayerBotActionShareResourcePack(this);
+                //m_customBase = new zPlayerBotActionShareResourcePack(this);
             }
             public ICustomPlayerBotActionBase m_customBase { get; set; }
             public override PlayerBotActionBase CreateAction()

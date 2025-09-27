@@ -133,7 +133,7 @@ namespace Zombified_Initiative;
 public class ZiMain : BasePlugin
 { //this class should contain all methods to call actions, any helpers to faciliate that, and inital setup,
     public static ManualLogSource log;
-    internal static bool newRootBotPlayerAction = true;
+    internal static bool newRootBotPlayerAction = false;
     public static Dictionary<string, PlayerAIBot> BotTable = new();
     public static PlayerChatManager _chatManager;
     public static PUI_CommunicationMenu _menu;

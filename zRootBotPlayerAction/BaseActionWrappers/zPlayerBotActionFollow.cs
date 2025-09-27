@@ -10,7 +10,7 @@ namespace ZombieTweak2
             public ICustomPlayerBotActionBase m_customBase { get; set; }
             public Descriptor(PlayerAIBot bot) : base(bot)
             {
-                m_customBase = new zPlayerBotActionFollow(this);
+                //m_customBase = new zPlayerBotActionFollow(this);
             }
             public override PlayerBotActionBase CreateAction()
             {
