@@ -17,11 +17,9 @@ namespace ZombieTweak2.zRootBotPlayerAction.BaseActionWrappers
                 //m_customBase = new zPlayerBotActionUseEnemyScanner(this);
             }
             public ICustomPlayerBotActionBase m_customBase { get; set; }
-            public override PlayerBotActionBase CreateAction()
+            public override zPlayerBotActionUseEnemyScanner CreateAction()
             {
-                var action = new zPlayerBotActionUseEnemyScanner(this);
-                m_customBase = action;
-                return action;
+                return new zPlayerBotActionUseEnemyScanner(this);
             }
         }
         public zPlayerBotActionUseEnemyScanner(Descriptor desc) : base(desc)

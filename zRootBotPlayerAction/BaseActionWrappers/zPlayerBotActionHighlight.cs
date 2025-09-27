@@ -12,11 +12,9 @@ namespace ZombieTweak2.zRootBotPlayerAction.BaseActionWrappers
                 //m_customBase = new zPlayerBotActionHighlight(this);
             }
             public ICustomPlayerBotActionBase m_customBase { get; set; }
-            public override PlayerBotActionBase CreateAction()
+            public override zPlayerBotActionHighlight CreateAction()
             {
-                var action = new zPlayerBotActionHighlight(this);
-                m_customBase = action;
-                return action;
+                return new zPlayerBotActionHighlight(this); ;
             }
         }
         public zPlayerBotActionHighlight(Descriptor desc) : base(desc)
