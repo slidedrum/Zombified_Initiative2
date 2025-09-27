@@ -133,7 +133,7 @@ namespace Zombified_Initiative;
 public class ZiMain : BasePlugin
 { //this class should contain all methods to call actions, any helpers to faciliate that, and inital setup,
     public static ManualLogSource log;
-
+    internal static bool newRootBotPlayerAction = true;
     public static Dictionary<string, PlayerAIBot> BotTable = new();
     public static PlayerChatManager _chatManager;
     public static PUI_CommunicationMenu _menu;
@@ -389,6 +389,8 @@ public class ZiMain : BasePlugin
     }
     public static float attackPrio = 5f;
     public static float attackHaste = 0.5f;
+
+
     public static PlayerBotActionAttack.Descriptor SendBotToKillEnemy(PlayerAIBot aiBot, EnemyAgent enemy, PlayerAgent commander = null, ulong netsender = 0, PlayerBotActionAttack.StanceEnum stance = PlayerBotActionAttack.StanceEnum.All, PlayerBotActionAttack.AttackMeansEnum means = PlayerBotActionAttack.AttackMeansEnum.Melee, PlayerBotActionWalk.Descriptor.PostureEnum posture = PlayerBotActionWalk.Descriptor.PostureEnum.Crouch)
     {
 

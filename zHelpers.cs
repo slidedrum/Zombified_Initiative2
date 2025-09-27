@@ -28,22 +28,20 @@ namespace ZombieTweak2
     }
     public class FlexibleEvent
     {
-        // This is a mostly AI generated class.
-        // This is a much more easy to use version of action that handles return types, arbitrary argument types and ammounts.
+        private readonly OrderedSet<Action> listeners = new();
 
-        private readonly OrderedSet<Action> listeners = new();//this used to be a list, but I think OrderedSet is better.
-                                                              //if you need to do the same thing twice, do it inside your own method.
-                                                              //Don't add the same callback twice.
         public void Listen(Action method)
         {
             if (method == null) return;
             listeners.Add(method);
         }
+
         public void Listen(FlexibleMethodDefinition method)
         {
-            Listen(method.method, method.args);
+            Listen(method.method, method.args, method);
         }
-        public void Listen(Delegate method, params object[] args)
+
+        public void Listen(Delegate method, object[] args, FlexibleMethodDefinition fMethod = null)
         {
             if (method == null) return;
 
@@ -52,38 +50,46 @@ namespace ZombieTweak2
 
             for (int i = 0; i < parameters.Length; i++)
             {
-                if (i < args.Length)
-                {
-                    if (args[i] != Default.Value)
-                        finalArgs[i] = args[i];
-                    else if (parameters[i].IsOptional)
-                        finalArgs[i] = parameters[i].DefaultValue;
-                    else
-                        throw new ArgumentException($"Missing required argument '{parameters[i].Name}'");
-                }
+                if (i < args.Length && args[i] != Default.Value)
+                    finalArgs[i] = args[i];
+                else if (parameters[i].IsOptional)
+                    finalArgs[i] = parameters[i].DefaultValue;
                 else
+                    throw new ArgumentException($"Missing required argument '{parameters[i].Name}'");
+            }
+
+            void Wrapper()
+            {
+                method.DynamicInvoke(finalArgs);
+
+                // Copy back ref/out changes to original args array
+                if (fMethod?.args != null)
                 {
-                    if (parameters[i].IsOptional)
-                        finalArgs[i] = parameters[i].DefaultValue;
-                    else
-                        throw new ArgumentException($"Missing required argument '{parameters[i].Name}'");
+                    for (int i = 0; i < finalArgs.Length && i < fMethod.args.Length; i++)
+                        fMethod.args[i] = finalArgs[i];
                 }
             }
-            void Wrapper() => method.DynamicInvoke(finalArgs);
+
             listeners.Add(Wrapper);
         }
+
         public void Unlisten(Action method)
         {
             listeners.Remove(method);
         }
+
         public void Unlisten(FlexibleMethodDefinition method)
         {
+            // Note: This only works if the same wrapper instance is stored.
+            // You may need to track the wrapper separately to remove it correctly.
             listeners.Remove((Action)method.method);
         }
+
         public void ClearListeners()
         {
             listeners.Clear();
         }
+
         public void Invoke()
         {
             foreach (var listener in listeners)

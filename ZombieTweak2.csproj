@@ -33,6 +33,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <None Include="zRootBotPlayerAction\BaseActionWrappers\zPlayerBotActionFollow.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
 	  <Reference Include="BetterBots">
 	    <HintPath>..\..\..\..\..\AppData\Roaming\r2modmanPlus-local\GTFO\profiles\Pancake\BetterBots.dll</HintPath>
 	  </Reference>
