@@ -11,7 +11,7 @@ namespace ZombieTweak2.zRootBotPlayerAction.BaseActionWrappers
     {
         public zRootPlayerBotAction(Descriptor desc) : base(desc)
         {
-            var data = RootActionRewritePatch.GetOrCreateData(this);
+            var data = zActions.GetOrCreateData(this);
             //hurt action is handled somewhere else?  Might need to find it?  Or maybe it's unused now?  Who knows.
 
             var m_idleAction = new zPlayerBotActionIdle.Descriptor(this.m_bot); // Create the action wrapper
@@ -68,6 +68,10 @@ namespace ZombieTweak2.zRootBotPlayerAction.BaseActionWrappers
             this.m_evadeAction = m_evadeAction;
             data.allActions.Add(m_evadeAction);
 
+            foreach(var action in data.allActions) 
+            { 
+                zActions.RegisterStrictTypeInstance(action);
+            }
         }
     }
 }

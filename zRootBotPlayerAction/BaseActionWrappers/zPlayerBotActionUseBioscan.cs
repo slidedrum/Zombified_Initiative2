@@ -4,7 +4,7 @@ namespace ZombieTweak2.zRootBotPlayerAction.BaseActionWrappers
 {
     internal class zPlayerBotActionUseBioscan : PlayerBotActionUseBioscan, ICustomPlayerBotActionBase
     {
-        public Descriptor descriptor;
+        public ICustomPlayerBotActionBase.IDescriptor m_customDesc { get; set; }
         public new class Descriptor : PlayerBotActionUseBioscan.Descriptor, ICustomPlayerBotActionBase.IDescriptor
         {
             public Descriptor(PlayerAIBot bot) : base(bot)
@@ -12,7 +12,7 @@ namespace ZombieTweak2.zRootBotPlayerAction.BaseActionWrappers
                 //m_customBase = new zPlayerBotActionUseBioscan(this);
             }
             public ICustomPlayerBotActionBase m_customBase { get; set; }
-            public override zPlayerBotActionUseBioscan CreateAction()
+            public override PlayerBotActionBase CreateAction()
             {
                 return new zPlayerBotActionUseBioscan(this);
             }
@@ -20,12 +20,12 @@ namespace ZombieTweak2.zRootBotPlayerAction.BaseActionWrappers
             {
                 root.UpdateActionUseBioscan(ref bestAction);
             }
+
         }
         public zPlayerBotActionUseBioscan(Descriptor desc) : base(desc)
         {
             desc.m_customBase = this;
-            descriptor = desc;
-            m_desc = m_descBase as Descriptor;
+            m_customDesc = desc;
         }
 
     }

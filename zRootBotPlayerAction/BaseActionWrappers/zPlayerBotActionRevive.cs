@@ -4,7 +4,7 @@ namespace ZombieTweak2.zRootBotPlayerAction.BaseActionWrappers
 {
     internal class zPlayerBotActionRevive : PlayerBotActionRevive, ICustomPlayerBotActionBase
     {
-        public Descriptor descriptor;
+        public ICustomPlayerBotActionBase.IDescriptor m_customDesc { get; set; }
         public new class Descriptor : PlayerBotActionRevive.Descriptor, ICustomPlayerBotActionBase.IDescriptor
         {
             public Descriptor(PlayerAIBot bot) : base(bot)
@@ -24,8 +24,7 @@ namespace ZombieTweak2.zRootBotPlayerAction.BaseActionWrappers
         public zPlayerBotActionRevive(Descriptor desc) : base(desc)
         {
             desc.m_customBase = this;
-            descriptor = desc;
-            m_desc = m_descBase as Descriptor;
+            m_customDesc = desc;
         }
 
 

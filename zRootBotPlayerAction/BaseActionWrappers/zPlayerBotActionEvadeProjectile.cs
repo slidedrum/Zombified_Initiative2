@@ -9,7 +9,7 @@ namespace ZombieTweak2.zRootBotPlayerAction.BaseActionWrappers
 {
     internal class zPlayerBotActionEvadeProjectile : PlayerBotActionEvadeProjectile, ICustomPlayerBotActionBase
     {
-        public Descriptor descriptor;
+        public ICustomPlayerBotActionBase.IDescriptor m_customDesc { get; set; }
         public new class Descriptor : PlayerBotActionEvadeProjectile.Descriptor, ICustomPlayerBotActionBase.IDescriptor
         {
             public ICustomPlayerBotActionBase m_customBase { get; set; }
@@ -30,8 +30,7 @@ namespace ZombieTweak2.zRootBotPlayerAction.BaseActionWrappers
         public zPlayerBotActionEvadeProjectile(Descriptor desc) : base(desc)
         {
             desc.m_customBase = this;
-            descriptor = desc;
-            m_desc = m_descBase as Descriptor;
+            m_customDesc = desc;
         }
 
     }
