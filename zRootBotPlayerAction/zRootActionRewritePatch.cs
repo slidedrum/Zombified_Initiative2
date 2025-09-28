@@ -1,8 +1,11 @@
 ﻿using HarmonyLib;
+using Il2CppInterop.Runtime.InteropTypes.Arrays;
+using Il2CppSystem.Security.Cryptography;
 using Player;
 using System.Collections.Generic;
 using TMPro;
 using ZombieTweak2.zRootBotPlayerAction.BaseActionWrappers;
+using ZombieTweak2.zRootBotPlayerAction.CustomActions;
 using Zombified_Initiative;
 using static Il2CppSystem.Globalization.CultureInfo;
 
@@ -73,6 +76,56 @@ namespace ZombieTweak2.zRootBotPlayerAction
             foreach (var actionDesc in data.allActions)
             {
                 __instance.SafeStopAction((PlayerBotActionBase.Descriptor)actionDesc);
+            }
+            return false;
+        }
+        public static void Z_StartAction(PlayerAIBot aiBot, CustomBotAction.Descriptor desc)
+        {
+            if (!desc.IsTerminated())
+            {
+                ZiMain.log.LogError("Action was queued while active: " + desc);
+            }
+            for (int i = 0; i < aiBot.m_actions.Count; i++)
+            {
+                if (aiBot.m_actions[i].DescBase == desc)
+                {
+                    aiBot.m_actions.RemoveAt(i);
+                    break;
+                }
+            }
+            desc.OnQueued();
+            aiBot.RemoveCollidingActions(desc);
+            // Add descriptor to queue — generically typed
+            if (desc is CustomBotAction.Descriptor customDesc)
+            {
+                aiBot.m_queuedActions.Add(customDesc);
+            }
+            else
+            {
+                aiBot.m_queuedActions.Add(desc);
+            }
+        }
+
+        [HarmonyPatch(typeof(PlayerAIBot), nameof(PlayerAIBot.StartQueuedActions))]
+        [HarmonyPrefix]
+        private static bool StartQueuedActions(PlayerAIBot __instance)
+        {
+            if (__instance.m_queuedActions.Count == 0)
+            {
+                return false;
+            }
+            var array = new Il2CppReferenceArray<PlayerBotActionBase.Descriptor>(__instance.m_queuedActions.Count);
+            __instance.m_queuedActions.CopyTo(array);
+            __instance.m_queuedActions.Clear();
+            foreach (PlayerBotActionBase.Descriptor descriptor in array)
+            {
+                if (descriptor.Status == PlayerBotActionBase.Descriptor.StatusType.Queued)
+                {
+                    descriptor.OnStarted();
+                    PlayerBotActionBase playerBotActionBase = descriptor.CreateAction(); //ERROR
+                    __instance.RemoveCollidingActions(descriptor);
+                    __instance.m_actions.Add(playerBotActionBase);
+                }
             }
             return false;
         }

@@ -443,7 +443,7 @@ namespace Zombified_Initiative
                 return;
             if (explore)
                 CheckSamplesNearby();
-            // Green if there's unexplored nearby, red if not
+            // Green if there's unexploredNode nearby, red if not
             if (explored)
                 rend.material.color = Color.green;
             else

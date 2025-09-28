@@ -690,8 +690,8 @@ public class ZombifiedPatches
         }
     }
     public static Dictionary<int, float> lastTimeCheckedForWakeUp = new();
-
     
+
     [HarmonyPatch(typeof(PlayerBotActionMelee), nameof(PlayerBotActionMelee.UpdateTravelAction))]
     [HarmonyPrefix]
     public static bool UpdateTravelAction(PlayerBotActionMelee __instance)
@@ -909,6 +909,8 @@ public class ZombifiedPatches
         // Update Strike bool
         __instance.m_meleeAction.Strike = strike;
     }
+
+
 
     [HarmonyPatch(typeof(PlayerBotActionCollectItem), nameof(PlayerBotActionCollectItem.OnTravelActionEvent))]
     [HarmonyPrefix]

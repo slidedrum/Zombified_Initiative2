@@ -28,7 +28,7 @@ namespace ZombieTweak2
         internal static bool debugCube = false;
         internal static bool debugText = false;
         internal static bool debugLines = false;
-        internal static int unexploredMaxDepth = 50;
+        internal static int unexploredMaxDepth = 5;
         private static PlayerAgent localPlayer;
         public static Vector3[] CapsuleCorners;
         public static HashSet<VisitNode> allnodes = new();
@@ -38,6 +38,8 @@ namespace ZombieTweak2
                 maxDepth = unexploredMaxDepth;
             if (searched == null)
                 searched = new();
+            if (allnodes.Count<10)
+                return null;
             var node = GetNearestNode(position);
             if (node == null)
                 return null;

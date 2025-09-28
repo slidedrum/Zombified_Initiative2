@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using ZombieTweak2.zRootBotPlayerAction.CustomActions;
+using Zombified_Initiative;
 
 namespace ZombieTweak2.zRootBotPlayerAction.BaseActionWrappers
 {
@@ -70,8 +71,11 @@ namespace ZombieTweak2.zRootBotPlayerAction.BaseActionWrappers
             m_evadeAction.PrioPrecaution = RootPlayerBotAction.m_prioSettings.EvadeProjectilePrecaution;
             this.m_evadeAction = m_evadeAction;
             data.allActions.Add(m_evadeAction);
-            //zPlayerBotActionExplore.Descriptor ExploreACtion = new zPlayerBotActionExplore.Descriptor(this.m_bot);
-            //data.allActions.Add((zPlayerBotActionExplore.Descriptor)ExploreACtion);
+
+            zPlayerBotActionExplore.Descriptor m_exploreAction = new zPlayerBotActionExplore.Descriptor(this.m_bot);
+            ZiMain.log.LogWarning("m_exploreAction.GetType() = " + m_exploreAction.GetType());
+            data.allActions.Add(m_exploreAction);
+            ZiMain.log.LogWarning("Last.GetType() = " + data.allActions.Last().GetType());
         }
     }
 }
