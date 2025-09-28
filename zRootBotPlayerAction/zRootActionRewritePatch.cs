@@ -103,17 +103,6 @@ namespace ZombieTweak2.zRootBotPlayerAction
                 zActions.RegisterStrictTypeInstance(__result);
             }
         }
-        [HarmonyPatch(typeof(PlayerAIBot), nameof(PlayerAIBot.Update))]
-        [HarmonyPrefix]
-        public static bool Update(PlayerAIBot __instance)
-        {
-            __instance.InitValues();
-            __instance.SleeperCheck();
-            __instance.UpdateActions();
-            __instance.StartQueuedActions();
-            __instance.ApplyValues();
-            return false;
-        }
         [HarmonyPatch(typeof(PlayerAIBot), nameof(PlayerAIBot.UpdateActions))]
         [HarmonyPrefix]
         private static bool UpdateActions(PlayerAIBot __instance)
@@ -137,7 +126,7 @@ namespace ZombieTweak2.zRootBotPlayerAction
                         bool flag = false;
                         for (int j = 0; j < __instance.m_actions.Count; j++)
                         {
-                            if (__instance.m_actions[j].Pointer == playerBotActionBase.Pointer) //this is failing as a direct comparison
+                            if (__instance.m_actions[j].Pointer == playerBotActionBase.Pointer) //this is failing as a direct comparison so have to compare pointer
                             {
                                 flag = true;
                                 num = j;
