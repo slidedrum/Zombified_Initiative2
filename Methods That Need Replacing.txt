@@ -1,0 +1,26 @@
+Everything that touches
+
+namespace Player
+{
+	// Token: 0x02000A87 RID: 2695
+	public class PlayerAIBot : MonoBehaviour
+	{
+		// Token: 0x04004540 RID: 17728
+		private List<PlayerBotActionBase> m_actions = new List<PlayerBotActionBase>();
+
+		// Token: 0x04004541 RID: 17729
+		private List<PlayerBotActionBase.Descriptor> m_queuedActions = new List<PlayerBotActionBase.Descriptor>();
+
+
+They should only be in the PlayerAIBot class. The methods are:
+
+ -- private void StartQueuedActions() DONE
+
+ -- public bool ApplyRestrictionsToRootPosition(ref Vector3 testPosition, ref float restrictionPrio)
+ -- public bool IsActionForbidden(PlayerBotActionBase.Descriptor desc)
+ -- private void RemoveCollidingActions(PlayerBotActionBase.Descriptor desc)
+ -- public void SetEnabled(bool state)
+ -- public void StartAction(PlayerBotActionBase.Descriptor desc)
+ -- public void StopAction(PlayerBotActionBase.Descriptor desc)
+ -- public void OnWarped(Vector3 position)
+ -- private void UpdateActions()

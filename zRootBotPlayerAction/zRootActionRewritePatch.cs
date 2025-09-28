@@ -3,6 +3,7 @@ using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using Il2CppSystem.Security.Cryptography;
 using Player;
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using ZombieTweak2.zRootBotPlayerAction.BaseActionWrappers;
 using ZombieTweak2.zRootBotPlayerAction.CustomActions;
@@ -11,24 +12,11 @@ using static Il2CppSystem.Globalization.CultureInfo;
 
 namespace ZombieTweak2.zRootBotPlayerAction
 {
-    public class RootPlayerBotActionData
-    {
-        public OrderedSet<ICustomPlayerBotActionBase.IDescriptor> allActions = new();
-    }
     [HarmonyPatch]
     public static class RootActionRewritePatch
     {
-        internal static readonly Dictionary<int, RootPlayerBotActionData> RootActionDataStore = new();
-        internal static RootPlayerBotActionData GetOrCreateData(PlayerBotActionBase botBase)
-        {
-            int botId = botBase.m_bot.GetInstanceID();
-            if (!RootActionDataStore.TryGetValue(botId, out var data))
-            {
-                data = new RootPlayerBotActionData();
-                RootActionDataStore[botId] = data;
-            }
-            return data;
-        }
+        internal static readonly Dictionary<int, dataStore> RootActionDataStore = new();
+
 
         [HarmonyPatch(typeof(RootPlayerBotAction.Descriptor), nameof(RootPlayerBotAction.Descriptor.CreateAction))]
         [HarmonyPrefix]
@@ -49,7 +37,7 @@ namespace ZombieTweak2.zRootBotPlayerAction
         {
             if (!ZiMain.newRootBotPlayerAction)
                 return true;
-            var data = GetOrCreateData(__instance);
+            var data = zActions.GetOrCreateData(__instance);
             if (BaseUpdate(__instance))
             {
                 __result = true;
@@ -57,7 +45,7 @@ namespace ZombieTweak2.zRootBotPlayerAction
             }
             __instance.RefreshGearAvailability();
             PlayerBotActionBase.Descriptor bestAction = null;
-            foreach (var actionDesc in data.allActions)
+            foreach (ICustomPlayerBotActionBase.IDescriptor actionDesc in data.allActions)
             {
                 actionDesc.compareAction(__instance, ref bestAction);
             }
@@ -72,7 +60,7 @@ namespace ZombieTweak2.zRootBotPlayerAction
         [HarmonyPrefix]
         public static bool Stop(RootPlayerBotAction __instance)
         {
-            var data = GetOrCreateData(__instance);
+            var data = zActions.GetOrCreateData(__instance);
             foreach (var actionDesc in data.allActions)
             {
                 __instance.SafeStopAction((PlayerBotActionBase.Descriptor)actionDesc);
@@ -95,21 +83,14 @@ namespace ZombieTweak2.zRootBotPlayerAction
             }
             desc.OnQueued();
             aiBot.RemoveCollidingActions(desc);
-            // Add descriptor to queue — generically typed
-            if (desc is CustomBotAction.Descriptor customDesc)
-            {
-                aiBot.m_queuedActions.Add(customDesc);
-            }
-            else
-            {
-                aiBot.m_queuedActions.Add(desc);
-            }
+            aiBot.m_queuedActions.Add(desc);
         }
 
         [HarmonyPatch(typeof(PlayerAIBot), nameof(PlayerAIBot.StartQueuedActions))]
         [HarmonyPrefix]
         private static bool StartQueuedActions(PlayerAIBot __instance)
         {
+            var data = zActions.GetOrCreateData(__instance);
             if (__instance.m_queuedActions.Count == 0)
             {
                 return false;
@@ -121,13 +102,33 @@ namespace ZombieTweak2.zRootBotPlayerAction
             {
                 if (descriptor.Status == PlayerBotActionBase.Descriptor.StatusType.Queued)
                 {
-                    descriptor.OnStarted();
-                    PlayerBotActionBase playerBotActionBase = descriptor.CreateAction(); //ERROR
-                    __instance.RemoveCollidingActions(descriptor);
-                    __instance.m_actions.Add(playerBotActionBase);
+                    var strictDesc = zActions.GetStrictTypeInstance(descriptor);
+                    if (strictDesc != null)
+                    {
+                        strictDesc.OnStarted();
+                        PlayerBotActionBase playerBotActionBase = strictDesc.CreateAction(); //ERROR
+                        __instance.RemoveCollidingActions((PlayerBotActionBase.Descriptor)strictDesc);
+                        __instance.m_actions.Add(playerBotActionBase);
+                    }
+                    else
+                    {
+                        descriptor.OnStarted();
+                        PlayerBotActionBase playerBotActionBase = descriptor.CreateAction(); //ERROR
+                        __instance.RemoveCollidingActions(descriptor);
+                        __instance.m_actions.Add(playerBotActionBase);
+                    }
                 }
             }
             return false;
+        }
+        [HarmonyPatch(typeof(PlayerBotActionBase.Descriptor), nameof(PlayerBotActionBase.Descriptor.CreateAction))]
+        [HarmonyPostfix]
+        static void CreateAction(PlayerBotActionBase.Descriptor __instance, ref PlayerBotActionBase __result)
+        {
+            if (__result is ICustomPlayerBotActionBase)
+            {
+                zActions.RegisterStrictTypeInstance(__result);
+            }
         }
     }
 }

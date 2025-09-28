@@ -6,7 +6,6 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
 {
     internal class zPlayerBotActionExplore : CustomBotAction, ICustomPlayerBotActionBase
     {
-
         // You might want to keep a refrence to any potential sub actions here.
         // private PlayerBotActionTravel.Descriptor m_travelAction;
         public new Descriptor descriptor;
