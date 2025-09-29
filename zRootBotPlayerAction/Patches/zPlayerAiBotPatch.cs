@@ -288,20 +288,6 @@ namespace ZombieTweak2.zRootBotPlayerAction.Patches
         public static bool StartAction(PlayerAIBot __instance, PlayerBotActionBase.Descriptor desc)
         {
             var data = zActions.GetOrCreateData(__instance);
-            int index = data.my_actions
-                .Select((d, i) => new { d, i })
-                .Where(x => x.d.Pointer == desc.Pointer)
-                .Select(x => x.i)
-                .FirstOrDefault(-1);
-            if (index == -1 && desc.Bot.m_rootAction.Pointer != desc.Pointer)
-            {
-                ZiMain.log.LogInfo($"Would have started action {desc.GetType()}");
-                data.bestAction = desc;
-                return false; //Do this so I can have control over when actions get started
-            }
-            if (index != -1)
-                data.my_actions.RemoveAt(index);
-
             if (!desc.IsTerminated())
             {
                 Debug.LogError("Action was queued while active: " + desc);
