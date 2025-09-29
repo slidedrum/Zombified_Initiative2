@@ -2,16 +2,16 @@
 
 namespace ZombieTweak2
 {
-    internal class zPlayerBotActionIdle : PlayerBotActionIdle, ICustomPlayerBotActionBase
+    internal class zPlayerBotActionIdle : PlayerBotActionIdle
     {
-        public ICustomPlayerBotActionBase.IDescriptor m_customDesc { get; set; }
+        public Descriptor m_customDesc { get; set; }
         public new class Descriptor : PlayerBotActionIdle.Descriptor, ICustomPlayerBotActionBase.IDescriptor
         {
             public Descriptor(PlayerAIBot bot) : base(bot) 
             {
                 //m_customBase = new zPlayerBotActionIdle(this);
             }
-            public ICustomPlayerBotActionBase m_customBase { get; set; }
+            public zPlayerBotActionIdle m_customBase { get; set; }
             public override zPlayerBotActionIdle CreateAction()
             {
                 return new zPlayerBotActionIdle(this);

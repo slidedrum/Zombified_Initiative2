@@ -20,6 +20,7 @@ using UnityEngine.SceneManagement;
 using ZombieTweak2;
 using ZombieTweak2.zMenu;
 using ZombieTweak2.zNetworking;
+using ZombieTweak2.zRootBotPlayerAction.CustomActions;
 using static Player.PlayerBotActionAttack;
 using static ZombieTweak2.zNetworking.pStructs;
 

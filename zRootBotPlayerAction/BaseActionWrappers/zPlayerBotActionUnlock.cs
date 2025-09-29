@@ -2,16 +2,16 @@
 
 namespace ZombieTweak2.zRootBotPlayerAction.BaseActionWrappers
 {
-    internal class zPlayerBotActionUnlock : PlayerBotActionUnlock, ICustomPlayerBotActionBase
+    internal class zPlayerBotActionUnlock : PlayerBotActionUnlock
     {
-        public ICustomPlayerBotActionBase.IDescriptor m_customDesc { get; set; }
+        public Descriptor m_customDesc { get; set; }
         public new class Descriptor : PlayerBotActionUnlock.Descriptor, ICustomPlayerBotActionBase.IDescriptor
         {
             public Descriptor(PlayerAIBot bot) : base(bot)
             {
                 //m_customBase = new zPlayerBotActionUnlock(this);
             }
-            public ICustomPlayerBotActionBase m_customBase { get; set; }
+            public zPlayerBotActionUnlock m_customBase { get; set; }
             public override zPlayerBotActionUnlock CreateAction()
             {
                 return new zPlayerBotActionUnlock(this);

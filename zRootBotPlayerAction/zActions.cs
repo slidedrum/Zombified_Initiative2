@@ -1,6 +1,9 @@
-﻿using Player;
+﻿using GTFO.API.Extensions;
+using Player;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Zombified_Initiative;
 
 namespace ZombieTweak2.zRootBotPlayerAction
@@ -8,12 +11,19 @@ namespace ZombieTweak2.zRootBotPlayerAction
     public class dataStore
     {
         public OrderedSet<PlayerBotActionBase.Descriptor> allActions = new();
+        public Il2CppSystem.Collections.Generic.List<PlayerBotActionBase> m_actions { get; set; } = new();
+        public Il2CppSystem.Collections.Generic.List<PlayerBotActionBase.Descriptor> m_queuedActions { get; set; } = new();
     }
     public static class zActions
     {
         internal static readonly Dictionary<int, dataStore> ActionDataStore = new();
-        private static Dictionary<IntPtr, ICustomPlayerBotActionBase.IDescriptor> StrictDescriptorTypeMap = new();
-        private static Dictionary<IntPtr, ICustomPlayerBotActionBase> StrictActionTypeMap = new();
+        public static Dictionary<IntPtr, ICustomPlayerBotActionBase.IDescriptor> StrictDescriptorTypeMap = new();
+        public static Dictionary<IntPtr, ICustomPlayerBotActionBase> StrictActionTypeMap = new();
+        internal static dataStore GetOrCreateData(PlayerBotActionBase.Descriptor desc)
+        {
+            PlayerAIBot bot = desc.Bot;
+            return GetOrCreateData(bot);
+        }
         internal static dataStore GetOrCreateData(PlayerBotActionBase botBase)
         {
             PlayerAIBot bot = botBase.m_bot;
@@ -38,7 +48,7 @@ namespace ZombieTweak2.zRootBotPlayerAction
             }
             return null;
         }
-        public static PlayerBotActionBase.Descriptor RegisterStrictTypeInstance(PlayerBotActionBase.Descriptor strictDescType)
+        public static PlayerBotActionBase.Descriptor RegisterStrictTypeInstanceDescriptor(PlayerBotActionBase.Descriptor strictDescType)
         {
             if (strictDescType is ICustomPlayerBotActionBase.IDescriptor descriptor)
                 StrictDescriptorTypeMap[strictDescType.Pointer] = descriptor;

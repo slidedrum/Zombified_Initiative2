@@ -7,12 +7,12 @@ using System.Threading.Tasks;
 
 namespace ZombieTweak2.zRootBotPlayerAction.BaseActionWrappers
 {
-    internal class zPlayerBotActionCollectItem : PlayerBotActionCollectItem, ICustomPlayerBotActionBase
+    internal class zPlayerBotActionCollectItem : PlayerBotActionCollectItem
     {
-        public ICustomPlayerBotActionBase.IDescriptor m_customDesc { get; set; }
+        public Descriptor m_customDesc { get; set; }
         public new class Descriptor : PlayerBotActionCollectItem.Descriptor, ICustomPlayerBotActionBase.IDescriptor
         {
-            public ICustomPlayerBotActionBase m_customBase { get; set; }
+            public zPlayerBotActionCollectItem m_customBase { get; set; }
             public Descriptor(PlayerAIBot bot) : base(bot)
             {
                 //m_customBase = new zPlayerBotActionCollectItem(this);

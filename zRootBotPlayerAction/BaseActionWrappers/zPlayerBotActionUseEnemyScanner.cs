@@ -9,14 +9,14 @@ namespace ZombieTweak2.zRootBotPlayerAction.BaseActionWrappers
 {
     internal class zPlayerBotActionUseEnemyScanner : PlayerBotActionUseEnemyScanner, ICustomPlayerBotActionBase
     {
-        public ICustomPlayerBotActionBase.IDescriptor m_customDesc { get; set; }
+        public Descriptor m_customDesc { get; set; }
         public new class Descriptor : PlayerBotActionUseEnemyScanner.Descriptor, ICustomPlayerBotActionBase.IDescriptor
         {
             public Descriptor(PlayerAIBot bot) : base(bot)
             {
                 //m_customBase = new zPlayerBotActionUseEnemyScanner(this);
             }
-            public ICustomPlayerBotActionBase m_customBase { get; set; }
+            public zPlayerBotActionUseEnemyScanner m_customBase { get; set; }
             public override zPlayerBotActionUseEnemyScanner CreateAction()
             {
                 return new zPlayerBotActionUseEnemyScanner(this);
