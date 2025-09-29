@@ -2,11 +2,11 @@
 
 namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
 {
-    public abstract class CustomBotAction : PlayerBotActionBase
+    public abstract class CustomBotAction : PlayerBotActionBase, ICustomPlayerBotActionBase
     {
         public Descriptor m_customDesc { get ; set; }
 
-        public new abstract class Descriptor(PlayerAIBot bot) : PlayerBotActionBase.Descriptor(bot)
+        public new abstract class Descriptor(PlayerAIBot bot) : PlayerBotActionBase.Descriptor(bot), ICustomPlayerBotActionBase.IDescriptor
         {
             public CustomBotAction m_customBase { get; set; }
             public abstract void compareAction(RootPlayerBotAction root, ref PlayerBotActionBase.Descriptor bestAction);

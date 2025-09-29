@@ -2,7 +2,7 @@
 
 namespace ZombieTweak2.zRootBotPlayerAction.BaseActionWrappers
 {
-    internal class zPlayerBotActionUnlock : PlayerBotActionUnlock
+    internal class zPlayerBotActionUnlock : PlayerBotActionUnlock, ICustomPlayerBotActionBase
     {
         public Descriptor m_customDesc { get; set; }
         public new class Descriptor : PlayerBotActionUnlock.Descriptor, ICustomPlayerBotActionBase.IDescriptor

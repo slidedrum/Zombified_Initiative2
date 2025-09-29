@@ -2,7 +2,7 @@
 
 namespace ZombieTweak2
 {
-    internal class zPlayerBotActionFollow : PlayerBotActionFollow
+    internal class zPlayerBotActionFollow : PlayerBotActionFollow, ICustomPlayerBotActionBase
     {
         public Descriptor m_customDesc { get; set; }
 

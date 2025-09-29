@@ -4,7 +4,7 @@ using Zombified_Initiative;
 
 namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
 {
-    internal class zPlayerBotActionExample : CustomBotAction
+    internal class zPlayerBotActionExample : CustomBotAction, ICustomPlayerBotActionBase
     {
         // You might want to keep a refrence to any potential sub actions here.
         // private PlayerBotActionTravel.Descriptor m_travelAction;

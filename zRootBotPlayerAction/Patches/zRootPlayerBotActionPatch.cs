@@ -64,11 +64,11 @@ namespace ZombieTweak2.zRootBotPlayerAction.Patches
         }
         [HarmonyPatch(typeof(PlayerBotActionBase.Descriptor), nameof(PlayerBotActionBase.Descriptor.CreateAction))]
         [HarmonyPostfix]
-        public static void CreateAction(PlayerBotActionBase.Descriptor __instance, PlayerBotActionBase __result)
+        static void CreateAction(PlayerBotActionBase.Descriptor __instance, ref PlayerBotActionBase __result)
         {
-            if (__result is ICustomPlayerBotActionBase idescriptor)
+            if (__result is ICustomPlayerBotActionBase)
             {
-                zActions.RegisterStrictTypeInstance(idescriptor);
+                zActions.RegisterStrictTypeInstance(__result);
             }
         }
         [HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.RefreshGearAvailability))]
