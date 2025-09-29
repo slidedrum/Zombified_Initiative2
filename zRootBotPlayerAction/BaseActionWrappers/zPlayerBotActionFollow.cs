@@ -2,11 +2,11 @@
 
 namespace ZombieTweak2
 {
-    internal class zPlayerBotActionFollow : PlayerBotActionFollow, ICustomPlayerBotActionBase
+    internal class zPlayerBotActionFollow : PlayerBotActionFollow//, ICustomPlayerBotActionBase
     {
         public Descriptor m_customDesc { get; set; }
 
-        public new class Descriptor : PlayerBotActionFollow.Descriptor, ICustomPlayerBotActionBase.IDescriptor
+        public new class Descriptor : PlayerBotActionFollow.Descriptor//, ICustomPlayerBotActionBase.IDescriptor
         {
             public zPlayerBotActionFollow m_customBase { get; set; }
             public Descriptor(PlayerAIBot bot) : base(bot)

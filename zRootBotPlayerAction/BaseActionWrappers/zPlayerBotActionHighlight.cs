@@ -2,10 +2,10 @@
 
 namespace ZombieTweak2.zRootBotPlayerAction.BaseActionWrappers
 {
-    internal class zPlayerBotActionHighlight : PlayerBotActionHighlight, ICustomPlayerBotActionBase
+    internal class zPlayerBotActionHighlight : PlayerBotActionHighlight//, ICustomPlayerBotActionBase
     {
         public Descriptor m_customDesc { get; set; }
-        public new class Descriptor : PlayerBotActionHighlight.Descriptor, ICustomPlayerBotActionBase.IDescriptor
+        public new class Descriptor : PlayerBotActionHighlight.Descriptor//, ICustomPlayerBotActionBase.IDescriptor
         {
             public Descriptor(PlayerAIBot bot) : base(bot)
             {

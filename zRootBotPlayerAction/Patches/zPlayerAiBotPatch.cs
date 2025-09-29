@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
+using Il2CppSystem.Security.Cryptography;
 using Player;
 using System;
 using UnityEngine;
@@ -174,50 +175,50 @@ namespace ZombieTweak2.zRootBotPlayerAction.Patches
         //    __instance.ApplyValues();
         //    return false;
         //}
-        //[HarmonyPatch(typeof(PlayerAIBot), nameof(PlayerAIBot.RemoveCollidingActions))]
-        //[HarmonyPrefix]
-        //public static bool RemoveCollidingActions(PlayerAIBot __instance, PlayerBotActionBase.Descriptor desc)
-        //{
-        //    var data = zActions.GetOrCreateData(__instance);
-        //    bool hasRemoved;
-        //    do
-        //    {
-        //        hasRemoved = false;
-        //        int i = 0;
-        //        while (i < data.m_queuedActions.Count)
-        //        {
-        //            PlayerBotActionBase.Descriptor descriptor = data.m_queuedActions[i];
-        //            if (descriptor.Status == PlayerBotActionBase.Descriptor.StatusType.Queued && descriptor.CheckCollision(desc))
-        //            {
-        //                data.m_queuedActions.RemoveAt(i);
-        //                descriptor.OnAborted();
-        //                hasRemoved = true;
-        //            }
-        //            else
-        //            {
-        //                i++;
-        //            }
-        //        }
-        //        int j = 0;
-        //        while (j < data.m_actions.Count)
-        //        {
-        //            PlayerBotActionBase playerBotActionBase = data.m_actions[j];
-        //            if (playerBotActionBase.CheckCollision(desc)) //this might be a problem with pointers?
-        //            {
-        //                data.m_actions.RemoveAt(j);
-        //                playerBotActionBase.DescBase.OnInterrupted();
-        //                playerBotActionBase.Stop();
-        //                hasRemoved = true;
-        //            }
-        //            else
-        //            {
-        //                j++;
-        //            }
-        //        }
-        //    }
-        //    while (hasRemoved && !desc.IsTerminated());
-        //    return false;
-        //}
+        [HarmonyPatch(typeof(PlayerAIBot), nameof(PlayerAIBot.RemoveCollidingActions))]
+        [HarmonyPrefix]
+        public static bool RemoveCollidingActions(PlayerAIBot __instance, PlayerBotActionBase.Descriptor desc)
+        {
+            var data = zActions.GetOrCreateData(__instance);
+            bool hasRemoved;
+            do
+            {
+                hasRemoved = false;
+                int i = 0;
+                while (i < data.m_queuedActions.Count)
+                {
+                    PlayerBotActionBase.Descriptor descriptor = data.m_queuedActions[i];
+                    if (descriptor.Status == PlayerBotActionBase.Descriptor.StatusType.Queued && descriptor.CheckCollision(desc))
+                    {
+                        data.m_queuedActions.RemoveAt(i);
+                        descriptor.OnAborted();
+                        hasRemoved = true;
+                    }
+                    else
+                    {
+                        i++;
+                    }
+                }
+                int j = 0;
+                while (j < data.m_actions.Count)
+                {
+                    PlayerBotActionBase playerBotActionBase = data.m_actions[j];
+                    if (playerBotActionBase.CheckCollision(desc)) //this might be a problem with pointers?
+                    {
+                        data.m_actions.RemoveAt(j);
+                        playerBotActionBase.DescBase.OnInterrupted();
+                        playerBotActionBase.Stop();
+                        hasRemoved = true;
+                    }
+                    else
+                    {
+                        j++;
+                    }
+                }
+            }
+            while (hasRemoved && !desc.IsTerminated());
+            return false;
+        }
         //[HarmonyPatch(typeof(PlayerAIBot), nameof(PlayerAIBot.SetEnabled))]
         //[HarmonyPrefix]
         //public static bool SetEnabled(PlayerAIBot __instance, bool state)
@@ -294,7 +295,13 @@ namespace ZombieTweak2.zRootBotPlayerAction.Patches
             }
             desc.OnQueued();
             __instance.RemoveCollidingActions(desc);
-            data.m_queuedActions.Add(desc);
+            //var hasStrictType = zActions.GetStrictTypeInstanceDescriptor(desc);
+            //if (hasStrictType != null)
+            //{
+            //    data.m_queuedActions.Add((PlayerBotActionBase.Descriptor)hasStrictType);
+            //}
+            //else
+                data.m_queuedActions.Add(desc);
             return false;
         }
         //[HarmonyPatch(typeof(PlayerAIBot), nameof(PlayerAIBot.StopAction))]

@@ -4,13 +4,13 @@ using Zombified_Initiative;
 
 namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
 {
-    internal class zPlayerBotActionExample : CustomBotAction, ICustomPlayerBotActionBase
+    internal class zPlayerBotActionExample : CustomBotAction//, ICustomPlayerBotActionBase
     {
         // You might want to keep a refrence to any potential sub actions here.
         // private PlayerBotActionTravel.Descriptor m_travelAction;
         public new class Descriptor(PlayerAIBot bot) : CustomBotAction.Descriptor(bot)
         {
-            public override void compareAction(RootPlayerBotAction root, ref PlayerBotActionBase.Descriptor bestAction)
+            public override void compareAction(ref PlayerBotActionBase.Descriptor bestAction)
             {
                 // When should this action run?
                 // Implement your custom comparison logic here

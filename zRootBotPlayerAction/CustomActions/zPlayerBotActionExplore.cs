@@ -4,11 +4,11 @@ using Zombified_Initiative;
 
 namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
 {
-    internal class zPlayerBotActionExplore : CustomBotAction, ICustomPlayerBotActionBase
+    internal class zPlayerBotActionExplore : CustomBotAction//, ICustomPlayerBotActionBase
     {
         // You might want to keep a refrence to any potential sub actions here.
         // private PlayerBotActionTravel.Descriptor m_travelAction;
-        public new class Descriptor : CustomBotAction.Descriptor, ICustomPlayerBotActionBase.IDescriptor
+        public new class Descriptor : CustomBotAction.Descriptor//, ICustomPlayerBotActionBase.IDescriptor
         {
             public int Prio = 5;
             //VisitNode unexploredNode = null;
@@ -17,7 +17,7 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
             public Descriptor(PlayerAIBot bot) : base(bot) 
             {
             }
-            public override void compareAction(RootPlayerBotAction root, ref PlayerBotActionBase.Descriptor bestAction)
+            public override void compareAction(ref PlayerBotActionBase.Descriptor bestAction)
             {
                 if (timeStarted == 0)
                     timeStarted = Time.time;

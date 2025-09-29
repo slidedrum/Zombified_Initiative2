@@ -40,9 +40,9 @@ namespace ZombieTweak2.zRootBotPlayerAction.Patches
             __instance.RefreshGearAvailability();
 
             PlayerBotActionBase.Descriptor bestAction = null;
-            foreach (ICustomPlayerBotActionBase.IDescriptor actionDesc in data.allActions)
+            foreach (PlayerBotActionBase.Descriptor actionDesc in data.allActions)
             {
-                actionDesc.compareAction(__instance, ref bestAction);
+                data.comparisonMap[actionDesc.Pointer].Invoke<PlayerBotActionBase.Descriptor>(ref bestAction);
             }
             if (bestAction != null)
             {
@@ -62,15 +62,15 @@ namespace ZombieTweak2.zRootBotPlayerAction.Patches
             }
             return false;
         }
-        [HarmonyPatch(typeof(PlayerBotActionBase.Descriptor), nameof(PlayerBotActionBase.Descriptor.CreateAction))]
-        [HarmonyPostfix]
-        static void CreateAction(PlayerBotActionBase.Descriptor __instance, ref PlayerBotActionBase __result)
-        {
-            if (__result is ICustomPlayerBotActionBase)
-            {
-                zActions.RegisterStrictTypeInstance(__result);
-            }
-        }
+        //[HarmonyPatch(typeof(PlayerBotActionBase.Descriptor), nameof(PlayerBotActionBase.Descriptor.CreateAction))]
+        //[HarmonyPostfix]
+        //static void CreateAction(PlayerBotActionBase.Descriptor __instance, ref PlayerBotActionBase __result)
+        //{
+        //    if (__result is ICustomPlayerBotActionBase)
+        //    {
+        //        zActions.RegisterStrictTypeInstance(__result);
+        //    }
+        //}
         [HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.RefreshGearAvailability))]
         [HarmonyPrefix]
         private static bool RefreshGearAvailability(RootPlayerBotAction __instance)
