@@ -7,10 +7,12 @@ namespace ZombieTweak2.zRootBotPlayerAction
 {
     public class dataStore
     {
-        public OrderedSet<PlayerBotActionBase.Descriptor> allActions = new();
+        public OrderedSet<CustomActionBase.Descriptor> customActions = new();
+        public PlayerBotActionBase.Descriptor bestAction = null;
         public Il2CppSystem.Collections.Generic.List<PlayerBotActionBase> m_actions { get; set; } = new();
         public Il2CppSystem.Collections.Generic.List<PlayerBotActionBase.Descriptor> m_queuedActions { get; set; } = new();
-        public Dictionary<IntPtr, FlexibleMethodDefinition> comparisonMap = new();
+        public List<PlayerBotActionBase.Descriptor> my_actions { get; set; } = new();
+        //public Dictionary<IntPtr, FlexibleMethodDefinition> comparisonMap = new();
     }
     public static class zActions
     {

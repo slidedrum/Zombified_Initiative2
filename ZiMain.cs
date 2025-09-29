@@ -20,7 +20,6 @@ using UnityEngine.SceneManagement;
 using ZombieTweak2;
 using ZombieTweak2.zMenu;
 using ZombieTweak2.zNetworking;
-using ZombieTweak2.zRootBotPlayerAction.CustomActions;
 using static Player.PlayerBotActionAttack;
 using static ZombieTweak2.zNetworking.pStructs;
 
@@ -156,6 +155,18 @@ public class ZiMain : BasePlugin
         m_Harmony.PatchAll();
         ClassInjector.RegisterTypeInIl2Cpp<zUpdater>();
         ClassInjector.RegisterTypeInIl2Cpp<zCameraEvents>();
+        //ClassInjector.RegisterTypeInIl2Cpp<il2cppTestClassscriptor>();
+        var temp = new PlayerBotActionBase.Descriptor(new PlayerAIBot());
+        Type tempType = temp.GetType();
+        var customTemp = new CustomActionBase.Descriptor(new PlayerAIBot().Pointer);
+        Type customtempType = customTemp.GetType();
+        //log.LogInfo(Type.GetType(tempType.FullName));
+        RegisterTypeOptions options = new RegisterTypeOptions();
+        options.BaseClassType = tempType;
+        ClassInjector.RegisterTypeInIl2Cpp(typeof(PlayerBotActionBase.Descriptor));
+        ClassInjector.RegisterTypeInIl2Cpp(typeof(PlayerBotActionBase));
+        ClassInjector.RegisterTypeInIl2Cpp(typeof(CustomActionBase.Descriptor), options);
+        ClassInjector.RegisterTypeInIl2Cpp(typeof(CustomActionBase), options);
 
         NetworkAPI.RegisterEvent<pItemPrioDisable>          ("SetItemPrioDisable",              zNetworking.ReciveSetItemPrioDisable);
         NetworkAPI.RegisterEvent<pItemPrio>                 ("SetItemPrio",                     zNetworking.ReciveSetItemPrio);
@@ -171,7 +182,6 @@ public class ZiMain : BasePlugin
         log = Log;
         zActionSub.addOnRemoved((Action<PlayerAIBot, PlayerBotActionBase>)onActionRemoved);
         zActionSub.addOnAdded((Action<PlayerAIBot, PlayerBotActionBase>)onActionAdded);
-
         EventAPI.OnManagersSetup += () =>
         {
             zUpdater.CreateInstance();

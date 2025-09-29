@@ -5,51 +5,26 @@ namespace ZombieTweak2
 {
     public class FlexibleMethodDefinition
     {
+        // This is a mostly AI generated class.
+        // This is a much more easy to use version of action that handles return types, arbitrary argument types and ammounts.
+
         public Delegate method;
         public object[] args;
 
         public FlexibleMethodDefinition(Delegate method)
         {
-            this.method = method ?? throw new ArgumentNullException(nameof(method));
+            this.method = method;
             this.args = Array.Empty<object>();
         }
-
         public FlexibleMethodDefinition(Delegate method, object[] args)
         {
-            this.method = method ?? throw new ArgumentNullException(nameof(method));
-            this.args = args ?? Array.Empty<object>();
+            this.method = method;
+            this.args = args;
         }
-
         public static implicit operator FlexibleMethodDefinition(Delegate d)
         {
             return new FlexibleMethodDefinition(d);
         }
-
-        public void Invoke()
-        {
-            method.DynamicInvoke(args);
-        }
-
-        public void Invoke(object[] arg)
-        {
-            method.DynamicInvoke(arg);
-        }
-
-        // Strongly-typed ref invoke
-        public void Invoke<T>(ref T arg)
-        {
-            if (method is RefAction<T> refMethod)
-            {
-                refMethod.Invoke(ref arg);
-            }
-            else
-            {
-                throw new InvalidOperationException($"Delegate is not of type RefAction<{typeof(T).Name}>");
-            }
-        }
-
-        // Helper delegate type
-        public delegate void RefAction<T>(ref T arg);
     }
     public class FlexibleEvent
     {

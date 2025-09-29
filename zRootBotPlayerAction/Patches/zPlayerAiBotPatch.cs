@@ -1,8 +1,10 @@
 ﻿using HarmonyLib;
+using Il2CppInterop.Runtime.Injection;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using Il2CppSystem.Security.Cryptography;
 using Player;
 using System;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.AI;
 using Zombified_Initiative;
@@ -90,6 +92,11 @@ namespace ZombieTweak2.zRootBotPlayerAction.Patches
             var data = zActions.GetOrCreateData(__instance);
             __instance.m_actions = data.m_actions;
             __instance.m_queuedActions = data.m_queuedActions;
+            //var m_exploreAction = new CustomActions.exploreDescriptor(__instance);
+            //data.customActions.Add(m_exploreAction);
+            CustomActionBase.Descriptor m_testAction = new CustomActionBase.Descriptor(__instance);
+            m_testAction.testInt = 5;
+            data.customActions.Add(m_testAction);
             ZiMain.log.LogMessage("init playerbot");
         }
         //[HarmonyPatch(typeof(PlayerAIBot), nameof(PlayerAIBot.Update))]
@@ -281,6 +288,20 @@ namespace ZombieTweak2.zRootBotPlayerAction.Patches
         public static bool StartAction(PlayerAIBot __instance, PlayerBotActionBase.Descriptor desc)
         {
             var data = zActions.GetOrCreateData(__instance);
+            int index = data.my_actions
+                .Select((d, i) => new { d, i })
+                .Where(x => x.d.Pointer == desc.Pointer)
+                .Select(x => x.i)
+                .FirstOrDefault(-1);
+            if (index == -1 && desc.Bot.m_rootAction.Pointer != desc.Pointer)
+            {
+                ZiMain.log.LogInfo($"Would have started action {desc.GetType()}");
+                data.bestAction = desc;
+                return false; //Do this so I can have control over when actions get started
+            }
+            if (index != -1)
+                data.my_actions.RemoveAt(index);
+
             if (!desc.IsTerminated())
             {
                 Debug.LogError("Action was queued while active: " + desc);
@@ -301,7 +322,7 @@ namespace ZombieTweak2.zRootBotPlayerAction.Patches
             //    data.m_queuedActions.Add((PlayerBotActionBase.Descriptor)hasStrictType);
             //}
             //else
-                data.m_queuedActions.Add(desc);
+            data.m_queuedActions.Add(desc);
             return false;
         }
         //[HarmonyPatch(typeof(PlayerAIBot), nameof(PlayerAIBot.StopAction))]

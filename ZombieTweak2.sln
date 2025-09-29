@@ -1,9 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36429.23 d17.14
+VisualStudioVersion = 17.14.36429.23
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZombieTweak2", "ZombieTweak2.csproj", "{217CAE0B-88AA-461B-A4C5-8817104DC666}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Il2CppInterop.Runtime", "..\..\..\..\..\Downloads\Il2CppInterop-1.5.1\Il2CppInterop.Runtime\Il2CppInterop.Runtime.csproj", "{27E4BC0E-CECC-C657-49F1-26A0B5B8E6B2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Il2CppInterop.Common", "..\..\..\..\..\Downloads\Il2CppInterop-1.5.1\Il2CppInterop.Common\Il2CppInterop.Common.csproj", "{D3781F2A-303D-BDB2-0C5C-4611DBE76608}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +19,14 @@ Global
 		{217CAE0B-88AA-461B-A4C5-8817104DC666}.Debug|x64.Build.0 = Debug|x64
 		{217CAE0B-88AA-461B-A4C5-8817104DC666}.Release|x64.ActiveCfg = Release|x64
 		{217CAE0B-88AA-461B-A4C5-8817104DC666}.Release|x64.Build.0 = Release|x64
+		{27E4BC0E-CECC-C657-49F1-26A0B5B8E6B2}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{27E4BC0E-CECC-C657-49F1-26A0B5B8E6B2}.Debug|x64.Build.0 = Debug|Any CPU
+		{27E4BC0E-CECC-C657-49F1-26A0B5B8E6B2}.Release|x64.ActiveCfg = Release|Any CPU
+		{27E4BC0E-CECC-C657-49F1-26A0B5B8E6B2}.Release|x64.Build.0 = Release|Any CPU
+		{D3781F2A-303D-BDB2-0C5C-4611DBE76608}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{D3781F2A-303D-BDB2-0C5C-4611DBE76608}.Debug|x64.Build.0 = Debug|Any CPU
+		{D3781F2A-303D-BDB2-0C5C-4611DBE76608}.Release|x64.ActiveCfg = Release|Any CPU
+		{D3781F2A-303D-BDB2-0C5C-4611DBE76608}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
