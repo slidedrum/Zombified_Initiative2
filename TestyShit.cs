@@ -33,10 +33,12 @@ public class CustomActionBase : PlayerBotActionBase
         }
         public override bool CheckCollision(PlayerBotActionBase.Descriptor desc)
         {
+
             return base.CheckCollision(desc);
         }
         public override void OnQueued()
         {
+            base.OnQueued();
             ZiMain.log.LogInfo("Holy shit custom action was queued!");
         }
         public override AccessLayers GetAccessLayersRuntime()
