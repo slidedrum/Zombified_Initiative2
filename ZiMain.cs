@@ -157,10 +157,6 @@ public class ZiMain : BasePlugin
         m_Harmony.PatchAll();
         ClassInjector.RegisterTypeInIl2Cpp<zUpdater>();
         ClassInjector.RegisterTypeInIl2Cpp<zCameraEvents>();
-        ClassInjector.RegisterTypeInIl2Cpp(typeof(CustomActionBase.Descriptor));
-        ClassInjector.RegisterTypeInIl2Cpp(typeof(CustomActionBase));
-        ClassInjector.RegisterTypeInIl2Cpp(typeof(zPlayerBotActionExplore.Descriptor));
-        ClassInjector.RegisterTypeInIl2Cpp(typeof(zPlayerBotActionExplore));
 
         NetworkAPI.RegisterEvent<pItemPrioDisable>          ("SetItemPrioDisable",              zNetworking.ReciveSetItemPrioDisable);
         NetworkAPI.RegisterEvent<pItemPrio>                 ("SetItemPrio",                     zNetworking.ReciveSetItemPrio);

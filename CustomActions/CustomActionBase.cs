@@ -8,10 +8,10 @@ public class CustomActionBase : PlayerBotActionBase
 {
     //This is the class you use to create a custom action!
     //Don't modify this, extend it instead.
-    CustomBase _Base; //This is used to call base methods without causing inf loops.
+    private CustomBase _Base; //This is used to call base methods without causing inf loops.
     public new class Descriptor : PlayerBotActionBase.Descriptor
     {
-        CustomDescBase _Base = null; //This is used to call base methods without causing inf loops.
+        private CustomDescBase _Base = null; //This is used to call base methods without causing inf loops.
         public Descriptor() : base(ClassInjector.DerivedConstructorPointer<Descriptor>())
         {
             ClassInjector.DerivedConstructorBody(this);
@@ -55,7 +55,6 @@ public class CustomActionBase : PlayerBotActionBase
         public virtual void compareAction(ref PlayerBotActionBase.Descriptor bestAction)
         {
         }
-
     }
     public CustomActionBase() : base(ClassInjector.DerivedConstructorPointer<CustomActionBase>())
     {

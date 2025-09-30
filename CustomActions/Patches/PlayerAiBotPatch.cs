@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using Il2CppInterop.Runtime.Injection;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using Player;
 using UnityEngine;
@@ -88,6 +89,10 @@ namespace ZombieTweak2.zRootBotPlayerAction.Patches
             __instance.m_queuedActions = data.m_queuedActions;
             //var m_exploreAction = new CustomActions.exploreDescriptor(instance);
             //data.customActions.Add(m_exploreAction);
+            ClassInjector.RegisterTypeInIl2Cpp(typeof(CustomActionBase.Descriptor));
+            ClassInjector.RegisterTypeInIl2Cpp(typeof(CustomActionBase));
+            ClassInjector.RegisterTypeInIl2Cpp(typeof(zPlayerBotActionExplore.Descriptor));
+            ClassInjector.RegisterTypeInIl2Cpp(typeof(zPlayerBotActionExplore));
             CustomActionBase.Descriptor m_testAction = new CustomActionBase.Descriptor(__instance);
             data.customActions.Add(m_testAction);
             zPlayerBotActionExplore.Descriptor m_exploreAction = new zPlayerBotActionExplore.Descriptor(__instance);

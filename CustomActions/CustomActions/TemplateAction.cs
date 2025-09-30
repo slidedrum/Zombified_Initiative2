@@ -3,7 +3,7 @@ using Player;
 using System;
 using UnityEngine;
 
-public class ExampleAction : CustomActionBase
+public class TemplateAction : CustomActionBase
 {
     //This is an example of how you can set up your own custom action!
     public new class Descriptor : CustomActionBase.Descriptor
@@ -68,17 +68,17 @@ public class ExampleAction : CustomActionBase
         }
 
     }
-    public ExampleAction() : base(ClassInjector.DerivedConstructorPointer<CustomActionBase>())// Don't use this!  Needed for il2cpp nonsense.
+    public TemplateAction() : base(ClassInjector.DerivedConstructorPointer<CustomActionBase>())// Don't use this!  Needed for il2cpp nonsense.
     {
         ClassInjector.DerivedConstructorBody(this);
         
     }// Don't use this!  Needed for il2cpp nonsense.
-    public ExampleAction(IntPtr ptr) : base(ptr) // Don't use this!  Needed for il2cpp nonsense.
+    public TemplateAction(IntPtr ptr) : base(ptr) // Don't use this!  Needed for il2cpp nonsense.
     {
         ClassInjector.DerivedConstructorBody(this);
 
     }// Don't use this!  Needed for il2cpp nonsense.
-    public ExampleAction(Descriptor desc) : base(desc)
+    public TemplateAction(Descriptor desc) : base(desc)
     {
         //Use this constructor.
         //This means your action is starting!
