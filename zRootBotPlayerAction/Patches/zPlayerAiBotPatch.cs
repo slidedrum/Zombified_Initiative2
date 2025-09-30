@@ -7,6 +7,7 @@ using System;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.AI;
+using ZombieTweak2.zRootBotPlayerAction.CustomActions;
 using Zombified_Initiative;
 
 namespace ZombieTweak2.zRootBotPlayerAction.Patches
@@ -96,6 +97,8 @@ namespace ZombieTweak2.zRootBotPlayerAction.Patches
             //data.customActions.Add(m_exploreAction);
             CustomActionBase.Descriptor m_testAction = new CustomActionBase.Descriptor(__instance);
             data.customActions.Add(m_testAction);
+            zPlayerBotActionExplore.Descriptor m_exploreAction = new zPlayerBotActionExplore.Descriptor(__instance);
+            data.customActions.Add(m_exploreAction);
             ZiMain.log.LogMessage("init playerbot");
         }
         //[HarmonyPatch(typeof(PlayerAIBot), nameof(PlayerAIBot.Update))]
@@ -290,6 +293,7 @@ namespace ZombieTweak2.zRootBotPlayerAction.Patches
             if (!desc.IsTerminated())
             {
                 Debug.LogError("Action was queued while active: " + desc);
+                return false;
             }
             for (int i = 0; i < data.m_actions.Count; i++)
             {
@@ -301,12 +305,6 @@ namespace ZombieTweak2.zRootBotPlayerAction.Patches
             }
             desc.OnQueued();
             __instance.RemoveCollidingActions(desc);
-            //var hasStrictType = zActions.GetStrictTypeInstanceDescriptor(desc);
-            //if (hasStrictType != null)
-            //{
-            //    data.m_queuedActions.Add((PlayerBotActionBase.Descriptor)hasStrictType);
-            //}
-            //else
             data.m_queuedActions.Add(desc);
             return false;
         }

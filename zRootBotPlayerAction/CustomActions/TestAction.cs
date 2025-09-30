@@ -6,13 +6,12 @@ using UnityEngine;
 using ZombieTweak2;
 using Zombified_Initiative;
 
-public class CustomActionBase : PlayerBotActionBase
+public class TestAction : PlayerBotActionBase
 {
     CustomBase _Base;
     public new class Descriptor : PlayerBotActionBase.Descriptor
     {
         CustomDescBase _Base = null;
-        public bool best = false;
         public Descriptor() : base(ClassInjector.DerivedConstructorPointer<Descriptor>())
         {
             ClassInjector.DerivedConstructorBody(this);
@@ -31,7 +30,7 @@ public class CustomActionBase : PlayerBotActionBase
         }
         public override PlayerBotActionBase CreateAction()
         {
-            return new CustomActionBase(this);
+            return new TestAction(this);
         }
         public override bool IsActionAllowed(PlayerBotActionBase.Descriptor desc)
         {
@@ -39,13 +38,12 @@ public class CustomActionBase : PlayerBotActionBase
         }
         public override bool CheckCollision(PlayerBotActionBase.Descriptor desc)
         {
-
+            Debug.Log("boop");
             return _Base.CheckCollision(desc);
         }
         public override void OnQueued()
         {
             _Base.OnQueued();
-            ZiMain.log.LogInfo("Holy shit custom action was queued!");
         }
         public override AccessLayers GetAccessLayersRuntime()
         {
@@ -55,26 +53,22 @@ public class CustomActionBase : PlayerBotActionBase
         {
             _Base.InternalOnTerminated();
         }
-
         internal void compareAction(ref PlayerBotActionBase.Descriptor bestAction)
         {
-            if (best && IsTerminated())
-                bestAction = this;
-            return;
         }
 
     }
-    public CustomActionBase() : base(ClassInjector.DerivedConstructorPointer<CustomActionBase>())
+    public TestAction() : base(ClassInjector.DerivedConstructorPointer<CustomActionBase>())
     {
         ClassInjector.DerivedConstructorBody(this);
         //Don't use
     }
-    public CustomActionBase(IntPtr ptr) : base(ptr) 
+    public TestAction(IntPtr ptr) : base(ptr) 
     {
         ClassInjector.DerivedConstructorBody(this);
         //Don't use
     }
-    public CustomActionBase(Descriptor desc) : base(ClassInjector.DerivedConstructorPointer<CustomActionBase>())
+    public TestAction(Descriptor desc) : base(ClassInjector.DerivedConstructorPointer<CustomActionBase>())
     {
         ClassInjector.DerivedConstructorBody(this);
         _Base = new CustomBase(this);
@@ -90,7 +84,6 @@ public class CustomActionBase : PlayerBotActionBase
     }
     public override bool Update()
     {
-        ZiMain.log.LogInfo("Holy shit custom action is updating!");
         return _Base.Update();
     }
     public override bool IsActionAllowed(PlayerBotActionBase.Descriptor desc)
