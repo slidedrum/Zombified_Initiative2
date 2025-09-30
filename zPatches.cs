@@ -1,24 +1,14 @@
-﻿using AIGraph;
-using BetterBots.Components;
-using Enemies;
+﻿using BetterBots.Components;
 using GameData;
 using Gear;
 using HarmonyLib;
-using Il2CppInterop.Runtime.Injection;
-using Il2CppInterop.Runtime.InteropTypes.Arrays;
-using Il2CppInterop.Runtime.Runtime;
-using LevelGeneration;
 using Player;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using UnityEngine.UIElements;
 using ZombieTweak2;
-using static Player.PlayerBotActionAttack;
 using static Zombified_Initiative.ZiMain;
 
 namespace Zombified_Initiative;
@@ -594,20 +584,6 @@ public class ZombifiedPatches
         {
             __result = basePriority;
         }
-        //if (Math.Abs(__result - originalResult) > 5)
-        //{ 
-        //    //Leaving this as a prefix for a bit to make sure this actually works.
-        //    ZiMain.log.LogWarning($"Priority: {__result} vs {originalResult}");
-        //    ZiMain.log.LogMessage($"Foundme: {foundMe}");
-        //    ZiMain.log.LogMessage($"otherAgents count: {otherAgents}");
-        //    ZiMain.log.LogMessage($"highestAmmoCap: {highestAmmoCap}");
-        //    ZiMain.log.LogMessage($"currentTotalAmmo: {currentTotalAmmoOfOtherBotsNotThisBot}");
-        //    ZiMain.log.LogMessage($"basePriority: {basePriority}");
-        //    ZiMain.log.LogMessage($"priorityFloor: {priorityFloor}");
-        //    ZiMain.log.LogMessage($"maxOtherTotal: {maxOtherTotal}");
-        //    ZiMain.log.LogMessage($"fillFactor: {fillFactor}");
-        //    ZiMain.log.LogMessage($"minPriority: {minPriority}");
-        //}
         return false;
     }
 
@@ -941,80 +917,4 @@ public class ZombifiedPatches
         }
         return false;
     }
-
-/*    [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct Il2CppGenericClass
-    {
-        public int typeDefinitionIndex;
-        public Il2CppGenericContext context;
-        public Il2CppClass* cached_class;
-    }
-    public static unsafe Type SystemTypeFromIl2CppType(Il2CppTypeStruct* typePointer)
-    {
-        var GetIl2CppTypeFullName = typeof(ClassInjector).GetMethod(
-            "GetIl2CppTypeFullName",
-            BindingFlags.NonPublic | BindingFlags.Static
-        );
-        string fullName = (string)GetIl2CppTypeFullName.Invoke(null, new object[] { (IntPtr)typePointer });
-        //var fullName = ClassInjector.GetIl2CppTypeFullName(typePointer);
-        Il2CppInterop.Runtime.Runtime.VersionSpecific.Type.INativeTypeStruct wrappedType = UnityVersionHandler.Wrap(typePointer);
-        Type type = Type.GetType(fullName);
-
-        if (type == null)
-        {
-            // Try prepending "Il2Cpp" if there is a dot in the name
-            if (fullName.Contains('.'))
-            {
-                type = Type.GetType("Il2Cpp" + fullName);
-            }
-            else
-            {
-                type = Type.GetType("Il2Cpp." + fullName);
-            }
-        }
-
-        if (type == null)
-        {
-            if (fullName == "PlayerBotActionBase+Descriptor, Modules-ASM")
-            { //This really should NOT be hard coded but whatever.
-                type = typeof(PlayerBotActionBase.Descriptor);
-            }
-        }
-
-        if (type == null)
-        {
-            throw new NullReferenceException(
-                $"Couldn't find System.Type for Il2Cpp type: {fullName}"
-            );
-        }
-
-        if (wrappedType.Type == Il2CppTypeEnum.IL2CPP_TYPE_GENERICINST)
-        {
-            Il2CppGenericClass* genericClass = (Il2CppGenericClass*)wrappedType.Data;
-            uint argc = genericClass->context.class_inst->type_argc;
-            Il2CppTypeStruct** argv = genericClass->context.class_inst->type_argv;
-            Type[] genericArguments = new Type[argc];
-
-            for (int i = 0; i < argc; i++)
-            {
-                genericArguments[i] = SystemTypeFromIl2CppType(argv[i]);
-            }
-            type = type.MakeGenericType(genericArguments);
-        }
-        if (wrappedType.ByRef)
-            type = type.MakeByRefType();
-        var RewriteType = typeof(ClassInjector).GetMethod(
-            "RewriteType",
-            BindingFlags.NonPublic | BindingFlags.Static
-        );
-        return (Type)RewriteType.Invoke(null, new object[] { type });
-        //return ClassInjector.RewriteType(type);
-    }
-    [HarmonyPatch(typeof(ClassInjector), "SystemTypeFromIl2CppType", new Type[] { typeof(Il2CppTypeStruct*) })]
-    [HarmonyPrefix]
-    public static unsafe bool SystemTypeFromIl2CppType(Il2CppTypeStruct* typePointer, ref Type __result)
-    {
-        __result = SystemTypeFromIl2CppType(typePointer);
-        return false;
-    }*/
 } // zombifiedpatches

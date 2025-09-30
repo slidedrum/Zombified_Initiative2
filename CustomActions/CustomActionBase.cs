@@ -1,22 +1,22 @@
 ﻿using Il2CppInterop.Runtime.Injection;
-using Il2CppSystem.Security.Cryptography;
 using Player;
 using System;
 using UnityEngine;
-using ZombieTweak2;
-using Zombified_Initiative;
+using ZombieTweak2.zRootBotPlayerAction.Patches;
 
-public class TestAction : PlayerBotActionBase
+public class CustomActionBase : PlayerBotActionBase
 {
-    CustomBase _Base;
+    //This is the class you use to create a custom action!
+    //Don't modify this, extend it instead.
+    CustomBase _Base; //This is used to call base methods without causing inf loops.
     public new class Descriptor : PlayerBotActionBase.Descriptor
     {
-        CustomDescBase _Base = null;
+        CustomDescBase _Base = null; //This is used to call base methods without causing inf loops.
         public Descriptor() : base(ClassInjector.DerivedConstructorPointer<Descriptor>())
         {
             ClassInjector.DerivedConstructorBody(this);
             //Don't use
-        }
+        } 
         public Descriptor(IntPtr ptr) : base(ptr)
         {
             ClassInjector.DerivedConstructorBody(this);
@@ -30,7 +30,7 @@ public class TestAction : PlayerBotActionBase
         }
         public override PlayerBotActionBase CreateAction()
         {
-            return new TestAction(this);
+            return new CustomActionBase(this);
         }
         public override bool IsActionAllowed(PlayerBotActionBase.Descriptor desc)
         {
@@ -38,7 +38,6 @@ public class TestAction : PlayerBotActionBase
         }
         public override bool CheckCollision(PlayerBotActionBase.Descriptor desc)
         {
-            Debug.Log("boop");
             return _Base.CheckCollision(desc);
         }
         public override void OnQueued()
@@ -53,22 +52,22 @@ public class TestAction : PlayerBotActionBase
         {
             _Base.InternalOnTerminated();
         }
-        internal void compareAction(ref PlayerBotActionBase.Descriptor bestAction)
+        public virtual void compareAction(ref PlayerBotActionBase.Descriptor bestAction)
         {
         }
 
     }
-    public TestAction() : base(ClassInjector.DerivedConstructorPointer<CustomActionBase>())
+    public CustomActionBase() : base(ClassInjector.DerivedConstructorPointer<CustomActionBase>())
     {
         ClassInjector.DerivedConstructorBody(this);
         //Don't use
     }
-    public TestAction(IntPtr ptr) : base(ptr) 
+    public CustomActionBase(IntPtr ptr) : base(ptr) 
     {
         ClassInjector.DerivedConstructorBody(this);
         //Don't use
     }
-    public TestAction(Descriptor desc) : base(ClassInjector.DerivedConstructorPointer<CustomActionBase>())
+    public CustomActionBase(Descriptor desc) : base(ClassInjector.DerivedConstructorPointer<CustomActionBase>())
     {
         ClassInjector.DerivedConstructorBody(this);
         _Base = new CustomBase(this);

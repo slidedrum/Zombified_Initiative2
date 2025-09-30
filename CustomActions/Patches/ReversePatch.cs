@@ -4,14 +4,14 @@ using System;
 using UnityEngine;
 using static Player.PlayerBotActionBase;
 
-namespace ZombieTweak2
+namespace ZombieTweak2.zRootBotPlayerAction.Patches
 {
     [HarmonyPatch]
     internal class CustomDescBase
     {
-        private readonly PlayerBotActionBase.Descriptor __instance;
+        private readonly Descriptor __instance;
 
-        public CustomDescBase(PlayerBotActionBase.Descriptor instance)
+        public CustomDescBase(Descriptor instance)
         {
             __instance = instance;
         }
@@ -19,10 +19,10 @@ namespace ZombieTweak2
         // ==== Non-static wrappers ====
         public void OnQueued() => OnQueuedBase(__instance);
 
-        public bool CheckCollision(PlayerBotActionBase.Descriptor desc)
+        public bool CheckCollision(Descriptor desc)
             => CheckCollisionBase(__instance, desc);
 
-        public bool IsActionAllowed(PlayerBotActionBase.Descriptor desc)
+        public bool IsActionAllowed(Descriptor desc)
             => IsActionAllowedBase(__instance, desc);
 
         public AccessLayers GetAccessLayersRuntime()
@@ -33,37 +33,37 @@ namespace ZombieTweak2
 
 
         // ==== Static reverse-patch stubs ====
-        [HarmonyPatch(typeof(PlayerBotActionBase.Descriptor), nameof(PlayerBotActionBase.Descriptor.OnQueued))]
+        [HarmonyPatch(typeof(Descriptor), nameof(Descriptor.OnQueued))]
         [HarmonyReversePatch]
-        private static void OnQueuedBase(PlayerBotActionBase.Descriptor __instance)
+        private static void OnQueuedBase(Descriptor __instance)
         {
             throw new NotImplementedException();
         }
 
-        [HarmonyPatch(typeof(PlayerBotActionBase.Descriptor), nameof(PlayerBotActionBase.Descriptor.CheckCollision))]
+        [HarmonyPatch(typeof(Descriptor), nameof(Descriptor.CheckCollision))]
         [HarmonyReversePatch]
-        private static bool CheckCollisionBase(PlayerBotActionBase.Descriptor __instance, PlayerBotActionBase.Descriptor desc)
+        private static bool CheckCollisionBase(Descriptor __instance, Descriptor desc)
         {
             throw new NotImplementedException();
         }
 
-        [HarmonyPatch(typeof(PlayerBotActionBase.Descriptor), nameof(PlayerBotActionBase.Descriptor.IsActionAllowed))]
+        [HarmonyPatch(typeof(Descriptor), nameof(Descriptor.IsActionAllowed))]
         [HarmonyReversePatch]
-        private static bool IsActionAllowedBase(PlayerBotActionBase.Descriptor __instance, PlayerBotActionBase.Descriptor desc)
+        private static bool IsActionAllowedBase(Descriptor __instance, Descriptor desc)
         {
             throw new NotImplementedException();
         }
 
-        [HarmonyPatch(typeof(PlayerBotActionBase.Descriptor), nameof(PlayerBotActionBase.Descriptor.GetAccessLayersRuntime))]
+        [HarmonyPatch(typeof(Descriptor), nameof(Descriptor.GetAccessLayersRuntime))]
         [HarmonyReversePatch]
-        private static AccessLayers GetAccessLayersRuntimeBase(PlayerBotActionBase.Descriptor __instance)
+        private static AccessLayers GetAccessLayersRuntimeBase(Descriptor __instance)
         {
             throw new NotImplementedException();
         }
 
-        [HarmonyPatch(typeof(PlayerBotActionBase.Descriptor), nameof(PlayerBotActionBase.Descriptor.InternalOnTerminated))]
+        [HarmonyPatch(typeof(Descriptor), nameof(Descriptor.InternalOnTerminated))]
         [HarmonyReversePatch]
-        private static void InternalOnTerminatedBase(PlayerBotActionBase.Descriptor __instance)
+        private static void InternalOnTerminatedBase(Descriptor __instance)
         {
             throw new NotImplementedException();
         }
@@ -85,10 +85,10 @@ namespace ZombieTweak2
 
         public void OnWarped(Vector3 position) => OnWarpedBase(__instance, position);
 
-        public bool IsActionAllowed(PlayerBotActionBase.Descriptor desc)
+        public bool IsActionAllowed(Descriptor desc)
             => IsActionAllowedBase(__instance, desc);
 
-        public bool CheckCollision(PlayerBotActionBase.Descriptor desc)
+        public bool CheckCollision(Descriptor desc)
             => CheckCollisionBase(__instance, desc);
 
         public AccessLayers GetAccessLayersRuntime()
@@ -119,14 +119,14 @@ namespace ZombieTweak2
 
         [HarmonyPatch(typeof(PlayerBotActionBase), nameof(PlayerBotActionBase.IsActionAllowed))]
         [HarmonyReversePatch]
-        private static bool IsActionAllowedBase(PlayerBotActionBase __instance, PlayerBotActionBase.Descriptor desc)
+        private static bool IsActionAllowedBase(PlayerBotActionBase __instance, Descriptor desc)
         {
             throw new NotImplementedException();
         }
 
         [HarmonyPatch(typeof(PlayerBotActionBase), nameof(PlayerBotActionBase.CheckCollision))]
         [HarmonyReversePatch]
-        private static bool CheckCollisionBase(PlayerBotActionBase __instance, PlayerBotActionBase.Descriptor desc)
+        private static bool CheckCollisionBase(PlayerBotActionBase __instance, Descriptor desc)
         {
             throw new NotImplementedException();
         }

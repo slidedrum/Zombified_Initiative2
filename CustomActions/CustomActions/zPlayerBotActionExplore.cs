@@ -10,12 +10,12 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
     {
         private StateEnum state = StateEnum.None;
         VisitNode UnexploredNode = null;
-        private PlayerBotActionTravel.Descriptor travelAction = null;
+        public PlayerBotActionTravel.Descriptor travelAction = null;
         public new class Descriptor : CustomActionBase.Descriptor
         {
             public new int Prio = 5;
-            float timeStarted = 0;
-            float ignoreTime = 5;
+            float lastLooked = 0;
+            float lookCooldown = 5;
             public Descriptor() : base(ClassInjector.DerivedConstructorPointer<Descriptor>())
             {
                 ClassInjector.DerivedConstructorBody(this);
@@ -32,17 +32,18 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
             }
             public override void compareAction(ref PlayerBotActionBase.Descriptor bestAction)
             {
-                if (timeStarted == 0)
-                    timeStarted = Time.time;
+                if (lastLooked == 0)
+                    lastLooked = Time.time;
                 if (DramaManager.CurrentStateEnum != DRAMA_State.Exploration)
                     return;
-                if (Time.time - timeStarted < ignoreTime)
+                if (Time.time - lastLooked < lookCooldown)
                     return;
-                if (zVisitedManager.GetUnexploredLocation(Bot.Agent.Position) != null && IsTerminated())
+                if (zVisitedManager.GetUnexploredLocation(Bot.Agent.Position, 0, 5) != null && IsTerminated())
                 {
                     if (bestAction == null || Prio > bestAction.Prio)
                     {
                         bestAction = this;
+                        lastLooked = Time.time;
                     }
                 }
             }
@@ -97,7 +98,7 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
                 {
                     PlayerAgent agent = m_bot.Agent;
                     Vector3 Unexplored = UnexploredNode.position;
-                    PlayerBotActionTravel.Descriptor travelAction = new(m_bot)
+                    travelAction = new(m_bot)
                     {
                         DestinationPos = Unexplored,
                         Haste = 0.5f,
@@ -108,7 +109,6 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
                         ParentActionBase = this,
                         Prio = 5,
                     };
-                    UnexploredNode = null;
                     m_bot.StartAction(travelAction);
                     FlexibleMethodDefinition callback = new(OnTravelActionEvent, [travelAction]);
                     zActionSub.addOnTerminated(travelAction, callback);
@@ -126,11 +126,23 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
                 Stop();
                 return true;
             }
+            else if (state == StateEnum.Moving) 
+            {
+                if (UnexploredNode != null && UnexploredNode.discovered)
+                {
+                    //travelAction.SetCompletionStatus(PlayerBotActionBase.Descriptor.StatusType.Successful);
+                    //travelAction?.OnInterrupted();
+                    //travelAction?.ActionBase?.Stop();
+                    state = StateEnum.lookingForUnexplored;
+                    return false;
+                }
+            }
             return !IsActive(); //state moving
         }
         public void OnTravelActionEvent(PlayerBotActionBase.Descriptor descBase)
         {
             travelAction = (PlayerBotActionTravel.Descriptor)descBase;
+            UnexploredNode = null;
             if (travelAction.Status == PlayerBotActionBase.Descriptor.StatusType.Successful)
             {
                 state = StateEnum.lookingForUnexplored;

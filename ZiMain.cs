@@ -14,6 +14,7 @@ using LevelGeneration;
 using Player;
 using SNetwork;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -156,16 +157,10 @@ public class ZiMain : BasePlugin
         m_Harmony.PatchAll();
         ClassInjector.RegisterTypeInIl2Cpp<zUpdater>();
         ClassInjector.RegisterTypeInIl2Cpp<zCameraEvents>();
-        RegisterTypeOptions options = new RegisterTypeOptions();
-        options.BaseClassType = typeof(PlayerBotActionBase.Descriptor);
-        ClassInjector.RegisterTypeInIl2Cpp(typeof(CustomActionBase.Descriptor), options);
-        ClassInjector.RegisterTypeInIl2Cpp(typeof(CustomActionBase), options);
-        ClassInjector.RegisterTypeInIl2Cpp(typeof(zPlayerBotActionExplore.Descriptor), options);
-        ClassInjector.RegisterTypeInIl2Cpp(typeof(zPlayerBotActionExplore), options);
-        //ClassInjector.RegisterTypeInIl2Cpp(typeof(CustomActionBase.Descriptor));
-        //ClassInjector.RegisterTypeInIl2Cpp(typeof(CustomActionBase));
-        //ClassInjector.RegisterTypeInIl2Cpp(typeof(zPlayerBotActionExplore.Descriptor));
-        //ClassInjector.RegisterTypeInIl2Cpp(typeof(zPlayerBotActionExplore));
+        ClassInjector.RegisterTypeInIl2Cpp(typeof(CustomActionBase.Descriptor));
+        ClassInjector.RegisterTypeInIl2Cpp(typeof(CustomActionBase));
+        ClassInjector.RegisterTypeInIl2Cpp(typeof(zPlayerBotActionExplore.Descriptor));
+        ClassInjector.RegisterTypeInIl2Cpp(typeof(zPlayerBotActionExplore));
 
         NetworkAPI.RegisterEvent<pItemPrioDisable>          ("SetItemPrioDisable",              zNetworking.ReciveSetItemPrioDisable);
         NetworkAPI.RegisterEvent<pItemPrio>                 ("SetItemPrio",                     zNetworking.ReciveSetItemPrio);
@@ -627,8 +622,4 @@ public class ZiMain : BasePlugin
         FlexibleMethodDefinition callback = new(SendBotToClearCurrentRoom,[aiBot,commander, netsender]);
         zActionSub.addOnTerminated(descriptor, callback);
     }
-
-    
-
-
 } // plugin

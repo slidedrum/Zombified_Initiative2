@@ -386,7 +386,7 @@ namespace ZombieTweak2
             GameObject observer = PlayerManager.GetLocalPlayerAgent().FPSCamera.gameObject;
             Transform menuTransform = zMenuManager.mainMenu.gameObject.transform;
             GameObject target = zSearch.GetClosestObjectInLookDirection(menuTransform, zSearch.GetGameObjectsWithLookDirection<EnemyAgent>(menuTransform), 180f);
-            zVisiblityManager2.CheckForObject(observer, target);
+            zVisiblityManager.CheckForObject(observer, target);
         }
         internal static void toggleVisCheck()
         {
@@ -416,7 +416,7 @@ namespace ZombieTweak2
             {
                 GameObject observer = PlayerManager.GetLocalPlayerAgent().FPSCamera.gameObject;
                 GameObject target = zSearch.GetClosestObjectInLookDirection(observer.transform, zSearch.GetGameObjectsWithLookDirection<EnemyAgent>(observer.transform), 180f);
-                zVisiblityManager2.CheckForObject(observer, target);
+                zVisiblityManager.CheckForObject(observer, target);
             }
         }
         internal static void SendClosestBotToExplore()

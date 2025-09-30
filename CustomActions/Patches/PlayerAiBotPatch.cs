@@ -1,21 +1,14 @@
 ﻿using HarmonyLib;
-using Il2CppInterop.Runtime.Injection;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
-using Il2CppSystem.Security.Cryptography;
 using Player;
-using System;
-using System.Linq;
 using UnityEngine;
-using UnityEngine.AI;
 using ZombieTweak2.zRootBotPlayerAction.CustomActions;
 using Zombified_Initiative;
 
 namespace ZombieTweak2.zRootBotPlayerAction.Patches
 {
-    //Wholesale replacement of m_actions and m_queuedActions handling to use our own lists so we can add custom actions
-    //Might be outdated, not sure if anything changed in the base game
     [HarmonyPatch]
-    internal class zPlayerAiBotPatch
+    internal class PlayerAiBotPatch
     {
         [HarmonyPatch(typeof(PlayerAIBot), nameof(PlayerAIBot.StartQueuedActions))]
         [HarmonyPrefix]
