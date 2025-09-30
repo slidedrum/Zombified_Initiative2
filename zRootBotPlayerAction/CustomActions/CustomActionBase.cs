@@ -53,7 +53,7 @@ public class CustomActionBase : PlayerBotActionBase
         {
             _Base.InternalOnTerminated();
         }
-        internal void compareAction(ref PlayerBotActionBase.Descriptor bestAction)
+        public virtual void compareAction(ref PlayerBotActionBase.Descriptor bestAction)
         {
         }
 

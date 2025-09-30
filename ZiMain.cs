@@ -25,7 +25,7 @@ using static Player.PlayerBotActionAttack;
 using static ZombieTweak2.zNetworking.pStructs;
 
 /*
- == TODO == Priority: 
+ == TODO == Priority: Clean up the mess I made creating custom actions.
 
  -- TODO -- DONE -- Re - create send bot to do manual action
  -- TODO -- DONE -- fix pickup action failing sometimes
@@ -162,8 +162,10 @@ public class ZiMain : BasePlugin
         ClassInjector.RegisterTypeInIl2Cpp(typeof(CustomActionBase), options);
         ClassInjector.RegisterTypeInIl2Cpp(typeof(zPlayerBotActionExplore.Descriptor), options);
         ClassInjector.RegisterTypeInIl2Cpp(typeof(zPlayerBotActionExplore), options);
-        //ClassInjector.RegisterTypeInIl2Cpp(typeof(TestAction.Descriptor), options);
-        //ClassInjector.RegisterTypeInIl2Cpp(typeof(TestAction), options);
+        //ClassInjector.RegisterTypeInIl2Cpp(typeof(CustomActionBase.Descriptor));
+        //ClassInjector.RegisterTypeInIl2Cpp(typeof(CustomActionBase));
+        //ClassInjector.RegisterTypeInIl2Cpp(typeof(zPlayerBotActionExplore.Descriptor));
+        //ClassInjector.RegisterTypeInIl2Cpp(typeof(zPlayerBotActionExplore));
 
         NetworkAPI.RegisterEvent<pItemPrioDisable>          ("SetItemPrioDisable",              zNetworking.ReciveSetItemPrioDisable);
         NetworkAPI.RegisterEvent<pItemPrio>                 ("SetItemPrio",                     zNetworking.ReciveSetItemPrio);
