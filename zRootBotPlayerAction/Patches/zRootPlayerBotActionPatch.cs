@@ -5,7 +5,6 @@ using Player;
 using System;
 using System.Collections.Generic;
 using System.Reflection.Emit;
-using ZombieTweak2.zRootBotPlayerAction.BaseActionWrappers;
 using Zombified_Initiative;
 
 namespace ZombieTweak2.zRootBotPlayerAction.Patches

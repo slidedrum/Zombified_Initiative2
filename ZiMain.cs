@@ -156,15 +156,10 @@ public class ZiMain : BasePlugin
         ClassInjector.RegisterTypeInIl2Cpp<zUpdater>();
         ClassInjector.RegisterTypeInIl2Cpp<zCameraEvents>();
         //ClassInjector.RegisterTypeInIl2Cpp<il2cppTestClassscriptor>();
-        var temp = new PlayerBotActionBase.Descriptor(new PlayerAIBot());
-        Type tempType = temp.GetType();
-        var customTemp = new CustomActionBase.Descriptor(new PlayerAIBot().Pointer);
-        Type customtempType = customTemp.GetType();
-        //log.LogInfo(Type.GetType(tempType.FullName));
+        //var temp = new PlayerBotActionBase.Descriptor(new PlayerAIBot());
+        //Type tempType = temp.GetType();
         RegisterTypeOptions options = new RegisterTypeOptions();
-        options.BaseClassType = tempType;
-        ClassInjector.RegisterTypeInIl2Cpp(typeof(PlayerBotActionBase.Descriptor));
-        ClassInjector.RegisterTypeInIl2Cpp(typeof(PlayerBotActionBase));
+        options.BaseClassType = typeof(PlayerBotActionBase.Descriptor);
         ClassInjector.RegisterTypeInIl2Cpp(typeof(CustomActionBase.Descriptor), options);
         ClassInjector.RegisterTypeInIl2Cpp(typeof(CustomActionBase), options);
 

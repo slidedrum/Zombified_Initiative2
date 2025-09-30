@@ -49,7 +49,7 @@ namespace ZombieTweak2.zRootBotPlayerAction.Patches
             {
                 return false;
             }
-            //PlayerBotActionBase[] array = new PlayerBotActionBase[__instance.m_actions.Count];
+            //PlayerBotActionBase[] array = new PlayerBotActionBase[instance.m_actions.Count];
             var array = new Il2CppReferenceArray<PlayerBotActionBase>(data.m_actions.Count);
             data.m_actions.CopyTo(array, 0);
             for (int i = 0; i < array.Length; i++)
@@ -92,24 +92,23 @@ namespace ZombieTweak2.zRootBotPlayerAction.Patches
             var data = zActions.GetOrCreateData(__instance);
             __instance.m_actions = data.m_actions;
             __instance.m_queuedActions = data.m_queuedActions;
-            //var m_exploreAction = new CustomActions.exploreDescriptor(__instance);
+            //var m_exploreAction = new CustomActions.exploreDescriptor(instance);
             //data.customActions.Add(m_exploreAction);
             CustomActionBase.Descriptor m_testAction = new CustomActionBase.Descriptor(__instance);
-            m_testAction.testInt = 5;
             data.customActions.Add(m_testAction);
             ZiMain.log.LogMessage("init playerbot");
         }
         //[HarmonyPatch(typeof(PlayerAIBot), nameof(PlayerAIBot.Update))]
         //[HarmonyPrefix]
-        //public static void Update(PlayerAIBot __instance)
+        //public static void Update(PlayerAIBot instance)
         //{
 
         //}
         //[HarmonyPatch(typeof(PlayerAIBot), nameof(PlayerAIBot.ApplyRestrictionsToRootPosition))]
         //[HarmonyPrefix]
-        //public static bool ApplyRestrictionsToRootPosition(PlayerAIBot __instance, ref Vector3 testPosition, ref float restrictionPrio, ref bool __result)
+        //public static bool ApplyRestrictionsToRootPosition(PlayerAIBot instance, ref Vector3 testPosition, ref float restrictionPrio, ref bool __result)
         //{
-        //    var data = zActions.GetOrCreateData(__instance);
+        //    var data = zActions.GetOrCreateData(instance);
         //    float resultPrio = restrictionPrio;
         //    Vector3 resultPos = testPosition;
         //    Vector3 tmpPos;
@@ -143,9 +142,9 @@ namespace ZombieTweak2.zRootBotPlayerAction.Patches
         //}
         //[HarmonyPatch(typeof(PlayerAIBot), nameof(PlayerAIBot.IsActionForbidden))]
         //[HarmonyPrefix]
-        //public static bool IsActionForbidden(PlayerAIBot __instance, PlayerBotActionBase.Descriptor desc, ref bool __result)
+        //public static bool IsActionForbidden(PlayerAIBot instance, PlayerBotActionBase.Descriptor desc, ref bool __result)
         //{
-        //    var data = zActions.GetOrCreateData(__instance);
+        //    var data = zActions.GetOrCreateData(instance);
         //    for (int i = 0; i < data.m_queuedActions.Count; i++)
         //    {
         //        if (!data.m_queuedActions[i].IsActionAllowed(desc))
@@ -167,9 +166,9 @@ namespace ZombieTweak2.zRootBotPlayerAction.Patches
         //}
         //[HarmonyPatch(typeof(PlayerAIBot), nameof(PlayerAIBot.OnWarped))]
         //[HarmonyPrefix]
-        //public static bool OnWarped(PlayerAIBot __instance, Vector3 position)
+        //public static bool OnWarped(PlayerAIBot instance, Vector3 position)
         //{
-        //    var data = zActions.GetOrCreateData(__instance);
+        //    var data = zActions.GetOrCreateData(instance);
         //    for (int i = 0; i < data.m_actions.Count; i++)
         //    {
         //        PlayerBotActionBase playerBotActionBase = data.m_actions[i];
@@ -178,8 +177,8 @@ namespace ZombieTweak2.zRootBotPlayerAction.Patches
         //            playerBotActionBase.OnWarped(position);
         //        }
         //    }
-        //    __instance.m_syncValues.Position = position;
-        //    __instance.ApplyValues();
+        //    instance.m_syncValues.Position = position;
+        //    instance.ApplyValues();
         //    return false;
         //}
         [HarmonyPatch(typeof(PlayerAIBot), nameof(PlayerAIBot.RemoveCollidingActions))]
@@ -228,29 +227,29 @@ namespace ZombieTweak2.zRootBotPlayerAction.Patches
         }
         //[HarmonyPatch(typeof(PlayerAIBot), nameof(PlayerAIBot.SetEnabled))]
         //[HarmonyPrefix]
-        //public static bool SetEnabled(PlayerAIBot __instance, bool state)
+        //public static bool SetEnabled(PlayerAIBot instance, bool state)
         //{
-        //    var data = zActions.GetOrCreateData(__instance);
-        //    if (state == __instance.enabled)
+        //    var data = zActions.GetOrCreateData(instance);
+        //    if (state == instance.enabled)
         //    {
         //        return false;
         //    }
         //    if (state)
         //    {
         //        NavMeshHit navMeshHit;
-        //        if (NavMesh.SamplePosition(__instance.m_playerAgent.Position, out navMeshHit, 3f, -1))
+        //        if (NavMesh.SamplePosition(instance.m_playerAgent.Position, out navMeshHit, 3f, -1))
         //        {
-        //            __instance.m_syncValues.Position = navMeshHit.position;
+        //            instance.m_syncValues.Position = navMeshHit.position;
         //        }
         //        else
         //        {
-        //            __instance.m_syncValues.Position = __instance.m_playerAgent.Position;
+        //            instance.m_syncValues.Position = instance.m_playerAgent.Position;
         //        }
-        //        __instance.m_syncValues.Forward = __instance.m_playerAgent.Forward;
-        //        __instance.m_syncValues.LookDirection = __instance.m_playerAgent.TargetLookDir;
-        //        __instance.m_syncValues.Ladder = __instance.m_playerAgent.Locomotion.CurrentLadder;
-        //        __instance.InitValues();
-        //        __instance.m_lastSyncedPosition = __instance.m_syncValues.Position;
+        //        instance.m_syncValues.Forward = instance.m_playerAgent.Forward;
+        //        instance.m_syncValues.LookDirection = instance.m_playerAgent.TargetLookDir;
+        //        instance.m_syncValues.Ladder = instance.m_playerAgent.Locomotion.CurrentLadder;
+        //        instance.InitValues();
+        //        instance.m_lastSyncedPosition = instance.m_syncValues.Position;
         //    }
         //    else
         //    {
@@ -260,7 +259,7 @@ namespace ZombieTweak2.zRootBotPlayerAction.Patches
         //            hasRemoved = false;
         //            for (int i = 0; i < data.m_queuedActions.Count; i++)
         //            {
-        //                if (data.m_queuedActions[i].Pointer != __instance.m_rootAction.Pointer)
+        //                if (data.m_queuedActions[i].Pointer != instance.m_rootAction.Pointer)
         //                {
         //                    data.m_queuedActions[i].OnAborted();
         //                    data.m_queuedActions.RemoveAt(i);
@@ -269,7 +268,7 @@ namespace ZombieTweak2.zRootBotPlayerAction.Patches
         //            }
         //            for (int j = 0; j < data.m_actions.Count; j++)
         //            {
-        //                if (data.m_actions[j].DescBase.Pointer != __instance.m_rootAction.Pointer)
+        //                if (data.m_actions[j].DescBase.Pointer != instance.m_rootAction.Pointer)
         //                {
         //                    data.m_actions[j].Stop();
         //                    data.m_actions[j].DescBase.OnStopped();
@@ -280,7 +279,7 @@ namespace ZombieTweak2.zRootBotPlayerAction.Patches
         //        }
         //        while (hasRemoved);
         //    }
-        //    __instance.enabled = state;
+        //    instance.enabled = state;
         //    return false;
         //}
         [HarmonyPatch(typeof(PlayerAIBot), nameof(PlayerAIBot.StartAction))]
@@ -313,9 +312,9 @@ namespace ZombieTweak2.zRootBotPlayerAction.Patches
         }
         //[HarmonyPatch(typeof(PlayerAIBot), nameof(PlayerAIBot.StopAction))]
         //[HarmonyPrefix]
-        //public static bool StopAction(PlayerAIBot __instance, PlayerBotActionBase.Descriptor desc)
+        //public static bool StopAction(PlayerAIBot instance, PlayerBotActionBase.Descriptor desc)
         //{
-        //    var data = zActions.GetOrCreateData(__instance);
+        //    var data = zActions.GetOrCreateData(instance);
         //    if (desc == PlayerAIBot.s_updatingAction)
         //    {
         //        Debug.LogError("Action was removed during its update: " + desc);

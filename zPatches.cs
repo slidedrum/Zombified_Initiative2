@@ -38,7 +38,7 @@ public class ZombifiedPatches
     }
     //[HarmonyPatch(typeof(PlayerManager), nameof(PlayerManager.OnObjectHighlighted))]
     //[HarmonyPrefix]
-    //public static void OnObjectHighlighted(PlayerManager __instance, AIG_CourseNode courseNode, GameObject go)
+    //public static void OnObjectHighlighted(PlayerManager instance, AIG_CourseNode courseNode, GameObject go)
     //{
     //    //if (!PlayerManager.Current.BotAIData.ObjectsToHighlight.ContainsKey(courseNode))
     //    //    PlayerManager.Current.MapHighlightableObjects(courseNode);
@@ -48,14 +48,14 @@ public class ZombifiedPatches
     //}
     //[HarmonyPatch(typeof(LG_ResourceContainer_Storage), nameof(LG_ResourceContainer_Storage.SetPickupInteractions))]
     //[HarmonyPostfix]
-    //public static void SetPickupInteractions(LG_ResourceContainer_Storage __instance, float wait, bool active)
+    //public static void SetPickupInteractions(LG_ResourceContainer_Storage instance, float wait, bool active)
     //{
     //    if (!active)
     //        return;
-    //    var node = __instance.m_core.SpawnNode;
+    //    var node = instance.m_core.SpawnNode;
     //    if (!PlayerManager.Current.BotAIData.ObjectsToHighlight.ContainsKey(node))
     //        PlayerManager.Current.MapHighlightableObjects(node);
-    //    foreach (var pickup in __instance.PickupInteractions)
+    //    foreach (var pickup in instance.PickupInteractions)
     //    {
     //        if (pickup?.gameObject == null) continue;
     //        PlayerManager.Current.BotAIData.ObjectsToHighlight[node].Add(pickup.gameObject);
@@ -64,25 +64,25 @@ public class ZombifiedPatches
     //}
     //[HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.UpdateActionHighlight))]
     //[HarmonyPostfix]
-    //public static void UpdateActionHighlight(RootPlayerBotAction __instance, ref PlayerBotActionBase.Descriptor bestAction)
+    //public static void UpdateActionHighlight(RootPlayerBotAction instance, ref PlayerBotActionBase.Descriptor bestAction)
     //{
-    //    if (!__instance.m_highlightAction.IsTerminated())
+    //    if (!instance.m_highlightAction.IsTerminated())
     //    {
     //        return;
     //    }
-    //    __instance.m_highlightAction.Prio = RootPlayerBotAction.m_prioSettings.Highlight;
-    //    if (!RootPlayerBotAction.CompareActionPrios(__instance.m_highlightAction, bestAction))
+    //    instance.m_highlightAction.Prio = RootPlayerBotAction.m_prioSettings.Highlight;
+    //    if (!RootPlayerBotAction.CompareActionPrios(instance.m_highlightAction, bestAction))
     //    {
     //        return;
     //    }
-    //    if (__instance.m_bot.IsActionForbidden(__instance.m_highlightAction))
+    //    if (instance.m_bot.IsActionForbidden(instance.m_highlightAction))
     //    {
     //        return;
     //    }
-    //    AIG_CourseNode courseNode = __instance.m_agent.CourseNode;
+    //    AIG_CourseNode courseNode = instance.m_agent.CourseNode;
     //    Il2CppSystem.Collections.Generic.List<GameObject> list = PlayerManager.Current.MapHighlightableObjects(courseNode);
     //    GameObject gameObject = null;
-    //    Vector3 position = __instance.m_agent.Position;
+    //    Vector3 position = instance.m_agent.Position;
     //    Vector3 vector = Vector3.zero;
     //    float num = RootPlayerBotAction.s_highlightSearchDistance * RootPlayerBotAction.s_highlightSearchDistance;
     //    PlayerBotActionHighlight.Descriptor.TargetTypeEnum targetTypeEnum = PlayerBotActionHighlight.Descriptor.TargetTypeEnum.Door;
@@ -97,9 +97,9 @@ public class ZombifiedPatches
     //        Vector3 vector2 = candidateObject.transform.position - position;
     //        float sqrMagnitude = vector2.sqrMagnitude;
     //        ZiMain.log.LogInfo($"ping candidate: {candidateObject.name}");
-    //        //if (sqrMagnitude > num || __instance.IsAnyHumanPlayerNear(candidateObject.transform.position, 0.1f))
+    //        //if (sqrMagnitude > num || instance.IsAnyHumanPlayerNear(candidateObject.transform.position, 0.1f))
     //        //    continue;
-    //        RootPlayerBotAction.s_tempObjReservation.CharacterID = __instance.m_agent.CharacterID;
+    //        RootPlayerBotAction.s_tempObjReservation.CharacterID = instance.m_agent.CharacterID;
     //        RootPlayerBotAction.s_tempObjReservation.Object = candidateObject;
     //        Vector3 vector3 = candidateObject.transform.position;
     //        if (PlayerManager.Current.IsObjectReserved(RootPlayerBotAction.s_tempObjReservation))
@@ -121,7 +121,7 @@ public class ZombifiedPatches
     //                    list.RemoveAt(i--);
     //                    continue;
     //                }
-    //                if (!__instance.GetPositionInFrontOfGate(gateComponenet, vector2, __instance.DescBase.Prio, out vector3))
+    //                if (!instance.GetPositionInFrontOfGate(gateComponenet, vector2, instance.DescBase.Prio, out vector3))
     //                {
     //                    continue;
     //                }
@@ -139,11 +139,11 @@ public class ZombifiedPatches
     //                        continue;
     //                    }
     //                    vector3 = candidateObject.transform.position - candidateObject.transform.up * RootPlayerBotAction.s_highlightStandDistance;
-    //                    if (!__instance.SnapPositionToNav(vector3, out vector3))
+    //                    if (!instance.SnapPositionToNav(vector3, out vector3))
     //                    {
     //                        continue;
     //                    }
-    //                    RootPlayerBotAction.s_tempPosReservation.CharacterID = __instance.m_agent.CharacterID;
+    //                    RootPlayerBotAction.s_tempPosReservation.CharacterID = instance.m_agent.CharacterID;
     //                    RootPlayerBotAction.s_tempPosReservation.Position = vector3;
     //                    if (PlayerManager.Current.IsPositionReserved(RootPlayerBotAction.s_tempPosReservation))
     //                    {
@@ -182,12 +182,12 @@ public class ZombifiedPatches
     //                    }
     //                }
     //            }
-    //            float prio = __instance.m_highlightAction.Prio;
-    //            if (__instance.m_bot.ApplyRestrictionsToRootPosition(ref vector3, ref prio))
+    //            float prio = instance.m_highlightAction.Prio;
+    //            if (instance.m_bot.ApplyRestrictionsToRootPosition(ref vector3, ref prio))
     //                continue;
     //            Vector3 vector4 = candidateObject.transform.position + Vector3.up * 0.3f;
     //            RaycastHit raycastHit;
-    //            if (__instance.m_bot.CanSeePosition(__instance.m_agent.EyePosition, vector4, LayerManager.MASK_WORLD, out raycastHit) || raycastHit.transform.gameObject == candidateObject || raycastHit.transform.IsChildOf(candidateObject.transform.parent.transform) || candidateObject.transform.IsChildOf(raycastHit.transform))
+    //            if (instance.m_bot.CanSeePosition(instance.m_agent.EyePosition, vector4, LayerManager.MASK_WORLD, out raycastHit) || raycastHit.transform.gameObject == candidateObject || raycastHit.transform.IsChildOf(candidateObject.transform.parent.transform) || candidateObject.transform.IsChildOf(raycastHit.transform))
     //            {
     //                gameObject = candidateObject;
     //                targetTypeEnum = targetTypeEnum2;
@@ -198,16 +198,16 @@ public class ZombifiedPatches
     //    }
     //    if (gameObject != null)
     //    {
-    //        __instance.m_highlightAction.TargetType = targetTypeEnum;
-    //        __instance.m_highlightAction.TargetGO = gameObject;
-    //        __instance.m_highlightAction.TargetPosition = vector;
-    //        __instance.m_highlightAction.CourseNode = courseNode;
-    //        bestAction = __instance.m_highlightAction;
+    //        instance.m_highlightAction.TargetType = targetTypeEnum;
+    //        instance.m_highlightAction.TargetGO = gameObject;
+    //        instance.m_highlightAction.TargetPosition = vector;
+    //        instance.m_highlightAction.CourseNode = courseNode;
+    //        bestAction = instance.m_highlightAction;
     //    }
     //}
     //[HarmonyPatch(typeof(PlayerBotActionHighlight), nameof(PlayerBotActionHighlight.MoveOut))]
     //[HarmonyPrefix]
-    //private static bool MoveOut(PlayerBotActionHighlight __instance)
+    //private static bool MoveOut(PlayerBotActionHighlight instance)
     //{
 
     //    // Get the Type for the Descriptor class
@@ -226,42 +226,42 @@ public class ZombifiedPatches
 
     //    // Read the IntPtr value from the static field
     //    IntPtr methodPtr = (IntPtr)fieldInfo.GetValue(null);
-    //    PlayerBotActionTravel.Descriptor descriptor = new PlayerBotActionTravel.Descriptor(__instance.m_bot)
+    //    PlayerBotActionTravel.Descriptor descriptor = new PlayerBotActionTravel.Descriptor(instance.m_bot)
     //    {
-    //        ParentActionBase = __instance,
-    //        Prio = __instance.m_desc.Prio,
+    //        ParentActionBase = instance,
+    //        Prio = instance.m_desc.Prio,
     //        EventDelegate = new PlayerBotActionBase.Descriptor.EventDelegateFunc(methodPtr),
     //        Haste = 0.5f,
     //        Radius = 10f,
     //        Persistent = false,
     //        RadiusHeightTolerance = 3f,
     //        DestinationType = PlayerBotActionTravel.Descriptor.DestinationEnum.Position,
-    //        DestinationPos = __instance.m_desc.TargetPosition
+    //        DestinationPos = instance.m_desc.TargetPosition
     //    };
-    //    if (__instance.m_bot.RequestAction(descriptor))
+    //    if (instance.m_bot.RequestAction(descriptor))
     //    {
-    //        __instance.m_travelAction = descriptor;
-    //        __instance.SetState(PlayerBotActionHighlight.State.Move);
+    //        instance.m_travelAction = descriptor;
+    //        instance.SetState(PlayerBotActionHighlight.State.Move);
     //        return false;
     //    }
-    //    __instance.m_desc.SetCompletionStatus(PlayerBotActionBase.Descriptor.StatusType.Failed);
+    //    instance.m_desc.SetCompletionStatus(PlayerBotActionBase.Descriptor.StatusType.Failed);
     //    return false;
     //}
     //[HarmonyPatch(typeof(PlayerBotActionHighlight), nameof(PlayerBotActionHighlight.VerifyTarget))]
     //[HarmonyPrefix]
-    //private static bool VerifyTarget(PlayerBotActionHighlight __instance, ref bool __result)
+    //private static bool VerifyTarget(PlayerBotActionHighlight instance, ref bool __result)
     //{
-    //    if (__instance.m_desc.TargetGO == null)
+    //    if (instance.m_desc.TargetGO == null)
     //    {
     //        __result = false;
     //        return false;
     //    }
-    //    if (__instance.IsAnyHumanPlayerNear(__instance.m_desc.TargetGO.transform.position, 3f))
+    //    if (instance.IsAnyHumanPlayerNear(instance.m_desc.TargetGO.transform.position, 3f))
     //    {
     //        __result = false;
     //        return false;
     //    }
-    //    if (!PlayerManager.Current.IsObjectHighlightable(__instance.m_desc.CourseNode, __instance.m_desc.TargetGO))
+    //    if (!PlayerManager.Current.IsObjectHighlightable(instance.m_desc.CourseNode, instance.m_desc.TargetGO))
     //    {
     //        __result = false;
     //        return false;
@@ -271,9 +271,9 @@ public class ZombifiedPatches
     //}
     //[HarmonyPatch(typeof(PlayerBotActionHighlight), nameof(PlayerBotActionHighlight.DetermineLookAtPosition))]
     //[HarmonyPrefix]
-    //public static bool DetermineLookAtPosition(PlayerBotActionHighlight __instance)
+    //public static bool DetermineLookAtPosition(PlayerBotActionHighlight instance)
     //{
-    //    __instance.m_lookAtPosition = __instance.m_desc.TargetGO.transform.position;
+    //    instance.m_lookAtPosition = instance.m_desc.TargetGO.transform.position;
     //    return false;
     //}
     [HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.UpdateActionShareResoursePack))]
@@ -849,7 +849,7 @@ public class ZombifiedPatches
             descriptor.Prio = __instance.m_desc.Prio;
 
             // Event delegate — decomp allocated a delegate object
-            //descriptor.EventDelegate = __instance.OnMeleeActionEvent;
+            //descriptor.EventDelegate = instance.OnMeleeActionEvent;
 
             // New fields present in IL2CPP decomp
             descriptor.Push = push;
