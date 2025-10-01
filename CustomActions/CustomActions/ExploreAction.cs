@@ -6,7 +6,7 @@ using Zombified_Initiative;
 
 namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
 {
-    internal class zPlayerBotActionExplore : CustomActionBase
+    internal class ExploreAction : CustomActionBase
     {
         private StateEnum state = StateEnum.None;
         VisitNode UnexploredNode = null;
@@ -54,19 +54,19 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
             }
             public override PlayerBotActionBase CreateAction()
             {
-                return new zPlayerBotActionExplore(this);
+                return new ExploreAction(this);
             }
         }
-        public zPlayerBotActionExplore() : base(ClassInjector.DerivedConstructorPointer<CustomActionBase>())
+        public ExploreAction() : base(ClassInjector.DerivedConstructorPointer<CustomActionBase>())
         {//Don't use!
             ClassInjector.DerivedConstructorBody(this);
             
         }
-        public zPlayerBotActionExplore(IntPtr ptr) : base(ptr)
+        public ExploreAction(IntPtr ptr) : base(ptr)
         {//Don't use!
             ClassInjector.DerivedConstructorBody(this);
         }
-        public zPlayerBotActionExplore(Descriptor desc) : base(desc)
+        public ExploreAction(Descriptor desc) : base(desc)
         {// Use this.
             ZiMain.sendChatMessage("Here I go exploring because I feel like it.",m_bot.Agent);
             m_bot.Actions[0].Cast<RootPlayerBotAction>().m_followLeaderAction.Prio = 4;
@@ -118,6 +118,15 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
                 state = StateEnum.Moving;
                 return !IsActive(); //Waiting for travel action to finish.
             }
+            else if (state == StateEnum.Moving)
+            {
+                if (UnexploredNode != null && UnexploredNode.discovered)
+                {
+                    m_bot.StopAction(travelAction);
+                    state = StateEnum.lookingForUnexplored;
+                    return false;
+                }
+            }
             else if (state == StateEnum.Finished)
             {
                 if (travelAction.Status == PlayerBotActionBase.Descriptor.StatusType.Successful)
@@ -125,17 +134,6 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
                 DescBase.SetCompletionStatus(travelAction.Status);
                 Stop();
                 return true;
-            }
-            else if (state == StateEnum.Moving) 
-            {
-                if (UnexploredNode != null && UnexploredNode.discovered)
-                {
-                    //travelAction.SetCompletionStatus(PlayerBotActionBase.Descriptor.StatusType.Successful);
-                    //travelAction?.OnInterrupted();
-                    //travelAction?.ActionBase?.Stop();
-                    state = StateEnum.lookingForUnexplored;
-                    return false;
-                }
             }
             return !IsActive(); //state moving
         }
