@@ -1,8 +1,10 @@
-﻿using HarmonyLib;
+﻿using FluffyUnderware.Curvy.ThirdParty.LibTessDotNet;
+using HarmonyLib;
 using Il2CppInterop.Runtime.Injection;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using Player;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
@@ -15,13 +17,24 @@ namespace ZombieTweak2.zRootBotPlayerAction.Patches
     [HarmonyPatch]
     internal class PlayerAiBotPatch
     {
-        private static bool vanillaOverides = true;
+        private static Dictionary<string,bool> vanillaOverides = new();
+
         [HarmonyPatch(typeof(PlayerAIBot), nameof(PlayerAIBot.Setup))]
         [HarmonyPrefix]
         public static void Setup(PlayerAIBot __instance)
         {
             // This is the only patch that actually has any new behavior.
             // Everything else is just needed to actually call my derived overides.
+            bool overide = true;
+            vanillaOverides["StartQueuedActions"]       = overide;
+            vanillaOverides["UpdateActions"]            = overide;
+            vanillaOverides["IsActionForbidden"]        = overide;
+            vanillaOverides["OnWarped"]                 = overide;
+            vanillaOverides["RemoveCollidingActions"]   = overide;
+            vanillaOverides["SetEnabled"]               = overide;
+            vanillaOverides["StartAction"]              = overide;
+            vanillaOverides["StopAction"]               = overide;
+
             var data = zActions.GetOrCreateData(__instance);
             var assembly = Assembly.GetExecutingAssembly();
             var customActionTypes = assembly.GetTypes().Where(t => !t.IsAbstract && typeof(CustomActionBase).IsAssignableFrom(t));
@@ -41,7 +54,7 @@ namespace ZombieTweak2.zRootBotPlayerAction.Patches
         [HarmonyPrefix]
         public static bool StartQueuedActions(PlayerAIBot __instance)
         {
-            if (!vanillaOverides)
+            if (!vanillaOverides["StartQueuedActions"])
                 return true;
             if (__instance.m_queuedActions.Count == 0)
             {
@@ -66,7 +79,7 @@ namespace ZombieTweak2.zRootBotPlayerAction.Patches
         [HarmonyPrefix]
         public static bool UpdateActions(PlayerAIBot __instance)
         {
-            if (!vanillaOverides)
+            if (!vanillaOverides["UpdateActions"])
                 return true;
             if (__instance.m_actions.Count == 0)
             {
@@ -112,7 +125,7 @@ namespace ZombieTweak2.zRootBotPlayerAction.Patches
         [HarmonyPrefix]
         public static bool IsActionForbidden(PlayerAIBot __instance, PlayerBotActionBase.Descriptor desc, ref bool __result)
         {
-            if (!vanillaOverides)
+            if (!vanillaOverides["IsActionForbidden"])
                 return true;
             for (int i = 0; i < __instance.m_queuedActions.Count; i++)
             {
@@ -137,7 +150,7 @@ namespace ZombieTweak2.zRootBotPlayerAction.Patches
         [HarmonyPrefix]
         public static bool OnWarped(PlayerAIBot __instance, Vector3 position)
         {
-            if (!vanillaOverides)
+            if (!vanillaOverides["OnWarped"])
                 return true;
             for (int i = 0; i < __instance.m_actions.Count; i++)
             {
@@ -155,7 +168,7 @@ namespace ZombieTweak2.zRootBotPlayerAction.Patches
         [HarmonyPrefix]
         public static bool RemoveCollidingActions(PlayerAIBot __instance, PlayerBotActionBase.Descriptor desc)
         {
-            if (!vanillaOverides)
+            if (!vanillaOverides["RemoveCollidingActions"])
                 return true;
             bool hasRemoved;
             do
@@ -200,7 +213,7 @@ namespace ZombieTweak2.zRootBotPlayerAction.Patches
         [HarmonyPrefix]
         public static bool SetEnabled(PlayerAIBot __instance, bool state)
         {
-            if (!vanillaOverides)
+            if (!vanillaOverides["SetEnabled"])
                 return true;
             if (state == __instance.enabled)
             {
@@ -258,7 +271,7 @@ namespace ZombieTweak2.zRootBotPlayerAction.Patches
         [HarmonyPrefix]
         public static bool StartAction(PlayerAIBot __instance, PlayerBotActionBase.Descriptor desc)
         {
-            if (!vanillaOverides)
+            if (!vanillaOverides["StartAction"])
                 return true;
             if (!desc.IsTerminated())
             {
@@ -282,7 +295,7 @@ namespace ZombieTweak2.zRootBotPlayerAction.Patches
         [HarmonyPrefix]
         public static bool StopAction(PlayerAIBot __instance, PlayerBotActionBase.Descriptor desc)
         {
-            if (!vanillaOverides)
+            if (!vanillaOverides["StopAction"])
                 return true;
             if (desc == PlayerAIBot.s_updatingAction)
             {
