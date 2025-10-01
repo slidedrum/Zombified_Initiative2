@@ -92,7 +92,7 @@ namespace Zombified_Initiative
             {
                 UpdateFindables(agent);
                 Updatefinds(agent);
-                CleanFindables(agent);
+                CleanFindables();
             }
         }
         public static List<ItemInLevel> GetItemsFromLocker(LG_ResourceContainer_Storage storage)
@@ -199,7 +199,7 @@ namespace Zombified_Initiative
                 }
             }
         }
-        public static void CleanFindables(PlayerAgent agent)
+        public static void CleanFindables()
         {
             List<int> objectToRemove = new List<int>();
             foreach (var obj in FindableObjects)

@@ -408,5 +408,12 @@ namespace ZombieTweak2.zMenu
         {
             return canvas;
         }
+        public void setNodeSize(float size)
+        {
+            foreach (zMenuNode node in nodes)
+            {
+                node.SetSize(size);
+            }
+        }
     }
 }

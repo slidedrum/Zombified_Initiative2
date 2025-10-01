@@ -14,6 +14,7 @@ namespace ZombieTweak2.zRootBotPlayerAction
     }
     public static class zActions
     {
+        public static List<PlayerBotActionBase.Descriptor> manualActions = new();
         internal static readonly Dictionary<int, dataStore> ActionDataStore = new();
         internal static dataStore GetOrCreateData(PlayerBotActionBase.Descriptor desc)
         {
@@ -34,6 +35,26 @@ namespace ZombieTweak2.zRootBotPlayerAction
                 ActionDataStore[botId] = data;
             }
             return data;
+        }
+        public static bool isManualAction(PlayerBotActionBase.Descriptor descriptor)
+        {
+            if (descriptor == null) return false;
+            if (manualActions == null) return false;
+
+            foreach (var desc in manualActions)
+            {
+                if (desc == null) continue; // just in case
+
+                if (desc.Pointer == descriptor.Pointer)
+                    return true;
+            }
+
+            if (descriptor.ParentActionBase != null)
+            {
+                return isManualAction(descriptor.ParentActionBase.DescBase);
+            }
+
+            return false;
         }
     }
 }

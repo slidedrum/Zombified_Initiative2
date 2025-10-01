@@ -91,11 +91,11 @@ namespace ZombieTweak2.zRootBotPlayerAction.Patches
             //data.customActions.Add(m_exploreAction);
             ClassInjector.RegisterTypeInIl2Cpp(typeof(CustomActionBase.Descriptor));
             ClassInjector.RegisterTypeInIl2Cpp(typeof(CustomActionBase));
-            ClassInjector.RegisterTypeInIl2Cpp(typeof(zPlayerBotActionExplore.Descriptor));
-            ClassInjector.RegisterTypeInIl2Cpp(typeof(zPlayerBotActionExplore));
+            ClassInjector.RegisterTypeInIl2Cpp(typeof(ExploreAction.Descriptor));
+            ClassInjector.RegisterTypeInIl2Cpp(typeof(ExploreAction));
             CustomActionBase.Descriptor m_testAction = new CustomActionBase.Descriptor(__instance);
             data.customActions.Add(m_testAction);
-            zPlayerBotActionExplore.Descriptor m_exploreAction = new zPlayerBotActionExplore.Descriptor(__instance);
+            ExploreAction.Descriptor m_exploreAction = new ExploreAction.Descriptor(__instance);
             data.customActions.Add(m_exploreAction);
             ZiMain.log.LogMessage("init playerbot");
         }

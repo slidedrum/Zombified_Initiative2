@@ -1,4 +1,5 @@
-﻿using GameData;
+﻿using CollisionRundown.Features.HUDs;
+using GameData;
 using Player;
 using System;
 using System.Collections.Generic;
@@ -28,6 +29,7 @@ namespace ZombieTweak2.zMenu
         public static zMenu permissionMenu;
         private static zMenu pickupDetailsSubmenu;
         private static zMenu shareDetailsSubmenu;
+        private static zMenu debugCameraCullingMenu;
         private static string endcolor = "</color>";
         private static string enabledColor = "<color=#FFA50066>";
         private static string disabledColor = "<color=#CCCCCC33>";
@@ -43,6 +45,7 @@ namespace ZombieTweak2.zMenu
             debugMenu = zMenuManager.createMenu("debug", zMenuManager.mainMenu);
             debugNodeMenu = zMenuManager.createMenu("Nodes", debugMenu);
             debugNodeSettingsMenu = zMenuManager.createMenu("Settings", debugNodeMenu);
+            debugCameraCullingMenu = zMenuManager.createMenu("Camera culling", debugMenu);
             //todo remove the flip/toggle nodes, and instead make hold action
             selectionMenu.AddNode("Toggle all", SelectionMenuClass.SelectionToggleAllBots).AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, UpdateIndicatorForNode, selectionMenu.centerNode, SelectionMenuClass.botSelection);
             selectionMenu.AddNode("Flip all", SelectionMenuClass.SelectionFlipAllBots).AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, UpdateIndicatorForNode, selectionMenu.centerNode, SelectionMenuClass.botSelection);
@@ -89,8 +92,8 @@ namespace ZombieTweak2.zMenu
 
             permissionMenu.AddNode("Move");
             actionMenu.AddNode("ClearRoom", ZiMain.SendBotToClearCurrentRoom);
-
-            debugMenu.AddNode("ChecVis", zDebug.debugCheckViz);
+            debugMenu.AddNode("Show title prompt", InGameTitle.DisplayDefault).AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, debugMenu.Close); ;
+            debugMenu.AddNode("ChecVis", zDebug.debugCheckViz).AddListener(zMenuManager.nodeEvent.OnHeldImmediate,zDebug.toggleVisCheck);
             debugMenu.AddNode("Find unexplored", zDebug.MarkUnexploredArea);
             debugMenu.AddNode("SendBotToExplore", zDebug.SendClosestBotToExplore);
             debugNodeMenu.AddNode("Node I'm looking at", zDebug.GetNodeImLookingAT, [zMenuManager.mainMenu.gameObject.transform]);
@@ -119,7 +122,9 @@ namespace ZombieTweak2.zMenu
             var connectionChecksPerFrameNode = debugNodeSettingsMenu.AddNode("Connections per frame");
             connectionChecksPerFrameNode.AddListener(zMenuManager.nodeEvent.WhileSelected, DebugMenuClass.ChangeValueBasedOnMouseWheel, [DebugValueToChange.connectionChecksPerFrame, connectionChecksPerFrameNode, 1f]);
             connectionChecksPerFrameNode.SetSubtitle($"{zVisitedManager.connectionChecksPerFrame}");
-
+            CullingMenuClass.setupCullingMenu(debugCameraCullingMenu);
+            debugCameraCullingMenu.radius = 40;
+            debugCameraCullingMenu.setNodeSize(0.5f);
 
 
             //debugMenu.AddNode("Toggle ChecVis", zDebug.toggleVisCheck);
@@ -231,6 +236,43 @@ namespace ZombieTweak2.zMenu
             float currentThreshold = zSlideComputer.GetResourceThreshold(itemID);
             zSlideComputer.SetResourceThreshold(itemID, Math.Clamp((int)currentThreshold + (normalizedScroll * increment), 0,100));
             updateNodeThresholdDisplay(node, itemID);
+        }
+    }
+    public static class CullingMenuClass
+    {
+        public static void setupCullingMenu(zMenu menu) 
+        {
+            for (int i = 0; i < 32; i++)
+            {
+                string name = LayerMask.LayerToName(i);
+                if (string.IsNullOrEmpty(name))
+                    continue;
+                Camera camera = Camera.main;
+                var node = menu.AddNode(name);
+                node.AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, ToggleLayer, camera, i, node);
+            }
+        }
+        public static void ToggleLayer(Camera camera, int layer, zMenu.zMenuNode node)
+        {
+            if (camera == null)
+            {
+                Debug.LogWarning("Camera is null!");
+                return;
+            }
+
+            if (layer < 0 || layer > 31)
+            {
+                Debug.LogWarning("Layer index out of range (0-31)!");
+                return;
+            }
+
+            // XOR the bit for the layer to toggle it
+            camera.cullingMask ^= 1 << layer;
+            bool isVisible = (camera.cullingMask & (1 << layer)) != 0;
+            if (isVisible)
+                node.SetColor(new Color(0, 0.2f, 0));
+            else
+                node.SetColor(new Color(0.2f, 0, 0));
         }
     }
     public static class DebugMenuClass

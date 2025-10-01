@@ -1,28 +1,21 @@
-﻿using Agents;
-using BepInEx;
+﻿using BepInEx;
 using BepInEx.Logging;
 using BepInEx.Unity.IL2CPP;
-using Dissonance.Networking.Client;
 using Enemies;
-using FluffyUnderware.DevTools;
 using GTFO.API;
 using HarmonyLib;
 using Il2CppInterop.Runtime.Injection;
-using Il2CppSystem.Reflection;
-using Il2CppSystem.Security.Cryptography;
 using LevelGeneration;
 using Player;
 using SNetwork;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using ZombieTweak2;
 using ZombieTweak2.zMenu;
 using ZombieTweak2.zNetworking;
-using ZombieTweak2.zRootBotPlayerAction.CustomActions;
-using static Player.PlayerBotActionAttack;
+using ZombieTweak2.zRootBotPlayerAction;
 using static ZombieTweak2.zNetworking.pStructs;
 
 /*
@@ -141,9 +134,6 @@ public class ZiMain : BasePlugin
     public static PUI_CommunicationMenu _menu;
     public static bool rootmenusetup = false;
 
-    public static float _manualActionsHaste = 1f;
-    public static float _manualActionsPriority = 5f;
-    public static List<PlayerBotActionBase.Descriptor> manualActions = new();
     public static System.Random rng = new System.Random();
     public static bool HasBetterBots { get; private set; }
 
@@ -200,36 +190,17 @@ public class ZiMain : BasePlugin
     {
 
     }
-    public static bool isManualAction(PlayerBotActionBase.Descriptor descriptor)
-    {
-        if (descriptor == null) return false;
-        if (manualActions == null) return false;
 
-        foreach (var desc in manualActions)
-        {
-            if (desc == null) continue; // just in case
-
-            if (desc.Pointer == descriptor.Pointer)
-                return true;
-        }
-
-        if (descriptor.ParentActionBase != null)
-        {
-            return isManualAction(descriptor.ParentActionBase.DescBase);
-        }
-
-        return false;
-    }
 
 
     public static void onActionRemoved(PlayerAIBot bot , PlayerBotActionBase action)
     { //TODO - Use a string builder
         string typeName = action.GetIl2CppType().Name;
-        bool manualAction = isManualAction(action.DescBase);
+        bool manualAction = zActions.isManualAction(action.DescBase);
         if (manualAction)
         {
             PlayerBotActionBase.Descriptor actionToRemove = null;
-            foreach (var desc in manualActions)
+            foreach (var desc in zActions.manualActions)
             {
                 if (desc.Pointer == action.DescBase.Pointer)
                 {
@@ -238,7 +209,7 @@ public class ZiMain : BasePlugin
                 }
             }
             if (actionToRemove != null)
-                manualActions.Remove(actionToRemove);
+                zActions.manualActions.Remove(actionToRemove);
         }
         if (typeName == "PlayerBotActionCarryExpeditionItem")
         {
@@ -417,7 +388,7 @@ public class ZiMain : BasePlugin
             Haste = attackHaste,
         };
         aiBot.Actions[0].Cast<RootPlayerBotAction>().m_followLeaderAction.Prio = attackPrio - 1;
-        manualActions.Add(descriptor);
+        zActions.manualActions.Add(descriptor);
         sendChatMessage($"Killing the {enemy.EnemyData.name}.", aiBot.Agent, commander);
         //TODO figure out how to make them crouch instead of stand.
         PlayerVoiceManager.WantToSay(aiBot.Agent.CharacterID, AK.EVENTS.PLAY_CL_WILLDO);
@@ -485,7 +456,7 @@ public class ZiMain : BasePlugin
         };
         sendChatMessage($"Carrying {item._PublicName_k__BackingField}", aiBot.Agent, commander);
         PlayerVoiceManager.WantToSay(aiBot.Agent.CharacterID, AK.EVENTS.PLAY_CL_WILLDO); //will do
-        manualActions.Add(desc);
+        zActions.manualActions.Add(desc);
         aiBot.StartAction(desc);
     }
     public static void SendBotToPickupItem(PlayerAIBot aiBot, ItemInLevel item, PlayerAgent commander = null, ulong netsender = 0)
@@ -527,7 +498,7 @@ public class ZiMain : BasePlugin
         FlexibleMethodDefinition barkback = new FlexibleMethodDefinition(PlayerVoiceManager.WantToSay, [aiBot.Agent.CharacterID, AK.EVENTS.PLAY_CL_WILLDO]);
         zUpdater.InvokeStatic(barkback, 1f);
         sendChatMessage($"Picking up {item.PublicName}",aiBot.Agent,commander);
-        manualActions.Add(desc);
+        zActions.manualActions.Add(desc);
         aiBot.StartAction(desc);
     }
     public static void SendBotToShareResourcePack(PlayerAIBot aiBot, PlayerAgent receiver, PlayerAgent commander = null, ulong netsender = 0)

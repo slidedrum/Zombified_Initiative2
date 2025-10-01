@@ -1,12 +1,16 @@
-﻿using Il2CppInterop.Runtime.Injection;
+﻿using BetterBots.Data;
+using Enemies;
+using Il2CppInterop.Runtime.Injection;
 using Player;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using Zombified_Initiative;
 
 namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
 {
-    internal class zPlayerBotActionExplore : CustomActionBase
+    internal class ExploreAction : CustomActionBase
     {
         private StateEnum state = StateEnum.None;
         VisitNode UnexploredNode = null;
@@ -16,6 +20,19 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
             public new int Prio = 5;
             float lastLooked = 0;
             float lookCooldown = 5;
+            List<string> typeIgnoreList = [
+                typeof(RootPlayerBotAction).FullName,
+                typeof(PlayerBotActionFollow).FullName,
+                typeof(PlayerBotActionIdle).FullName,
+                typeof(PlayerBotActionLook).FullName,
+            ];
+            List<string> typeBlackList = [
+                typeof(PlayerBotActionCollectItem).FullName,
+                typeof(PlayerBotActionAttack).FullName,
+                typeof(PlayerBotActionRevive).FullName,
+                typeof(PlayerBotActionHighlight).FullName,
+                typeof(PlayerBotActionShareResourcePack).FullName,
+            ];
             public Descriptor() : base(ClassInjector.DerivedConstructorPointer<Descriptor>())
             {
                 ClassInjector.DerivedConstructorBody(this);
@@ -34,17 +51,35 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
             {
                 if (lastLooked == 0)
                     lastLooked = Time.time;
-                if (DramaManager.CurrentStateEnum != DRAMA_State.Exploration)
+                if (DramaManager.CurrentStateEnum != DRAMA_State.Exploration && DramaManager.CurrentStateEnum != DRAMA_State.Sneaking)
                     return;
+                //if (DramaManager.EnemiesAreClose)
+                //    return;
                 if (Time.time - lastLooked < lookCooldown)
                     return;
-                if (zVisitedManager.GetUnexploredLocation(Bot.Agent.Position, 0, 5) != null && IsTerminated())
+                if (!IsTerminated())
+                    return;
+                bool foundEnemy = zSearch.FindableObjects.Values.Any(obj => obj.found && obj.gameObject.GetComponent<EnemyAgent>() != null);
+                if (foundEnemy)
+                    return;
+                float maxprio = 0f;
+                foreach (var act in Bot.Actions)
                 {
-                    if (bestAction == null || Prio > bestAction.Prio)
-                    {
-                        bestAction = this;
-                        lastLooked = Time.time;
-                    }
+                    if (typeBlackList.Contains(act.GetIl2CppType().FullName))
+                        return;
+                    if (typeIgnoreList.Contains(act.GetIl2CppType().FullName))
+                        continue;
+                    var desc = act.DescBase;
+                    maxprio = Math.Max(desc.Prio, maxprio);
+                }
+                if (maxprio > Prio)
+                    return;
+                if (zVisitedManager.GetUnexploredLocation(Bot.Agent.Position, 0, 30) == null)
+                    return;
+                if (bestAction == null || Prio > bestAction.Prio)
+                {
+                    bestAction = this;
+                    lastLooked = Time.time;
                 }
             }
             public override void OnQueued()
@@ -54,22 +89,21 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
             }
             public override PlayerBotActionBase CreateAction()
             {
-                return new zPlayerBotActionExplore(this);
+                return new ExploreAction(this);
             }
         }
-        public zPlayerBotActionExplore() : base(ClassInjector.DerivedConstructorPointer<CustomActionBase>())
+        public ExploreAction() : base(ClassInjector.DerivedConstructorPointer<CustomActionBase>())
         {//Don't use!
             ClassInjector.DerivedConstructorBody(this);
             
         }
-        public zPlayerBotActionExplore(IntPtr ptr) : base(ptr)
+        public ExploreAction(IntPtr ptr) : base(ptr)
         {//Don't use!
             ClassInjector.DerivedConstructorBody(this);
         }
-        public zPlayerBotActionExplore(Descriptor desc) : base(desc)
+        public ExploreAction(Descriptor desc) : base(desc)
         {// Use this.
             ZiMain.sendChatMessage("Here I go exploring because I feel like it.",m_bot.Agent);
-            m_bot.Actions[0].Cast<RootPlayerBotAction>().m_followLeaderAction.Prio = 4;
             state = StateEnum.lookingForUnexplored;
         }
         public override bool Update()
@@ -107,7 +141,7 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
                         DestinationType = PlayerBotActionTravel.Descriptor.DestinationEnum.Position,
                         Persistent = false,
                         ParentActionBase = this,
-                        Prio = 5,
+                        Prio = 3,
                     };
                     m_bot.StartAction(travelAction);
                     FlexibleMethodDefinition callback = new(OnTravelActionEvent, [travelAction]);
@@ -122,6 +156,8 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
             {
                 if (travelAction.Status == PlayerBotActionBase.Descriptor.StatusType.Successful)
                     ZiMain.sendChatMessage("I have looked everywhere!");
+                if (travelAction.Status == PlayerBotActionBase.Descriptor.StatusType.Active)
+                    ZiMain.log.LogWarning("Travel action still active somehow.");
                 DescBase.SetCompletionStatus(travelAction.Status);
                 Stop();
                 return true;
@@ -130,9 +166,7 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
             {
                 if (UnexploredNode != null && UnexploredNode.discovered)
                 {
-                    //travelAction.SetCompletionStatus(PlayerBotActionBase.Descriptor.StatusType.Successful);
-                    //travelAction?.OnInterrupted();
-                    //travelAction?.ActionBase?.Stop();
+                    m_bot.StopAction(travelAction);
                     state = StateEnum.lookingForUnexplored;
                     return false;
                 }
@@ -155,7 +189,6 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
         public override void Stop()
         {
             base.Stop();
-            m_bot.Actions[0].Cast<RootPlayerBotAction>().m_followLeaderAction.Prio = 14;
         }
         public enum StateEnum
         {

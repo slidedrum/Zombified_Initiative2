@@ -1,4 +1,7 @@
-﻿using InControl;
+﻿using CullingSystem;
+using ExteriorRendering;
+using InControl;
+using Player;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,6 +10,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.PostProcessing;
+using UnityEngine.UIElements;
 using ZombieTweak2.zMenu;
 
 namespace ZombieTweak2
@@ -20,7 +24,8 @@ namespace ZombieTweak2
         private static List<Color> colorsToCheck = new();
         private static Renderer[] targetRenderers;
         private static Texture2D visiblityTexture;
-
+        //Might be useful
+        //	ExteriorLight	public static void UpdateShadows(Camera camera, float nearClip, float bias, float thickness, int blur)
 
         // Quads for visualization
         private static GameObject _fullQuad;
@@ -34,14 +39,15 @@ namespace ZombieTweak2
             _observerCam = camObj.AddComponent<Camera>();
             _observerCam.CopyFrom(Camera.main);
             _observerCam.enabled = false;
-            _observerCam.clearFlags = CameraClearFlags.SolidColor;
-            _observerCam.backgroundColor = Color.black;
-            _observerCam.orthographic = false;
-            _observerCam.nearClipPlane = 0.01f;
-            _observerCam.farClipPlane = 1000f;
+            _observerCam.cullingMask = (1 << LayerMask.NameToLayer("Default"))
+                                     | (1 << LayerMask.NameToLayer("Enemy"));
+            _observerCam.farClipPlane = 20f;
+            camObj.AddComponent<ExteriorCamera>();
 
             // Low-res RT
-            _renderTexture = new RenderTexture(32, 32, 16, RenderTextureFormat.ARGB32);
+            _renderTexture = new RenderTexture(256, 256, 8, RenderTextureFormat.ARGB32);
+            _renderTexture.filterMode = FilterMode.Point;
+            _renderTexture.autoGenerateMips = false;
             _observerCam.targetTexture = _renderTexture;
 
             // Solid white material for rendering target
@@ -55,6 +61,8 @@ namespace ZombieTweak2
 
             // Material for quads
             _quadMat = new Material(Shader.Find("Unlit/Texture"));
+            _quadMat.mainTexture = _renderTexture;
+            _quadMat.mainTexture.filterMode = FilterMode.Point;
 
             // Create floating quads (one for each pass)
             _fullQuad = GameObject.CreatePrimitive(PrimitiveType.Quad);
@@ -75,7 +83,7 @@ namespace ZombieTweak2
             _fullQuad.GetComponent<MeshRenderer>().material.mainTexture = texture;
         }
 
-        public static float CheckForObject(GameObject observer, GameObject target)
+        public static float CheckForObject(GameObject observer, GameObject target, PlayerAgent agent = null, GameObject debug = null)
         {
             zMenuManager.CloseAllMenues();
             if (target == null) return 0f;
@@ -104,45 +112,41 @@ namespace ZombieTweak2
             _observerCam.transform.rotation = observer.transform.rotation;
 
             // ---- PASS 1: Target only ----
-            var originalLayers = SaveOriginalLayers(target);
-            int tempLayer = 31; // choose an unused layer
-            SetLayerRecursively(target, tempLayer);
-            _observerCam.cullingMask = 1 << tempLayer;
-            //_observerCam.clearFlags = CameraClearFlags.SolidColor;
-            //_observerCam.backgroundColor = Color.black;
-            //_observerCam.allowHDR = false;
+            var realcam = C_Camera.Current.m_camera;
+            var realagent = C_Camera.Current.m_cullAgent;
+            C_Camera.Current.m_camera = _observerCam;
+            C_Camera.Current.m_cullAgent = agent?.gameObject?.GetComponent<C_MovingCuller>() ?? C_Camera.Current.m_cullAgent;
+            C_Camera.Current.RunVisibility();
             _observerCam.Render();
             visiblityTexture = new Texture2D(_renderTexture.width, _renderTexture.height, TextureFormat.RGB24, false);
+            visiblityTexture.filterMode = FilterMode.Point;
             RenderTexture.active = _renderTexture;
             visiblityTexture.ReadPixels(new Rect(0, 0, _renderTexture.width, _renderTexture.height), 0, 0);
             visiblityTexture.Apply();
-            RestoreOriginalLayers(originalLayers);  // <- restore layers
             FilterTexture(visiblityTexture, Color.white);
-
+            GetOrCreateQuad(Color.white, debug ?? observer, visiblityTexture, -1);
             int totalVisblePixels = CountColorPixels(visiblityTexture, Color.white);
 
             //CREATE QUAD FOR visiblityTexture INFRONT OF AND TO THE LEFT OF observer
-
-            _observerCam.cullingMask = ~0; // everything
-            //_observerCam.clearFlags = CameraClearFlags.Skybox; // or keep original
             _observerCam.Render();
-            //_observerCam.allowHDR = true;
             int numQuads = 0;
             foreach (Color color in colorsToCheck)
             {
                 // 2. Run pass with colors
                 Texture2D texture;
                 int colorVisiblePixels = RunVisibilityPass(observer, target, color, out texture);
-                GetOrCreateQuad(color, observer, texture, numQuads);
+                GetOrCreateQuad(color, debug ?? observer, texture, numQuads);
                 numQuads++;
                 //TODO calcuate visible.  Will do myself later.
             }
-
+            C_Camera.Current.m_cullAgent = realagent;
+            C_Camera.Current.m_camera = realcam;
             // Restore materials
             for (int i = 0; i < targetRenderers.Length; i++)
                 targetRenderers[i].sharedMaterials = oldMats[i];
             return 0f;
         }
+        private static bool applyMask = true;
         private static int RunVisibilityPass(GameObject observer, GameObject target, Color color, out Texture2D colorVisibleTexture)
         {
             Material litMat = CreatelitMaterial(color);
@@ -160,7 +164,8 @@ namespace ZombieTweak2
             RenderTexture.active = _renderTexture;
             colorVisibleTexture.ReadPixels(new Rect(0, 0, _renderTexture.width, _renderTexture.height), 0, 0);
             colorVisibleTexture.Apply();
-            //ApplyMask(colorVisibleTexture, visiblityTexture);
+            if (applyMask)
+                ApplyMask(colorVisibleTexture, visiblityTexture);
             return CountColorPixels(colorVisibleTexture, color);
         }
         private static void FilterTexture(Texture2D tex, Color color, int tolerance = 5)
@@ -213,14 +218,16 @@ namespace ZombieTweak2
             Recurse(obj);
             return layers;
         }
-
+        public static float emmisiveness = 1.1f;
         private static Material CreatelitMaterial(Color color)
         {
             var mat = new Material(Shader.Find("Standard"));
             float mult = 1f;
             mat.color = new Color(color.r * mult, color.g * mult, color.b * mult);
-            mat.SetFloat("_Glossiness", 0f);
-            mat.SetFloat("_Metallic", 0f);
+            // Enable emission keyword so Unity actually uses it
+            mat.EnableKeyword("_EMISSION");
+            // Set emission color slightly brighter than base
+            mat.SetColor("_EmissionColor", color * emmisiveness);
             return mat;
         }
         private static void ApplyMask(Texture2D targetTex, Texture2D maskTex, int tolerance = 5)
@@ -282,6 +289,7 @@ namespace ZombieTweak2
             quad.transform.position = basePos + side + vertical;
             quad.transform.rotation = obsT.rotation;
             quad.transform.localScale = Vector3.one * 0.5f;
+            quad.ChangeLayerRecursive(LayerMask.NameToLayer("Ignore Raycast"));
 
             // Assign texture
             quad.GetComponent<MeshRenderer>().material.mainTexture = texture;

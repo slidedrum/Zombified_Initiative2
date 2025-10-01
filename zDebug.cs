@@ -383,10 +383,13 @@ namespace ZombieTweak2
         }
         internal static void debugCheckViz()
         {
-            GameObject observer = PlayerManager.GetLocalPlayerAgent().FPSCamera.gameObject;
+            var numPlayers = PlayerManager.PlayerAgentsInLevel.Count;
+            var playerIndex = 0;// UnityEngine.Random.RandomRangeInt(0, numPlayers);
+            PlayerAgent agent = PlayerManager.PlayerAgentsInLevel[playerIndex];
+            GameObject observer = agent.GetHeadCamTransform().gameObject;//PlayerManager.GetLocalPlayerAgent().FPSCamera.gameObject;
             Transform menuTransform = zMenuManager.mainMenu.gameObject.transform;
             GameObject target = zSearch.GetClosestObjectInLookDirection(menuTransform, zSearch.GetGameObjectsWithLookDirection<EnemyAgent>(menuTransform), 180f);
-            zVisiblityManager.CheckForObject(observer, target);
+            zVisiblityManager.CheckForObject(observer, target, agent, zMenuManager.mainMenu.gameObject.gameObject);
         }
         internal static void toggleVisCheck()
         {
@@ -414,9 +417,13 @@ namespace ZombieTweak2
         {
             if (checkVis)
             {
-                GameObject observer = PlayerManager.GetLocalPlayerAgent().FPSCamera.gameObject;
-                GameObject target = zSearch.GetClosestObjectInLookDirection(observer.transform, zSearch.GetGameObjectsWithLookDirection<EnemyAgent>(observer.transform), 180f);
-                zVisiblityManager.CheckForObject(observer, target);
+                var numPlayers = PlayerManager.PlayerAgentsInLevel.Count;
+                var playerIndex = 0;// UnityEngine.Random.RandomRangeInt(0, numPlayers);
+                PlayerAgent agent = PlayerManager.PlayerAgentsInLevel[playerIndex];
+                GameObject observer = agent.GetHeadCamTransform().gameObject;//PlayerManager.GetLocalPlayerAgent().FPSCamera.gameObject;
+                Transform menuTransform = zMenuManager.mainMenu.gameObject.transform;
+                GameObject target = zSearch.GetClosestObjectInLookDirection(menuTransform, zSearch.GetGameObjectsWithLookDirection<EnemyAgent>(menuTransform), 180f);
+                zVisiblityManager.CheckForObject(observer, target, agent, zMenuManager.mainMenu.gameObject.gameObject);
             }
         }
         internal static void SendClosestBotToExplore()

@@ -9,6 +9,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 using ZombieTweak2;
+using ZombieTweak2.zRootBotPlayerAction;
 using static Zombified_Initiative.ZiMain;
 
 namespace Zombified_Initiative;
@@ -736,7 +737,7 @@ public class ZombifiedPatches
                 }
             }
         }
-        if (targetObject != null && targetObject.transform != null && ZiMain.isManualAction(__instance.m_descBase))
+        if (targetObject != null && targetObject.transform != null && zActions.isManualAction(__instance.m_descBase))
         {
             if (!lastTimeCheckedForWakeUp.ContainsKey(__instance.m_bot.GetInstanceID()))
             {
@@ -855,7 +856,7 @@ public class ZombifiedPatches
             if (__instance.m_bot != null && __instance.m_bot.RequestAction(descriptor))
             {
                 __instance.m_meleeAction = descriptor;
-                if (ZiMain.isManualAction(descriptor))
+                if (zActions.isManualAction(descriptor))
                 {
                     FlexibleMethodDefinition callback = new FlexibleMethodDefinition(CheckForWakeChance, [__instance.m_bot, descriptor.TargetAgent.gameObject]);
                     zActionSub.addOnTerminated(descriptor, callback);
