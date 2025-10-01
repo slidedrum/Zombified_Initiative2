@@ -46,7 +46,12 @@ public class CustomActionBase : PlayerBotActionBase
         }
         public override AccessLayers GetAccessLayersRuntime()
         {
-            return _Base.GetAccessLayersRuntime();
+            //must be re-implemented so virtual overides work.
+            if (this.ActionBase == null)
+            {
+                return this.RequiredLayers;
+            }
+            return this.ActionBase.GetAccessLayersRuntime();
         }
         public override void InternalOnTerminated()
         {
@@ -86,7 +91,7 @@ public class CustomActionBase : PlayerBotActionBase
     }
     public override bool IsActionAllowed(PlayerBotActionBase.Descriptor desc)
     {
-        return _Base.IsActionAllowed(desc);
+        return this.m_descBase.IsActionAllowed(desc);
     }
     public override bool CheckCollision(PlayerBotActionBase.Descriptor desc)
     {

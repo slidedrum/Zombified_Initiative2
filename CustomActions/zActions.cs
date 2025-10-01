@@ -1,7 +1,5 @@
 ﻿using Player;
-using System;
 using System.Collections.Generic;
-using Zombified_Initiative;
 
 namespace ZombieTweak2.zRootBotPlayerAction
 {
@@ -9,8 +7,6 @@ namespace ZombieTweak2.zRootBotPlayerAction
     {
         public OrderedSet<CustomActionBase.Descriptor> customActions = new();
         public PlayerBotActionBase.Descriptor bestAction = null;
-        public Il2CppSystem.Collections.Generic.List<PlayerBotActionBase> m_actions { get; set; } = new();
-        public Il2CppSystem.Collections.Generic.List<PlayerBotActionBase.Descriptor> m_queuedActions { get; set; } = new();
     }
     public static class zActions
     {
