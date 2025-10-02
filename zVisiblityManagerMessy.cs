@@ -1,24 +1,15 @@
 ﻿using CullingSystem;
 using Enemies;
 using ExteriorRendering;
-using InControl;
 using Player;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.Rendering;
-using UnityEngine.Rendering.PostProcessing;
-using UnityEngine.UIElements;
-using ZombieTweak2.zMenu;
-using static FluffyUnderware.DevTools.ConditionalAttribute;
-using static Il2CppSystem.Linq.Expressions.Interpreter.CastInstruction.CastInstructionNoT;
 
 namespace ZombieTweak2
 {
-    internal class zVisiblityManager
+    internal class zVisiblityManagerMessy
     {
         private static Camera _observerCam;
         private static RenderTexture _renderTexture;
@@ -34,7 +25,16 @@ namespace ZombieTweak2
         private static GameObject _fullQuad;
         private static Material _quadMat;
         private static readonly Dictionary<int, GameObject> _quads = new Dictionary<int, GameObject>();
-        static zVisiblityManager()
+
+        private static bool applyMask = true;
+        private static float toleranceFloor = 0.1f;
+        private static float toleranceCeling = 0.3f;
+        public static float emmisivenessOn = 0.75f;
+        public static float emmisivenessOff = 0.1f;
+        public static bool alwaysEmit = false;
+        public static Color AverageColor = Color.black;
+        public static Color invertedColor = Color.white;
+        static zVisiblityManagerMessy()
         {
             // Create hidden head camera
             GameObject camObj = new GameObject("ObserverCam");
@@ -43,7 +43,7 @@ namespace ZombieTweak2
             //_observerCam.CopyFrom(Camera.main);
             _observerCam.enabled = false;
             _observerCam.allowMSAA = false;
-            _observerCam.allowHDR = false;
+            //_observerCam.allowHDR = false;
             _observerCam.cullingMask = (1 << LayerMask.NameToLayer("Default"))
                                      | (1 << LayerMask.NameToLayer("Enemy"));
             _observerCam.useOcclusionCulling = false;
@@ -51,7 +51,7 @@ namespace ZombieTweak2
             camObj.AddComponent<ExteriorCamera>();
 
             // Low-res RT
-            _renderTexture = new RenderTexture(16, 16, 1, RenderTextureFormat.ARGB32)
+            _renderTexture = new RenderTexture(128, 128, 1, RenderTextureFormat.ARGB32)
             {
                 filterMode = FilterMode.Point,
                 wrapMode = TextureWrapMode.Clamp,
@@ -188,33 +188,27 @@ namespace ZombieTweak2
             RenderTexture.active = _renderTexture;
             visiblityTexture.ReadPixels(new Rect(0, 0, _renderTexture.width, _renderTexture.height), 0, 0);
             visiblityTexture.Apply();
-            Color color = NormalizeColor(InvertColor(NormalizeColor(AverageColorExcluding(visiblityTexture, Color.white))));
+            AverageColor = GetAverageColor(visiblityTexture, Color.white);
+            invertedColor = InvertColor(AverageColor);
             GetOrCreateQuad(-1, debug ?? observer, visiblityTexture, -1);
             FilterTexture(visiblityTexture, Color.white);
-            int totalVisblePixels = CountColorPixels(visiblityTexture, Color.white);
-
-            //CREATE QUAD FOR visiblityTexture INFRONT OF AND TO THE LEFT OF head
-            //_observerCam.Render();
-            int numQuads = 0;
-            
-            //foreach (Color color in colorsToCheck)
-            //{
-                // 2. Run pass with colors
-                Texture2D texture;
-                int colorVisiblePixels = RunVisibilityPass(observer, target, color, out texture);
-                GetOrCreateQuad(numQuads, debug ?? observer, texture, numQuads);
-                numQuads++;
-                //TODO calcuate visible.  Will do myself later.
-            //}
+            float totalVisblePixels = CountColorPixels(visiblityTexture, Color.white,0.4f,0.6f);
+            // 2. Run pass with colors
+            Texture2D texture;
+            float colorVisiblePixels = RunVisibilityPass(observer, target, invertedColor, out texture);
+            float visPercent = colorVisiblePixels / Math.Max(float.Epsilon,totalVisblePixels);
             C_Camera.Current.m_cullAgent = realagent;
             C_Camera.Current.m_camera = realcam;
+            GetOrCreateQuad(1, debug ?? observer, texture, 1);
+            //TODO calcuate visible.  Will do myself later.
             // Restore materials
             for (int i = 0; i < targetRenderers.Length; i++)
                 targetRenderers[i].sharedMaterials = oldMats[i];
-            return 0f;
+            ShowVisibilityNumber(visPercent, invertedColor);
+            return visPercent;
         }
-        private static bool applyMask = true;
-        private static int RunVisibilityPass(GameObject observer, GameObject target, Color color, out Texture2D colorVisibleTexture)
+
+        private static float RunVisibilityPass(GameObject observer, GameObject target, Color color, out Texture2D colorVisibleTexture)
         {
             Material litMat = CreatelitMaterial(color, target.GetComponent<EnemyAgent>());
 
@@ -233,7 +227,7 @@ namespace ZombieTweak2
             colorVisibleTexture.Apply();
             if (applyMask)
                 ApplyMask(colorVisibleTexture, visiblityTexture);
-            return CountColorPixels(colorVisibleTexture, color);
+            return CountColorPixels(colorVisibleTexture, color, toleranceFloor, toleranceCeling);
         }
         private static void FilterTexture(Texture2D tex, Color color, int tolerance = 0)
         {
@@ -261,46 +255,44 @@ namespace ZombieTweak2
                 return new Color(c.r / maxVal, c.g / maxVal, c.b / maxVal, c.a);
             return c; // if all components are 0, return the original color
         }
-        private static Color AverageColorExcluding(Texture2D tex, Color excludeColor, int tolerance = 0)
+        public static Color GetAverageColor(Texture2D tex, Color? ignoreColor = null, float tolerance = 0.01f)
         {
             Color32[] pixels = tex.GetPixels32();
-            byte er = (byte)(excludeColor.r * 255);
-            byte eg = (byte)(excludeColor.g * 255);
-            byte eb = (byte)(excludeColor.b * 255);
-
-            long sumR = 0, sumG = 0, sumB = 0, sumA = 0;
+            long r = 0, g = 0, b = 0, a = 0;
             int count = 0;
 
-            for (int i = 0; i < pixels.Length; i++)
+            foreach (Color32 c in pixels)
             {
-                int dr = pixels[i].r - er;
-                int dg = pixels[i].g - eg;
-                int db = pixels[i].b - eb;
-                int distSq = dr * dr + dg * dg + db * db;
-
-                if (distSq > tolerance * tolerance) // exclude this color
+                if (ignoreColor.HasValue)
                 {
-                    sumR += pixels[i].r;
-                    sumG += pixels[i].g;
-                    sumB += pixels[i].b;
-                    sumA += pixels[i].a;
-                    count++;
+                    Color32 ic = ignoreColor.Value;
+                    float dr = Mathf.Abs(c.r / 255f - ic.r);
+                    float dg = Mathf.Abs(c.g / 255f - ic.g);
+                    float db = Mathf.Abs(c.b / 255f - ic.b);
+                    if (dr <= tolerance && dg <= tolerance && db <= tolerance)
+                        continue; // skip this pixel
                 }
+
+                r += c.r;
+                g += c.g;
+                b += c.b;
+                a += c.a;
+                count++;
             }
 
             if (count == 0)
-                return Color.black; // nothing to average
+                return Color.clear;
 
-            return new Color(
-                (float)sumR / (count * 255f),
-                (float)sumG / (count * 255f),
-                (float)sumB / (count * 255f),
-                (float)sumA / (count * 255f)
-            );
+            return new Color(r / (float)(count * 255), g / (float)(count * 255), b / (float)(count * 255), a / (float)(count * 255));
         }
         private static Color InvertColor(Color c)
         {
-            return new Color(1f - c.r, 1f - c.g, 1f - c.b, c.a);
+            Color.RGBToHSV(c, out float h, out float s, out float v);
+            h = (h + 0.5f) % 1f; // shift hue 180 degrees
+            //v = 1f - v;           // invert brightness
+            Color result = Color.HSVToRGB(h, s, v);
+            result.a = c.a;       // keep alpha
+            return result;
         }
         public static void SetLayerRecursively(GameObject obj, int layer)
         {
@@ -333,8 +325,7 @@ namespace ZombieTweak2
             Recurse(obj);
             return layers;
         }
-        public static float emmisiveness = 1f;
-        public static bool alwaysEmit = false;
+
         private static Material CreatelitMaterial(Color color, EnemyAgent agent = null)
         {
             var mat = new Material(Shader.Find("Standard"));
@@ -343,7 +334,8 @@ namespace ZombieTweak2
             // Enable emission keyword so Unity actually uses it
             mat.EnableKeyword("_EMISSION");
             // Set emission color slightly brighter than base
-            mat.SetColor("_EmissionColor", color * emmisiveness);// (((agent?.AI?.m_detection?.m_noiseDetectionOn ?? false) || alwaysEmit) ? emmisiveness : 0f));
+            mat.SetColor("_EmissionColor", color * (((agent?.AI?.m_detection?.m_noiseDetectionOn ?? false) || alwaysEmit) ? emmisivenessOn : emmisivenessOff));
+            //mat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
             return mat;
         }
         private static void ApplyMask(Texture2D targetTex, Texture2D maskTex, int tolerance = 5)
@@ -362,24 +354,74 @@ namespace ZombieTweak2
             targetTex.SetPixels32(targetPixels);
             targetTex.Apply();
         }
-        private static int CountColorPixels(Texture2D tex, Color color, int tolerance = 20)
-        {
-            Color32[] pixels = tex.GetPixels32();
-            byte kr = (byte)(color.r * 255);
-            byte kg = (byte)(color.g * 255);
-            byte kb = (byte)(color.b * 255);
 
-            int count = 0;
+        private static void ShowVisibilityNumber(float visPercent, Color color, int stackIndex = 0)
+        {
+            color.r *= 0.2f;
+            color.g *= 0.2f;
+            color.b *= 0.2f;
+            const int textKey = 999; // unique key for the TextMesh
+            if (!_quads.TryGetValue(textKey, out GameObject textObj) || textObj == null)
+            {
+                textObj = new GameObject("VisibilityText");
+                TextMesh tm = textObj.AddComponent<TextMesh>();
+                tm.fontSize = 48;
+                tm.characterSize = 0.02f;
+                tm.anchor = TextAnchor.MiddleCenter;
+                tm.alignment = TextAlignment.Center;
+                tm.color = color;
+                _quads[textKey] = textObj;
+                UnityEngine.Object.DontDestroyOnLoad(textObj);
+            }
+
+            // Position to the left of the camera at same offset as quads
+            Transform obsT = PlayerManager.GetLocalPlayerAgent().transform;
+            float forwardDist = 1.0f;
+            float sideOffset = -0.6f; // left side
+            float verticalSpacing = 0.6f;
+
+            Vector3 basePos = obsT.position + obsT.forward * forwardDist + obsT.up * 1f;
+            Vector3 side = obsT.right * -sideOffset;
+            Vector3 vertical = -obsT.up * (stackIndex * verticalSpacing); // stack downward if needed
+            textObj.transform.position = basePos + side + vertical;
+            textObj.transform.rotation = obsT.rotation;
+
+            // Update the text
+            TextMesh textMesh = textObj.GetComponent<TextMesh>();
+            textMesh.text = (visPercent * 100f).ToString("F1") + "%";
+        }
+        private static float CountColorPixels(Texture2D tex, Color color, float minTolerance = 0.1f, float maxTolerance = 0.3f)
+        {
+            
+            Color32[] pixels = tex.GetPixels32();
+            float total = 0f;
+            float maxDistnace = 2f;
+            minTolerance = minTolerance * maxDistnace;
+            maxTolerance = maxTolerance * maxDistnace;
+            Vector3 targetVector = new Vector3(color.r, color.g, color.b).normalized;
+
             for (int i = 0; i < pixels.Length; i++)
             {
-                int dr = pixels[i].r - kr;
-                int dg = pixels[i].g - kg;
-                int db = pixels[i].b - kb;
-                int distSq = dr * dr + dg * dg + db * db;
-                if (distSq < tolerance * tolerance)
-                    count++;
+                if (pixels[i] == Color.black)
+                    continue;
+                Vector3 pixelVector = new Vector3(pixels[i].r, pixels[i].g, pixels[i].b).normalized;
+                float dist = Vector3.Distance(pixelVector, targetVector);
+                float contribution;
+                if (dist < minTolerance)
+                {
+                    contribution = 1f;
+                }
+                else if (dist > maxTolerance)
+                {
+                    contribution = 0f;
+                }
+                else
+                {
+                    contribution = 1 - ((dist - minTolerance) / (maxTolerance - minTolerance));
+                }
+                total += contribution;
             }
-            return count;
+            return total;
         }
         private static GameObject GetOrCreateQuad(int key, GameObject observer, Texture2D texture, int stackIndex)
         {
