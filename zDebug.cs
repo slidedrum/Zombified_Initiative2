@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using XInputDotNetPure;
 using ZombieTweak2.zMenu;
 using ZombieTweak2.zNetworking;
 using Zombified_Initiative;
@@ -413,17 +414,21 @@ namespace ZombieTweak2
             var localPlayer = PlayerManager.GetLocalPlayerAgent();
             GuiManager.AttemptSetPlayerPingStatus(localPlayer, true, pos);
         }
+        public static int playerIndex = -1;
+        public static PlayerAgent agent = null;
+        public static GameObject head = null;
         internal static void debugUpdate() 
         {
             if (checkVis)
             {
-                var numPlayers = PlayerManager.PlayerAgentsInLevel.Count;
-                var playerIndex = 0;// UnityEngine.Random.RandomRangeInt(0, numPlayers);
-                PlayerAgent agent = PlayerManager.PlayerAgentsInLevel[playerIndex];
-                GameObject observer = agent.GetHeadCamTransform().gameObject;//PlayerManager.GetLocalPlayerAgent().FPSCamera.gameObject;
-                Transform menuTransform = zMenuManager.mainMenu.gameObject.transform;
-                GameObject target = zSearch.GetClosestObjectInLookDirection(menuTransform, zSearch.GetGameObjectsWithLookDirection<EnemyAgent>(menuTransform), 180f);
-                zVisiblityManager.CheckForObject(observer, target, agent, zMenuManager.mainMenu.gameObject.gameObject);
+                if (playerIndex == -1)
+                {
+                    playerIndex = 0;// UnityEngine.Random.RandomRangeInt(0, numPlayers);
+                    agent = PlayerManager.PlayerAgentsInLevel[playerIndex];
+                    head = agent.GetHeadCamTransform().gameObject;//PlayerManager.GetLocalPlayerAgent().FPSCamera.gameObject;
+                }
+                GameObject target = zSearch.GetClosestObjectInLookDirection(Camera.main.transform, zSearch.GetGameObjectsWithLookDirection<EnemyAgent>(Camera.main.transform), 180f);
+                zVisiblityManager.CheckForObject(Camera.main.gameObject, target, agent, head);
             }
         }
         internal static void SendClosestBotToExplore()

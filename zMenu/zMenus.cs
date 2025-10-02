@@ -93,7 +93,10 @@ namespace ZombieTweak2.zMenu
             permissionMenu.AddNode("Move");
             actionMenu.AddNode("ClearRoom", ZiMain.SendBotToClearCurrentRoom);
             debugMenu.AddNode("Show title prompt", InGameTitle.DisplayDefault).AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, debugMenu.Close); ;
-            debugMenu.AddNode("ChecVis", zDebug.debugCheckViz).AddListener(zMenuManager.nodeEvent.OnHeldImmediate,zDebug.toggleVisCheck);
+            debugMenu.AddNode("ChecVis", zDebug.debugCheckViz)
+                .AddListener(zMenuManager.nodeEvent.OnHeldImmediate,zDebug.toggleVisCheck)
+                .AddListener(zMenuManager.nodeEvent.OnUnpressedSelected,zMenuManager.CloseAllMenues)
+                .AddListener(zMenuManager.nodeEvent.OnHeldImmediate, zMenuManager.CloseAllMenues);
             debugMenu.AddNode("Find unexplored", zDebug.MarkUnexploredArea);
             debugMenu.AddNode("SendBotToExplore", zDebug.SendClosestBotToExplore);
             debugNodeMenu.AddNode("Node I'm looking at", zDebug.GetNodeImLookingAT, [zMenuManager.mainMenu.gameObject.transform]);
