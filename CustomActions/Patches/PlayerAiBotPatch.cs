@@ -313,7 +313,7 @@ namespace ZombieTweak2.zRootBotPlayerAction.Patches
         //    var data = zActions.GetOrCreateData(instance);
         //    if (desc == PlayerAIBot.s_updatingAction)
         //    {
-        //        Debug.LogError("Action was removed during its update: " + desc);
+        //        VisDebug.LogError("Action was removed during its update: " + desc);
         //    }
         //    if (desc.Status == PlayerBotActionBase.Descriptor.StatusType.Queued)
         //    {
@@ -332,7 +332,7 @@ namespace ZombieTweak2.zRootBotPlayerAction.Patches
         //    {
         //        if (desc.ActionBase == null)
         //        {
-        //            Debug.LogError("Active descriptor is missing action: " + desc);
+        //            VisDebug.LogError("Active descriptor is missing action: " + desc);
         //        }
         //        data.m_actions.Remove(desc.ActionBase);
         //        desc.ActionBase.Stop();

@@ -421,14 +421,7 @@ namespace ZombieTweak2
         {
             if (checkVis)
             {
-                if (playerIndex == -1)
-                {
-                    playerIndex = 0;// UnityEngine.Random.RandomRangeInt(0, numPlayers);
-                    agent = PlayerManager.PlayerAgentsInLevel[playerIndex];
-                    head = agent.GetHeadCamTransform().gameObject;//PlayerManager.GetLocalPlayerAgent().FPSCamera.gameObject;
-                }
-                GameObject target = zSearch.GetClosestObjectInLookDirection(Camera.main.transform, zSearch.GetGameObjectsWithLookDirection<EnemyAgent>(Camera.main.transform), 180f);
-                zVisiblityManagerMessy.CheckForObject(Camera.main.gameObject, target, agent, head);
+                debugCheckViz();
             }
         }
         internal static void SendClosestBotToExplore()
