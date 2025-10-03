@@ -6,12 +6,22 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace ZombieTweak2
 {
     public static class zVisibilityManager
     {
-        private static Camera observationCamera;
+        private static Camera _observationCamera;
+        public static Camera observationCamera
+        {
+            get
+            {
+                if (_observationCamera == null)
+                    Setup.SetUpObservationCamera();
+                return _observationCamera;
+            }
+        }
         private static GameObject observercamGobject;
         private static ExteriorCamera observerExteriroCamera;
         private static RenderTexture renderTextureAtlas;
@@ -50,7 +60,7 @@ namespace ZombieTweak2
             public bool resetCullingCam;
             public visSettings()
             {
-                maxDistance = 30f;
+                maxDistance = 150f;
                 visMethod = visMethods.VeryFancy;
                 resetCullingCam = true;
             }
@@ -59,9 +69,9 @@ namespace ZombieTweak2
         {
             observercamGobject = new GameObject("ObserverCam");
             observerExteriroCamera = observercamGobject.AddComponent<ExteriorCamera>();
-            renderTexture = new RenderTexture(Settings.resolution.x, Settings.resolution.y, 1);
-            renderTextureAtlas = new RenderTexture(Settings.resolution.x, Settings.resolution.y*3, 1);
-            Setup.SetUpObservationCamera();
+            renderTexture = new RenderTexture(Settings.resolution.x, Settings.resolution.y, 1, RenderTextureFormat.ARGB32);
+            renderTextureAtlas = new RenderTexture(Settings.resolution.x, Settings.resolution.y*3, 1, RenderTextureFormat.ARGB32);
+            //Setup.SetUpObservationCamera();
             Setup.SetUpMaterals();
             textureAtlas = new(Settings.resolution.x, Settings.resolution.y * 3, TextureFormat.RGBA32, false);
             scratchBoard = new(Settings.resolution.x, Settings.resolution.y, TextureFormat.RGBA32, false);
@@ -71,12 +81,16 @@ namespace ZombieTweak2
         {
             public static void SetUpObservationCamera()
             {
-                observationCamera = observercamGobject.AddComponent<Camera>();
+                _observationCamera = observercamGobject.GetComponent<Camera>();
+                if (_observationCamera == null )
+                    _observationCamera = observercamGobject.AddComponent<Camera>();
                 observationCamera.enabled = false;
                 observationCamera.allowMSAA = false;
                 observationCamera.useOcclusionCulling = false;
-                observationCamera.farClipPlane = 20f;
+                observationCamera.farClipPlane = 150f;
                 observationCamera.targetTexture = renderTexture;
+                observationCamera.clearFlags = CameraClearFlags.SolidColor;
+                observationCamera.backgroundColor = Color.black;
                 observationCamera.cullingMask = (1 << LayerMask.NameToLayer("Default"))
                                               | (1 << LayerMask.NameToLayer("Enemy"))
                                               | (1 << LayerMask.NameToLayer("Dynamic"));
@@ -177,18 +191,18 @@ namespace ZombieTweak2
                     renderer.sharedMaterials = mats;
                 }
             }
-            public static void CopyToAtlas(RenderTexture renderTexture, RenderTexture atlas, int index)
+            public static void CopyToAtlas(int index)
             {
-                if (renderTexture == null || atlas == null)
+                if (renderTexture == null || renderTextureAtlas == null)
                     throw new ArgumentNullException("RenderTexture or atlas is null.");
 
-                if (index < 0 || index >= atlas.height / renderTexture.height)
+                if (index < 0 || index >= renderTextureAtlas.height / renderTexture.height)
                     throw new ArgumentOutOfRangeException(nameof(index), "Index out of bounds for atlas bands.");
 
                 int bandHeight = renderTexture.height;
                 int dstY = index * bandHeight;
                 Graphics.CopyTexture(renderTexture, 0, 0, 0, 0, renderTexture.width, bandHeight,
-                                     atlas, 0, 0, 0, dstY);
+                                     renderTextureAtlas, 0, 0, 0, dstY);
             }
             public static float CalculateVerticalFov(Vector3 observerPos, Bounds targetBounds)
             {
@@ -265,8 +279,108 @@ namespace ZombieTweak2
                 debugParrent = new("zVisDebug");
                 VisDebug.debugQuads = new();
             }
-        }
 
+            internal static void CreateDebugHud()
+            {
+                if (debugParrent == null)
+                    debugParrent = new GameObject("zVisDebug");
+
+                const string hudName = "DebugHudTexture";
+
+                // Try to find an existing HUD quad
+                if (!debugQuads.TryGetValue(0, out GameObject debugHud))
+                {
+                    debugHud = new GameObject(hudName);
+                    debugHud.transform.SetParent(debugParrent.transform, false);
+
+                    // Add Canvas if needed
+                    Canvas canvas = debugHud.AddComponent<Canvas>();
+                    canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+                    canvas.sortingOrder = 9999;
+
+                    CanvasScaler scaler = debugHud.AddComponent<CanvasScaler>();
+                    scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+                    scaler.referenceResolution = new Vector2(1920, 1080);
+
+                    debugHud.AddComponent<GraphicRaycaster>();
+
+                    // Add RawImage to show textureAtlas
+                    GameObject rawImageObj = new GameObject("AtlasImage");
+                    rawImageObj.transform.SetParent(debugHud.transform, false);
+                    RawImage rawImage = rawImageObj.AddComponent<RawImage>();
+
+                    // Set size and anchor to bottom-right
+                    RectTransform rt = rawImage.GetComponent<RectTransform>();
+                    rt.anchorMin = new Vector2(1f, 0f);
+                    rt.anchorMax = new Vector2(1f, 0f);
+                    rt.pivot = new Vector2(1f, 0f);
+                    rt.anchoredPosition = new Vector2(-10f, 10f); // 10px from corner
+                    rt.sizeDelta = new Vector2(textureAtlas.width * 4, textureAtlas.height * 4); // scale up for visibility
+
+                    debugQuads[0] = debugHud;
+
+                    // === Add labels for each band ===
+                    int bandHeight = Settings.resolution.y * 4; // scaled size per band
+                    int numBands = textureAtlas.height / Settings.resolution.y;
+
+                    for (int i = 0; i < numBands; i++)
+                    {
+                        GameObject labelObj = new GameObject($"Label_{i}");
+                        labelObj.transform.SetParent(rawImageObj.transform, false);
+                        Text label = labelObj.AddComponent<Text>();
+                        label.text = i.ToString();
+                        label.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+                        label.fontSize = 20;
+                        label.color = Color.white;
+                        label.alignment = TextAnchor.MiddleRight;
+
+                        RectTransform lrt = label.GetComponent<RectTransform>();
+                        lrt.anchorMin = new Vector2(0f, 0f);
+                        lrt.anchorMax = new Vector2(0f, 0f);
+                        lrt.pivot = new Vector2(1f, 0.5f);
+                        lrt.anchoredPosition = new Vector2(-5f, i * bandHeight + bandHeight / 2f); // center of band
+                        lrt.sizeDelta = new Vector2(40f, 30f);
+                    }
+
+                    // === Add color swatches ===
+                    GameObject avgSwatchObj = new GameObject("AverageColorSwatch");
+                    avgSwatchObj.transform.SetParent(rawImageObj.transform, false);
+                    Image avgSwatch = avgSwatchObj.AddComponent<Image>();
+                    avgSwatch.color = AverageColor;
+
+                    RectTransform avgRt = avgSwatch.GetComponent<RectTransform>();
+                    avgRt.anchorMin = new Vector2(0f, 1f);
+                    avgRt.anchorMax = new Vector2(0f, 1f);
+                    avgRt.pivot = new Vector2(0f, 1f);
+                    avgRt.anchoredPosition = new Vector2(0f, 0f);
+                    avgRt.sizeDelta = new Vector2(30f, 30f);
+
+                    GameObject hueSwatchObj = new GameObject("HueShiftColorSwatch");
+                    hueSwatchObj.transform.SetParent(rawImageObj.transform, false);
+                    Image hueSwatch = hueSwatchObj.AddComponent<Image>();
+                    hueSwatch.color = invertedColor;
+
+                    RectTransform hueRt = hueSwatch.GetComponent<RectTransform>();
+                    hueRt.anchorMin = new Vector2(0f, 1f);
+                    hueRt.anchorMax = new Vector2(0f, 1f);
+                    hueRt.pivot = new Vector2(0f, 1f);
+                    hueRt.anchoredPosition = new Vector2(35f, 0f); // next to avg swatch
+                    hueRt.sizeDelta = new Vector2(30f, 30f);
+                }
+
+                // Update atlas texture
+                RawImage img = debugHud.GetComponentInChildren<RawImage>();
+                if (img != null)
+                    img.texture = textureAtlas;
+
+                // Update swatch colors each call
+                foreach (var image in debugHud.GetComponentsInChildren<Image>())
+                {
+                    if (image.name == "AverageColorSwatch") image.color = AverageColor;
+                    if (image.name == "HueShiftColorSwatch") image.color = invertedColor;
+                }
+            }
+        }
         public static float CheckObjectVisiblity(GameObject target, GameObject observer)
         {
             visSettings settings = new visSettings();
@@ -306,14 +420,15 @@ namespace ZombieTweak2
         }
         private static float VeryFancyObjectVisilityCheck(GameObject target, GameObject observer, visSettings settings)
         {
-            float ret = 0f;
+            if (target == null || observer == null) return 0f;
             // Step 0: Move camera
             observercamGobject.gameObject.transform.position = observer.transform.position;
             var bounds = HelperMethods.GetMaxBounds(target);
             observercamGobject.transform.LookAt(bounds.center);
             observationCamera.fieldOfView = HelperMethods.CalculateVerticalFov(observer.transform.position, bounds);
+            observationCamera.farClipPlane = settings.maxDistance;
 
-            
+
             if (cullingCamInOriginalState) // Save culling camera settings
             {
                 PlayerAgent agent = observer.GetComponent<PlayerAgent>(); // Set temp culling camera settings
@@ -322,23 +437,21 @@ namespace ZombieTweak2
                 C_Camera.Current.RunVisibility(); // Must recalculate culling with new position.
             }
 
-            // Step 1: First pass render, whiteMat enemy only
+            // Backup original materials
+            HelperMethods.StoreMaterals(target); 
 
-            // Setup camera for render.
-            HelperMethods.StoreMaterals(target); // Backup original materials
+            // Step 1: First pass render, whiteMat enemy only
             HelperMethods.SetMateral(unlitMat);
             observationCamera.cullingMask = (1 << LayerMask.NameToLayer("Enemy"));
             observationCamera.Render(); // observationCamera.targetTexture = renderTexture;
-            HelperMethods.CopyToAtlas(renderTexture, renderTextureAtlas,0);
+            HelperMethods.CopyToAtlas(0);
 
             // Setp 2: Second pass render, whiteMat enemy + world
             observationCamera.cullingMask = (1 << LayerMask.NameToLayer("Default"))
-                                          | (1 << LayerMask.NameToLayer("Enemy"))
-                                          | (1 << LayerMask.NameToLayer("Dynamic"));
-            litMat.color = Color.white;
-            HelperMethods.SetMateral(litMat);
+                                          | (1 << LayerMask.NameToLayer("Enemy"));
+            HelperMethods.SetMateral(unlitMat);
             observationCamera.Render(); // observationCamera.targetTexture = renderTexture;
-            HelperMethods.CopyToAtlas(renderTexture, renderTextureAtlas, 1);
+            HelperMethods.CopyToAtlas(1);
 
             // Step 3: Get color1 from second pass render
             var averageColor = HelperMethods.GetAverageColor(renderTexture, Color.white);
@@ -357,7 +470,7 @@ namespace ZombieTweak2
             litMat.SetColor("_EmissionColor", averageColor * (shouldGlow ? VisDebug.emmisivenessOn : VisDebug.emmisivenessOff));
             HelperMethods.SetMateral(litMat);
             observationCamera.Render(); // observationCamera.targetTexture = renderTexture;
-            HelperMethods.CopyToAtlas(renderTexture, renderTextureAtlas, 2);
+            HelperMethods.CopyToAtlas(2);
             HelperMethods.RestoreMaterals();
             // Restore culling camera
             if (settings.resetCullingCam && !cullingCamInOriginalState)
@@ -369,6 +482,10 @@ namespace ZombieTweak2
             // Step 5: Move renderTextureAtlas to CPU mem,
 
             HelperMethods.CopyTextureAtlasToCpu();
+            if (VisDebug.debugMode)
+            {
+                VisDebug.CreateDebugHud();
+            }
             int bandHeight = Settings.resolution.y;
             int pass1offset = 0;
             int pass2offset = bandHeight;
@@ -392,6 +509,9 @@ namespace ZombieTweak2
                     Color color1 = GetPixel(x, y, 0);
                     Color color2 = GetPixel(x, y, 1);
                     Color color3 = GetPixel(x, y, 2);
+                    pixels[(0 * bandHeight + y) * width + x].a = 255;
+                    pixels[(1 * bandHeight + y) * width + x].a = 255;
+                    pixels[(2 * bandHeight + y) * width + x].a = 255;
                     if (color1 == Color.black)
                         continue;
                     if (color1 == Color.white) // Step 6: Hue shift 1st pass render.

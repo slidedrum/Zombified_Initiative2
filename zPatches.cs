@@ -276,7 +276,7 @@ public class ZombifiedPatches
         //This is based on the original mono decomp. Not a re-creation.  Still quite modified though.
         //Todo have a custom threshold per type - DONE
         //Todo Block some types outright. - DONE
-        //Todo if someone else is already giving the target the same item, don't double up.
+        //Todo if someone else is already giving the visTarget the same item, don't double up.
         if (!__instance.m_shareResourceAction.IsTerminated())
         {
             //is there already share resource action?
@@ -366,7 +366,7 @@ public class ZombifiedPatches
                 int baseThreshold = zSlideComputer.resourceThresholds[itemID];
                 foreach (var agent in PlayerManager.PlayerAgentsInLevel)
                 {
-                    //Check if any other bots are giving the same target the same resource
+                    //Check if any other bots are giving the same visTarget the same resource
                     if (!agent.Owner.IsBot)
                         continue;
                     PlayerAIBot aiBot = agent.gameObject.GetComponent<PlayerAIBot>();
@@ -691,7 +691,7 @@ public class ZombifiedPatches
         }
         GameObject targetObject = null;
 
-        // Determine target: either the agent's GameObject or a preset target
+        // Determine visTarget: either the agent's GameObject or a preset visTarget
         if (__instance.m_desc.TargetAgent != null)
         {
             targetObject = __instance.m_desc.TargetAgent.gameObject;
@@ -704,7 +704,7 @@ public class ZombifiedPatches
         // Check if existing travel action exists
         if (__instance.m_travelAction != null)
         {
-            // If destination already matches target, no update needed
+            // If destination already matches visTarget, no update needed
             if (__instance.m_travelAction.Status == PlayerBotActionBase.Descriptor.StatusType.Active &&
                 __instance.m_travelAction.DestinationObject == targetObject)
             {
@@ -767,16 +767,16 @@ public class ZombifiedPatches
         __instance.SafeStopAction(__instance.m_fireAction);
         __instance.SafeStopAction(__instance.m_useNanoswarmAction);
 
-        // 2) Prepare variables used for target selection & strike decision
+        // 2) Prepare variables used for visTarget selection & strike decision
         Transform aimTransform = null;
         float vulnerableScore = 0.0f;
         bool strike = false;
 
-        // 3) Preserve previous TargetGameObject if we recently selected a target
+        // 3) Preserve previous TargetGameObject if we recently selected a visTarget
         GameObject preservedTarget = null;
         if (__instance.m_meleeAction != null && __instance.m_meleeAction.TargetGameObject != null)
         {
-            // If still within target re-selection delay, prefer the existing target object
+            // If still within visTarget re-selection delay, prefer the existing visTarget object
             if (Time.time - __instance.m_targetSelectedTime < PlayerBotActionAttack.s_targetReselectionDelay)
             {
                 preservedTarget = __instance.m_meleeAction.TargetGameObject;
@@ -786,7 +786,7 @@ public class ZombifiedPatches
         // 4) Choose aimTransform and compute strike boolean
         if (push)
         {
-            // push branch uses EasyAimTarget on the target agent
+            // push branch uses EasyAimTarget on the visTarget agent
             if (__instance.m_currentAttackOption == null || __instance.m_currentAttackOption.TargetAgent == null)
             {
                 // decomp jumps to a trap; return early here to match safe behavior
@@ -798,7 +798,7 @@ public class ZombifiedPatches
         }
         else
         {
-            // non-push: find a vulnerable target, passing preservedTarget (may be null)
+            // non-push: find a vulnerable visTarget, passing preservedTarget (may be null)
             if (__instance.m_currentAttackOption == null)
             {
                 return;
@@ -841,7 +841,7 @@ public class ZombifiedPatches
             descriptor.Strike = strike;
 
 
-            // Set target agent and (optionally) target game object
+            // Set visTarget agent and (optionally) visTarget game object
             descriptor.TargetAgent = __instance.m_currentAttackOption.TargetAgent;
             if (aimTransform != null)
             {
@@ -872,7 +872,7 @@ public class ZombifiedPatches
             __instance.m_meleeAction.Prio = __instance.m_desc.Prio;
         }
 
-        // Update target agent
+        // Update visTarget agent
         __instance.m_meleeAction.TargetAgent = __instance.m_currentAttackOption.TargetAgent;
 
         // Update TargetGameObject if we have an aim transform

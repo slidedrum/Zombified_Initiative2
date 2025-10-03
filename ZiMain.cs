@@ -38,8 +38,8 @@ using static ZombieTweak2.zNetworking.pStructs;
  -- TODO -- DONE -- want to make custom blacklist pickups
  -- TODO -- DONE -- want to fix attack not always working
  -- TODO -- DONE -- want to make attack wake room sometimes
- -- TOOD -- DONE -- Not perfect. When sharing resources, if someone else is already giving the target the same item, don't double up.  Can still happen, but much less likely.
- -- TODO -- DONE -- Remake attack my target methods and put it under actions.
+ -- TOOD -- DONE -- Not perfect. When sharing resources, if someone else is already giving the visTarget the same item, don't double up.  Can still happen, but much less likely.
+ -- TODO -- DONE -- Remake attack my visTarget methods and put it under actions.
  -- TODO -- DONE -- Investigate what is causing recolor of some menu elements with other mods (Archive essentials?)
  -- TODO -- DONE -- Investigate what is causing first letter of bot name to mess up with other mods (Arhcive essentials?)
  -- TODO -- DONE -- Investigate compat with BetterBots.  Seems to break pickup blocking?

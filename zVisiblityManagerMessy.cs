@@ -60,7 +60,7 @@ namespace ZombieTweak2
             }; 
             _observerCam.targetTexture = _renderTexture;
 
-            // Solid white material for rendering target
+            // Solid white material for rendering visTarget
             _solidWhite = new Material(Shader.Find("Unlit/Color"));
             _solidWhite.color = Color.white;
 
@@ -346,7 +346,7 @@ namespace ZombieTweak2
             for (int i = 0; i < targetPixels.Length; i++)
             {
                 var m = maskPixels[i];
-                // If mask pixel is not (almost) white, black out the target pixel
+                // If mask pixel is not (almost) white, black out the visTarget pixel
                 if (m.r < 255 - tolerance || m.g < 255 - tolerance || m.b < 255 - tolerance)
                     targetPixels[i] = Color.black;
             }

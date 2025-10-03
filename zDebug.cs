@@ -382,15 +382,22 @@ namespace ZombieTweak2
             info.commander = pStructs.Get_pStructFromRefrence(PlayerManager.GetLocalPlayerAgent());
             zNetworking.zNetworking.ReciveRequestToKillEnemy(netSender, info);
         }
-        internal static void debugCheckViz()
+        internal static void setCheckVizTarget()
         {
             var numPlayers = PlayerManager.PlayerAgentsInLevel.Count;
             var playerIndex = 0;// UnityEngine.Random.RandomRangeInt(0, numPlayers);
             PlayerAgent agent = PlayerManager.PlayerAgentsInLevel[playerIndex];
-            GameObject observer = agent.GetHeadCamTransform().gameObject;//PlayerManager.GetLocalPlayerAgent().FPSCamera.gameObject;
+            visObserver = agent.GetHeadCamTransform().gameObject;//PlayerManager.GetLocalPlayerAgent().FPSCamera.gameObject;
             Transform menuTransform = zMenuManager.mainMenu.gameObject.transform;
-            GameObject target = zSearch.GetClosestObjectInLookDirection(menuTransform, zSearch.GetGameObjectsWithLookDirection<EnemyAgent>(menuTransform), 180f);
-            zVisiblityManagerMessy.CheckForObject(observer, target, agent, zMenuManager.mainMenu.gameObject.gameObject);
+            visTarget = zSearch.GetClosestObjectInLookDirection(menuTransform, zSearch.GetGameObjectsWithLookDirection<EnemyAgent>(menuTransform), 180f);
+        }
+        internal static void debugCheckViz()
+        {
+            if (visObserver == null || visTarget == null)
+                setCheckVizTarget();
+            if (visObserver == null || visTarget == null)
+                return;
+            ZiMain.log.LogInfo(zVisibilityManager.CheckObjectVisiblity(visTarget, visObserver));
         }
         internal static void toggleVisCheck()
         {
@@ -417,6 +424,9 @@ namespace ZombieTweak2
         public static int playerIndex = -1;
         public static PlayerAgent agent = null;
         public static GameObject head = null;
+        private static GameObject visObserver;
+        private static GameObject visTarget;
+
         internal static void debugUpdate() 
         {
             if (checkVis)
