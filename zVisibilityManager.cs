@@ -1,6 +1,7 @@
 ﻿using CullingSystem;
 using Enemies;
 using ExteriorRendering;
+using FluffyUnderware.DevTools.Extensions;
 using Player;
 using System;
 using System.Collections.Generic;
@@ -24,6 +25,8 @@ namespace ZombieTweak2
         }
         private static GameObject observercamGobject;
         private static ExteriorCamera observerExteriroCamera;
+        private static FPSCamera fpsCamera;
+        private static PreLitVolume PreLitVolume;
         private static RenderTexture renderTextureAtlas;
         private static RenderTexture renderTexture;
         private static Texture2D textureAtlas;
@@ -35,6 +38,8 @@ namespace ZombieTweak2
         private static List<Material[]> originalMats = new();
         private static Renderer[] rendererCache;
 
+
+
         private static bool cullingCamInOriginalState 
         { 
             get 
@@ -45,6 +50,8 @@ namespace ZombieTweak2
         }
         private static Camera real_C_Cam_cam = C_Camera.Current.m_camera;
         private static C_MovingCuller real_C_Cam_agent = C_Camera.Current.m_cullAgent;
+        private static Camera r_camera = new();
+        private static Transform r_transform = new();
 
         public enum visMethods
         {
@@ -69,12 +76,14 @@ namespace ZombieTweak2
         {
             observercamGobject = new GameObject("ObserverCam");
             observerExteriroCamera = observercamGobject.AddComponent<ExteriorCamera>();
-            renderTexture = new RenderTexture(Settings.resolution.x, Settings.resolution.y, 1, RenderTextureFormat.ARGB32);
-            renderTextureAtlas = new RenderTexture(Settings.resolution.x, Settings.resolution.y*3, 1, RenderTextureFormat.ARGB32);
+            fpsCamera = observercamGobject.AddComponent<FPSCamera>();
+            PreLitVolume = observercamGobject.AddComponent<PreLitVolume>();
+            renderTexture = new RenderTexture(Settings.resolution.x, Settings.resolution.y, 16, RenderTextureFormat.ARGB32);
+            renderTextureAtlas = new RenderTexture(Settings.resolution.x, Settings.resolution.y*3, 16, RenderTextureFormat.ARGB32);
             //Setup.SetUpObservationCamera();
             Setup.SetUpMaterals();
-            textureAtlas = new(Settings.resolution.x, Settings.resolution.y * 3, TextureFormat.RGBA32, false);
-            scratchBoard = new(Settings.resolution.x, Settings.resolution.y, TextureFormat.RGBA32, false);
+            textureAtlas = new(Settings.resolution.x, Settings.resolution.y * 3, TextureFormat.RGB24, false);
+            scratchBoard = new(Settings.resolution.x, Settings.resolution.y, TextureFormat.RGB24, false);
 
         }
         private static class Setup
@@ -109,11 +118,106 @@ namespace ZombieTweak2
             public static Vector2Int resolution;
             static Settings()
             {
-                resolution = new Vector2Int(32, 32);
+                resolution = new Vector2Int(64, 64);
             }
         }
         public static class HelperMethods
         {
+
+            public static void QuaternionToYawPitch(Quaternion q, out float yaw, out float pitch)
+            {
+                Vector3 f = q * Vector3.forward;
+                yaw = Mathf.Atan2(f.x, f.z) * Mathf.Rad2Deg;
+                pitch = -Mathf.Asin(Mathf.Clamp(f.y, -1f, 1f)) * Mathf.Rad2Deg;
+            }
+            public struct CameraSettings
+            {
+                public float fieldOfView;
+                public float nearClipPlane;
+                public float farClipPlane;
+                public bool allowMSAA;
+                public bool useOcclusionCulling;
+                public CameraClearFlags clearFlags;
+                public Color backgroundColor;
+                public LayerMask cullingMask;
+                public Vector3 agentPosition;
+                public Quaternion agentRotation;
+                public Vector3 camPosition;
+                public Quaternion camRotation;
+                public RenderTexture targetTexture;
+            }
+            public static CameraSettings SaveSettings()
+            {
+                Camera cam = Camera.main;
+                FPSCamera fps = cam.GetComponent<FPSCamera>();
+                return new CameraSettings
+                {
+                    fieldOfView = cam.fieldOfView,
+                    nearClipPlane = cam.nearClipPlane,
+                    farClipPlane = cam.farClipPlane,
+                    allowMSAA = cam.allowMSAA,
+                    useOcclusionCulling = cam.useOcclusionCulling,
+                    clearFlags = cam.clearFlags,
+                    backgroundColor = cam.backgroundColor,
+                    cullingMask = cam.cullingMask,
+                    camPosition = cam.transform.position,
+                    camRotation = cam.transform.rotation,
+                    targetTexture = cam.targetTexture,
+                    agentPosition = fps.Position,
+                    agentRotation = fps.Rotation,
+
+                };
+            }
+            public static void SetSettings(Camera source)
+            {
+                Camera cam = Camera.main;
+                FPSCamera fps = cam.gameObject.GetComponent<FPSCamera>();
+                cam.fieldOfView = source.fieldOfView;
+                cam.nearClipPlane = source.nearClipPlane;
+                cam.farClipPlane = source.farClipPlane;
+                cam.allowMSAA = source.allowMSAA;
+                cam.useOcclusionCulling = source.useOcclusionCulling;
+                cam.clearFlags = source.clearFlags;
+                cam.backgroundColor = source.backgroundColor;
+                cam.cullingMask = source.cullingMask;
+                cam.transform.position = source.transform.position;
+                cam.transform.rotation = source.transform.rotation;
+                cam.targetTexture = source.targetTexture;
+                fps.Position = source.transform.position;
+                fps.Rotation = source.transform.rotation;
+                fps.m_owner.Position = source.transform.position;
+                fps.m_owner.transform.rotation = source.transform.rotation;
+                var yaw = fps.m_yaw;
+                var pitch = fps.m_pitch;
+                QuaternionToYawPitch(source.transform.rotation, out yaw, out pitch);
+                fps.m_yaw = yaw;
+                fps.m_pitch = pitch;
+            }
+            public static void SetSettings(CameraSettings settings)
+            {
+                Camera cam = Camera.main;
+                FPSCamera fps = cam.GetComponent<FPSCamera>();
+                cam.fieldOfView = settings.fieldOfView;
+                cam.nearClipPlane = settings.nearClipPlane;
+                cam.farClipPlane = settings.farClipPlane;
+                cam.allowMSAA = settings.allowMSAA;
+                cam.useOcclusionCulling = settings.useOcclusionCulling;
+                cam.clearFlags = settings.clearFlags;
+                cam.backgroundColor = settings.backgroundColor;
+                cam.cullingMask = settings.cullingMask;
+                cam.transform.position = settings.camPosition;
+                cam.transform.rotation = settings.camRotation;
+                cam.targetTexture = settings.targetTexture;
+                fps.Position = settings.agentPosition;
+                fps.Rotation = settings.agentRotation;
+                fps.m_owner.Position = settings.agentPosition;
+                fps.m_owner.transform.rotation = settings.agentRotation;
+                var yaw = fps.m_yaw;
+                var pitch = fps.m_pitch;
+                QuaternionToYawPitch(settings.agentRotation, out yaw, out pitch);
+                fps.m_yaw = yaw;
+                fps.m_pitch = pitch;
+            }
             public static void CopyTextureAtlasToCpu()
             {
                 RenderTexture prev = RenderTexture.active;
@@ -134,9 +238,10 @@ namespace ZombieTweak2
             }
             public static Color GetAverageColor(RenderTexture renderTexture, Color ignoreColor, float tolerance = 0.01f)
             {
+                return Color.red;
                 if (renderTexture == null) return Color.clear;
 
-                // Create a temporary Texture2D to read the RenderTexture
+                // Create a temporary Texture2D destination read the RenderTexture
                 RenderTexture prev = RenderTexture.active;
                 RenderTexture.active = renderTexture;
 
@@ -187,7 +292,7 @@ namespace ZombieTweak2
                 {
                     Material[] mats = new Material[renderer.sharedMaterials.Length];
                     for (int i = 0; i < mats.Length; i++)
-                        mats[i] = materal;  // Not sure if this is the best way to do this.
+                        mats[i] = materal;  // Not sure if this is the best way destination do this.
                     renderer.sharedMaterials = mats;
                 }
             }
@@ -215,7 +320,7 @@ namespace ZombieTweak2
                 float fovRad = 2f * Mathf.Atan(targetHeight / (2f * distance));
                 float fovDeg = fovRad * Mathf.Rad2Deg;
 
-                return Mathf.Clamp(fovDeg, 0.0001f, 179f);
+                return Mathf.Clamp(fovDeg + VisDebug.fovOffset, 0.0001f, 179f);
             }
             public static Bounds GetMaxBounds(GameObject go)
             {
@@ -273,6 +378,7 @@ namespace ZombieTweak2
             public static bool alwaysEmit = false;
             public static Color AverageColor = Color.black;
             public static Color invertedColor = Color.white;
+            internal static float fovOffset = 5f;
             public static readonly Dictionary<int, GameObject> debugQuads;
             static VisDebug()
             {
@@ -280,15 +386,15 @@ namespace ZombieTweak2
                 VisDebug.debugQuads = new();
             }
 
-            internal static void CreateDebugHud()
+            internal static void CreateDebugHud(int index)
             {
                 if (debugParrent == null)
                     debugParrent = new GameObject("zVisDebug");
 
-                const string hudName = "DebugHudTexture";
+                string hudName = $"DebugHudTexture_{index}";
 
-                // Try to find an existing HUD quad
-                if (!debugQuads.TryGetValue(0, out GameObject debugHud))
+                // Try destination find an existing HUD quad for this index
+                if (!debugQuads.TryGetValue(index, out GameObject debugHud))
                 {
                     debugHud = new GameObject(hudName);
                     debugHud.transform.SetParent(debugParrent.transform, false);
@@ -304,22 +410,25 @@ namespace ZombieTweak2
 
                     debugHud.AddComponent<GraphicRaycaster>();
 
-                    // Add RawImage to show textureAtlas
+                    // Add RawImage destination show textureAtlas
                     GameObject rawImageObj = new GameObject("AtlasImage");
                     rawImageObj.transform.SetParent(debugHud.transform, false);
                     RawImage rawImage = rawImageObj.AddComponent<RawImage>();
 
-                    // Set size and anchor to bottom-right
+                    // Set size and anchor destination bottom-right
                     RectTransform rt = rawImage.GetComponent<RectTransform>();
                     rt.anchorMin = new Vector2(1f, 0f);
                     rt.anchorMax = new Vector2(1f, 0f);
                     rt.pivot = new Vector2(1f, 0f);
-                    rt.anchoredPosition = new Vector2(-10f, 10f); // 10px from corner
-                    rt.sizeDelta = new Vector2(textureAtlas.width * 4, textureAtlas.height * 4); // scale up for visibility
 
-                    debugQuads[0] = debugHud;
+                    // Each index shifts left by atlas width + 60px padding
+                    float xOffset = -70f - (index * (textureAtlas.width * 4 + 60f));
+                    rt.anchoredPosition = new Vector2(xOffset, 10f);
+                    rt.sizeDelta = new Vector2(textureAtlas.width * 4, textureAtlas.height * 4);
 
-                    // === Add labels for each band ===
+                    debugQuads[index] = debugHud;
+
+                    // === Add labels for each band (stay on the right edge of atlas) ===
                     int bandHeight = Settings.resolution.y * 4; // scaled size per band
                     int numBands = textureAtlas.height / Settings.resolution.y;
 
@@ -332,17 +441,20 @@ namespace ZombieTweak2
                         label.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
                         label.fontSize = 20;
                         label.color = Color.white;
-                        label.alignment = TextAnchor.MiddleRight;
+                        label.alignment = TextAnchor.MiddleLeft;
 
                         RectTransform lrt = label.GetComponent<RectTransform>();
-                        lrt.anchorMin = new Vector2(0f, 0f);
-                        lrt.anchorMax = new Vector2(0f, 0f);
-                        lrt.pivot = new Vector2(1f, 0.5f);
-                        lrt.anchoredPosition = new Vector2(-5f, i * bandHeight + bandHeight / 2f); // center of band
+                        lrt.anchorMin = new Vector2(1f, 0f);
+                        lrt.anchorMax = new Vector2(1f, 0f);
+                        lrt.pivot = new Vector2(0f, 0.5f);
+                        lrt.anchoredPosition = new Vector2(5f, i * bandHeight + bandHeight / 2f);
                         lrt.sizeDelta = new Vector2(40f, 30f);
                     }
 
-                    // === Add color swatches ===
+                    // === Add color swatches above the atlas ===
+                    float swatchWidth = rt.sizeDelta.x / 2f;
+                    float swatchHeight = 30f;
+
                     GameObject avgSwatchObj = new GameObject("AverageColorSwatch");
                     avgSwatchObj.transform.SetParent(rawImageObj.transform, false);
                     Image avgSwatch = avgSwatchObj.AddComponent<Image>();
@@ -351,9 +463,9 @@ namespace ZombieTweak2
                     RectTransform avgRt = avgSwatch.GetComponent<RectTransform>();
                     avgRt.anchorMin = new Vector2(0f, 1f);
                     avgRt.anchorMax = new Vector2(0f, 1f);
-                    avgRt.pivot = new Vector2(0f, 1f);
-                    avgRt.anchoredPosition = new Vector2(0f, 0f);
-                    avgRt.sizeDelta = new Vector2(30f, 30f);
+                    avgRt.pivot = new Vector2(0f, 0f);
+                    avgRt.anchoredPosition = new Vector2(0f, 10f);
+                    avgRt.sizeDelta = new Vector2(swatchWidth, swatchHeight);
 
                     GameObject hueSwatchObj = new GameObject("HueShiftColorSwatch");
                     hueSwatchObj.transform.SetParent(rawImageObj.transform, false);
@@ -363,15 +475,19 @@ namespace ZombieTweak2
                     RectTransform hueRt = hueSwatch.GetComponent<RectTransform>();
                     hueRt.anchorMin = new Vector2(0f, 1f);
                     hueRt.anchorMax = new Vector2(0f, 1f);
-                    hueRt.pivot = new Vector2(0f, 1f);
-                    hueRt.anchoredPosition = new Vector2(35f, 0f); // next to avg swatch
-                    hueRt.sizeDelta = new Vector2(30f, 30f);
+                    hueRt.pivot = new Vector2(0f, 0f);
+                    hueRt.anchoredPosition = new Vector2(swatchWidth, 10f);
+                    hueRt.sizeDelta = new Vector2(swatchWidth, swatchHeight);
                 }
 
-                // Update atlas texture
+                // Update atlas texture (source instead of live reference)
                 RawImage img = debugHud.GetComponentInChildren<RawImage>();
-                if (img != null)
-                    img.texture = textureAtlas;
+
+                // Always create or update the source for this index
+                Texture2D snapshot = new Texture2D(textureAtlas.width, textureAtlas.height, TextureFormat.RGBA32, false);
+                snapshot.SetPixels(textureAtlas.GetPixels());
+                snapshot.Apply();
+                img.texture = snapshot;
 
                 // Update swatch colors each call
                 foreach (var image in debugHud.GetComponentsInChildren<Image>())
@@ -380,6 +496,8 @@ namespace ZombieTweak2
                     if (image.name == "HueShiftColorSwatch") image.color = invertedColor;
                 }
             }
+
+
         }
         public static float CheckObjectVisiblity(GameObject target, GameObject observer)
         {
@@ -418,26 +536,37 @@ namespace ZombieTweak2
             }
             return ret;
         }
+
+
         private static float VeryFancyObjectVisilityCheck(GameObject target, GameObject observer, visSettings settings)
         {
             if (target == null || observer == null) return 0f;
+
+            //if (cullingCamInOriginalState) // Save culling camera source
+            //{
+            //    FPSCameraHolder c_holder = observer.GetComponent<FPSCameraHolder>(); // Set temp culling camera source
+            //    PlayerAgent c_agent = c_holder.m_owner;
+            //    C_Camera.Current.m_camera = observationCamera; // This causes flicker, TODO
+            //    C_Camera.Current.m_cullAgent = c_agent?.gameObject?.GetComponent<C_MovingCuller>() ?? C_Camera.Current.m_cullAgent; //If c_agent exists upate cullagent, if not don't touch it.
+            //    C_Camera.Current.RunVisibility(); // Must recalculate culling with new agentPosition.
+            //}
+
             // Step 0: Move camera
+            //PreLitVolume.Current.UpdateFogVolume = false;
+            //PreLitVolume.Current.UpdateLitVolume = false;
+            //PreLitVolume.Current.UpdateIndirectVolume = false;
             observercamGobject.gameObject.transform.position = observer.transform.position;
             var bounds = HelperMethods.GetMaxBounds(target);
             observercamGobject.transform.LookAt(bounds.center);
             observationCamera.fieldOfView = HelperMethods.CalculateVerticalFov(observer.transform.position, bounds);
             observationCamera.farClipPlane = settings.maxDistance;
+            
+            //This might be very cursed, but what if I move camera.main too?
+            //var settingsbackup = HelperMethods.SaveSettings();
+            //HelperMethods.SetSettings(observationCamera);
+            //C_Camera.Current.GetComponent<FPSCamera>().OnPreCull();
 
-
-            if (cullingCamInOriginalState) // Save culling camera settings
-            {
-                PlayerAgent agent = observer.GetComponent<PlayerAgent>(); // Set temp culling camera settings
-                C_Camera.Current.m_camera = observationCamera; // This causes flicker, TODO
-                C_Camera.Current.m_cullAgent = agent?.gameObject?.GetComponent<C_MovingCuller>() ?? C_Camera.Current.m_cullAgent; //If agent exists upate cullagent, if not don't touch it.
-                C_Camera.Current.RunVisibility(); // Must recalculate culling with new position.
-            }
-
-            // Backup original materials
+            // Backup source materials
             HelperMethods.StoreMaterals(target); 
 
             // Step 1: First pass render, whiteMat enemy only
@@ -447,13 +576,12 @@ namespace ZombieTweak2
             HelperMethods.CopyToAtlas(0);
 
             // Setp 2: Second pass render, whiteMat enemy + world
-            observationCamera.cullingMask = (1 << LayerMask.NameToLayer("Default"))
-                                          | (1 << LayerMask.NameToLayer("Enemy"));
+            observationCamera.cullingMask = -1;
             HelperMethods.SetMateral(unlitMat);
             observationCamera.Render(); // observationCamera.targetTexture = renderTexture;
             HelperMethods.CopyToAtlas(1);
 
-            // Step 3: Get color1 from second pass render
+            // Step 3: Get color1 source second pass render
             var averageColor = HelperMethods.GetAverageColor(renderTexture, Color.white);
             var hueShiftColor = HelperMethods.HueShift(averageColor);
             if (VisDebug.debugMode)
@@ -473,18 +601,22 @@ namespace ZombieTweak2
             HelperMethods.CopyToAtlas(2);
             HelperMethods.RestoreMaterals();
             // Restore culling camera
-            if (settings.resetCullingCam && !cullingCamInOriginalState)
-            {
-                C_Camera.Current.m_cullAgent = real_C_Cam_agent;
-                C_Camera.Current.m_camera = real_C_Cam_cam;
-            }
-
-            // Step 5: Move renderTextureAtlas to CPU mem,
+            //if (settings.resetCullingCam && !cullingCamInOriginalState)
+            //{
+            //    C_Camera.Current.m_cullAgent = real_C_Cam_agent;
+            //    C_Camera.Current.m_camera = real_C_Cam_cam;
+            //}
+            // Restore camera source.
+            //HelperMethods.SetSettings(settingsbackup);
+            //PreLitVolume.Current.UpdateFogVolume = true;
+            //PreLitVolume.Current.UpdateLitVolume = true;
+            //PreLitVolume.Current.UpdateIndirectVolume = true;
+            // Step 5: Move renderTextureAtlas destination CPU mem,
 
             HelperMethods.CopyTextureAtlasToCpu();
             if (VisDebug.debugMode)
             {
-                VisDebug.CreateDebugHud();
+                VisDebug.CreateDebugHud(0);
             }
             int bandHeight = Settings.resolution.y;
             int pass1offset = 0;
@@ -528,7 +660,7 @@ namespace ZombieTweak2
                         color3 = Color.black;
                         continue;
                     }
-                    // Step 8: Compare 1st pass and 3rd pass render to get final value
+                    // Step 8: Compare 1st pass and 3rd pass render destination get final value
                     float contribution = 0f;
                     Color.RGBToHSV(color1, out float hue1, out float sat1, out float val1);
                     Color.RGBToHSV(color3, out float hue3, out float sat3, out float val3);
@@ -545,6 +677,7 @@ namespace ZombieTweak2
             {
                 textureAtlas.SetPixels32(pixels);
                 textureAtlas.Apply();
+                VisDebug.CreateDebugHud(1);
             }
             
             return totalPixels == 0 ? 0 : totalValue / totalPixels;

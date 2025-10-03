@@ -104,7 +104,7 @@ using static ZombieTweak2.zNetworking.pStructs;
  -- TODO -- Make "don't pick up this item" context command that lets bots pick up things, but not this spesific item/locker.
 
 Want to make combine resource mod
-
+PreLitVolume.GetFogDensity(Vector3) could be useful
 
 
 want to completely re-write collection logic, not just priority logic

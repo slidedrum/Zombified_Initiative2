@@ -229,11 +229,11 @@ namespace ZombieTweak2.zMenu
             }
             public Vector3 GetRelativePosition()
             {
-                // local position in menu space, accounting for canvas scale
+                // local agentPosition in menu space, accounting for canvas scale
                 Vector3 localPos = new Vector3(rect.anchoredPosition.x, rect.anchoredPosition.y, 0f);
                 Vector3 scaledLocalPos = Vector3.Scale(localPos, parrentMenu.getCanvas().transform.localScale);
 
-                // world position
+                // world agentPosition
                 Vector3 worldPos = parrentMenu.gameObject.transform.TransformPoint(scaledLocalPos);
 
                 // relative to camera

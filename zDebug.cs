@@ -385,9 +385,9 @@ namespace ZombieTweak2
         internal static void setCheckVizTarget()
         {
             var numPlayers = PlayerManager.PlayerAgentsInLevel.Count;
-            var playerIndex = 0;// UnityEngine.Random.RandomRangeInt(0, numPlayers);
+            //playerIndex = 0;// UnityEngine.Random.RandomRangeInt(0, numPlayers);
             PlayerAgent agent = PlayerManager.PlayerAgentsInLevel[playerIndex];
-            visObserver = agent.GetHeadCamTransform().gameObject;//PlayerManager.GetLocalPlayerAgent().FPSCamera.gameObject;
+            visObserver = agent.GetHeadCamTransform().parent.gameObject;//PlayerManager.GetLocalPlayerAgent().FPSCamera.gameObject;
             Transform menuTransform = zMenuManager.mainMenu.gameObject.transform;
             visTarget = zSearch.GetClosestObjectInLookDirection(menuTransform, zSearch.GetGameObjectsWithLookDirection<EnemyAgent>(menuTransform), 180f);
         }
@@ -397,7 +397,9 @@ namespace ZombieTweak2
                 setCheckVizTarget();
             if (visObserver == null || visTarget == null)
                 return;
-            ZiMain.log.LogInfo(zVisibilityManager.CheckObjectVisiblity(visTarget, visObserver));
+            zVisibilityManager.CheckObjectVisiblity(visTarget, visObserver);
+            //PlayerAgent agent = PlayerManager.PlayerAgentsInLevel[0];
+            //zVisiblityManagerMessy.CheckForObject(visTarget, visObserver, agent);
         }
         internal static void toggleVisCheck()
         {
@@ -421,7 +423,7 @@ namespace ZombieTweak2
             var localPlayer = PlayerManager.GetLocalPlayerAgent();
             GuiManager.AttemptSetPlayerPingStatus(localPlayer, true, pos);
         }
-        public static int playerIndex = -1;
+        public static int playerIndex = 1;
         public static PlayerAgent agent = null;
         public static GameObject head = null;
         private static GameObject visObserver;
