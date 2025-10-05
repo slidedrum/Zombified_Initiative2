@@ -9,6 +9,10 @@ public class CustomActionBase : PlayerBotActionBase
     //This is the class you use to create a custom action!
     //Don't modify this, extend it instead.
     private CustomBase _Base; //This is used to call base methods without causing inf loops.
+    public static bool Setup()
+    {
+        return true;
+    }
     public new class Descriptor : PlayerBotActionBase.Descriptor
     {
         private CustomDescBase _Base = null; //This is used to call base methods without causing inf loops.

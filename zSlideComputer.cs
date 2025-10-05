@@ -27,6 +27,7 @@ namespace ZombieTweak2
         public static Dictionary<int, bool> MovePerms = new (); //bot.Agent.Owner.PlayerSlotIndex()
 
 
+
         public static Il2CppReferenceArray<ItemDataBlock> consumableItems 
         { 
             get 

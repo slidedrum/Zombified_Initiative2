@@ -14,11 +14,30 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
     {
         private StateEnum state = StateEnum.None;
         VisitNode UnexploredNode = null;
+        public static Dictionary<int, bool> ExplorePerms = new(); //bot.Agent.Owner.PlayerSlotIndex()
+        public static new bool Setup()
+        {
+            return true;
+        }
+        public static bool GetExplorePerm(PlayerAIBot bot)
+        {
+            return GetExplorePerm(bot.Agent);
+        }
+        public static bool GetExplorePerm(PlayerAgent agent)
+        {
+            return GetExplorePerm(agent.Owner.PlayerSlotIndex());
+        }
+        public static bool GetExplorePerm(int index)
+        {
+            if (ExplorePerms.TryGetValue(index, out var perm)) { return perm; }
+            return ExplorePerms[index] = true;
+        }
         public PlayerBotActionTravel.Descriptor travelAction = null;
         public new class Descriptor : CustomActionBase.Descriptor
         {
             public new int Prio = 5;
             float lastLooked = 0;
+            public bool canExplore = true;
             float lookCooldown = 5;
             List<string> typeIgnoreList = [
                 typeof(RootPlayerBotAction).FullName,
@@ -33,8 +52,6 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
                 typeof(PlayerBotActionHighlight).FullName,
                 typeof(PlayerBotActionShareResourcePack).FullName,
             ];
-            public static bool canExplore = true;
-
             public Descriptor() : base(ClassInjector.DerivedConstructorPointer<Descriptor>())
             {
                 ClassInjector.DerivedConstructorBody(this);
@@ -110,14 +127,21 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
             //ZiMain.sendChatMessage("Here I go exploring because I feel like it.",m_bot.Agent);
             state = StateEnum.lookingForUnexplored;
         }
-        public static void ToggleCanExplore()
+        public void ToggleCanExplore()
         {
-            Descriptor.canExplore = !Descriptor.canExplore;
-            ZiMain.log.LogInfo($"Can explore is now: {Descriptor.canExplore}");
+            int index = this.m_bot.Agent.Owner.PlayerSlotIndex();
+            bool allowed = ExplorePerms[index];
+            ExplorePerms[index] = !allowed;
         }
         public override bool Update()
         {
             base.Update();
+            if (!GetExplorePerm(m_bot))
+            {
+                m_bot.StopAction(travelAction);
+                state = StateEnum.Finished;
+                return false;
+            }
             if (state == StateEnum.lookingForUnexplored)
             {
                 if (UnexploredNode == null)
