@@ -750,17 +750,14 @@ namespace ZombieTweak2
             BoundingBox observerBounds = new(observer);
             BoundingBox targetBounds = new(target);
 
-            Vector3 dir = observerBounds.Center - targetBounds.Center;
+            Vector3 dir = targetBounds.Center - observerBounds.Center;
             float checkDistance = dir.magnitude;
             RaycastHit hit;
             if (Physics.Raycast(observerBounds.Center, dir.normalized, out hit, checkDistance))
             {
-                if (hit.collider.gameObject == target || hit.collider.transform.IsChildOf(target.transform))
+                if (hit.collider.transform.IsChildOf(target.transform))
                     return 1f;
             }
-            else
-                return 1f;
-
             return 0f;
         }
     }

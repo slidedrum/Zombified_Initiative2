@@ -1,7 +1,4 @@
 ﻿using AIGraph;
-using Enemies;
-using Il2CppInterop.Runtime;
-using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using LevelGeneration;
 using Player;
 using System;
@@ -24,7 +21,7 @@ namespace Zombified_Initiative
         private static PlayerPingTarget[] allPingTargets;
         private static List<PlayerPingTarget> pingTargets;
         private static int pingMapCellSise = 5;
-        private static Dictionary<Vector2, List<PlayerPingTarget>> pingTargetMap = new();
+        private static Dictionary<Vector2, List<FindableObject>> findbleObjectMap = new();
 
         public static GameObject GetClosestObjectInLookDirection(Transform baseTransform,List<GameObject> candidates,float maxAngle = 180f, Vector3? candidateOffset = null, Vector3? baseOffset = null)
         {
@@ -141,7 +138,7 @@ namespace Zombified_Initiative
         {
             allPingTargets = UnityEngine.Object.FindObjectsOfType<PlayerPingTarget>();
             List<PingTargetParrent> consolidatedPingTargets = new List<PingTargetParrent>();
-            pingTargetMap.Clear();
+            findbleObjectMap.Clear();
             // Result: base parent -> type -> list of ping targets
             var grouped = new Dictionary<GameObject, Dictionary<eNavMarkerStyle, List<PlayerPingTarget>>>();
 
@@ -293,12 +290,17 @@ namespace Zombified_Initiative
                 int cellZ = Mathf.FloorToInt(pos.z / pingMapCellSise);
                 Vector2 cell = new Vector2(cellX, cellZ);
 
-                if (!pingTargetMap.TryGetValue(cell, out var list))
+                if (!findbleObjectMap.TryGetValue(cell, out var list))
                 {
-                    list = new List<PlayerPingTarget>();
-                    pingTargetMap[cell] = list;
+                    list = new List<FindableObject>();
+                    findbleObjectMap[cell] = list;
                 }
-                list.Add(ping);
+                list.Add(new FindableObject()
+                {
+                    gameObject = ping.gameObject,
+                    type = ping.GetType(),
+                    found = false,
+                });
                 BoundingBox box = new BoundingBox(ping.gameObject);
                 box.ShowDebug();
             }
@@ -328,70 +330,70 @@ namespace Zombified_Initiative
         }
         public static void UpdateFindables(PlayerAgent agent)
         {
-            AIG_CourseNode node = agent.CourseNode;
-            //if (node == null)
-            //    return;
-            //if (CheckedNodes.Contains(node))
+            //AIG_CourseNode node = agent.CourseNode;
+            ////if (node == null)
+            ////    return;
+            ////if (CheckedNodes.Contains(node))
+            ////{
+            ////    //return;
+            ////}
+            ////else 
+            ////    CheckedNodes.Add(node);
+            //////update enemy findables
+            ////Il2CppSystem.Collections.Generic.List<EnemyAgent> enemyAgents = new();
+            ////AIG_CourseNode.GetEnemiesInNodes(node, 2, enemyAgents);
+            ////foreach (var enemy in enemyAgents)
+            ////{
+            ////    int instanceId = enemy.gameObject.GetInstanceID();
+            ////    if (FindableObjects.ContainsKey(instanceId))
+            ////        continue;
+            ////    FindableObject findable = new FindableObject { gameObject = enemy.gameObject, courseNode = node, type = typeof(EnemyAgent), found = false};
+            ////    FindableObjects[instanceId] = findable;
+            ////}
+            ////Update pingTargetFindalbes
+            //Vector3 pos = agent.transform.position;
+
+            //int cellX = Mathf.FloorToInt(pos.x / pingMapCellSise);
+            //int cellZ = Mathf.FloorToInt(pos.z / pingMapCellSise);
+
+            //int range = Mathf.CeilToInt(foundDistance / pingMapCellSise);
+
+            //for (int dx = -range; dx <= range; dx++)
             //{
-            //    //return;
+            //    for (int dz = -range; dz <= range; dz++)
+            //    {
+            //        Vector2 neighborCell = new Vector2(cellX + dx, cellZ + dz);
+
+            //        if (!findbleObjectMap.TryGetValue(neighborCell, out List<PlayerPingTarget> pingTargets))
+            //            continue;
+
+            //        foreach (var ping in pingTargets)
+            //        {
+            //            if (ping == null) continue;
+
+            //            Vector3 pingPos = ping.transform.position;
+            //            float distance = Vector3.Distance(pos, pingPos);
+
+            //            // Double-check that it's truly within foundDistance
+            //            if (distance > foundDistance)
+            //                continue;
+
+            //            int instanceId = ping.gameObject.GetInstanceID();
+            //            if (FindableObjects.ContainsKey(instanceId))
+            //                continue;
+
+            //            FindableObject findable = new FindableObject
+            //            {
+            //                gameObject = ping.gameObject,
+            //                courseNode = node,
+            //                type = typeof(PlayerPingTarget),
+            //                found = false
+            //            };
+
+            //            FindableObjects[instanceId] = findable;
+            //        }
+            //    }
             //}
-            //else 
-            //    CheckedNodes.Add(node);
-            ////update enemy findables
-            //Il2CppSystem.Collections.Generic.List<EnemyAgent> enemyAgents = new();
-            //AIG_CourseNode.GetEnemiesInNodes(node, 2, enemyAgents);
-            //foreach (var enemy in enemyAgents)
-            //{
-            //    int instanceId = enemy.gameObject.GetInstanceID();
-            //    if (FindableObjects.ContainsKey(instanceId))
-            //        continue;
-            //    FindableObject findable = new FindableObject { gameObject = enemy.gameObject, courseNode = node, type = typeof(EnemyAgent), found = false};
-            //    FindableObjects[instanceId] = findable;
-            //}
-            //Update pingTargetFindalbes
-            Vector3 pos = agent.transform.position;
-
-            int cellX = Mathf.FloorToInt(pos.x / pingMapCellSise);
-            int cellZ = Mathf.FloorToInt(pos.z / pingMapCellSise);
-
-            int range = Mathf.CeilToInt(foundDistance / pingMapCellSise);
-
-            for (int dx = -range; dx <= range; dx++)
-            {
-                for (int dz = -range; dz <= range; dz++)
-                {
-                    Vector2 neighborCell = new Vector2(cellX + dx, cellZ + dz);
-
-                    if (!pingTargetMap.TryGetValue(neighborCell, out List<PlayerPingTarget> pingTargets))
-                        continue;
-
-                    foreach (var ping in pingTargets)
-                    {
-                        if (ping == null) continue;
-
-                        Vector3 pingPos = ping.transform.position;
-                        float distance = Vector3.Distance(pos, pingPos);
-
-                        // Double-check that it's truly within foundDistance
-                        if (distance > foundDistance)
-                            continue;
-
-                        int instanceId = ping.gameObject.GetInstanceID();
-                        if (FindableObjects.ContainsKey(instanceId))
-                            continue;
-
-                        FindableObject findable = new FindableObject
-                        {
-                            gameObject = ping.gameObject,
-                            courseNode = node,
-                            type = typeof(PlayerPingTarget),
-                            found = false
-                        };
-
-                        FindableObjects[instanceId] = findable;
-                    }
-                }
-            }
 
 
             ////update locker findables
@@ -437,41 +439,52 @@ namespace Zombified_Initiative
 
         public static void Updatefinds(PlayerAgent agent)
         {
-            AIG_CourseNode node = agent.CourseNode;
-            if (node == null)
-                return;
-            List<int> objectToRemove = new List<int>();
-            foreach (var kvp in FindableObjects)
+            Vector3 pos = agent.transform.position;
+            int cellX = Mathf.FloorToInt(pos.x / pingMapCellSise);
+            int cellZ = Mathf.FloorToInt(pos.z / pingMapCellSise);
+
+            // Number of cells to cover foundDistance
+            int range = Mathf.CeilToInt(foundDistance / pingMapCellSise);
+
+            for (int dx = -range; dx <= range; dx++)
             {
-                int instanceId = kvp.Key;
-                FindableObject findable = kvp.Value;
-                if (findable == null || findable.gameObject == null || !findable.gameObject.activeInHierarchy) 
+                for (int dz = -range; dz <= range; dz++)
                 {
-                    objectToRemove.Add(kvp.Key);
-                    continue;
+                    Vector2 cell = new Vector2(cellX + dx, cellZ + dz);
+
+                    if (!findbleObjectMap.TryGetValue(cell, out var findables))
+                        continue;
+
+                    foreach (var findable in findables)
+                    {
+                        if (findable == null || findable.gameObject == null || !findable.gameObject.activeInHierarchy)
+                            continue;
+
+                        if (findable.found)
+                            continue;
+
+                        if (!findable.lastCheckedVis.TryGetValue(agent.Owner.PlayerSlotIndex(), out float lastChecked))
+                            lastChecked = 0f;
+
+                        if (Time.time - lastChecked < 0.5f)
+                            continue;
+
+                        findable.lastCheckedVis[agent.Owner.PlayerSlotIndex()] = Time.time;
+
+                        // Check visibility / distance
+                        if (zVisibilityManager.CheckObjectVisiblity(findable.gameObject, agent.gameObject, foundDistance) > 0.2f)
+                        {
+                            findable.found = true;
+
+                            BoundingBox findableBox = new(findable.gameObject);
+                            BoundingBox agentBox = new(agent.gameObject);
+
+                            zDebug.DrawLine(findableBox.Center, agentBox.Center, new Color(0.1f, 0.1f, 0.1f), 0.1f);
+                            ZiMain.log.LogInfo($"Found object {findable.type}! {findable.gameObject.name}");
+                        }
+                    }
                 }
-                if (findable.found == true)
-                {
-                    continue;
-                }
-                if (!findable.lastCheckedVis.TryGetValue(agent.Owner.PlayerSlotIndex(),out float lastChecked))
-                    findable.lastCheckedVis[agent.Owner.PlayerSlotIndex()] = Time.time;
-                if (Time.time - lastChecked < 0.5f)
-                {
-                    continue;
-                }
-                GameObject gameObject = findable.gameObject;
-                //if (Vector3.Distance(gameObject.transform.position, agent.Position) < foundDistance)
-                if (zVisibilityManager.CheckObjectVisiblity(findable.gameObject,agent.gameObject, foundDistance) > 0.2)
-                {
-                    findable.found = true;
-                    zDebug.DrawLine(findable.gameObject.transform.position, agent.gameObject.transform.position, new Color(0.1f, 0.1f, 0.1f), 0.1f);
-                    ZiMain.log.LogInfo($"Found object {findable.type}! {gameObject.name}");
-                }
-                findable.lastCheckedVis[agent.Owner.PlayerSlotIndex()] = Time.time;
             }
-            foreach (var index in objectToRemove)
-                FindableObjects.Remove(index);
         }
     }
     public class FindableObject
