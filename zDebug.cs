@@ -557,5 +557,24 @@ namespace ZombieTweak2
         {
             zVisitedManager.SetDebug(text: !zVisitedManager.debugText);
         }
+        internal static void DrawLine(Vector3 start, Vector3 end, Color color, float width, float time = 1f)
+        {
+            // Create a new GameObject to hold the line
+            GameObject lineObj = new GameObject("VisibilityLine");
+            LineRenderer lr = lineObj.AddComponent<LineRenderer>();
+
+            // Set up the line appearance
+            lr.startWidth = width;
+            lr.endWidth = width;
+            lr.material = new Material(Shader.Find("Unlit/Color")); // simple unlit shader
+            lr.startColor = color;
+            lr.endColor = color;
+            lr.positionCount = 2;
+            lr.SetPosition(0, start);
+            lr.SetPosition(1, end);
+
+            // Optional: auto-destroy after a short time (so lines don't pile up)
+            //GameObject.Destroy(lineObj, time);
+        }
     }
 }

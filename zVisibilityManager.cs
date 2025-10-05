@@ -87,7 +87,6 @@ namespace ZombieTweak2
             //Setup.SetUpMaterals();
             //textureAtlas = new(Settings.resolution.x, Settings.resolution.y * 3, TextureFormat.RGB24, false);
             //scratchBoard = new(Settings.resolution.x, Settings.resolution.y, TextureFormat.RGB24, false);
-
         }
         private static class Setup
         {
@@ -518,8 +517,6 @@ namespace ZombieTweak2
                     if (image.name == "HueShiftColorSwatch") image.color = invertedColor;
                 }
             }
-
-
         }
         public static float CheckObjectVisiblity(GameObject target, GameObject observer)
         {
@@ -728,8 +725,10 @@ namespace ZombieTweak2
                     float checkDistance = dir.magnitude;
                     RaycastHit hit;
                     if (Physics.Raycast(observerCorner, dir.normalized, out hit, checkDistance))
+                    {
                         if (hit.collider.gameObject == target || hit.collider.transform.IsChildOf(target.transform))
                             ret++;
+                    }
                     else
                         ret++;
                 }
@@ -737,7 +736,30 @@ namespace ZombieTweak2
         }
         private static float VeryBasicObjectVisibilityChec(GameObject target, GameObject observer, visSettings settings)
         {
-            throw new NotImplementedException();
+            float range = settings.maxDistance;
+            var preLit = Camera.main.GetComponent<FPSCamera>().PrelitVolume;
+            float fogPenalty = preLit.GetFogDensity(target.transform.position) + preLit.GetFogDensity(observer.transform.position);
+            fogPenalty = HelperMethods.InverseLerp(3f, 0, fogPenalty);
+            range *= fogPenalty;
+            //TODO figure out how to do a lighting penalty for dark areas.
+            float distance = Vector3.Distance(target.transform.position, observer.transform.position);
+            if (distance > range)
+                return 0;
+            BoundingBox observerBounds = new(observer);
+            BoundingBox targetBounds = new(target);
+
+            Vector3 dir = observerBounds.Center - targetBounds.Center;
+            float checkDistance = dir.magnitude;
+            RaycastHit hit;
+            if (Physics.Raycast(observerBounds.Center, dir.normalized, out hit, checkDistance))
+            {
+                if (hit.collider.gameObject == target || hit.collider.transform.IsChildOf(target.transform))
+                    return 1f;
+            }
+            else
+                return 1f;
+
+            return 0f;
         }
     }
 }

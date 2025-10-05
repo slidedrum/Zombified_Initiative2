@@ -91,6 +91,8 @@ namespace ZombieTweak2.zMenu
                     ClearAllMenus();
                     zMenus.CreateMenus();
                     zSlideComputer.Init();
+                    zSearch.FindableObjects.Clear();
+                    zVisitedManager.Setup();
                 }
                 bool menuOpen = currentMenu != null;
                 if (menuOpen)

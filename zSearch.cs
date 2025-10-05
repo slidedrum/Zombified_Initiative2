@@ -204,6 +204,7 @@ namespace Zombified_Initiative
                 }
             }
         }
+
         public static void Updatefinds(PlayerAgent agent)
         {
             AIG_CourseNode node = agent.CourseNode;
@@ -218,12 +219,12 @@ namespace Zombified_Initiative
                     continue;
                 }
                 GameObject gameObject = findable.gameObject;
-                //if (Vector3.Distance(findable.gameObject.transform.position, agent.Position) < foundDistance)
+                //if (Vector3.Distance(gameObject.transform.position, agent.Position) < foundDistance)
                 if (zVisibilityManager.CheckObjectVisiblity(findable.gameObject,agent.gameObject) > 0.2)
                 {
                     findable.found = true;
+                    zDebug.DrawLine(findable.gameObject.transform.position, agent.gameObject.transform.position, new Color(0.1f, 0.1f, 0.1f), 0.1f);
                     ZiMain.log.LogInfo($"Found object {findable.type}! {gameObject.name}");
-                    zDebug.CreatePing(findable.gameObject.transform.position);
                 }
             }
         }
@@ -231,7 +232,7 @@ namespace Zombified_Initiative
         {
             List<int> objectToRemove = new List<int>();
             foreach (var obj in FindableObjects)
-                if (!obj.Value.gameObject.activeInHierarchy)
+                if (obj.Value == null || !obj.Value.gameObject.activeInHierarchy)
                     objectToRemove.Add(obj.Key);
             foreach (var index in objectToRemove)
                 FindableObjects.Remove(index);

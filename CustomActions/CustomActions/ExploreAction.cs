@@ -33,6 +33,8 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
                 typeof(PlayerBotActionHighlight).FullName,
                 typeof(PlayerBotActionShareResourcePack).FullName,
             ];
+            public static bool canExplore = true;
+
             public Descriptor() : base(ClassInjector.DerivedConstructorPointer<Descriptor>())
             {
                 ClassInjector.DerivedConstructorBody(this);
@@ -49,6 +51,8 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
             }
             public override void compareAction(ref PlayerBotActionBase.Descriptor bestAction)
             {
+                if (!canExplore)
+                    return;
                 if (lastLooked == 0)
                     lastLooked = Time.time;
                 if (DramaManager.CurrentStateEnum != DRAMA_State.Exploration && DramaManager.CurrentStateEnum != DRAMA_State.Sneaking)
@@ -103,8 +107,13 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
         }
         public ExploreAction(Descriptor desc) : base(desc)
         {// Use this.
-            ZiMain.sendChatMessage("Here I go exploring because I feel like it.",m_bot.Agent);
+            //ZiMain.sendChatMessage("Here I go exploring because I feel like it.",m_bot.Agent);
             state = StateEnum.lookingForUnexplored;
+        }
+        public static void ToggleCanExplore()
+        {
+            Descriptor.canExplore = !Descriptor.canExplore;
+            ZiMain.log.LogInfo($"Can explore is now: {Descriptor.canExplore}");
         }
         public override bool Update()
         {

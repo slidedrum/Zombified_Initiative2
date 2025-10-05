@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEngine;
+using ZombieTweak2.zRootBotPlayerAction.CustomActions;
 using Zombified_Initiative;
 using static Il2CppSystem.Linq.Expressions.Interpreter.NullableMethodCallInstruction;
 using static ZombieTweak2.zMenu.DebugMenuClass;
@@ -105,6 +106,7 @@ namespace ZombieTweak2.zMenu
             debugMenu.AddNode("Find unexplored", zDebug.MarkUnexploredArea);
             debugMenu.AddNode("SendBotToExplore", zDebug.SendClosestBotToExplore);
             debugMenu.AddNode("Show corners",zDebug.debugCorners);
+            debugMenu.AddNode("Toggle explore",ExploreAction.ToggleCanExplore);
             debugNodeMenu.AddNode("Node I'm looking at", zDebug.GetNodeImLookingAT, [zMenuManager.mainMenu.gameObject.transform]);
             debugNodeMenu.AddNode("Toggle Nodes", zDebug.ToggleNodes);
             debugNodeMenu.AddNode("Toggle Connections", zDebug.ToggleConnections);

@@ -205,6 +205,8 @@ namespace ZombieTweak2
                 Setup();
             if (!setup)
                 return;
+            if (agents.Any(x => x == null))
+                agents = PlayerManager.PlayerAgentsInLevel.ToArray().ToList();
             foreach(PlayerAgent agent in agents)
             {
                 HashSet<VisitNode> visitableNodes = GetNearByNodes(agent.transform.position, NodeVisitDistance);
