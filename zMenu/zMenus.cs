@@ -37,109 +37,12 @@ namespace ZombieTweak2.zMenu
 
         public static void CreateMenus()
         {
-            
-            selectionMenu = zMenuManager.createMenu("Bot selection", zMenuManager.mainMenu);
-            actionMenu = zMenuManager.createMenu("Actions", zMenuManager.mainMenu);
-            permissionMenu = zMenuManager.createMenu("Permissions", zMenuManager.mainMenu);
-            pickupDetailsSubmenu = zMenuManager.createMenu("Pickups", permissionMenu, false);
-            shareDetailsSubmenu = zMenuManager.createMenu("Share", permissionMenu, false);
-            debugMenu = zMenuManager.createMenu("debug", zMenuManager.mainMenu);
-            debugNodeMenu = zMenuManager.createMenu("Nodes", debugMenu);
-            debugNodeSettingsMenu = zMenuManager.createMenu("Settings", debugNodeMenu);
-            debugCameraCullingMenu = zMenuManager.createMenu("Camera culling", debugMenu);
-            //todo remove the flip/toggle nodes, and instead make hold action
-            selectionMenu.AddNode("Toggle all", SelectionMenuClass.SelectionToggleAllBots).AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, UpdateIndicatorForNode, selectionMenu.centerNode, SelectionMenuClass.botSelection);
-            selectionMenu.AddNode("Flip all", SelectionMenuClass.SelectionFlipAllBots).AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, UpdateIndicatorForNode, selectionMenu.centerNode, SelectionMenuClass.botSelection);
-            //todo add option to set selection to the bots that are following you.
-            List<PlayerAIBot> playerAiBots = ZiMain.GetBotList();
-            foreach (PlayerAIBot bot in playerAiBots.AsEnumerable().Reverse())
-            {
-                string botName = bot.m_playerAgent.PlayerName;
-                int id = bot.Agent.Owner.PlayerSlotIndex();
-                zMenu.zMenuNode node = selectionMenu.AddNode(bot.m_playerAgent.PlayerName, SelectionMenuClass.toggleBotSelection, bot);
-                SelectionMenuClass.selectionBotNodes[id] = node;
-                node.AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, SelectionMenuClass.updateColorBaesdOnSelection, node, bot);
-                node.AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, UpdateIndicatorForNode, selectionMenu.centerNode, SelectionMenuClass.botSelection);
-                node.parrentMenu.AddListener(zMenuManager.menuEvent.OnOpened, SelectionMenuClass.updateColorBaesdOnSelection, node, bot);
-            }
-            foreach (PlayerAIBot bot in playerAiBots)
-            {
-                int id = bot.Agent.Owner.PlayerSlotIndex();
-                SelectionMenuClass.botSelection[id] = true;
-            }
-            //todo this might be an issue having two nodes with the same name.  Maybe add an ID getter system?
-            var pickupNode = permissionMenu.AddNode("Pickups").AddListener(zMenuManager.nodeEvent.OnTapped, zSlideComputer.TogglePickupPermission);
-            pickupNode.AddListener(zMenuManager.nodeEvent.OnTapped, UpdateIndicatorForNode, pickupNode, zSlideComputer.PickUpPerms);
-            pickupNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, pickupDetailsSubmenu.Open);
-            //TODO make 5 item filters that you can switch between by scrolling on center node.
-            //ALL - ENCOUNTERED - RESOURCES - PLACEABLES - THROWABLES - FAVORITES
-            pickupDetailsSubmenu.centerNode.ClearListeners(zMenuManager.nodeEvent.OnUnpressedSelected); 
-            pickupDetailsSubmenu.centerNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, zSlideComputer.ResetAllItemPrio);
-            pickupDetailsSubmenu.centerNode.AddListener(zMenuManager.nodeEvent.OnTapped, pickupDetailsSubmenu.parrentMenu.Open);
-            PermissionsMenuClass.setUpItemNodes(pickupDetailsSubmenu);
-            pickupDetailsSubmenu.radius = 22;
-            selectionMenu.AddListener(zMenuManager.menuEvent.OnOpened, UpdateIndicatorForNode, selectionMenu.centerNode, SelectionMenuClass.botSelection);
-            permissionMenu.AddListener(zMenuManager.menuEvent.OnOpened, UpdateIndicatorForNode, permissionMenu.centerNode, SelectionMenuClass.botSelection);
-            permissionMenu.AddListener(zMenuManager.menuEvent.OnOpened, UpdateIndicatorForNode, pickupNode, zSlideComputer.PickUpPerms);
-
-            var shareNode = permissionMenu.AddNode("Share").AddListener(zMenuManager.nodeEvent.OnTapped, zSlideComputer.ToggleBotSharePermission);
-            shareNode.AddListener(zMenuManager.nodeEvent.OnTapped, UpdateIndicatorForNode, shareNode, zSlideComputer.SharePerms);
-            permissionMenu.AddListener(zMenuManager.menuEvent.OnOpened, UpdateIndicatorForNode, shareNode, zSlideComputer.SharePerms);
-            shareNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, shareDetailsSubmenu.Open);
-            shareDetailsSubmenu.centerNode.ClearListeners(zMenuManager.nodeEvent.OnUnpressedSelected);
-            shareDetailsSubmenu.centerNode.AddListener(zMenuManager.nodeEvent.OnTapped, shareDetailsSubmenu.parrentMenu.Open);
-            shareDetailsSubmenu.AddNode("");
-            ShareMenuClass.setUpPackNodes(shareDetailsSubmenu);
-
-            permissionMenu.AddNode("Move");
-            actionMenu.AddNode("ClearRoom", ZiMain.SendBotToClearCurrentRoom);
-            debugMenu.AddNode("Show title prompt", InGameTitle.DisplayDefault).AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, debugMenu.Close); ;
-            debugMenu.AddNode("ChecVis")
-                .AddListener(zMenuManager.nodeEvent.OnUnpressedSelected,zDebug.setCheckVizTarget)
-                .AddListener(zMenuManager.nodeEvent.OnUnpressedSelected,zDebug.debugCheckViz)
-                .AddListener(zMenuManager.nodeEvent.OnHeldImmediate,    zDebug.toggleVisCheck)
-                .AddListener(zMenuManager.nodeEvent.OnHeldImmediate,    zMenuManager.CloseAllMenues)
-                .AddListener(zMenuManager.nodeEvent.OnTappedExclusive,  zMenuManager.CloseAllMenues)
-                .AddListener(zMenuManager.nodeEvent.OnDoubleTapped,     zDebug.setVisCheck, false)
-                .AddListener(zMenuManager.nodeEvent.OnDoubleTapped,     zMenuManager.CloseAllMenues)
-            ;
-            debugMenu.AddNode("Find unexplored", zDebug.MarkUnexploredArea);
-            debugMenu.AddNode("SendBotToExplore", zDebug.SendClosestBotToExplore);
-            debugMenu.AddNode("Show corners",zDebug.debugCorners);
-            //debugMenu.AddNode("Toggle explore",ExploreAction.ToggleCanExplore);
-            debugNodeMenu.AddNode("Node I'm looking at", zDebug.GetNodeImLookingAT, [zMenuManager.mainMenu.gameObject.transform]);
-            debugNodeMenu.AddNode("Toggle Nodes", zDebug.ToggleNodes);
-            debugNodeMenu.AddNode("Toggle Connections", zDebug.ToggleConnections);
-            debugNodeMenu.AddNode("Toggle Node Info", zDebug.ToggleNodeInfo);
-            debugNodeSettingsMenu.radius = 30;
-            var gridSizeNode = debugNodeSettingsMenu.AddNode("Grid Size");
-            gridSizeNode.AddListener(zMenuManager.nodeEvent.WhileSelected, DebugMenuClass.ChangeValueBasedOnMouseWheel, [DebugValueToChange.NodeGridSize, gridSizeNode,0.1f]);
-            gridSizeNode.SetSubtitle($"{zVisitedManager.NodeGridSize}");
-            var mapGridSizeNode = debugNodeSettingsMenu.AddNode("Map Grid Size");
-            mapGridSizeNode.AddListener(zMenuManager.nodeEvent.WhileSelected, DebugMenuClass.ChangeValueBasedOnMouseWheel, [DebugValueToChange.NodeMapSize, mapGridSizeNode,1f]);
-            mapGridSizeNode.SetSubtitle($"{zVisitedManager.NodeMapGridSize}");
-            var visitDistanceNode = debugNodeSettingsMenu.AddNode("Visit distnace");
-            visitDistanceNode.AddListener(zMenuManager.nodeEvent.WhileSelected, DebugMenuClass.ChangeValueBasedOnMouseWheel, [DebugValueToChange.NodeVisitDistance, visitDistanceNode,0.5f]);
-            visitDistanceNode.SetSubtitle($"{zVisitedManager.NodeVisitDistance}");
-            var propigationAmmountNode = debugNodeSettingsMenu.AddNode("Propigation ammount");
-            propigationAmmountNode.AddListener(zMenuManager.nodeEvent.WhileSelected, DebugMenuClass.ChangeValueBasedOnMouseWheel, [DebugValueToChange.PropigationAmmount, propigationAmmountNode, 1f]);
-            propigationAmmountNode.SetSubtitle($"{zVisitedManager.propigationAmmount}");
-            var propigationSameCountNode = debugNodeSettingsMenu.AddNode("Propigation sample count");
-            propigationSameCountNode.AddListener(zMenuManager.nodeEvent.WhileSelected, DebugMenuClass.ChangeValueBasedOnMouseWheel, [DebugValueToChange.PropigationSampleCount, propigationSameCountNode, 1f]);
-            propigationSameCountNode.SetSubtitle($"{zVisitedManager.propigationSampleCount}");
-            var nodesPerFrameNode = debugNodeSettingsMenu.AddNode("Nodes per frame");
-            nodesPerFrameNode.AddListener(zMenuManager.nodeEvent.WhileSelected, DebugMenuClass.ChangeValueBasedOnMouseWheel, [DebugValueToChange.NodesCreatedPerFrame, nodesPerFrameNode, 1f]);
-            nodesPerFrameNode.SetSubtitle($"{zVisitedManager.nodesCreatedPerFrame}");
-            var connectionChecksPerFrameNode = debugNodeSettingsMenu.AddNode("Connections per frame");
-            connectionChecksPerFrameNode.AddListener(zMenuManager.nodeEvent.WhileSelected, DebugMenuClass.ChangeValueBasedOnMouseWheel, [DebugValueToChange.connectionChecksPerFrame, connectionChecksPerFrameNode, 1f]);
-            connectionChecksPerFrameNode.SetSubtitle($"{zVisitedManager.connectionChecksPerFrame}");
-            CullingMenuClass.setupCullingMenu(debugCameraCullingMenu);
-            debugCameraCullingMenu.radius = 40;
-            debugCameraCullingMenu.setNodeSize(0.5f);
-
-
-            //debugMenu.AddNode("Toggle ChecVis", zDebug.toggleVisCheck);
-
+            zMenuManager.createMenu("Automatic Actions", zMenuManager.mainMenu);
+            zMenuManager.createMenu("Manual Actions", zMenuManager.mainMenu);
+            zMenuManager.createMenu("Contextual Actions", zMenuManager.mainMenu);
+            zMenuManager.createMenu("Settings", zMenuManager.mainMenu);
+            zMenuManager.createMenu("Voice menu", zMenuManager.mainMenu);
+            zMenuManager.createMenu("Debug", zMenuManager.mainMenu);
         }
         public static zMenu.zMenuNode UpdateIndicatorForNode(zMenu.zMenuNode node, Dictionary<int, bool> selectionPickUpPerms)
         {

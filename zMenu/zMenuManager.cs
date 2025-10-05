@@ -1,4 +1,6 @@
-﻿using FluffyUnderware.DevTools.Extensions;
+﻿using AK;
+using CellMenu;
+using FluffyUnderware.DevTools.Extensions;
 using Player;
 using System;
 using System.Collections.Generic;
@@ -22,6 +24,15 @@ namespace ZombieTweak2.zMenu
         public static FPSCamera mainCamera;
         private static bool menuWasOpen = false;
         public static Color defaultColor { get; private set; } = new Color(0.25f, 0.25f, 0.25f, 0.25f);
+
+
+        public static uint MainMenuOpenSound = EVENTS.GAME_MENU_CONFIRM;
+        public static uint MenuOpenSound = EVENTS.GAME_MENU_CONFIRM;
+        public static uint MenuCloseSound = EVENTS.GAME_MENU_CONFIRM;
+        public static uint MenuBackSound = EVENTS.GAME_MENU_CONFIRM;
+        public static uint MenuSelectSound = EVENTS.GAME_MENU_CONFIRM;
+        public static uint MenuClickSound = EVENTS.GAME_MENU_CONFIRM;
+
         public enum nodeEvent
         {
             // To add an event it must be added here, a flexible event must be created, it must be added in the eventMap, and given a place where it is invoked.
@@ -70,7 +81,7 @@ namespace ZombieTweak2.zMenu
             }
             else if (autoAddNode)
             {
-                parrentMenu.AddNode(newMenu);
+                    parrentMenu.AddNode(newMenu);
             }
             registerMenu(newMenu);
             return newMenu;

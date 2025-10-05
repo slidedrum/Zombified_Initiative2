@@ -1,6 +1,8 @@
-﻿using BepInEx;
+﻿using AK;
+using BepInEx;
 using BepInEx.Logging;
 using BepInEx.Unity.IL2CPP;
+using CellMenu;
 using Enemies;
 using GTFO.API;
 using HarmonyLib;
@@ -176,7 +178,7 @@ public class ZiMain : BasePlugin
         LG_Factory.add_OnFactoryBuildDone((Action)zSlideComputer.Init);
         LG_Factory.add_OnFactoryBuildDone((Action)zMenuManager.SetupCamera);
         LG_Factory.add_OnFactoryBuildDone((Action)zMenus.CreateMenus);
-        LG_Factory.add_OnFactoryBuildDone((Action)zSearch.CleanFindables);
+        LG_Factory.add_OnFactoryBuildDone((Action)zSearch.OnFactoryBuildDone);
 
     }
 
@@ -395,6 +397,10 @@ public class ZiMain : BasePlugin
         PlayerVoiceManager.WantToSay(aiBot.Agent.CharacterID, AK.EVENTS.PLAY_CL_WILLDO);
         aiBot.StartAction(descriptor);
         return descriptor;
+    }
+    public static void PlayUiSound(uint e)
+    {
+        CM_PageBase.PostSound(e, "PlayUiSound");
     }
     public static Item TryGetItemInLevelFromItemData(pItemData itemData)
     {

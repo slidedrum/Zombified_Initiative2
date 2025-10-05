@@ -1,9 +1,11 @@
 ﻿using AIGraph;
 using Enemies;
 using Il2CppInterop.Runtime;
+using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using LevelGeneration;
 using Player;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -16,8 +18,13 @@ namespace Zombified_Initiative
     {
         //this class is for finding stuff inside the world.
         public static Dictionary<int,FindableObject> FindableObjects = new();
+        public static HashSet<AIG_CourseNode> CheckedNodes = new();
         public static float foundDistance = 10f;
         private static PlayerAgent localPlayer = null;
+        private static PlayerPingTarget[] allPingTargets;
+        private static List<PlayerPingTarget> pingTargets;
+        private static int pingMapCellSise = 5;
+        private static Dictionary<Vector2, List<PlayerPingTarget>> pingTargetMap = new();
 
         public static GameObject GetClosestObjectInLookDirection(Transform baseTransform,List<GameObject> candidates,float maxAngle = 180f, Vector3? candidateOffset = null, Vector3? baseOffset = null)
         {
@@ -122,7 +129,178 @@ namespace Zombified_Initiative
             {
                 UpdateFindables(agent);
                 Updatefinds(agent);
-                CleanFindables();
+            }
+        }
+        private struct PingTargetParrent
+        {
+            public eNavMarkerStyle PingTargetStyle;
+            public GameObject parrent;
+            
+        }
+        public static void OnFactoryBuildDone()
+        {
+            allPingTargets = UnityEngine.Object.FindObjectsOfType<PlayerPingTarget>();
+            List<PingTargetParrent> consolidatedPingTargets = new List<PingTargetParrent>();
+            pingTargetMap.Clear();
+            // Result: base parent -> type -> list of ping targets
+            var grouped = new Dictionary<GameObject, Dictionary<eNavMarkerStyle, List<PlayerPingTarget>>>();
+
+            foreach (var ping in allPingTargets)
+            {
+                if (ping == null) continue;
+
+                GameObject parentGO = ping.transform.parent != null ? ping.transform.parent.gameObject : ping.gameObject;
+                eNavMarkerStyle style = ping.PingTargetStyle;
+
+                GameObject mergeTarget = null;
+                List<GameObject> keysToRemove = new List<GameObject>();
+
+                // Check if any existing grouped parent is a child of this ping's parent
+                foreach (var existingParent in grouped.Keys)
+                {
+                    if (existingParent.transform.IsChildOf(parentGO.transform))
+                    {
+                        mergeTarget = parentGO;
+                        keysToRemove.Add(existingParent);
+                    }
+                    else if (parentGO.transform.IsChildOf(existingParent.transform))
+                    {
+                        mergeTarget = existingParent;
+                    }
+                }
+
+                if (mergeTarget == null)
+                    mergeTarget = parentGO;
+
+                // Remove merged old parents
+                foreach (var old in keysToRemove)
+                {
+                    var oldMap = grouped[old];
+                    grouped.Remove(old);
+
+                    // Merge old style lists into mergeTarget
+                    foreach (var kvp in oldMap)
+                    {
+                        if (!grouped.TryGetValue(mergeTarget, out var typeMap))
+                        {
+                            typeMap = new Dictionary<eNavMarkerStyle, List<PlayerPingTarget>>();
+                            grouped[mergeTarget] = typeMap;
+                        }
+
+                        if (!typeMap.TryGetValue(kvp.Key, out var list))
+                        {
+                            list = new List<PlayerPingTarget>();
+                            typeMap[kvp.Key] = list;
+                        }
+
+                        list.AddRange(kvp.Value);
+                    }
+                }
+
+                // Add current ping
+                if (!grouped.TryGetValue(mergeTarget, out var map))
+                {
+                    map = new Dictionary<eNavMarkerStyle, List<PlayerPingTarget>>();
+                    grouped[mergeTarget] = map;
+                }
+
+                if (!map.TryGetValue(style, out var list2))
+                {
+                    list2 = new List<PlayerPingTarget>();
+                    map[style] = list2;
+                }
+
+                list2.Add(ping);
+            }
+            pingTargets = new List<PlayerPingTarget>();
+
+            foreach (var kvpParent in grouped)
+            {
+                var typeMap = kvpParent.Value;
+
+                foreach (var kvpType in typeMap)
+                {
+                    var pingList = kvpType.Value;
+                    if (pingList.Count == 0) continue;
+
+                    PlayerPingTarget shallowestPing = null;
+                    int minDepth = int.MaxValue;
+
+                    foreach (var ping in pingList)
+                    {
+                        // Compute depth relative to the parent object
+                        int depth = 0;
+                        Transform t = ping.transform;
+                        while (t.parent != null && t.parent.gameObject != kvpParent.Key)
+                        {
+                            depth++;
+                            t = t.parent;
+                        }
+
+                        if (depth < minDepth)
+                        {
+                            minDepth = depth;
+                            shallowestPing = ping;
+                        }
+                    }
+
+                    if (shallowestPing != null)
+                        pingTargets.Add(shallowestPing);
+                }
+            }
+            //foreach (var kvpParent in grouped)
+            //{
+            //    var typeMap = kvpParent.Value;
+
+            //    foreach (var kvpType in typeMap)
+            //    {
+            //        var pingList = kvpType.Value;
+            //        if (pingList.Count == 0) continue;
+
+            //        // Compute centroid
+            //        Vector3 centroid = Vector3.zero;
+            //        foreach (var ping in pingList)
+            //            centroid += ping.transform.position;
+
+            //        centroid /= pingList.Count;
+
+            //        // Find ping closest to centroid
+            //        PlayerPingTarget centralPing = null;
+            //        float minDist = float.MaxValue;
+
+            //        foreach (var ping in pingList)
+            //        {
+            //            float dist = Vector3.Distance(ping.transform.position, centroid);
+            //            if (dist < minDist)
+            //            {
+            //                minDist = dist;
+            //                centralPing = ping;
+            //            }
+            //        }
+
+            //        if (centralPing != null)
+            //            pingTargets.Add(centralPing);
+            //    }
+            //}
+            foreach (var ping in pingTargets)
+            {
+                if (ping == null) continue;
+
+                Vector3 pos = ping.transform.position;
+
+                // Compute cell coordinate
+                int cellX = Mathf.FloorToInt(pos.x / pingMapCellSise);
+                int cellZ = Mathf.FloorToInt(pos.z / pingMapCellSise);
+                Vector2 cell = new Vector2(cellX, cellZ);
+
+                if (!pingTargetMap.TryGetValue(cell, out var list))
+                {
+                    list = new List<PlayerPingTarget>();
+                    pingTargetMap[cell] = list;
+                }
+                list.Add(ping);
+                BoundingBox box = new BoundingBox(ping.gameObject);
+                box.ShowDebug();
             }
         }
         public static List<ItemInLevel> GetItemsFromLocker(LG_ResourceContainer_Storage storage)
@@ -150,59 +328,111 @@ namespace Zombified_Initiative
         }
         public static void UpdateFindables(PlayerAgent agent)
         {
-            //update enemy findables
             AIG_CourseNode node = agent.CourseNode;
-            if (node == null)
-                return;
-            Il2CppSystem.Collections.Generic.List<EnemyAgent> enemyAgents = new();
-            AIG_CourseNode.GetEnemiesInNodes(node, 2, enemyAgents);
-            foreach (var enemy in enemyAgents)
+            //if (node == null)
+            //    return;
+            //if (CheckedNodes.Contains(node))
+            //{
+            //    //return;
+            //}
+            //else 
+            //    CheckedNodes.Add(node);
+            ////update enemy findables
+            //Il2CppSystem.Collections.Generic.List<EnemyAgent> enemyAgents = new();
+            //AIG_CourseNode.GetEnemiesInNodes(node, 2, enemyAgents);
+            //foreach (var enemy in enemyAgents)
+            //{
+            //    int instanceId = enemy.gameObject.GetInstanceID();
+            //    if (FindableObjects.ContainsKey(instanceId))
+            //        continue;
+            //    FindableObject findable = new FindableObject { gameObject = enemy.gameObject, courseNode = node, type = typeof(EnemyAgent), found = false};
+            //    FindableObjects[instanceId] = findable;
+            //}
+            //Update pingTargetFindalbes
+            Vector3 pos = agent.transform.position;
+
+            int cellX = Mathf.FloorToInt(pos.x / pingMapCellSise);
+            int cellZ = Mathf.FloorToInt(pos.z / pingMapCellSise);
+
+            int range = Mathf.CeilToInt(foundDistance / pingMapCellSise);
+
+            for (int dx = -range; dx <= range; dx++)
             {
-                int instanceId = enemy.gameObject.GetInstanceID();
-                if (FindableObjects.ContainsKey(instanceId))
-                    continue;
-                FindableObject findable = new FindableObject { gameObject = enemy.gameObject, courseNode = node, type = typeof(EnemyAgent), found = false};
-                FindableObjects[instanceId] = findable;
-            }
-            //update locker findables
-            Il2CppSystem.Collections.Generic.List<LG_ResourceContainer_Storage> lockers = new();
-            lockers = node.MetaData.StorageContainers;
-            foreach (var locker in lockers)
-            {
-                int instanceId = locker.gameObject.GetInstanceID();
-                if (!FindableObjects.ContainsKey(instanceId))
+                for (int dz = -range; dz <= range; dz++)
                 {
-                    FindableObject findable = new FindableObject { gameObject = locker.gameObject, courseNode = node, type = typeof(LG_ResourceContainer_Storage), found = false };
-                    FindableObjects[instanceId] = findable;
-                }
-                //update item findables
-                LG_WeakResourceContainer Container = locker.gameObject.GetComponent<LG_WeakResourceContainer>();
-                if (Container != null && Container.ISOpen)
-                {
-                    LG_ResourceContainer_Storage storage = Container.gameObject.GetComponent<LG_ResourceContainer_Storage>();
-                    if (storage == null)
+                    Vector2 neighborCell = new Vector2(cellX + dx, cellZ + dz);
+
+                    if (!pingTargetMap.TryGetValue(neighborCell, out List<PlayerPingTarget> pingTargets))
                         continue;
-                    var items = GetItemsFromLocker(storage);
-                    foreach (ItemInLevel item in items)
+
+                    foreach (var ping in pingTargets)
                     {
-                        
-                        if (item == null)
+                        if (ping == null) continue;
+
+                        Vector3 pingPos = ping.transform.position;
+                        float distance = Vector3.Distance(pos, pingPos);
+
+                        // Double-check that it's truly within foundDistance
+                        if (distance > foundDistance)
                             continue;
-                        instanceId = item.GetInstanceID();
+
+                        int instanceId = ping.gameObject.GetInstanceID();
                         if (FindableObjects.ContainsKey(instanceId))
+                            continue;
+
+                        FindableObject findable = new FindableObject
                         {
-                            uint currentId = FindableObjects[instanceId].gameObject.GetComponent<ItemInLevel>().ItemDataBlock.persistentID;
-                            uint newId = item.ItemDataBlock.persistentID;
-                            if (currentId == newId)
-                            {
-                                continue;
-                            }
-                        }
-                        FindableObject itemFindable = new FindableObject { gameObject = item.gameObject, courseNode = node, type = typeof(ItemInLevel), found = false};
-                        FindableObjects[instanceId] = itemFindable;
+                            gameObject = ping.gameObject,
+                            courseNode = node,
+                            type = typeof(PlayerPingTarget),
+                            found = false
+                        };
+
+                        FindableObjects[instanceId] = findable;
                     }
                 }
             }
+
+
+            ////update locker findables
+            //Il2CppSystem.Collections.Generic.List<LG_ResourceContainer_Storage> lockers = new();
+            //lockers = node.MetaData.StorageContainers;
+            //foreach (var locker in lockers)
+            //{
+            //    int instanceId = locker.gameObject.GetInstanceID();
+            //    if (!FindableObjects.ContainsKey(instanceId))
+            //    {
+            //        FindableObject findable = new FindableObject { gameObject = locker.gameObject, courseNode = node, type = typeof(LG_ResourceContainer_Storage), found = false};
+            //        FindableObjects[instanceId] = findable;
+            //    }
+            //    //update item findables
+            //    LG_WeakResourceContainer Container = locker.gameObject.GetComponent<LG_WeakResourceContainer>();
+            //    if (Container != null && Container.ISOpen)
+            //    {
+            //        LG_ResourceContainer_Storage storage = Container.gameObject.GetComponent<LG_ResourceContainer_Storage>();
+            //        if (storage == null)
+            //            continue;
+            //        var items = GetItemsFromLocker(storage);
+            //        foreach (ItemInLevel item in items)
+            //        {
+
+            //            if (item == null)
+            //                continue;
+            //            instanceId = item.GetInstanceID();
+            //            if (FindableObjects.ContainsKey(instanceId))
+            //            {
+            //                uint currentId = FindableObjects[instanceId].gameObject.GetComponent<ItemInLevel>().ItemDataBlock.persistentID;
+            //                uint newId = item.ItemDataBlock.persistentID;
+            //                if (currentId == newId)
+            //                {
+            //                    continue;
+            //                }
+            //            }
+            //            FindableObject itemFindable = new FindableObject { gameObject = item.gameObject, courseNode = node, type = typeof(ItemInLevel), found = false};
+            //            FindableObjects[instanceId] = itemFindable;
+            //        }
+            //    }
+            //}
         }
 
         public static void Updatefinds(PlayerAgent agent)
@@ -210,30 +440,36 @@ namespace Zombified_Initiative
             AIG_CourseNode node = agent.CourseNode;
             if (node == null)
                 return;
+            List<int> objectToRemove = new List<int>();
             foreach (var kvp in FindableObjects)
             {
                 int instanceId = kvp.Key;
                 FindableObject findable = kvp.Value;
+                if (findable == null || findable.gameObject == null || !findable.gameObject.activeInHierarchy) 
+                {
+                    objectToRemove.Add(kvp.Key);
+                    continue;
+                }
                 if (findable.found == true)
+                {
+                    continue;
+                }
+                if (!findable.lastCheckedVis.TryGetValue(agent.Owner.PlayerSlotIndex(),out float lastChecked))
+                    findable.lastCheckedVis[agent.Owner.PlayerSlotIndex()] = Time.time;
+                if (Time.time - lastChecked < 0.5f)
                 {
                     continue;
                 }
                 GameObject gameObject = findable.gameObject;
                 //if (Vector3.Distance(gameObject.transform.position, agent.Position) < foundDistance)
-                if (zVisibilityManager.CheckObjectVisiblity(findable.gameObject,agent.gameObject) > 0.2)
+                if (zVisibilityManager.CheckObjectVisiblity(findable.gameObject,agent.gameObject, foundDistance) > 0.2)
                 {
                     findable.found = true;
                     zDebug.DrawLine(findable.gameObject.transform.position, agent.gameObject.transform.position, new Color(0.1f, 0.1f, 0.1f), 0.1f);
                     ZiMain.log.LogInfo($"Found object {findable.type}! {gameObject.name}");
                 }
+                findable.lastCheckedVis[agent.Owner.PlayerSlotIndex()] = Time.time;
             }
-        }
-        public static void CleanFindables()
-        {
-            List<int> objectToRemove = new List<int>();
-            foreach (var obj in FindableObjects)
-                if (obj.Value == null || !obj.Value.gameObject.activeInHierarchy)
-                    objectToRemove.Add(obj.Key);
             foreach (var index in objectToRemove)
                 FindableObjects.Remove(index);
         }
@@ -244,6 +480,7 @@ namespace Zombified_Initiative
         public AIG_CourseNode courseNode;
         public Type type;
         public bool found;
+        public Dictionary<int,float> lastCheckedVis = new();
     }
     
     public class VisitNode
@@ -700,5 +937,51 @@ namespace Zombified_Initiative
             return UnexploredLocation != Vector3.zero;
         }
     }
+    public class ComponentFinder : MonoBehaviour
+    {
+        public IEnumerator FindAllWithComponentSlow<T>(Action<List<GameObject>> onComplete, int itemsPerFrame = 100)
+            where T : Component
+        {
+            List<GameObject> results = new List<GameObject>();
 
+            // Get all root objects in all loaded scenes
+            List<GameObject> roots = new List<GameObject>();
+            for (int i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCount; i++)
+            {
+                var scene = UnityEngine.SceneManagement.SceneManager.GetSceneAt(i);
+                if (!scene.isLoaded) continue;
+                scene.GetRootGameObjects(roots.ToIl2CppList());
+            }
+
+            int processed = 0;
+
+            foreach (var root in roots)
+            {
+                // Walk all children manually instead of using FindObjectsOfType
+                foreach (var t in root.GetComponentsInChildren<Transform>(true))
+                {
+                    if (t.TryGetComponent<T>(out _))
+                        results.Add(t.gameObject);
+
+                    processed++;
+
+                    // Yield every N objects to spread over frames
+                    if (processed % itemsPerFrame == 0)
+                        yield return null;
+                }
+            }
+
+            onComplete?.Invoke(results);
+        }
+    }
+    public static class ListConverter
+    {
+        public static Il2CppSystem.Collections.Generic.List<T> ToIl2CppList<T>(this IEnumerable<T> source)
+        {
+            var list = new Il2CppSystem.Collections.Generic.List<T>();
+            foreach (var item in source)
+                list.Add(item);
+            return list;
+        }
+    }
 }

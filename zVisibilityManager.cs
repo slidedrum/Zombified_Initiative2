@@ -706,6 +706,8 @@ namespace ZombieTweak2
         }
         private static float BasicObjectVisibilityChec(GameObject target, GameObject observer, visSettings settings)
         {
+            if (target == null || observer == null)
+                return 0f;
             float ret = 0;
             float range = settings.maxDistance;
             var preLit = Camera.main.GetComponent<FPSCamera>().PrelitVolume;

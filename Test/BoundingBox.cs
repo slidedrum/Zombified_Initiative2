@@ -100,8 +100,26 @@ public class BoundingBox
         }
 
         if (allBounds.Count == 0)
-            throw new System.Exception("BoundingBox requires at least one mesh, renderer, or collider.");
+        {
+            // --- Fallback: no geometry found ---
+            Vector3 pos = rootT.position;
+            Center = pos;
 
+            for (int xi = 0; xi < 3; xi++)
+                for (int yi = 0; yi < 3; yi++)
+                    for (int zi = 0; zi < 3; zi++)
+                    {
+                        CornerTag tag = CornerTag.None;
+                        tag |= xi == 0 ? CornerTag.Left : xi == 1 ? CornerTag.MiddleX : CornerTag.Right;
+                        tag |= yi == 0 ? CornerTag.Bottom : yi == 1 ? CornerTag.MiddleY : CornerTag.Top;
+                        tag |= zi == 0 ? CornerTag.Back : zi == 1 ? CornerTag.MiddleZ : CornerTag.Front;
+
+                        _points.Add(new BoundingPoint(pos, tag));
+                    }
+
+            _go.transform.rotation = originalRotation;
+            return;
+        }
         // Combine all bounds
         Bounds combinedBounds = allBounds[0];
         foreach (var b in allBounds.Skip(1))
