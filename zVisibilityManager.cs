@@ -3,11 +3,14 @@ using Enemies;
 using ExteriorRendering;
 using FluffyUnderware.DevTools.Extensions;
 using Player;
+using PlayFab.AdminModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
+using Zombified_Initiative;
+using static UnityEngine.UI.Image;
 
 namespace ZombieTweak2
 {
@@ -67,23 +70,23 @@ namespace ZombieTweak2
             public bool resetCullingCam;
             public visSettings()
             {
-                maxDistance = 150f;
-                visMethod = visMethods.VeryFancy;
+                maxDistance = 30f;
+                visMethod = visMethods.Basic;
                 resetCullingCam = true;
             }
         }
         static zVisibilityManager()
         {
-            observercamGobject = new GameObject("ObserverCam");
-            observerExteriroCamera = observercamGobject.AddComponent<ExteriorCamera>();
-            fpsCamera = observercamGobject.AddComponent<FPSCamera>();
-            PreLitVolume = observercamGobject.AddComponent<PreLitVolume>();
-            renderTexture = new RenderTexture(Settings.resolution.x, Settings.resolution.y, 16, RenderTextureFormat.ARGB32);
-            renderTextureAtlas = new RenderTexture(Settings.resolution.x, Settings.resolution.y*3, 16, RenderTextureFormat.ARGB32);
-            //Setup.SetUpObservationCamera();
-            Setup.SetUpMaterals();
-            textureAtlas = new(Settings.resolution.x, Settings.resolution.y * 3, TextureFormat.RGB24, false);
-            scratchBoard = new(Settings.resolution.x, Settings.resolution.y, TextureFormat.RGB24, false);
+            //observercamGobject = new GameObject("ObserverCam");
+            //observerExteriroCamera = observercamGobject.AddComponent<ExteriorCamera>();
+            //fpsCamera = observercamGobject.AddComponent<FPSCamera>();
+            //PreLitVolume = observercamGobject.AddComponent<PreLitVolume>();
+            //renderTexture = new RenderTexture(Settings.resolution.x, Settings.resolution.y, 16, RenderTextureFormat.ARGB32);
+            //renderTextureAtlas = new RenderTexture(Settings.resolution.x, Settings.resolution.y*3, 16, RenderTextureFormat.ARGB32);
+            ////Setup.SetUpObservationCamera();
+            //Setup.SetUpMaterals();
+            //textureAtlas = new(Settings.resolution.x, Settings.resolution.y * 3, TextureFormat.RGB24, false);
+            //scratchBoard = new(Settings.resolution.x, Settings.resolution.y, TextureFormat.RGB24, false);
 
         }
         private static class Setup
@@ -123,7 +126,10 @@ namespace ZombieTweak2
         }
         public static class HelperMethods
         {
-
+            public static float InverseLerp(float min, float max, float value)
+            {
+                return (value - min) / (max - min);
+            }
             public static void QuaternionToYawPitch(Quaternion q, out float yaw, out float pitch)
             {
                 Vector3 f = q * Vector3.forward;
@@ -322,6 +328,23 @@ namespace ZombieTweak2
 
                 return Mathf.Clamp(fovDeg + VisDebug.fovOffset, 0.0001f, 179f);
             }
+            public static Vector3[] GetCorners(Bounds bounds)
+            {
+                Vector3 center = bounds.center;
+                Vector3 extents = bounds.extents;
+
+                return new Vector3[]
+                {
+                    center + new Vector3(+extents.x, +extents.y, +extents.z),
+                    center + new Vector3(+extents.x, +extents.y, -extents.z),
+                    center + new Vector3(+extents.x, -extents.y, +extents.z),
+                    center + new Vector3(+extents.x, -extents.y, -extents.z),
+                    center + new Vector3(-extents.x, +extents.y, +extents.z),
+                    center + new Vector3(-extents.x, +extents.y, -extents.z),
+                    center + new Vector3(-extents.x, -extents.y, +extents.z),
+                    center + new Vector3(-extents.x, -extents.y, -extents.z)
+                };
+            }
             public static Bounds GetMaxBounds(GameObject go)
             {
                 var bounds = GetRendererMaxBounds(go);
@@ -357,7 +380,6 @@ namespace ZombieTweak2
                 }
                 return bounds;
             }
-
             public static Color HueShift(Color color)
             {
                 Color.RGBToHSV(color, out float hue, out float sat, out float val);
@@ -536,10 +558,9 @@ namespace ZombieTweak2
             }
             return ret;
         }
-
-
         private static float VeryFancyObjectVisilityCheck(GameObject target, GameObject observer, visSettings settings)
         {
+            return 0f;
             if (target == null || observer == null) return 0f;
 
             //if (cullingCamInOriginalState) // Save culling camera source
@@ -581,7 +602,7 @@ namespace ZombieTweak2
             observationCamera.Render(); // observationCamera.targetTexture = renderTexture;
             HelperMethods.CopyToAtlas(1);
 
-            // Step 3: Get color1 source second pass render
+            // Step 3: GetCorners color1 source second pass render
             var averageColor = HelperMethods.GetAverageColor(renderTexture, Color.white);
             var hueShiftColor = HelperMethods.HueShift(averageColor);
             if (VisDebug.debugMode)
@@ -688,7 +709,31 @@ namespace ZombieTweak2
         }
         private static float BasicObjectVisibilityChec(GameObject target, GameObject observer, visSettings settings)
         {
-            throw new NotImplementedException();
+            float ret = 0;
+            float range = settings.maxDistance;
+            var preLit = Camera.main.GetComponent<FPSCamera>().PrelitVolume;
+            float fogPenalty = preLit.GetFogDensity(target.transform.position) + preLit.GetFogDensity(observer.transform.position);
+            fogPenalty = HelperMethods.InverseLerp(3f, 0, fogPenalty);
+            range *= fogPenalty;
+            //TODO figure out how to do a lighting penalty for dark areas.
+            float distance = Vector3.Distance(target.transform.position, observer.transform.position);
+            if (distance > range)
+                return 0;
+            BoundingBox observerBounds = new(observer);
+            BoundingBox targetBounds = new(target);
+            foreach (var observerCorner in observerBounds.GetCorners())
+                foreach (var targetCorner in targetBounds.GetCorners())
+                {
+                    Vector3 dir = targetCorner - observerCorner;
+                    float checkDistance = dir.magnitude;
+                    RaycastHit hit;
+                    if (Physics.Raycast(observerCorner, dir.normalized, out hit, checkDistance))
+                        if (hit.collider.gameObject == target || hit.collider.transform.IsChildOf(target.transform))
+                            ret++;
+                    else
+                        ret++;
+                }
+            return (ret/729)*fogPenalty;
         }
         private static float VeryBasicObjectVisibilityChec(GameObject target, GameObject observer, visSettings settings)
         {

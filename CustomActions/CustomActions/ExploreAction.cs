@@ -164,6 +164,12 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
             }
             else if (state == StateEnum.Moving) 
             {
+                if (HasUnfoundEnemies())
+                {
+                    m_bot.StopAction(travelAction);
+                    state = StateEnum.Finished;
+                    return false;
+                }
                 if (UnexploredNode != null && UnexploredNode.discovered)
                 {
                     m_bot.StopAction(travelAction);
@@ -171,7 +177,18 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
                     return false;
                 }
             }
-            return !IsActive(); //state moving
+            return !IsActive();
+        }
+        private bool HasUnfoundEnemies()
+        {
+            foreach (var findable in zSearch.FindableObjects.Values)
+            {
+                if (findable.type == typeof(EnemyAgent) && findable.found)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
         public void OnTravelActionEvent(PlayerBotActionBase.Descriptor descBase)
         {

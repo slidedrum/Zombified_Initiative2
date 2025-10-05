@@ -279,7 +279,7 @@ namespace ZombieTweak2
             Vector3 direction = (node2.position - node1.position).normalized;
             Quaternion rotation1 = Quaternion.LookRotation(direction);
 
-            // Get world-space corners
+            // GetCorners world-space corners
             Vector3[] node1Corners = GetWorldColliderCorners(node1.position, rotation1);
             Vector3[] node2Corners = GetWorldColliderCorners(node2.position, rotation1);
 

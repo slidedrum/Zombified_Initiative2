@@ -1,5 +1,6 @@
 ﻿using AIGraph;
 using Enemies;
+using Il2CppInterop.Runtime;
 using LevelGeneration;
 using Player;
 using System;
@@ -7,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.AI;
+using ZombieTweak2;
 
 namespace Zombified_Initiative
 {
@@ -51,6 +53,24 @@ namespace Zombified_Initiative
 
             return null;
         }
+        public static List<GameObject> GetObjectsWithComponentInRadius(Vector3 position, float searchRadius, List<Il2CppSystem.Type> types)
+        {
+            List<GameObject> results = new List<GameObject>();
+
+            Collider[] nearby = Physics.OverlapSphere(position, searchRadius);
+            foreach (var col in nearby)
+            {
+                foreach (var type in types) 
+                {
+                    Component comp = col.GetComponentInParent(type);
+                    if (comp != null)
+                    {
+                        results.Add(comp.gameObject);
+                    } 
+                }
+            }
+            return results;
+        }
         public static List<GameObject> GetObjectsWithComponentInRadius<T>(Vector3 position,float searchRadius) where T : Component
         {
             List<GameObject> results = new List<GameObject>();
@@ -65,6 +85,16 @@ namespace Zombified_Initiative
                 }
             }
             return results;
+        }
+        public static List<GameObject> GetGameObjectsWithLookDirection(Transform source, List<Il2CppSystem.Type> types, float searchRadius = 3, float rayDistance = 10000f)
+        {
+            Ray ray = new Ray(source.position, source.forward);
+            if (Physics.Raycast(ray, out RaycastHit hit, rayDistance))
+            {
+                //zDebug.ShowDebugSphere(hit.point, searchRadius);
+                return GetObjectsWithComponentInRadius(hit.point, searchRadius, types);
+            }
+            return new List<GameObject>();
         }
         public static List<GameObject> GetGameObjectsWithLookDirection<T>(Transform source,float searchRadius = 3,float rayDistance = 10000f) where T : Component
         {
@@ -174,10 +204,8 @@ namespace Zombified_Initiative
                 }
             }
         }
-        private static int totalFound = 0;
         public static void Updatefinds(PlayerAgent agent)
         {
-            totalFound = 0;
             AIG_CourseNode node = agent.CourseNode;
             if (node == null)
                 return;
@@ -187,15 +215,15 @@ namespace Zombified_Initiative
                 FindableObject findable = kvp.Value;
                 if (findable.found == true)
                 {
-                    totalFound++;
                     continue;
                 }
                 GameObject gameObject = findable.gameObject;
-                if (Vector3.Distance(findable.gameObject.transform.position, agent.Position) < foundDistance)
+                //if (Vector3.Distance(findable.gameObject.transform.position, agent.Position) < foundDistance)
+                if (zVisibilityManager.CheckObjectVisiblity(findable.gameObject,agent.gameObject) > 0.2)
                 {
                     findable.found = true;
-                    totalFound++;
                     ZiMain.log.LogInfo($"Found object {findable.type}! {gameObject.name}");
+                    zDebug.CreatePing(findable.gameObject.transform.position);
                 }
             }
         }

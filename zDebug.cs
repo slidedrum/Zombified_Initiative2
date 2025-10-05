@@ -469,7 +469,7 @@ namespace ZombieTweak2
             if (!Physics.Raycast(lookTransform.position, lookTransform.forward, out RaycastHit hit, 100f))
                 return null;
 
-            // Get nearby nodes at hit point
+            // GetCorners nearby nodes at hit point
             HashSet<VisitNode> nearbyNodes = zVisitedManager.GetNearByNodes(hit.point, zVisitedManager.NodeVisitDistance);
             if (nearbyNodes.Count == 0)
                 return null;
@@ -517,7 +517,32 @@ namespace ZombieTweak2
             FlexibleMethodDefinition callback = new (SendBotToExplore, [bot]);
             zActionSub.addOnTerminated(descriptor, callback);
         }
-
+        private static Dictionary<GameObject,BoundingBox> boxes = new Dictionary<GameObject,BoundingBox>();
+        internal static void debugCorners()
+        {
+            List<Il2CppSystem.Type> types = new List<Il2CppSystem.Type>
+            {
+                new LG_WeakResourceContainer().GetIl2CppType(),
+                new EnemyAgent().GetIl2CppType(),
+                new ColliderMaterial().GetIl2CppType(),
+                new PlayerAgent().GetIl2CppType(),
+            };
+            Transform menuTransform = zMenuManager.mainMenu.gameObject.transform;
+            var target = zSearch.GetClosestObjectInLookDirection(menuTransform, zSearch.GetGameObjectsWithLookDirection(menuTransform, types));
+            if (target == null)
+            {
+                ZiMain.log.LogWarning("Could not find target for corners");
+                return;
+            }
+            if (boxes.ContainsKey(target))
+            {
+                boxes[target].ToggleDebug();
+                return;
+            }
+            BoundingBox box = new BoundingBox(target);
+            box.ShowDebug();
+            boxes[target] = box;
+        }
         internal static void ToggleNodes()
         {
             zVisitedManager.SetDebug(debug: !zVisitedManager.debugCube);

@@ -104,6 +104,7 @@ namespace ZombieTweak2.zMenu
             ;
             debugMenu.AddNode("Find unexplored", zDebug.MarkUnexploredArea);
             debugMenu.AddNode("SendBotToExplore", zDebug.SendClosestBotToExplore);
+            debugMenu.AddNode("Show corners",zDebug.debugCorners);
             debugNodeMenu.AddNode("Node I'm looking at", zDebug.GetNodeImLookingAT, [zMenuManager.mainMenu.gameObject.transform]);
             debugNodeMenu.AddNode("Toggle Nodes", zDebug.ToggleNodes);
             debugNodeMenu.AddNode("Toggle Connections", zDebug.ToggleConnections);

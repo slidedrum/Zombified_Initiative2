@@ -203,10 +203,10 @@ public class ZombifiedPatches
     //private static bool MoveOut(PlayerBotActionHighlight instance)
     //{
 
-    //    // Get the Type for the Descriptor class
+    //    // GetCorners the Type for the Descriptor class
     //    Type descriptorType = typeof(PlayerBotActionHighlight.Descriptor);
 
-    //    // Get the private static field
+    //    // GetCorners the private static field
     //    FieldInfo fieldInfo = descriptorType.GetField(
     //        "NativeMethodInfoPtr_OnTravelActionEvent_Public_Void_Descriptor_0",
     //        BindingFlags.NonPublic | BindingFlags.Static
