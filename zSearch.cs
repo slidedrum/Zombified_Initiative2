@@ -22,10 +22,8 @@ namespace Zombified_Initiative
         public static float foundDistance = 10f;
         private static PlayerAgent localPlayer = null;
         private static PlayerPingTarget[] allPingTargets;
-        private static List<PingTargetParent> pingTargetGroups;
         private static int pingMapCellSise = 5;
         private static Dictionary<Vector2, List<FindableObject>> findbleObjectMap = new();
-        private static Dictionary<eNavMarkerStyle, List<PlayerPingTarget>> pingGroups = new();
         private static List<Transform> pingTransforms = new();
 
         public static GameObject GetClosestObjectInLookDirection(Transform baseTransform,List<GameObject> candidates,float maxAngle = 180f, Vector3? candidateOffset = null, Vector3? baseOffset = null)
@@ -133,11 +131,10 @@ namespace Zombified_Initiative
                 Updatefinds(agent);
             }
         }
-        public class PingTargetParent
+        public class PingTargetTransform
         {
-            public GameObject baseGo;
-            public eNavMarkerStyle PingTargetStyle;
-            public List<PlayerPingTarget> pings = new();
+            public Transform transform;
+            public PlayerPingTarget ping;
         }
         public static void OnFactoryBuildDone()
         {
@@ -145,12 +142,6 @@ namespace Zombified_Initiative
             pingTransforms = new();
             foreach (PlayerPingTarget ping in allPingTargets)
             {
-                if (!pingGroups.TryGetValue(ping.PingTargetStyle, out var list))
-                {
-                    list = new List<PlayerPingTarget>();
-                    pingGroups[ping.PingTargetStyle] = list;
-                }
-                list.Add(ping);
                 var parent = ping.transform;
                 Type type = null;
                 switch (ping.PingTargetStyle)
@@ -183,7 +174,8 @@ namespace Zombified_Initiative
                     case eNavMarkerStyle.PlayerPingCaution:
                         break;
 
-                    case eNavMarkerStyle.PlayerPingHSU: //
+                    case eNavMarkerStyle.PlayerPingHSU: //TODO
+                        type = typeof(LG_GenericTerminalItem);
                         break;
 
                     case eNavMarkerStyle.PlayerPingDoor:
@@ -273,7 +265,6 @@ namespace Zombified_Initiative
                     default:
                         break;
                 }
-
                 if (type != null)
                 {
                     var originalParrent = parent;
@@ -312,8 +303,23 @@ namespace Zombified_Initiative
             }
             foreach (var p in pingTransforms)
             {
-                BoundingBox box = new(p.gameObject, BoundingSource.Renderers);
-                box.ShowDebug();
+                BoundingBox box = new(p.gameObject);
+                var cell = new Vector2Int(
+                    Mathf.FloorToInt(box.Center.x / pingMapCellSise),
+                    Mathf.FloorToInt(box.Center.z / pingMapCellSise));
+                FindableObject newFindable = new()
+                {
+                    gameObject = p.gameObject,
+                    type = typeof(PlayerPingTarget),
+                    pingSyle = p.GetComponentInChildren<PlayerPingTarget>().PingTargetStyle, //TODO speed this up?
+                    found = false,
+                    box = box,
+                };
+                if (!findbleObjectMap.TryGetValue(cell, out var findables))
+                {
+                    findbleObjectMap[cell] = new();
+                }
+                findbleObjectMap[cell].Add(newFindable);
             }
         }
         //public static void OnFactoryBuildDone()
@@ -436,17 +442,6 @@ namespace Zombified_Initiative
         //    }
         //    //The base game object bounding box for some reason is offset for lockers, no idea why.  Actually ping target game objects are not.
         //}
-        private static PingTargetParent FindPingTargetByname(string name)
-        {
-            foreach (var ping in pingTargetGroups)
-            { 
-                if (ping.baseGo.name.Contains(name))
-                {
-                    return ping;
-                }
-            }
-            return null;
-        }
 
         public static List<ItemInLevel> GetItemsFromLocker(LG_ResourceContainer_Storage storage)
         {
@@ -600,40 +595,38 @@ namespace Zombified_Initiative
 
                     foreach (var findable in findables)
                     {
-                        foreach (var gameObject in findable.gameObjects)
+                        var gameObject = findable.gameObject;
+                        if (findable == null)
+                            continue;
+                        if (gameObject == null)
+                            continue;
+                        if (!gameObject.activeInHierarchy)
+                            continue;
+                        if (findable.found)
+                            continue;
+                        if (!findable.lastCheckedVis.TryGetValue(agent.Owner.PlayerSlotIndex(), out float lastChecked))
+                            lastChecked = 0f;
+                        if (Time.time - lastChecked < 0.1f)
+                            continue;
+
+                        findable.lastCheckedVis[agent.Owner.PlayerSlotIndex()] = Time.time;
+
+                        // Check visibility / distance
+                        Vector3 dir = findable.box.Center - agent.Position + Vector3.up * 1.5f; ;
+                        int layerMask =
+                            (1 << 0) | //Default
+                            (1 << 11) | //Dynamic
+                            (1 << 15) | // Glue Gun proj
+                            (1 << 16) | //Enemy
+                            (1 << 17) | // Enemy dead
+                            (1 << 18) | // Debris 
+                            (1 << 19); // Denemy Damageble
+                        if (zVisibilityManager.CheckObjectVisiblity(gameObject, agent.gameObject, foundDistance) > 0.01f)
                         {
-                            if (findable == null)
-                                continue;
-                            if (gameObject == null)
-                                continue;
-                            if (!gameObject.activeInHierarchy)
-                                continue;
-                            if (findable.found)
-                                continue;
-                            if (!findable.lastCheckedVis.TryGetValue(agent.Owner.PlayerSlotIndex(), out float lastChecked))
-                                lastChecked = 0f;
-                            if (Time.time - lastChecked < 0.1f)
-                                continue;
-
-                            findable.lastCheckedVis[agent.Owner.PlayerSlotIndex()] = Time.time;
-
-                            // Check visibility / distance
-                            Vector3 dir = findable.centerPoint - agent.Position + Vector3.up * 1.5f; ;
-                            int layerMask =
-                                (1 << 0) | //Default
-                                (1 << 11) | //Dynamic
-                                (1 << 15) | // Glue Gun proj
-                                (1 << 16) | //Enemy
-                                (1 << 17) | // Enemy dead
-                                (1 << 18) | // Debris 
-                                (1 << 19); // Denemy Damageble
-                            if (zVisibilityManager.CheckObjectVisiblity(gameObject, agent.gameObject, foundDistance) > 0.01f)
-                            {
-                                findable.found = true;
-                                GuiManager.AttemptSetPlayerPingStatus(agent, true, findable.centerPoint, style : findable.gameObjects[0].GetComponent<PlayerPingTarget>().PingTargetStyle);
-                                ZiMain.log.LogInfo($"Found object {findable.type}! {gameObject.name}");
-                                break;
-                            }
+                            findable.found = true;
+                            GuiManager.AttemptSetPlayerPingStatus(agent, true, findable.box.Center, style : findable.pingSyle);
+                            ZiMain.log.LogInfo($"Found object {findable.type}! {gameObject.name}");
+                            break;
                         }
                     }
                 }
@@ -642,12 +635,13 @@ namespace Zombified_Initiative
     }
     public class FindableObject
     {
-        public List<GameObject> gameObjects;
+        public BoundingBox box;
+        public GameObject gameObject;
         public AIG_CourseNode courseNode;
         public Type type;
+        public eNavMarkerStyle pingSyle;
         public bool found;
         public Dictionary<int,float> lastCheckedVis = new();
-        public Vector3 centerPoint;
     }
     
     public class VisitNode

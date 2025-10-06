@@ -71,7 +71,7 @@ namespace ZombieTweak2
             public visSettings()
             {
                 maxDistance = 30f;
-                visMethod = visMethods.VeryBasic;
+                visMethod = visMethods.Basic;
                 resetCullingCam = true;
             }
         }
