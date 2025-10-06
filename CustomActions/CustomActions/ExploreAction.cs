@@ -80,7 +80,7 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
                     return;
                 if (!IsTerminated())
                     return;
-                bool foundEnemy = zSearch.FindableObjects.Values.Any(obj => obj.found && obj.gameObject.GetComponent<EnemyAgent>() != null);
+                bool foundEnemy = zSearch.FindableObjects.Values.Any(obj => obj.found && obj.type == typeof(EnemyAgent));
                 if (foundEnemy)
                     return;
                 float maxprio = 0f;

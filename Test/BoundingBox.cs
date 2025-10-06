@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using TMPro;
 using UnityEngine;
+using ZombieTweak2;
 
 [System.Flags]
 public enum CornerTag
@@ -53,20 +55,29 @@ public class BoundingBox
     private List<GameObject> _debugMarkers = new List<GameObject>();
     public Vector3 Center { get; private set; }
 
-    public BoundingBox(GameObject go)
+    public BoundingBox(GameObject go, BoundingSource sources = BoundingSource.All)
     {
         _go = go;
-        Refresh();
+        Refresh(sources);
     }
-
+    [System.Flags]
+    public enum BoundingSource
+    {
+        None = 0,
+        MeshFilters = 1 << 0,
+        Renderers = 1 << 1,
+        Colliders = 1 << 2,
+        All = MeshFilters | Renderers | Colliders
+    }
     /// <summary>
     /// Recalculate all points based on the current transform
     /// </summary>
-    public void Refresh()
+    public void Refresh(BoundingSource sources = BoundingSource.All)
     {
         var originalRotation = _go.transform.rotation;
         _go.transform.rotation = Quaternion.identity;
-
+        Transform originalParent = _go.transform.parent;
+        _go.transform.parent = null;
         _points.Clear();
 
         Transform rootT = _go.transform;
@@ -75,28 +86,37 @@ public class BoundingBox
         List<Bounds> allBounds = new List<Bounds>();
 
         // MeshFilters
-        foreach (var mf in _go.GetComponentsInChildren<MeshFilter>())
+        if (sources.HasFlag(BoundingSource.MeshFilters))
         {
-            if (mf.mesh == null) continue;
-            Bounds b = mf.mesh.bounds;
-            b.center = rootT.InverseTransformPoint(mf.transform.TransformPoint(b.center));
-            allBounds.Add(b);
+            foreach (var mf in _go.GetComponentsInChildren<MeshFilter>())
+            {
+                if (mf.mesh == null) continue;
+                Bounds b = mf.mesh.bounds;
+                b.center = rootT.InverseTransformPoint(mf.transform.TransformPoint(b.center));
+                allBounds.Add(b);
+            }
         }
 
         // Renderers
-        foreach (var rend in _go.GetComponentsInChildren<Renderer>())
+        if (sources.HasFlag(BoundingSource.Renderers))
         {
-            Bounds b = rend.bounds; // world-space bounds
-            b.center = rootT.InverseTransformPoint(b.center);
-            allBounds.Add(b);
+            foreach (var rend in _go.GetComponentsInChildren<Renderer>())
+            {
+                Bounds b = rend.bounds; // world-space bounds
+                b.center = rootT.InverseTransformPoint(b.center);
+                allBounds.Add(b);
+            }
         }
 
         // Colliders
-        foreach (var col in _go.GetComponentsInChildren<Collider>())
+        if (sources.HasFlag(BoundingSource.Colliders))
         {
-            Bounds b = col.bounds; // world-space bounds
-            b.center = rootT.InverseTransformPoint(b.center);
-            allBounds.Add(b);
+            foreach (var col in _go.GetComponentsInChildren<Collider>())
+            {
+                Bounds b = col.bounds; // world-space bounds
+                b.center = rootT.InverseTransformPoint(b.center);
+                allBounds.Add(b);
+            }
         }
 
         if (allBounds.Count == 0)
@@ -152,17 +172,22 @@ public class BoundingBox
                     _points.Add(new BoundingPoint(worldPoint, tag));
                 }
 
-        // Restore rotation
+        // Restore transform
         _go.transform.rotation = originalRotation;
+        _go.transform.parent = originalParent;
 
         // Rotate all points by original rotation around center
         for (int i = 0; i < _points.Count; i++)
         {
-            Vector3 localOffset = _points[i].Position - Center;
-            Vector3 rotatedOffset = originalRotation * localOffset;
-            Vector3 rotatedPos = Center + rotatedOffset;
+            Vector3 localOffset = _points[i].Position - rootT.position;  // <-- rotate around origin
+            Vector3 rotatedPos = originalRotation * localOffset + rootT.position;
             _points[i] = new BoundingPoint(rotatedPos, _points[i].Tags);
         }
+        // Update Center to match rotated points
+        Vector3 sum = Vector3.zero;
+        foreach (var pt in _points)
+            sum += pt.Position;
+        Center = sum / _points.Count;
     }
     public bool IsInside(Vector3 worldPoint)
     {
@@ -231,8 +256,11 @@ public class BoundingBox
     public void ShowDebug(Transform parent = null, float size = 0.2f)
     {
         ClearDebug();
+
+        // Draw all corners and lines
         foreach (var point in GetCorners())
         {
+            // Original TextMesh marker
             GameObject marker = new GameObject("BB_DebugPoint");
             if (parent != null)
                 marker.transform.parent = parent;
@@ -246,7 +274,34 @@ public class BoundingBox
             tm.alignment = TextAlignment.Center;
             tm.color = Color.red;
 
+            var lineObj = zDebug.DrawLine(point, Center, Color.white, 0.01f);
+            lineObj.transform.SetParent(marker.transform, true);
             _debugMarkers.Add(marker);
+        }
+
+        BoundingPoint? topCenter = _points.FirstOrDefault(p =>
+             p.Has(CornerTag.Top) &&
+             p.Has(CornerTag.MiddleX) &&
+             p.Has(CornerTag.MiddleZ));
+
+        if (topCenter.HasValue)
+        {
+            GameObject label = new GameObject("BB_DebugLabel");
+            if (parent != null)
+                label.transform.parent = parent;
+
+            // Place directly above the top-center-center node
+            label.transform.position = topCenter.Value.Position + Vector3.up * 0.1f;
+            label.transform.localScale = new Vector3(0.25f, 0.25f, 0.25f);
+
+            TextMesh tmp = label.AddComponent<TextMesh>();
+            tmp.text = _go.name;
+            tmp.fontSize = 20;
+            tmp.anchor = TextAnchor.LowerCenter;
+            tmp.alignment = TextAlignment.Center;
+            tmp.color = Color.yellow;
+
+            _debugMarkers.Add(label);
         }
     }
 

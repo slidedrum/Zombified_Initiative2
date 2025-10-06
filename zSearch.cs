@@ -1,4 +1,5 @@
 ﻿using AIGraph;
+using Il2CppInterop.Runtime;
 using LevelGeneration;
 using Player;
 using System;
@@ -8,6 +9,8 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.AI;
 using ZombieTweak2;
+using static BoundingBox;
+using static PUI_CommunicationButton;
 
 namespace Zombified_Initiative
 {
@@ -19,9 +22,11 @@ namespace Zombified_Initiative
         public static float foundDistance = 10f;
         private static PlayerAgent localPlayer = null;
         private static PlayerPingTarget[] allPingTargets;
-        private static List<PlayerPingTarget> pingTargets;
+        private static List<PingTargetParent> pingTargetGroups;
         private static int pingMapCellSise = 5;
         private static Dictionary<Vector2, List<FindableObject>> findbleObjectMap = new();
+        private static Dictionary<eNavMarkerStyle, List<PlayerPingTarget>> pingGroups = new();
+        private static List<Transform> pingTransforms = new();
 
         public static GameObject GetClosestObjectInLookDirection(Transform baseTransform,List<GameObject> candidates,float maxAngle = 180f, Vector3? candidateOffset = null, Vector3? baseOffset = null)
         {
@@ -128,183 +133,321 @@ namespace Zombified_Initiative
                 Updatefinds(agent);
             }
         }
-        private struct PingTargetParrent
+        public class PingTargetParent
         {
+            public GameObject baseGo;
             public eNavMarkerStyle PingTargetStyle;
-            public GameObject parrent;
-            
+            public List<PlayerPingTarget> pings = new();
         }
         public static void OnFactoryBuildDone()
         {
-            allPingTargets = UnityEngine.Object.FindObjectsOfType<PlayerPingTarget>();
-            List<PingTargetParrent> consolidatedPingTargets = new List<PingTargetParrent>();
-            findbleObjectMap.Clear();
-            // Result: base parent -> type -> list of ping targets
-            var grouped = new Dictionary<GameObject, Dictionary<eNavMarkerStyle, List<PlayerPingTarget>>>();
-
-            foreach (var ping in allPingTargets)
+            allPingTargets = UnityEngine.Object.FindObjectsOfType<PlayerPingTarget>();  //Find all ping targets in the level.
+            pingTransforms = new();
+            foreach (PlayerPingTarget ping in allPingTargets)
             {
-                if (ping == null) continue;
-
-                GameObject parentGO = ping.transform.parent != null ? ping.transform.parent.gameObject : ping.gameObject;
-                eNavMarkerStyle style = ping.PingTargetStyle;
-
-                GameObject mergeTarget = null;
-                List<GameObject> keysToRemove = new List<GameObject>();
-
-                // Check if any existing grouped parent is a child of this ping's parent
-                foreach (var existingParent in grouped.Keys)
+                if (!pingGroups.TryGetValue(ping.PingTargetStyle, out var list))
                 {
-                    if (existingParent.transform.IsChildOf(parentGO.transform))
-                    {
-                        mergeTarget = parentGO;
-                        keysToRemove.Add(existingParent);
-                    }
-                    else if (parentGO.transform.IsChildOf(existingParent.transform))
-                    {
-                        mergeTarget = existingParent;
-                    }
+                    list = new List<PlayerPingTarget>();
+                    pingGroups[ping.PingTargetStyle] = list;
+                }
+                list.Add(ping);
+                var parent = ping.transform;
+                Type type = null;
+                switch (ping.PingTargetStyle)
+                {
+                    case eNavMarkerStyle.LocationBeacon:
+                        break;
+
+                    case eNavMarkerStyle.PlayerPingLookat:
+                        break;
+
+                    case eNavMarkerStyle.PlayerPingEnemy:
+                        break;
+
+                    case eNavMarkerStyle.PlayerPingAmmo:
+                        type = typeof(LG_GenericTerminalItem);
+                        break;
+
+                    case eNavMarkerStyle.PlayerPingHealth:
+                        type = typeof(LG_GenericTerminalItem);
+                        break;
+
+                    case eNavMarkerStyle.PlayerPingLoot:
+                        type = typeof(LG_PickupItem_Sync);
+                        break;
+
+                    case eNavMarkerStyle.PlayerPingTerminal:
+                        type = typeof(LG_GenericTerminalItem);
+                        break;
+
+                    case eNavMarkerStyle.PlayerPingCaution:
+                        break;
+
+                    case eNavMarkerStyle.PlayerPingHSU: //
+                        break;
+
+                    case eNavMarkerStyle.PlayerPingDoor:
+                        type = typeof(LG_GenericTerminalItem);
+                        break;
+
+                    case eNavMarkerStyle.PlayerPingResourceLocker:
+                        type = typeof(LG_GenericTerminalItem);
+                        break;
+
+                    case eNavMarkerStyle.PlayerPingResourceBox:
+                        type = typeof(LG_GenericTerminalItem);
+                        break;
+
+                    case eNavMarkerStyle.PlayerInCompass:
+                        break;
+
+                    case eNavMarkerStyle.PlayerPingSign:
+                        break;
+
+                    case eNavMarkerStyle.LocationBeaconNoText:
+                        break;
+
+                    case eNavMarkerStyle.TerminalPing:
+                        break;
+
+                    case eNavMarkerStyle.PlayerPingGenerator:
+                        type = typeof(LG_GenericTerminalItem);
+                        break;
+
+                    case eNavMarkerStyle.PlayerPingDisinfection:
+                        type = typeof(LG_GenericTerminalItem);
+                        break;
+
+                    case eNavMarkerStyle.PlayerPingCarryItem:
+                        type = typeof(LG_GenericTerminalItem);
+                        break;
+
+                    case eNavMarkerStyle.PlayerPingConsumable:
+                        type = typeof(LG_PickupItem_Sync);
+                        break;
+
+                    case eNavMarkerStyle.PlayerPingPickupObjectiveItem:
+                        type = typeof(LG_GenericTerminalItem);
+                        break;
+
+                    case eNavMarkerStyle.PlayerPingToolRefill:
+                        type = typeof(LG_GenericTerminalItem);
+                        break;
+
+                    case eNavMarkerStyle.PlayerPingSecurityDoor:
+                        type = typeof(LG_GenericTerminalItem);
+                        break;
+
+                    case eNavMarkerStyle.PlayerPingBulkheadDoor:
+                        type = typeof(LG_GenericTerminalItem);
+                        break;
+
+                    case eNavMarkerStyle.PlayerPingApexDoor:
+                        type = typeof(LG_GenericTerminalItem);
+                        break;
+
+                    case eNavMarkerStyle.PlayerPingBloodDoor:
+                        type = typeof(LG_GenericTerminalItem);
+                        break;
+
+                    case eNavMarkerStyle.PlayerPingSecurityCheckpointDoor:
+                        type = typeof(LG_GenericTerminalItem);
+                        break;
+
+                    case eNavMarkerStyle.PlayerPingBulkheadCheckpointDoor:
+                        type = typeof(LG_GenericTerminalItem);
+                        break;
+
+                    case eNavMarkerStyle.PlayerPingApexCheckpointDoor:
+                        type = typeof(LG_GenericTerminalItem);
+                        break;
+
+                    case eNavMarkerStyle.PlayerPingBloodCheckpointDoor:
+                        type = typeof(LG_GenericTerminalItem);
+                        break;
+
+                    case eNavMarkerStyle.PlayerPingBulkheadDC:
+                        type = typeof(LG_GenericTerminalItem);
+                        break;
+
+                    default:
+                        break;
                 }
 
-                if (mergeTarget == null)
-                    mergeTarget = parentGO;
-
-                // Remove merged old parents
-                foreach (var old in keysToRemove)
+                if (type != null)
                 {
-                    var oldMap = grouped[old];
-                    grouped.Remove(old);
-
-                    // Merge old style lists into mergeTarget
-                    foreach (var kvp in oldMap)
+                    var originalParrent = parent;
+                    while(parent.GetComponent(Il2CppType.From(type)) == null)
                     {
-                        if (!grouped.TryGetValue(mergeTarget, out var typeMap))
+                        if (parent.parent == null)
                         {
-                            typeMap = new Dictionary<eNavMarkerStyle, List<PlayerPingTarget>>();
-                            grouped[mergeTarget] = typeMap;
+                            parent = originalParrent;
+                            break;
                         }
-
-                        if (!typeMap.TryGetValue(kvp.Key, out var list))
+                        parent = parent.parent;
+                    }
+                    if (!pingTransforms.Contains(parent))
+                    {
+                        bool found = false;
+                        for (int i = 0; i < pingTransforms.Count; i++)
                         {
-                            list = new List<PlayerPingTarget>();
-                            typeMap[kvp.Key] = list;
+                            if (pingTransforms[i].IsChildOf(parent))
+                            {
+                                pingTransforms[i] = parent;
+                                found = true;
+                                break;
+                            }
+                            if (parent.IsChildOf(pingTransforms[i]))
+                            {
+                                found = true;
+                                break;
+                            }
                         }
-
-                        list.AddRange(kvp.Value);
+                        if (!found)
+                        {
+                            pingTransforms.Add(parent);
+                        }
                     }
                 }
-
-                // Add current ping
-                if (!grouped.TryGetValue(mergeTarget, out var map))
-                {
-                    map = new Dictionary<eNavMarkerStyle, List<PlayerPingTarget>>();
-                    grouped[mergeTarget] = map;
-                }
-
-                if (!map.TryGetValue(style, out var list2))
-                {
-                    list2 = new List<PlayerPingTarget>();
-                    map[style] = list2;
-                }
-
-                list2.Add(ping);
             }
-            pingTargets = new List<PlayerPingTarget>();
-
-            foreach (var kvpParent in grouped)
+            foreach (var p in pingTransforms)
             {
-                var typeMap = kvpParent.Value;
-
-                foreach (var kvpType in typeMap)
-                {
-                    var pingList = kvpType.Value;
-                    if (pingList.Count == 0) continue;
-
-                    PlayerPingTarget shallowestPing = null;
-                    int minDepth = int.MaxValue;
-
-                    foreach (var ping in pingList)
-                    {
-                        // Compute depth relative to the parent object
-                        int depth = 0;
-                        Transform t = ping.transform;
-                        while (t.parent != null && t.parent.gameObject != kvpParent.Key)
-                        {
-                            depth++;
-                            t = t.parent;
-                        }
-
-                        if (depth < minDepth)
-                        {
-                            minDepth = depth;
-                            shallowestPing = ping;
-                        }
-                    }
-
-                    if (shallowestPing != null)
-                        pingTargets.Add(shallowestPing);
-                }
-            }
-            //foreach (var kvpParent in grouped)
-            //{
-            //    var typeMap = kvpParent.Value;
-
-            //    foreach (var kvpType in typeMap)
-            //    {
-            //        var pingList = kvpType.Value;
-            //        if (pingList.Count == 0) continue;
-
-            //        // Compute centroid
-            //        Vector3 centroid = Vector3.zero;
-            //        foreach (var ping in pingList)
-            //            centroid += ping.transform.position;
-
-            //        centroid /= pingList.Count;
-
-            //        // Find ping closest to centroid
-            //        PlayerPingTarget centralPing = null;
-            //        float minDist = float.MaxValue;
-
-            //        foreach (var ping in pingList)
-            //        {
-            //            float dist = Vector3.Distance(ping.transform.position, centroid);
-            //            if (dist < minDist)
-            //            {
-            //                minDist = dist;
-            //                centralPing = ping;
-            //            }
-            //        }
-
-            //        if (centralPing != null)
-            //            pingTargets.Add(centralPing);
-            //    }
-            //}
-            foreach (var ping in pingTargets)
-            {
-                if (ping == null) continue;
-
-                Vector3 pos = ping.transform.position;
-
-                // Compute cell coordinate
-                int cellX = Mathf.FloorToInt(pos.x / pingMapCellSise);
-                int cellZ = Mathf.FloorToInt(pos.z / pingMapCellSise);
-                Vector2 cell = new Vector2(cellX, cellZ);
-
-                if (!findbleObjectMap.TryGetValue(cell, out var list))
-                {
-                    list = new List<FindableObject>();
-                    findbleObjectMap[cell] = list;
-                }
-                list.Add(new FindableObject()
-                {
-                    gameObject = ping.gameObject,
-                    type = ping.GetType(),
-                    found = false,
-                });
-                BoundingBox box = new BoundingBox(ping.gameObject);
+                BoundingBox box = new(p.gameObject, BoundingSource.Renderers);
                 box.ShowDebug();
             }
         }
+        //public static void OnFactoryBuildDone()
+        //{
+        //    allPingTargets = UnityEngine.Object.FindObjectsOfType<PlayerPingTarget>();  //Find all ping targets in the level.
+        //    pingTargetGroups = new();
+        //    foreach (var ping in allPingTargets) //Loop through all of them to group them together into each item.
+        //    {
+        //        if (ping == null || ping.gameObject == null) continue;
+
+        //        eNavMarkerStyle style = ping.PingTargetStyle;
+        //        GameObject currentGO = ping.gameObject;
+        //        bool foundParrent = false;
+        //        foreach(var pingTarget in pingTargetGroups) //Figure out if they are part of an existing group.
+        //        {
+        //            if (pingTarget.PingTargetStyle != style) continue; //not the same type, can't be in the same group.
+        //            if (ping.gameObject.transform.IsChildOf(pingTarget.baseGo.transform)) //Part of an existing group.
+        //            {
+        //                pingTarget.pings.Add(ping);
+        //                foundParrent = true;
+        //                break;
+        //            }
+        //            else if (pingTarget.baseGo.transform.IsChildOf(ping.gameObject.transform.parent)) // An existing group is part of this ping
+        //            {
+        //                pingTarget.pings.Add(ping);
+        //                pingTarget.baseGo = ping.gameObject.transform.parent.gameObject;
+        //                foundParrent = true;
+        //                break;
+        //            }
+        //        }
+        //        if (!foundParrent) // Not part of an existing group.
+        //        {
+        //            pingTargetGroups.Add(new PingTargetParent()
+        //            {
+        //                baseGo = ping.gameObject.transform.parent.gameObject,
+        //                PingTargetStyle = style,
+        //                pings = new List<PlayerPingTarget> { ping }
+        //            });
+        //        }
+        //    }
+        //    foreach (var group in pingTargetGroups) // Find the highest level game object.  might not be needed?
+        //    {
+        //        if (group.pings == null || group.pings.Count == 0)
+        //            continue;
+
+        //        // Start from the first ping’s transform
+        //        Transform common = group.pings[0].transform;
+
+        //        // Iterate upward until this transform contains ALL ping objects
+        //        bool foundCommon = false;
+        //        while (common != null)
+        //        {
+        //            bool allContained = true;
+        //            foreach (var ping in group.pings)
+        //            {
+        //                if (!ping.transform.IsChildOf(common))
+        //                {
+        //                    allContained = false;
+        //                    break;
+        //                }
+        //            }
+
+        //            if (allContained)
+        //            {
+        //                foundCommon = true;
+        //                break;
+        //            }
+
+        //            common = common.parent;
+        //        }
+
+        //        if (foundCommon && common != null)
+        //            group.baseGo = common.gameObject;
+        //    }
+        //    foreach (var group in pingTargetGroups) //Add the ping target to the map.
+        //    {
+        //        Vector3 centerpoint = Vector3.zero;
+        //        List<Vector3> points = new List<Vector3>();
+        //        foreach (var ping in group.pings) 
+        //        {
+        //            BoundingBox box = new(ping.gameObject,BoundingSource.Renderers);
+        //            //box.ShowDebug();
+        //            foreach(var point in box.GetCorners())
+        //            {
+        //                points.Add(point);
+        //            }
+        //        }
+        //        if (points.Count == 0)
+        //        {
+        //            continue;
+        //        }
+        //        else if (points.Count == 1)
+        //        {
+        //            centerpoint = points[0];
+        //        }
+        //        else
+        //        {
+        //            Bounds bounds = new Bounds(points[0], points[1]);
+        //            foreach (var  point in points)
+        //            {
+        //                bounds.Encapsulate(point);
+        //            }
+        //            centerpoint = bounds.center;
+        //        }
+        //        var cell = new Vector2Int(
+        //            Mathf.FloorToInt(centerpoint.x / pingMapCellSise),
+        //            Mathf.FloorToInt(centerpoint.z / pingMapCellSise)
+        //        );
+        //        if (!findbleObjectMap.ContainsKey(cell))
+        //        {
+        //            findbleObjectMap[cell] = new List<FindableObject>();
+        //        }
+        //        findbleObjectMap[cell].Add(new FindableObject()
+        //        {
+        //            gameObjects = group.pings.Select(p => p.gameObject).ToList(),
+        //            type = typeof(PlayerPingTarget),
+        //            found = false,
+        //            centerPoint = centerpoint,
+        //        });
+        //    }
+        //    //The base game object bounding box for some reason is offset for lockers, no idea why.  Actually ping target game objects are not.
+        //}
+        private static PingTargetParent FindPingTargetByname(string name)
+        {
+            foreach (var ping in pingTargetGroups)
+            { 
+                if (ping.baseGo.name.Contains(name))
+                {
+                    return ping;
+                }
+            }
+            return null;
+        }
+
         public static List<ItemInLevel> GetItemsFromLocker(LG_ResourceContainer_Storage storage)
         {
             List<ItemInLevel> ret = new();
@@ -457,30 +600,40 @@ namespace Zombified_Initiative
 
                     foreach (var findable in findables)
                     {
-                        if (findable == null || findable.gameObject == null || !findable.gameObject.activeInHierarchy)
-                            continue;
-
-                        if (findable.found)
-                            continue;
-
-                        if (!findable.lastCheckedVis.TryGetValue(agent.Owner.PlayerSlotIndex(), out float lastChecked))
-                            lastChecked = 0f;
-
-                        if (Time.time - lastChecked < 0.5f)
-                            continue;
-
-                        findable.lastCheckedVis[agent.Owner.PlayerSlotIndex()] = Time.time;
-
-                        // Check visibility / distance
-                        if (zVisibilityManager.CheckObjectVisiblity(findable.gameObject, agent.gameObject, foundDistance) > 0.2f)
+                        foreach (var gameObject in findable.gameObjects)
                         {
-                            findable.found = true;
+                            if (findable == null)
+                                continue;
+                            if (gameObject == null)
+                                continue;
+                            if (!gameObject.activeInHierarchy)
+                                continue;
+                            if (findable.found)
+                                continue;
+                            if (!findable.lastCheckedVis.TryGetValue(agent.Owner.PlayerSlotIndex(), out float lastChecked))
+                                lastChecked = 0f;
+                            if (Time.time - lastChecked < 0.1f)
+                                continue;
 
-                            BoundingBox findableBox = new(findable.gameObject);
-                            BoundingBox agentBox = new(agent.gameObject);
+                            findable.lastCheckedVis[agent.Owner.PlayerSlotIndex()] = Time.time;
 
-                            zDebug.DrawLine(findableBox.Center, agentBox.Center, new Color(0.1f, 0.1f, 0.1f), 0.1f);
-                            ZiMain.log.LogInfo($"Found object {findable.type}! {findable.gameObject.name}");
+                            // Check visibility / distance
+                            Vector3 dir = findable.centerPoint - agent.Position + Vector3.up * 1.5f; ;
+                            int layerMask =
+                                (1 << 0) | //Default
+                                (1 << 11) | //Dynamic
+                                (1 << 15) | // Glue Gun proj
+                                (1 << 16) | //Enemy
+                                (1 << 17) | // Enemy dead
+                                (1 << 18) | // Debris 
+                                (1 << 19); // Denemy Damageble
+                            if (zVisibilityManager.CheckObjectVisiblity(gameObject, agent.gameObject, foundDistance) > 0.01f)
+                            {
+                                findable.found = true;
+                                GuiManager.AttemptSetPlayerPingStatus(agent, true, findable.centerPoint, style : findable.gameObjects[0].GetComponent<PlayerPingTarget>().PingTargetStyle);
+                                ZiMain.log.LogInfo($"Found object {findable.type}! {gameObject.name}");
+                                break;
+                            }
                         }
                     }
                 }
@@ -489,11 +642,12 @@ namespace Zombified_Initiative
     }
     public class FindableObject
     {
-        public GameObject gameObject;
+        public List<GameObject> gameObjects;
         public AIG_CourseNode courseNode;
         public Type type;
         public bool found;
         public Dictionary<int,float> lastCheckedVis = new();
+        public Vector3 centerPoint;
     }
     
     public class VisitNode

@@ -71,7 +71,7 @@ namespace ZombieTweak2
             public visSettings()
             {
                 maxDistance = 30f;
-                visMethod = visMethods.Basic;
+                visMethod = visMethods.VeryBasic;
                 resetCullingCam = true;
             }
         }
@@ -726,13 +726,28 @@ namespace ZombieTweak2
                     Vector3 dir = targetCorner - observerCorner;
                     float checkDistance = dir.magnitude;
                     RaycastHit hit;
-                    if (Physics.Raycast(observerCorner, dir.normalized, out hit, checkDistance))
+                    int layerMask =
+                        (1 << 0) | //Default
+                        (1 << 11) | //Dynamic
+                        (1 << 15) | // Glue Gun proj
+                        (1 << 16) | //Enemy
+                        (1 << 17) | // Enemy dead
+                        (1 << 18) | // Debris 
+                        (1 << 19); // Denemy Damageble
+                    if (Physics.Raycast(observerCorner, dir.normalized, out hit, checkDistance, layerMask))
                     {
                         if (hit.collider.gameObject == target || hit.collider.transform.IsChildOf(target.transform))
+                        {
+                            //zDebug.DrawLine(observerCorner, targetCorner, new Color(0.1f, 0.1f, 0.1f), 0.01f);
                             ret++;
+                        }
                     }
                     else
+                    {
+                        //zDebug.DrawLine(observerCorner, targetCorner, new Color(0.1f, 0.1f, 0.1f), 0.01f);
                         ret++;
+                    }
+                        
                 }
             return (ret/729)*fogPenalty;
         }
@@ -753,10 +768,21 @@ namespace ZombieTweak2
             Vector3 dir = targetBounds.Center - observerBounds.Center;
             float checkDistance = dir.magnitude;
             RaycastHit hit;
-            if (Physics.Raycast(observerBounds.Center, dir.normalized, out hit, checkDistance))
+            int layerMask =
+                (1 << 0) | //Default
+                (1 << 11) | //Dynamic
+                (1 << 15) | // Glue Gun proj
+                (1 << 16) | //Enemy
+                (1 << 17) | // Enemy dead
+                (1 << 18) | // Debris 
+                (1 << 19); // Denemy Damageble
+            if (Physics.Raycast(observerBounds.Center, dir.normalized, out hit, checkDistance,layerMask))
             {
                 if (hit.collider.transform.IsChildOf(target.transform))
+                {
+                    //zDebug.DrawLine(observerBounds.Center, targetBounds.Center, new Color(0.1f, 0.1f, 0.1f), 0.01f);
                     return 1f;
+                }
             }
             return 0f;
         }

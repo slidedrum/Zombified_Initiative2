@@ -557,7 +557,7 @@ namespace ZombieTweak2
         {
             zVisitedManager.SetDebug(text: !zVisitedManager.debugText);
         }
-        internal static void DrawLine(Vector3 start, Vector3 end, Color color, float width, float time = 1f)
+        internal static GameObject DrawLine(Vector3 start, Vector3 end, Color color, float width, float time = 1f)
         {
             // Create a new GameObject to hold the line
             GameObject lineObj = new GameObject("VisibilityLine");
@@ -575,6 +575,7 @@ namespace ZombieTweak2
 
             // Optional: auto-destroy after a short time (so lines don't pile up)
             //GameObject.Destroy(lineObj, time);
+            return lineObj;
         }
     }
 }
