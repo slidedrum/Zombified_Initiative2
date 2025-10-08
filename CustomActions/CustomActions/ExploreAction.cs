@@ -1,4 +1,5 @@
-﻿using BetterBots.Data;
+﻿using Agents;
+using BetterBots.Data;
 using Enemies;
 using Il2CppInterop.Runtime.Injection;
 using Player;
@@ -6,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.UIElements;
 using Zombified_Initiative;
 
 namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
@@ -66,6 +68,14 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
             {
                 //Use this
             }
+            private bool HasFoundEnemies()
+            {
+                Vector3 pos1 = Bot.transform.position;
+                Vector3 pos2 = Bot.m_rootAction.Cast<RootPlayerBotAction.Descriptor>().ActionBase.Cast<RootPlayerBotAction>().m_followLeaderAction.Cast<PlayerBotActionFollow.Descriptor>().Client.transform.position; //holy shit this is dumb.
+                if (ExploreAction.HasFoundEnemies(pos1) || ExploreAction.HasFoundEnemies(pos2))
+                    return true;
+                return false;
+            }
             public override void compareAction(ref PlayerBotActionBase.Descriptor bestAction)
             {
                 if (!canExplore)
@@ -80,8 +90,7 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
                     return;
                 if (!IsTerminated())
                     return;
-                bool foundEnemy = zSearch.FindableObjects.Values.Any(obj => obj.found && obj.type == typeof(EnemyAgent));
-                if (foundEnemy)
+                if (HasFoundEnemies())
                     return;
                 float maxprio = 0f;
                 foreach (var act in Bot.Actions)
@@ -112,6 +121,7 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
             {
                 return new ExploreAction(this);
             }
+
         }
         public ExploreAction() : base(ClassInjector.DerivedConstructorPointer<CustomActionBase>())
         {//Don't use!
@@ -197,7 +207,7 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
             }
             else if (state == StateEnum.Moving) 
             {
-                if (HasUnfoundEnemies())
+                if (HasFoundEnemies())
                 {
                     m_bot.StopAction(travelAction);
                     state = StateEnum.Finished;
@@ -212,13 +222,36 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
             }
             return !IsActive();
         }
-        private bool HasUnfoundEnemies()
+        private bool HasFoundEnemies()
         {
-            foreach (var findable in zSearch.FindableObjects.Values)
+            Vector3 pos1 = m_bot.transform.position;
+            Vector3 pos2 = m_bot.m_rootAction.Cast<RootPlayerBotAction.Descriptor>().ActionBase.Cast<RootPlayerBotAction>().m_followLeaderAction.Cast<PlayerBotActionFollow.Descriptor>().Client.transform.position;
+            if (HasFoundEnemies(pos1) || HasFoundEnemies(pos2))
+                return true;
+            return false;
+        }
+        private static bool HasFoundEnemies(Vector3 pos)
+        {
+            int cellX = Mathf.FloorToInt(pos.x / zSearch.MapCellSise);
+            int cellZ = Mathf.FloorToInt(pos.z / zSearch.MapCellSise);
+
+            // Number of cells to cover foundDistance
+            int range = Mathf.CeilToInt(zSearch.foundDistance * 5 / zSearch.MapCellSise);
+
+            for (int dx = -range; dx <= range; dx++)
             {
-                if (findable.type == typeof(EnemyAgent) && findable.found)
+                for (int dz = -range; dz <= range; dz++)
                 {
-                    return true;
+                    Vector2 cell = new Vector2(cellX + dx, cellZ + dz);
+
+                    if (!zSearch.findbleObjectMap.TryGetValue(cell, out var findables))
+                        continue;
+
+                    foreach (var findable in findables)
+                    {
+                        if (findable.found == true && findable.type == typeof(EnemyAgent))
+                            return true;
+                    }
                 }
             }
             return false;

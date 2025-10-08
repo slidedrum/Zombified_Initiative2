@@ -178,7 +178,6 @@ public class ZiMain : BasePlugin
         LG_Factory.add_OnFactoryBuildDone((Action)zSlideComputer.Init);
         LG_Factory.add_OnFactoryBuildDone((Action)zMenuManager.SetupCamera);
         LG_Factory.add_OnFactoryBuildDone((Action)zMenus.CreateMenus);
-        LG_Factory.add_OnFactoryBuildDone((Action)zSearch.OnFactoryBuildDone);
 
     }
 

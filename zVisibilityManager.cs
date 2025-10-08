@@ -40,6 +40,7 @@ namespace ZombieTweak2
 
         private static List<Material[]> originalMats = new();
         private static Renderer[] rendererCache;
+        private static Dictionary<int,BoundingBox> boundingBoxCache;
 
 
 
@@ -68,25 +69,31 @@ namespace ZombieTweak2
             public float maxDistance;
             public visMethods visMethod;
             public bool resetCullingCam;
+            public Vector3 observerOffest;
+            public Vector3 targetOffset;
+            public float FOV;
             public visSettings()
             {
                 maxDistance = 30f;
-                visMethod = visMethods.Basic;
+                visMethod = visMethods.VeryBasic;
                 resetCullingCam = true;
+                observerOffest = Vector3.zero;
+                targetOffset = Vector3.zero;
+                FOV = 90f;
             }
         }
         static zVisibilityManager()
         {
-            //observercamGobject = new GameObject("ObserverCam");
+            observercamGobject = new GameObject("ObserverCam");
             //observerExteriroCamera = observercamGobject.AddComponent<ExteriorCamera>();
             //fpsCamera = observercamGobject.AddComponent<FPSCamera>();
             //PreLitVolume = observercamGobject.AddComponent<PreLitVolume>();
-            //renderTexture = new RenderTexture(Settings.resolution.x, Settings.resolution.y, 16, RenderTextureFormat.ARGB32);
+            renderTexture = new RenderTexture(Settings.resolution.x, Settings.resolution.y, 1, RenderTextureFormat.ARGB32);
             //renderTextureAtlas = new RenderTexture(Settings.resolution.x, Settings.resolution.y*3, 16, RenderTextureFormat.ARGB32);
-            ////Setup.SetUpObservationCamera();
-            //Setup.SetUpMaterals();
+            Setup.SetUpObservationCamera();
+            Setup.SetUpMaterals();
             //textureAtlas = new(Settings.resolution.x, Settings.resolution.y * 3, TextureFormat.RGB24, false);
-            //scratchBoard = new(Settings.resolution.x, Settings.resolution.y, TextureFormat.RGB24, false);
+            scratchBoard = new(Settings.resolution.x, Settings.resolution.y, TextureFormat.RGB24, false);
         }
         private static class Setup
         {
@@ -110,9 +117,9 @@ namespace ZombieTweak2
             {
                 unlitMat = new Material(Shader.Find("Unlit/Color"));
                 unlitMat.color = Color.white;
-                litMat = new Material(Shader.Find("Standard"));
-                litMat.color = Color.white;
-                litMat.EnableKeyword("_EMISSION");
+                //litMat = new Material(Shader.Find("Standard"));
+                //litMat.color = Color.white;
+                //litMat.EnableKeyword("_EMISSION");
             }
         }
         public static class Settings
@@ -120,7 +127,7 @@ namespace ZombieTweak2
             public static Vector2Int resolution;
             static Settings()
             {
-                resolution = new Vector2Int(64, 64);
+                resolution = new Vector2Int(16, 16);
             }
         }
         public static class HelperMethods
@@ -314,10 +321,10 @@ namespace ZombieTweak2
                 Graphics.CopyTexture(renderTexture, 0, 0, 0, 0, renderTexture.width, bandHeight,
                                      renderTextureAtlas, 0, 0, 0, dstY);
             }
-            public static float CalculateVerticalFov(Vector3 observerPos, Bounds targetBounds)
+            public static float CalculateVerticalFov(Vector3 observerPos, BoundingBox targetBounds)
             {
-                float targetHeight = targetBounds.size.y;
-                float distance = Vector3.Distance(observerPos, targetBounds.center);
+                float targetHeight = targetBounds.Size.y;
+                float distance = Vector3.Distance(observerPos, targetBounds.Center);
 
                 if (distance < 1e-4f || targetHeight <= 0f)
                     return 1f;
@@ -385,6 +392,70 @@ namespace ZombieTweak2
                 hue = (hue + 0.5f) % 1f;
                 sat = sat > 0.001f ? sat : 0f;
                 return Color.HSVToRGB(hue, sat, val, true);
+            }
+
+            public static Dictionary<int, int> BackupLayers(GameObject root)
+            {
+                var layerBackup = new Dictionary<int, int>();
+
+                foreach (Transform t in root.GetComponentsInChildren<Transform>(true))
+                {
+                    layerBackup[t.gameObject.GetInstanceID()] = t.gameObject.layer;
+                }
+
+                return layerBackup;
+            }
+            public static void RestoreLayers(GameObject root, Dictionary<int, int> backup)
+            {
+                foreach (Transform t in root.GetComponentsInChildren<Transform>(true))
+                {
+                    int id = t.gameObject.GetInstanceID();
+                    if (backup.TryGetValue(id, out int originalLayer))
+                    {
+                        t.gameObject.layer = originalLayer;
+                    }
+                }
+            }
+
+            public static void SetLayer(GameObject root, int layer)
+            {
+                root.layer = layer;
+
+                foreach (Transform child in root.GetComponentsInChildren<Transform>(true))
+                {
+                    child.gameObject.layer = layer;
+                }
+            }
+
+            public static int CountWhitePixels(RenderTexture renderTexture)
+            {
+                // Make the RenderTexture active
+                var originalActive = RenderTexture.active;
+                RenderTexture.active = renderTexture;
+
+                // Create a temporary Texture2D with the same dimensions
+                Texture2D tex = new Texture2D(renderTexture.width, renderTexture.height, TextureFormat.RGB24, false);
+
+                // Read the RenderTexture into the Texture2D
+                tex.ReadPixels(new Rect(0, 0, renderTexture.width, renderTexture.height), 0, 0);
+                tex.Apply();
+
+                int whitePixelCount = 0;
+
+                // Loop through all pixels
+                Color32[] pixels = tex.GetPixels32();
+                foreach (var pixel in pixels)
+                {
+                    // Pure white check (RGB = 255,255,255)
+                    if (pixel.r == 255 && pixel.g == 255 && pixel.b == 255)
+                        whitePixelCount++;
+                }
+
+                // Cleanup
+                RenderTexture.active = originalActive;
+                UnityEngine.Object.Destroy(tex);
+
+                return whitePixelCount;
             }
         }
         private static class VisDebug
@@ -557,152 +628,177 @@ namespace ZombieTweak2
         }
         private static float VeryFancyObjectVisilityCheck(GameObject target, GameObject observer, visSettings settings)
         {
-            return 0f;
             if (target == null || observer == null) return 0f;
 
-            //if (cullingCamInOriginalState) // Save culling camera source
-            //{
-            //    FPSCameraHolder c_holder = observer.GetComponent<FPSCameraHolder>(); // Set temp culling camera source
-            //    PlayerAgent c_agent = c_holder.m_owner;
-            //    C_Camera.Current.m_camera = observationCamera; // This causes flicker, TODO
-            //    C_Camera.Current.m_cullAgent = c_agent?.gameObject?.GetComponent<C_MovingCuller>() ?? C_Camera.Current.m_cullAgent; //If c_agent exists upate cullagent, if not don't touch it.
-            //    C_Camera.Current.RunVisibility(); // Must recalculate culling with new agentPosition.
-            //}
+            Vector3 angleToTarget = (target.transform.position - observer.transform.position).normalized;
+            float angle = Vector3.Angle(observer.transform.forward, angleToTarget);
+            if (angle > settings.FOV / 2)
+                return 0f;
+            float range = settings.maxDistance;
+            var preLit = Camera.main.GetComponent<FPSCamera>().PrelitVolume;
+            float fogPenalty = preLit.GetFogDensity(target.transform.position) + preLit.GetFogDensity(observer.transform.position);
+            fogPenalty = HelperMethods.InverseLerp(3f, 0, fogPenalty);
+            range *= fogPenalty;
+            //TODO figure out how to do a lighting penalty for dark areas.
+            float distance = Vector3.Distance(target.transform.position, observer.transform.position);
+            if (distance > range)
+                return 0;
+            var originalCam = C_Camera.Current.m_camera;
+            var originalCullAgent = C_Camera.Current.m_cullAgent;
+            C_Camera.Current.m_camera = observationCamera; // This causes flicker, TODO
+            C_Camera.Current.m_cullAgent = observer?.gameObject?.GetComponent<C_MovingCuller>() ?? C_Camera.Current.m_cullAgent; //If c_agent exists upate cullagent, if not don't touch it.
+            C_Camera.Current.RunVisibility(); // Must recalculate culling with new agentPosition.
 
-            // Step 0: Move camera
-            //PreLitVolume.Current.UpdateFogVolume = false;
-            //PreLitVolume.Current.UpdateLitVolume = false;
-            //PreLitVolume.Current.UpdateIndirectVolume = false;
             observercamGobject.gameObject.transform.position = observer.transform.position;
-            var bounds = HelperMethods.GetMaxBounds(target);
-            observercamGobject.transform.LookAt(bounds.center);
+            var bounds = new BoundingBox(target,BoundingBox.BoundingSource.Renderers);
+
+            observercamGobject.transform.LookAt(bounds.Center);
             observationCamera.fieldOfView = HelperMethods.CalculateVerticalFov(observer.transform.position, bounds);
             observationCamera.farClipPlane = settings.maxDistance;
-            
-            //This might be very cursed, but what if I move camera.main too?
-            //var settingsbackup = HelperMethods.SaveSettings();
-            //HelperMethods.SetSettings(observationCamera);
-            //C_Camera.Current.GetComponent<FPSCamera>().OnPreCull();
 
-            // Backup source materials
-            HelperMethods.StoreMaterals(target); 
-
-            // Step 1: First pass render, whiteMat enemy only
-            HelperMethods.SetMateral(unlitMat);
-            observationCamera.cullingMask = (1 << LayerMask.NameToLayer("Enemy"));
-            observationCamera.Render(); // observationCamera.targetTexture = renderTexture;
-            HelperMethods.CopyToAtlas(0);
-
-            // Setp 2: Second pass render, whiteMat enemy + world
-            observationCamera.cullingMask = -1;
+            HelperMethods.StoreMaterals(target);
             HelperMethods.SetMateral(unlitMat);
             observationCamera.Render(); // observationCamera.targetTexture = renderTexture;
-            HelperMethods.CopyToAtlas(1);
 
-            // Step 3: GetCorners color1 source second pass render
-            var averageColor = HelperMethods.GetAverageColor(renderTexture, Color.white);
-            var hueShiftColor = HelperMethods.HueShift(averageColor);
-            if (VisDebug.debugMode)
-            {
-                VisDebug.AverageColor = averageColor;
-                VisDebug.invertedColor = hueShiftColor;
-            }
-            // Setp 4: Third pass render, litcolor mat enemy + world
-            litMat.color = averageColor;
-            var enemyAgent = target.GetComponent<EnemyAgent>();
-            bool shouldGlow = enemyAgent?.AI?.m_detection?.m_noiseDetectionOn ?? false;
-            if (VisDebug.debugMode)
-                shouldGlow = shouldGlow || VisDebug.alwaysEmit;
-            litMat.SetColor("_EmissionColor", averageColor * (shouldGlow ? VisDebug.emmisivenessOn : VisDebug.emmisivenessOff));
-            HelperMethods.SetMateral(litMat);
-            observationCamera.Render(); // observationCamera.targetTexture = renderTexture;
-            HelperMethods.CopyToAtlas(2);
             HelperMethods.RestoreMaterals();
-            // Restore culling camera
-            //if (settings.resetCullingCam && !cullingCamInOriginalState)
-            //{
-            //    C_Camera.Current.m_cullAgent = real_C_Cam_agent;
-            //    C_Camera.Current.m_camera = real_C_Cam_cam;
-            //}
-            // Restore camera source.
-            //HelperMethods.SetSettings(settingsbackup);
-            //PreLitVolume.Current.UpdateFogVolume = true;
-            //PreLitVolume.Current.UpdateLitVolume = true;
-            //PreLitVolume.Current.UpdateIndirectVolume = true;
-            // Step 5: Move renderTextureAtlas destination CPU mem,
+            C_Camera.Current.m_camera = originalCam;
+            C_Camera.Current.m_cullAgent = originalCullAgent;
+            C_Camera.Current.RunVisibility();
 
-            HelperMethods.CopyTextureAtlasToCpu();
-            if (VisDebug.debugMode)
+            return HelperMethods.CountWhitePixels(renderTexture);
+
+            //return 0f;
+            //HelperMethods.CopyToAtlas(0);
+
+            //// Setp 2: Second pass render, whiteMat enemy + world
+            //observationCamera.cullingMask = -1;
+            //HelperMethods.SetMateral(unlitMat);
+            //observationCamera.Render(); // observationCamera.targetTexture = renderTexture;
+            //HelperMethods.CopyToAtlas(1);
+
+            //// Step 3: GetCorners color1 source second pass render
+            //var averageColor = HelperMethods.GetAverageColor(renderTexture, Color.white);
+            //var hueShiftColor = HelperMethods.HueShift(averageColor);
+            //if (VisDebug.debugMode)
+            //{
+            //    VisDebug.AverageColor = averageColor;
+            //    VisDebug.invertedColor = hueShiftColor;
+            //}
+            //// Setp 4: Third pass render, litcolor mat enemy + world
+            //litMat.color = averageColor;
+            //var enemyAgent = target.GetComponent<EnemyAgent>();
+            //bool shouldGlow = enemyAgent?.AI?.m_detection?.m_noiseDetectionOn ?? false;
+            //if (VisDebug.debugMode)
+            //    shouldGlow = shouldGlow || VisDebug.alwaysEmit;
+            //litMat.SetColor("_EmissionColor", averageColor * (shouldGlow ? VisDebug.emmisivenessOn : VisDebug.emmisivenessOff));
+            //HelperMethods.SetMateral(litMat);
+            //observationCamera.Render(); // observationCamera.targetTexture = renderTexture;
+            //HelperMethods.CopyToAtlas(2);
+            //HelperMethods.RestoreMaterals();
+            //// Restore culling camera
+            ////if (settings.resetCullingCam && !cullingCamInOriginalState)
+            ////{
+            ////    C_Camera.Current.m_cullAgent = real_C_Cam_agent;
+            ////    C_Camera.Current.m_camera = real_C_Cam_cam;
+            ////}
+            //// Restore camera source.
+            ////HelperMethods.SetSettings(settingsbackup);
+            ////PreLitVolume.Current.UpdateFogVolume = true;
+            ////PreLitVolume.Current.UpdateLitVolume = true;
+            ////PreLitVolume.Current.UpdateIndirectVolume = true;
+            //// Step 5: Move renderTextureAtlas destination CPU mem,
+
+            //HelperMethods.CopyTextureAtlasToCpu();
+            //if (VisDebug.debugMode)
+            //{
+            //    VisDebug.CreateDebugHud(0);
+            //}
+            //int bandHeight = Settings.resolution.y;
+            //int pass1offset = 0;
+            //int pass2offset = bandHeight;
+            //int pass3offset = bandHeight * 2;
+            //int totalPixels = 0;
+            //int width = textureAtlas.width;
+            //float totalValue = 0f;
+            //Color32[] pixels = textureAtlas.GetPixels32();
+            //Color GetPixel(int x, int y, int i)
+            //{
+            //    return pixels[(i * bandHeight + y) * width + x];
+            //}
+            //void SetPixel(int x, int y, int i, Color color)
+            //{
+            //    pixels[(i * bandHeight + y) * width + x] = color;
+            //}
+            //for (int y = 0; y < bandHeight; y++)
+            //{
+            //    for (int x = 0; x < width; x++)
+            //    {
+            //        Color color1 = GetPixel(x, y, 0);
+            //        Color color2 = GetPixel(x, y, 1);
+            //        Color color3 = GetPixel(x, y, 2);
+            //        pixels[(0 * bandHeight + y) * width + x].a = 255;
+            //        pixels[(1 * bandHeight + y) * width + x].a = 255;
+            //        pixels[(2 * bandHeight + y) * width + x].a = 255;
+            //        if (color1 == Color.black)
+            //            continue;
+            //        if (color1 == Color.white) // Step 6: Hue shift 1st pass render.
+            //        {
+            //            if (VisDebug.debugMode)
+            //                SetPixel(x, y, 0, hueShiftColor);
+            //            color1 = hueShiftColor;
+            //            totalPixels++;
+            //        }
+            //        if (color2 != Color.white) // Step 7: Mask 3rd pass render with 2nd pass render.
+            //        {
+            //            if (VisDebug.debugMode)
+            //                SetPixel(x, y, 2, Color.black);
+            //            color3 = Color.black;
+            //            continue;
+            //        }
+            //        // Step 8: Compare 1st pass and 3rd pass render destination get final value
+            //        float contribution = 0f;
+            //        Color.RGBToHSV(color1, out float hue1, out float sat1, out float val1);
+            //        Color.RGBToHSV(color3, out float hue3, out float sat3, out float val3);
+            //        float hueDiff = Mathf.Abs(hue1 - hue3);
+            //        hueDiff = Mathf.Min(hueDiff, 1f - hueDiff);
+            //        float satDiff = Mathf.Abs(sat1 - sat3);
+            //        float hueSatDiff = Mathf.Sqrt(hueDiff * hueDiff + satDiff * satDiff);
+            //        float score = Mathf.Clamp01(1f - hueSatDiff); // [0,1], higher = more similar
+            //        contribution = score * val3; // darker pixels reduce contribution
+            //        totalValue += contribution;
+            //    }
+            //}
+            //if (VisDebug.debugMode)
+            //{
+            //    textureAtlas.SetPixels32(pixels);
+            //    textureAtlas.Apply();
+            //    VisDebug.CreateDebugHud(1);
+            //}
+            
+            //return totalPixels == 0 ? 0 : totalValue / totalPixels;
+        }
+        private class Vector3Comparer : IEqualityComparer<Vector3>
+        {
+            private const float tolerance = 0.0001f;
+            public bool Equals(Vector3 a, Vector3 b)
             {
-                VisDebug.CreateDebugHud(0);
+                return (a - b).sqrMagnitude < tolerance * tolerance;
             }
-            int bandHeight = Settings.resolution.y;
-            int pass1offset = 0;
-            int pass2offset = bandHeight;
-            int pass3offset = bandHeight * 2;
-            int totalPixels = 0;
-            int width = textureAtlas.width;
-            float totalValue = 0f;
-            Color32[] pixels = textureAtlas.GetPixels32();
-            Color GetPixel(int x, int y, int i)
+
+            public int GetHashCode(Vector3 v)
             {
-                return pixels[(i * bandHeight + y) * width + x];
-            }
-            void SetPixel(int x, int y, int i, Color color)
-            {
-                pixels[(i * bandHeight + y) * width + x] = color;
-            }
-            for (int y = 0; y < bandHeight; y++)
-            {
-                for (int x = 0; x < width; x++)
+                unchecked
                 {
-                    Color color1 = GetPixel(x, y, 0);
-                    Color color2 = GetPixel(x, y, 1);
-                    Color color3 = GetPixel(x, y, 2);
-                    pixels[(0 * bandHeight + y) * width + x].a = 255;
-                    pixels[(1 * bandHeight + y) * width + x].a = 255;
-                    pixels[(2 * bandHeight + y) * width + x].a = 255;
-                    if (color1 == Color.black)
-                        continue;
-                    if (color1 == Color.white) // Step 6: Hue shift 1st pass render.
-                    {
-                        if (VisDebug.debugMode)
-                            SetPixel(x, y, 0, hueShiftColor);
-                        color1 = hueShiftColor;
-                        totalPixels++;
-                    }
-                    if (color2 != Color.white) // Step 7: Mask 3rd pass render with 2nd pass render.
-                    {
-                        if (VisDebug.debugMode)
-                            SetPixel(x, y, 2, Color.black);
-                        color3 = Color.black;
-                        continue;
-                    }
-                    // Step 8: Compare 1st pass and 3rd pass render destination get final value
-                    float contribution = 0f;
-                    Color.RGBToHSV(color1, out float hue1, out float sat1, out float val1);
-                    Color.RGBToHSV(color3, out float hue3, out float sat3, out float val3);
-                    float hueDiff = Mathf.Abs(hue1 - hue3);
-                    hueDiff = Mathf.Min(hueDiff, 1f - hueDiff);
-                    float satDiff = Mathf.Abs(sat1 - sat3);
-                    float hueSatDiff = Mathf.Sqrt(hueDiff * hueDiff + satDiff * satDiff);
-                    float score = Mathf.Clamp01(1f - hueSatDiff); // [0,1], higher = more similar
-                    contribution = score * val3; // darker pixels reduce contribution
-                    totalValue += contribution;
+                    int x = Mathf.RoundToInt(v.x / tolerance);
+                    int y = Mathf.RoundToInt(v.y / tolerance);
+                    int z = Mathf.RoundToInt(v.z / tolerance);
+                    return (x * 73856093) ^ (y * 19349663) ^ (z * 83492791);
                 }
             }
-            if (VisDebug.debugMode)
-            {
-                textureAtlas.SetPixels32(pixels);
-                textureAtlas.Apply();
-                VisDebug.CreateDebugHud(1);
-            }
-            
-            return totalPixels == 0 ? 0 : totalValue / totalPixels;
         }
         private static float FancyObjectVisibilityChec(GameObject target, GameObject observer, visSettings settings)
         {
-            throw new NotImplementedException();
+            return 0f;
         }
         private static float BasicObjectVisibilityChec(GameObject target, GameObject observer, visSettings settings)
         {
@@ -723,8 +819,8 @@ namespace ZombieTweak2
             foreach (var observerCorner in observerBounds.GetCorners())
                 foreach (var targetCorner in targetBounds.GetCorners())
                 {
-                    Vector3 dir = targetCorner - observerCorner;
-                    float checkDistance = dir.magnitude;
+                    Vector3 dir = (targetCorner + settings.targetOffset) - (observerCorner + settings.observerOffest);
+                    float checkDistance = dir.magnitude*2;
                     RaycastHit hit;
                     int layerMask =
                         (1 << 0) | //Default
@@ -734,7 +830,7 @@ namespace ZombieTweak2
                         (1 << 17) | // Enemy dead
                         (1 << 18) | // Debris 
                         (1 << 19); // Denemy Damageble
-                    if (Physics.Raycast(observerCorner, dir.normalized, out hit, checkDistance, layerMask))
+                    if (Physics.Raycast(observerCorner + settings.observerOffest, dir.normalized, out hit, checkDistance, layerMask))
                     {
                         if (hit.collider.gameObject == target || hit.collider.transform.IsChildOf(target.transform))
                         {
@@ -758,14 +854,16 @@ namespace ZombieTweak2
             float fogPenalty = preLit.GetFogDensity(target.transform.position) + preLit.GetFogDensity(observer.transform.position);
             fogPenalty = HelperMethods.InverseLerp(3f, 0, fogPenalty);
             range *= fogPenalty;
+
             //TODO figure out how to do a lighting penalty for dark areas.
+
             float distance = Vector3.Distance(target.transform.position, observer.transform.position);
             if (distance > range)
                 return 0;
-            BoundingBox observerBounds = new(observer);
-            BoundingBox targetBounds = new(target);
+            var observerBounds = HelperMethods.GetRendererMaxBounds(observer);
+            var targetBounds = HelperMethods.GetRendererMaxBounds(target);
 
-            Vector3 dir = targetBounds.Center - observerBounds.Center;
+            Vector3 dir = (targetBounds.center + settings.targetOffset) - (observerBounds.center + settings.observerOffest);
             float checkDistance = dir.magnitude;
             RaycastHit hit;
             int layerMask =
@@ -776,15 +874,16 @@ namespace ZombieTweak2
                 (1 << 17) | // Enemy dead
                 (1 << 18) | // Debris 
                 (1 << 19); // Denemy Damageble
-            if (Physics.Raycast(observerBounds.Center, dir.normalized, out hit, checkDistance,layerMask))
+            if (Physics.Raycast(observerBounds.center + settings.observerOffest, dir.normalized, out hit, checkDistance, layerMask))
             {
                 if (hit.collider.transform.IsChildOf(target.transform))
                 {
                     //zDebug.DrawLine(observerBounds.Center, targetBounds.Center, new Color(0.1f, 0.1f, 0.1f), 0.01f);
                     return 1f;
                 }
+                return 0f;
             }
-            return 0f;
+            return 1f;
         }
     }
 }

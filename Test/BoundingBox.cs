@@ -54,6 +54,7 @@ public class BoundingBox
     public IEnumerable<BoundingPoint> Points => _points;
     private List<GameObject> _debugMarkers = new List<GameObject>();
     public Vector3 Center { get; private set; }
+    public Vector3 Size { get; private set; }
 
     public BoundingBox(GameObject go, BoundingSource sources = BoundingSource.All)
     {
@@ -147,6 +148,7 @@ public class BoundingBox
             combinedBounds.Encapsulate(b.min);
             combinedBounds.Encapsulate(b.max);
         }
+        Size = combinedBounds.size;
 
         Center = rootT.TransformPoint(combinedBounds.center);
 
@@ -294,12 +296,12 @@ public class BoundingBox
             label.transform.position = topCenter.Value.Position + Vector3.up * 0.1f;
             label.transform.localScale = new Vector3(0.25f, 0.25f, 0.25f);
 
-            TextMesh tmp = label.AddComponent<TextMesh>();
-            tmp.text = _go.name;
-            tmp.fontSize = 20;
-            tmp.anchor = TextAnchor.LowerCenter;
-            tmp.alignment = TextAlignment.Center;
-            tmp.color = Color.yellow;
+            //TextMesh tmp = label.AddComponent<TextMesh>();
+            //tmp.text = _go.name;
+            //tmp.fontSize = 20;
+            //tmp.anchor = TextAnchor.LowerCenter;
+            //tmp.alignment = TextAlignment.Center;
+            //tmp.color = Color.yellow;
 
             _debugMarkers.Add(label);
         }
