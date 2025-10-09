@@ -83,13 +83,13 @@ namespace ZombieTweak2.zNetworking
             uint id = info.id;
             bool allowed = info.allowed;
             ZiMain.log.LogInfo($"id:{id}, allowed:{allowed}");
-            if (!PermissionsMenuClass.prioNodesByID.ContainsKey(id))
+            if (!PickupMenuClass.prioNodesByID.ContainsKey(id))
             {
                 ZiMain.log.LogError("Unknown id recived!");
                 return;
             }
             zSlideComputer.SetItemPrioDisabled(id, allowed, sender);
-            PermissionsMenuClass.updateNodePriorityDisplay(PermissionsMenuClass.prioNodesByID[id], id);
+            PickupMenuClass.updateNodePriorityDisplay(PickupMenuClass.prioNodesByID[id], id);
         }
         internal static void ReciveSetItemPrio(ulong sender, pStructs.pItemPrio info)
         {
@@ -97,13 +97,13 @@ namespace ZombieTweak2.zNetworking
             uint id = info.id;
             float prio = info.prio;
             ZiMain.log.LogInfo($"id:{id}, prio:{prio}");
-            if (!PermissionsMenuClass.prioNodesByID.ContainsKey(id))
+            if (!PickupMenuClass.prioNodesByID.ContainsKey(id))
             {
                 ZiMain.log.LogError("Unknown id recived!");
                 return;
             }
             zSlideComputer.SetBotItemPriority(id, prio, sender);
-            PermissionsMenuClass.updateNodePriorityDisplay(PermissionsMenuClass.prioNodesByID[id], id);
+            PickupMenuClass.updateNodePriorityDisplay(PickupMenuClass.prioNodesByID[id], id);
         }
         internal static void reciveSetResourceThreshold(ulong sender, pStructs.pResourceThreshold info)
         {
@@ -145,7 +145,7 @@ namespace ZombieTweak2.zNetworking
                 return;
             }
             zSlideComputer.SetPickupPermission(playerID, allowed, sender);
-            zMenus.UpdateIndicatorForNode(zMenus.permissionMenu.GetNode("Pickups"), zSlideComputer.PickUpPerms);
+            //zMenus.UpdateIndicatorForNode(zMenus.permissionMenu.GetNode("Pickups"), zSlideComputer.PickUpPerms);
         }
         internal static void ReciveSetSharePermission(ulong sender, pStructs.pSharePermission info)
         {
@@ -159,7 +159,7 @@ namespace ZombieTweak2.zNetworking
                 return;
             }
             zSlideComputer.SetSharePermission(playerID, allowed, sender);
-            zMenus.UpdateIndicatorForNode(zMenus.permissionMenu.GetNode("Share"), zSlideComputer.SharePerms);
+            //zMenus.UpdateIndicatorForNode(zMenus.permissionMenu.GetNode("Share"), zSlideComputer.SharePerms);
         }
         internal static void ReciveRequestToPickupItem(ulong sender, pStructs.pPickupItemInfo info)
         {

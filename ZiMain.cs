@@ -40,7 +40,7 @@ using static ZombieTweak2.zNetworking.pStructs;
  -- TODO -- DONE -- want to make custom blacklist pickups
  -- TODO -- DONE -- want to fix attack not always working
  -- TODO -- DONE -- want to make attack wake room sometimes
- -- TOOD -- DONE -- Not perfect. When sharing resources, if someone else is already giving the visTarget the same item, don't double up.  Can still happen, but much less likely.
+ -- TOOD -- DONE -- Not perfect. When sharing resourcesActions, if someone else is already giving the visTarget the same item, don't double up.  Can still happen, but much less likely.
  -- TODO -- DONE -- Remake attack my visTarget methods and put it under actions.
  -- TODO -- DONE -- Investigate what is causing recolor of some menu elements with other mods (Archive essentials?)
  -- TODO -- DONE -- Investigate what is causing first letter of bot name to mess up with other mods (Arhcive essentials?)
@@ -93,7 +93,7 @@ using static ZombieTweak2.zNetworking.pStructs;
  -- TODO -- Come up with a better more consistant naming scheme for pStructs and encoding/decoding methods
  -- TODO -- Make network packets only send after a 100ms delay, and send the most up to date value 100ms later.
  -- TODO -- Make clients ask host for current value after every settings change to resolve dysync and conflicts.
- -- TODO -- Send inventory sync command when bots run out of resources from a manual action?
+ -- TODO -- Send inventory sync command when bots run out of resourcesActions from a manual action?
  -- TODO -- In smart select, add some leeway for very close objects, maybe inside of 2 units lerp between max angle of given, and 180 at 0 units.
  -- TODO -- make fulltextpart position perfectly match on submenus even when line len of title/subtitle doesn't match.
  -- TODO -- handle bots spamming chat with the same message over and over (usually failed to do thing)
@@ -149,7 +149,7 @@ public class ZiMain : BasePlugin
         m_Harmony.PatchAll();
         ClassInjector.RegisterTypeInIl2Cpp<zUpdater>();
         ClassInjector.RegisterTypeInIl2Cpp<zCameraEvents>();
-
+         
         NetworkAPI.RegisterEvent<pItemPrioDisable>          ("SetItemPrioDisable",              zNetworking.ReciveSetItemPrioDisable);
         NetworkAPI.RegisterEvent<pItemPrio>                 ("SetItemPrio",                     zNetworking.ReciveSetItemPrio);
         NetworkAPI.RegisterEvent<pResourceThreshold>        ("SetResourceThreshold",            zNetworking.reciveSetResourceThreshold);

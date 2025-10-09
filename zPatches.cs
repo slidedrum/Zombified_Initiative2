@@ -297,7 +297,7 @@ public class ZombifiedPatches
         BackpackItem backpackItem;
         if (!backpack.TryGetBackpackItem(InventorySlot.ResourcePack, out backpackItem))
         {
-            //Do we have any resources to share?
+            //Do we have any resourcesActions to share?
             return false;
         }
         int agentID = __instance.m_agent.Owner.PlayerSlotIndex();

@@ -112,7 +112,7 @@ namespace ZombieTweak2.zMenu
                     if (FocusStateManager.CurrentState != eFocusState.FPS_CommunicationDialog)
                         CloseAllMenues();
                     Dictionary<GameObject, zMenu.zMenuNode> nodeDict = new(currentMenu.nodes.Count + 1);
-                    foreach (var node in currentMenu.allNodes)
+                    foreach (var node in currentMenu.allNodes.Where(n => n.gameObject.activeInHierarchy).ToList())
                     {
                         nodeDict[node.gameObject] = node;
                     }

@@ -23,8 +23,8 @@ namespace ZombieTweak2.zMenu
                 return new[] { centerNode }.Concat(nodes.Where(n => n != centerNode));
             }
         }
-        public OrderedSet<zMenuNode> nodes { get; private set; }
-        public OrderedSet<zMenuNode> disabledNodes { get; private set; }
+        public OrderedSet<zMenuNode> nodes { get; private set; } = new();
+        public OrderedSet<zMenuNode> disabledNodes { get; private set; } = new();
         public  zMenuNode centerNode { get; private set; }
         private zMenu _parrentMenu;
         internal int frameOpenedAt = Time.frameCount;
@@ -59,6 +59,7 @@ namespace ZombieTweak2.zMenu
         //settings
         private Vector3 canvasScale = new Vector3(0.003f, 0.003f, 0.003f); //Really small because it's really close to the camera.
         public float radius = 20f;
+        public float rotationalOffset = 0f;
         private Color textColor = zMenuManager.defaultColor;
         private zMenuNode selectedNode;
 
@@ -73,7 +74,6 @@ namespace ZombieTweak2.zMenu
                                     { zMenuManager.menuEvent.WhileSelected, WhileSelected },
                                     { zMenuManager.menuEvent.OnDeselected, OnDeselected },
                                     { zMenuManager.menuEvent.WhileDeselected, WhileDeselected }};
-            nodes = new OrderedSet<zMenuNode>();
             name = arg_Name;
             gameObject = new GameObject($"zMenu {name}");
             gameObject.transform.SetParent(zMenuManager.menuParrent.transform);
@@ -99,7 +99,7 @@ namespace ZombieTweak2.zMenu
             else
                 WhileClosed.Invoke();
             selectedNode = null;
-            foreach (var node in allNodes)
+            foreach (var node in allNodes.Where(n => n.gameObject.activeInHierarchy).ToList())
             {
                 node.Update();
             }
@@ -131,11 +131,12 @@ namespace ZombieTweak2.zMenu
             frameOpenedAt = Time.frameCount;
             if (!zMenuManager.menues.Contains(this))
                 ZiMain.log.LogWarning($"Unregestered menu opened! ({name}) It may not close properly.");
-            if (RelativePosition == Vector3.zero)
-            {
+            //if (RelativePosition == Vector3.zero)
+            //{
                 if (parrentMenu == null)
                 { 
-                    MoveInfrontOfCamera();
+                    if (RelativePosition == Vector3.zero)
+                        MoveInfrontOfCamera();
                 }
                 else
                 { 
@@ -143,10 +144,10 @@ namespace ZombieTweak2.zMenu
                     var node = parrentMenu.GetNode(name);
                     SetRelativePosition(zMenuManager.mainCamera.Position - node.gameObject.transform.position);
                 }
-            }
-            ArrangeNodes();
+            //}
             FaceCamera();
             setVisiblity(true);
+            ArrangeNodes();
             zMenu oldMenu = zMenuManager.currentMenu;
             zMenuManager.currentMenu = this;
             if (oldMenu != null && oldMenu != this)
@@ -226,20 +227,32 @@ namespace ZombieTweak2.zMenu
         }
         public zMenu ArrangeNodes()
         {
-            //TODO add alt variants of arrange nodes
-            int count = nodes.Count;
+            var activeNodes = nodes.Where(n => n.gameObject.activeInHierarchy).ToList();
+            float additionalOffset = 0f;
+            if (rotationalOffset == 0f && activeNodes.Count() == 4)
+                additionalOffset = 45f;
+            if (rotationalOffset == 0f && activeNodes.Count() == 2)
+                additionalOffset = 90f;
+            float offsetRadians = (rotationalOffset + additionalOffset) * Mathf.Deg2Rad;
+
+            int count = activeNodes.Count;
+
+            if (count == 0)
+                return this;
+
             for (int i = 0; i < count; i++)
             {
                 // Calculate angle for this node (start at top, go clockwise)
-                float angle = 2 * Mathf.PI / count * i - Mathf.PI / 2; // subtract PI/2 = top start
+                float angle = 2 * Mathf.PI / count * i - Mathf.PI / 2 + offsetRadians;
 
                 // Compute x and y positions (flip Y for clockwise)
                 float x = radius * Mathf.Cos(angle);
                 float y = -radius * Mathf.Sin(angle); // flip sign for clockwise
 
                 // Set node position
-                nodes[i].SetPosition(x, y);
+                activeNodes[i].SetPosition(x, y);
             }
+
             return this;
         }
         public zMenu MoveInfrontOfCamera()
@@ -321,35 +334,65 @@ namespace ZombieTweak2.zMenu
         }
         public void DisableNode(zMenuNode node)
         {
-            if (nodes.Contains(node))
+            if (!disabledNodes.Contains(node))
             {
-                nodes.Remove(node);
+                disabledNodes.Add(node);
                 node.gameObject.SetActive(false);
+                ArrangeNodes();
             }
             else
                 ZiMain.log.LogWarning($"Could not find node {node.text} to disable from {name} menu");
+        }
+        public void DisableNode(zMenu menu)
+        {
+            var nodeToDisable = nodes.FirstOrDefault(n => n.text == menu.centerNode.text);
+            if (nodeToDisable != null)
+            {
+                DisableNode(nodeToDisable);
+            }
+            else
+                ZiMain.log.LogWarning($"Could not find node {menu.centerNode.text} to disable from {name} menu");
         }
         public void DisableNode(string nodeText)
         {
             var nodeToDisable = nodes.FirstOrDefault(n => n.text == nodeText);
             if (nodeToDisable != null)
             {
-                nodes.Remove(nodeToDisable);
-                nodeToDisable.gameObject.SetActive(false);
+                DisableNode(nodeToDisable);
             }
             else
                 ZiMain.log.LogWarning($"Could not find node {nodeText} to disable from {name} menu");
+        }
+        public void EnableNode(zMenuNode node)
+        {
+            if (disabledNodes.Contains(node))
+            {
+                disabledNodes.Remove(node);
+                node.gameObject.SetActive(true);
+                ArrangeNodes();
+            }
+            else
+                ZiMain.log.LogWarning($"Could not find node {node.text} to enable from {name} menu");
         }
         public void EnableNode(string nodeText)
         {
             var nodeToEnable = disabledNodes.FirstOrDefault(n => n.text == nodeText);
             if (nodeToEnable != null)
             {
-                disabledNodes.Add(nodeToEnable);
-                nodeToEnable.gameObject.SetActive(true);
+                EnableNode(nodeToEnable);
             }
             else
                 ZiMain.log.LogWarning($"Could not find node {nodeText} to enable from {name} menu");
+        }
+        public void EnableNode(zMenu menu)
+        {
+            var nodeToEnable = disabledNodes.FirstOrDefault(n => n.text == menu.centerNode.text);
+            if (nodeToEnable != null)
+            {
+                EnableNode(nodeToEnable);
+            }
+            else
+                ZiMain.log.LogWarning($"Could not find node {menu.centerNode.text} to enable from {name} menu");
         }
         public zMenuNode AddNode(zMenu menu)
         {

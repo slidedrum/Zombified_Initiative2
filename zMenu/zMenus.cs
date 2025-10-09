@@ -1,15 +1,12 @@
-﻿using CollisionRundown.Features.HUDs;
-using GameData;
+﻿using GameData;
 using Player;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEngine;
-using ZombieTweak2.zRootBotPlayerAction.CustomActions;
 using Zombified_Initiative;
-using static Il2CppSystem.Linq.Expressions.Interpreter.NullableMethodCallInstruction;
-using static ZombieTweak2.zMenu.DebugMenuClass;
+using static ZombieTweak2.zMenu.AutomaticActionMenuClass;
 
 namespace ZombieTweak2.zMenu
 {
@@ -18,32 +15,23 @@ namespace ZombieTweak2.zMenu
         //This is the class that actually creates the menue instances
         //This is spesific to ZI
         //Very unfinished atm
-
+        private static zMenu AutomaticActionsMenu;
         public static List<zMenu> botMenus;
-
-        
-        private static zMenu selectionMenu;
-        private static zMenu debugMenu;
-        private static zMenu debugNodeMenu;
-        private static zMenu debugNodeSettingsMenu;
-        private static zMenu actionMenu;
-        public static zMenu permissionMenu;
-        private static zMenu pickupDetailsSubmenu;
-        private static zMenu shareDetailsSubmenu;
-        private static zMenu debugCameraCullingMenu;
         private static string endcolor = "</color>";
         private static string enabledColor = "<color=#FFA50066>";
         private static string disabledColor = "<color=#CCCCCC33>";
 
         public static void CreateMenus()
         {
-            zMenuManager.createMenu("Automatic Actions", zMenuManager.mainMenu);
+            AutomaticActionsMenu = zMenuManager.createMenu("Automatic Actions", zMenuManager.mainMenu);
+            AutomaticActionMenuClass.Setup(AutomaticActionsMenu);
             zMenuManager.createMenu("Manual Actions", zMenuManager.mainMenu);
             zMenuManager.createMenu("Contextual Actions", zMenuManager.mainMenu);
             zMenuManager.createMenu("Settings", zMenuManager.mainMenu);
             zMenuManager.createMenu("Voice menu", zMenuManager.mainMenu);
             zMenuManager.createMenu("Debug", zMenuManager.mainMenu);
         }
+        [Obsolete]
         public static zMenu.zMenuNode UpdateIndicatorForNode(zMenu.zMenuNode node, Dictionary<int, bool> selectionPickUpPerms)
         {
             ZiMain.log.LogInfo($"Updatin selections for node {node.text}");
@@ -73,6 +61,98 @@ namespace ZombieTweak2.zMenu
             return node;
         }
     }
+    public static class AutomaticActionMenuClass
+    {
+        public static List<zMenu> autoActionMenus = new List<zMenu>();
+        private static zMenu AutoActionMenu;
+        private static int catagoryIndex = 0;
+        private static Dictionary<string, List<string>> catagories = new();
+        internal static void Setup(zMenu menu)
+        {
+            AutoActionMenu = menu;
+            AutoActionMenu.radius = 30f;
+            //Vanilla actions
+            autoActionMenus.Add(zMenuManager.createMenu("Tag Enemies", AutoActionMenu));
+            autoActionMenus.Add(zMenuManager.createMenu("Attack", AutoActionMenu));
+            autoActionMenus.Add(zMenuManager.createMenu("Revive", AutoActionMenu));
+            autoActionMenus.Add(zMenuManager.createMenu("Bioscan", AutoActionMenu));
+            var shareMenu = zMenuManager.createMenu("Share", AutoActionMenu);
+            autoActionMenus.Add(shareMenu);
+            autoActionMenus.Add(zMenuManager.createMenu("Ping", AutoActionMenu));
+            autoActionMenus.Add(zMenuManager.createMenu("Enemy Scanner", AutoActionMenu));
+            var pickupmenu = zMenuManager.createMenu("Pickup", AutoActionMenu);
+            autoActionMenus.Add(pickupmenu);
+            autoActionMenus.Add(zMenuManager.createMenu("Follow", AutoActionMenu));
+            autoActionMenus.Add(zMenuManager.createMenu("Unlock", AutoActionMenu));
+            //Custom actions
+            autoActionMenus.Add(zMenuManager.createMenu("Explore", AutoActionMenu));
+
+            PickupMenuClass.setUpItemNodes(pickupmenu);
+            ShareMenuClass.setUpPackNodes(shareMenu);
+
+            catagories["Favorites"] = new();
+            catagories["Favorites"].Add("Pickup");
+            catagories["Favorites"].Add("Pickup");
+            catagories["Favorites"].Add("Share");
+            catagories["Favorites"].Add("Explore");
+            catagories["Favorites"].Add("Follow");
+            catagories["Resources"] = new();
+            catagories["Resources"].Add("Pickup");
+            catagories["Resources"].Add("Share");
+
+            menu.centerNode.AddListener(zMenuManager.nodeEvent.WhileSelected, UpdateCatagoryByScroll);
+            SetCatagory("Favorites");
+            
+        }
+        private static void UpdateCatagoryByScroll()
+        {
+            float scroll = Input.GetAxis("Mouse ScrollWheel");
+            int normalizedScroll = (int)Mathf.Sign(scroll);
+            if (scroll == 0f)
+                return;
+            catagoryIndex += (int)normalizedScroll;
+            if (catagoryIndex > catagories.Count())
+                catagoryIndex = 0;
+            if (catagoryIndex < 0)
+                catagoryIndex = catagories.Count();
+            if (catagoryIndex == catagories.Count())
+            {
+                SetCatagory("All");
+                return;
+            }
+            SetCatagory(catagories.Keys.ElementAt(catagoryIndex));
+        }
+
+        internal static void SetCatagory(string catagory)
+        {
+            if (catagory == "All")
+            {
+                foreach (var node in AutoActionMenu.nodes)
+                {
+                    AutoActionMenu.EnableNode(node);
+                }
+                SetSubtitle("All");
+                return;
+            }
+            SetSubtitle(catagory);
+            if (!catagories.ContainsKey(catagory))
+            {
+                ZiMain.log.LogError($"Invalid auto action catagory: {catagory}.");
+                return;
+            }
+            foreach (var node in AutoActionMenu.nodes)
+            {
+                if (catagories[catagory].Contains(node.text))
+                    AutoActionMenu.EnableNode(node);
+                else
+                    AutoActionMenu.DisableNode(node);
+            }
+        }
+        private static void SetSubtitle(String subtitle)
+        {
+            AutoActionMenu.centerNode.SetSubtitle($"<color=#CC840066>[ </color>{subtitle}<color=#CC840066> ]</color>");
+        }
+    }
     public static class ShareMenuClass
     {
         public static Dictionary<uint, zMenu.zMenuNode> packNodesByID = new Dictionary<uint, zMenu.zMenuNode>();
@@ -85,6 +165,11 @@ namespace ZombieTweak2.zMenu
                 uint itemID = ItemDataBlock.s_blockIDByName[block.name];
                 string name = block.publicName;
                 zMenu.zMenuNode node = menu.AddNode(name);
+                //TODO uncomment then when moved over to overide system instead of selection system.
+                //var thisNode = menu.parrentMenu.GetNode(menu.centerNode.text);
+                //thisNode.ClearListeners(zMenuManager.nodeEvent.OnUnpressedSelected);
+                //thisNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, menu.Open);
+                //thisNode.AddListener(zMenuManager.nodeEvent.OnTapped, TogglePerms);
                 node.AddListener(zMenuManager.nodeEvent.OnTapped, zSlideComputer.ToggleResourceSharePermission, itemID);
                 node.AddListener(zMenuManager.nodeEvent.OnTapped, updateNodeThresholdDisplay, node, itemID);
                 node.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, zSlideComputer.SetResourceSharePermission, itemID, true);
@@ -92,6 +177,8 @@ namespace ZombieTweak2.zMenu
                 node.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, updateNodeThresholdDisplay, node, itemID);
                 node.AddListener(zMenuManager.nodeEvent.WhileSelected, ChangeThresholdBasedOnMouseWheel, itemID, node, 5);
                 menu.AddListener(zMenuManager.menuEvent.OnOpened, updateNodeThresholdDisplay, node, itemID);
+                menu.centerNode.ClearListeners(zMenuManager.nodeEvent.OnUnpressedSelected);
+                menu.centerNode.AddListener(zMenuManager.nodeEvent.OnTapped, menu.parrentMenu.Open);
                 menu.centerNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, zSlideComputer.SetResourceThreshold, itemID, 100);
                 menu.centerNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, zSlideComputer.SetResourceSharePermission, itemID, true);
                 menu.centerNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, updateNodeThresholdDisplay, node, itemID);
@@ -99,11 +186,6 @@ namespace ZombieTweak2.zMenu
                 node.subtitlePart.SetScale(0.75f, 0.75f);
                 node.titlePart.SetScale(0.5f, 0.5f);
                 packNodesByID[itemID] = node;
-                if (menu.nodes.Count - 1 == (int)(resourceDataBlocks.Count/2))
-                {
-                    //TODO allow for rotation offsets or other modes for aranging nodes.
-                    menu.AddNode("");
-                }
             }
         }
         public static void updateNodeThresholdDisplay(zMenu.zMenuNode node, uint itemID)
@@ -124,6 +206,10 @@ namespace ZombieTweak2.zMenu
                 node.SetColor(zMenuManager.defaultColor);
             else
                 node.SetColor(new Color(0.25f, 0f, 0f));
+        }
+        public static void TogglePerms()
+        {
+            //TODO change the whole system to be based on overides, not selections.
         }
         public static Color GetThresholdColor(float value)
         {
@@ -248,11 +334,38 @@ namespace ZombieTweak2.zMenu
             node.SetSubtitle($"{value}");
         }
     }
-    public static class PermissionsMenuClass
+    public static class PickupMenuClass
     {
         public static Dictionary<uint,zMenu.zMenuNode> prioNodesByID = new Dictionary<uint,zMenu.zMenuNode>();
+        private static Dictionary<string, List<string>> catagories = new();
+        private static int catagoryIndex = 1;
+        private static zMenu pickupMenu;
         public static void setUpItemNodes(zMenu menu)
         {
+            pickupMenu = menu;
+            pickupMenu.radius = 25f;
+            //ALL - ENCOUNTERED - RESOURCES - PLACEABLES - THROWABLES - FAVORITES
+            catagories["Encountered"] = new();
+            catagories["Resources"]   = new();
+            catagories["Placeables"]  = new();
+            catagories["Throwables"]  = new();
+            catagories["Favorites"]   = new();
+            catagories["Resources"] .Add("MediPack");
+            catagories["Resources"] .Add("Ammo Pack");
+            catagories["Resources"] .Add("Tool Refill Pack");
+            catagories["Resources"] .Add("Disinfection Pack");
+            catagories["Placeables"].Add("Lock Melter");
+            catagories["Placeables"].Add("Explosive Trip Mine");
+            catagories["Placeables"].Add("C-Foam Tripmine");
+            catagories["Throwables"].Add("Glow Stick");
+            catagories["Throwables"].Add("Fog Repeller");
+            catagories["Throwables"].Add("C-Foam Grenade");
+            catagories["Favorites"] .Add("MediPack");
+            catagories["Favorites"] .Add("Ammo Pack");
+            catagories["Favorites"] .Add("Tool Refill Pack");
+            catagories["Favorites"] .Add("Disinfection Pack");
+            catagories["Favorites"] .Add("C-Foam Grenade");
+
             zMenu.zMenuNode glowstickNode = null;
             foreach (var item in zSlideComputer.itemPrios)
             {
@@ -265,30 +378,95 @@ namespace ZombieTweak2.zMenu
                 {
                     if (glowstickNode == null)
                     {
-                        glowstickNode = menu.AddNode(zSlideComputer.shortGlowStickNames.FirstOrDefault());
+                        glowstickNode = pickupMenu.AddNode(zSlideComputer.shortGlowStickNames.FirstOrDefault());
                         prioNodesByID[itemID] = glowstickNode;
                     }
                     node = glowstickNode;
                 }
                 else
                 {
-                    node = menu.AddNode(publicName);
+                    node = pickupMenu.AddNode(publicName);
                     prioNodesByID[itemID] = node;
                 }
+                //TODO uncomment then when moved over to overide system instead of selection system.
+                //var thisNode = menu.parrentMenu.GetNode(menu.centerNode.text);
+                //thisNode.ClearListeners(zMenuManager.nodeEvent.OnUnpressedSelected);
+                //thisNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, menu.Open);
+                //thisNode.AddListener(zMenuManager.nodeEvent.OnTapped, TogglePerms);
                 node.AddListener(zMenuManager.nodeEvent.WhileSelected, ChangePrioBasedOnMouseWheel, itemID, node);
                 node.AddListener(zMenuManager.nodeEvent.OnTapped, zSlideComputer.ToggleItemPrioDisabled, itemID);
                 node.AddListener(zMenuManager.nodeEvent.OnTapped, updateNodePriorityDisplay, node, itemID);//TODO make these args order consistant.
-                node.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, zSlideComputer.ResetItemPrio, itemID);
-                node.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, zSlideComputer.SetItemPrioDisabled, itemID, true);
-                node.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, updateNodePriorityDisplay, node, itemID);
-                menu.centerNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, zSlideComputer.SetItemPrioDisabled, itemID, true);
-                menu.centerNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, updateNodePriorityDisplay, node, itemID);
-                menu.AddListener(zMenuManager.menuEvent.OnOpened, updateNodePriorityDisplay, node, itemID);
+                node.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, ResetNodeSettings, itemID, node);
+                pickupMenu.centerNode.ClearListeners(zMenuManager.nodeEvent.OnUnpressedSelected);
+                pickupMenu.centerNode.AddListener(zMenuManager.nodeEvent.OnTapped, pickupMenu.parrentMenu.Open);
+                pickupMenu.centerNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, ResetNodeSettings, itemID, node);
+                pickupMenu.AddListener(zMenuManager.menuEvent.OnOpened, updateNodePriorityDisplay, node, itemID);
                 node.fullTextPart.SetScale(1f, 1f);
                 node.subtitlePart.SetScale(0.75f, 0.75f);
                 node.titlePart.SetScale(0.5f, 0.5f);
                 node.SetSize(0.75f);
             }
+            pickupMenu.centerNode.AddListener(zMenuManager.nodeEvent.WhileSelected, UpdateCatagoryByScroll);
+            SetCatagory("All");
+        }
+        private static void ResetNodeSettings(uint itemID, zMenu.zMenuNode node)
+        {
+            if (!node.gameObject.activeInHierarchy)
+                return;
+            zSlideComputer.ResetItemPrio(itemID);
+            zSlideComputer.SetItemPrioDisabled(itemID, true);
+            updateNodePriorityDisplay(node, itemID);
+        }
+        private static void UpdateCatagoryByScroll()
+        {
+            float scroll = Input.GetAxis("Mouse ScrollWheel");
+            int normalizedScroll = (int)Mathf.Sign(scroll);
+            if (scroll == 0f)
+                return;
+            catagoryIndex += (int)normalizedScroll;
+            if (catagoryIndex > catagories.Count())
+                catagoryIndex = 0;
+            if (catagoryIndex < 0)
+                catagoryIndex = catagories.Count();
+            if (catagoryIndex == catagories.Count())
+            {
+                SetCatagory("All");
+                return;
+            }
+            SetCatagory(catagories.Keys.ElementAt(catagoryIndex));
+        }
+        internal static void SetCatagory(string catagory)
+        {
+            if (catagory == "All")
+            {
+                foreach (var node in pickupMenu.nodes)
+                {
+                    pickupMenu.EnableNode(node);
+                }
+                SetSubtitle("All");
+                return;
+            }
+            SetSubtitle(catagory);
+            if (!catagories.ContainsKey(catagory))
+            {
+                ZiMain.log.LogError($"Invalid auto action catagory: {catagory}.");
+                return;
+            }
+            foreach (var node in pickupMenu.nodes)
+            {
+                if (catagories[catagory].Contains(node.text))
+                    pickupMenu.EnableNode(node);
+                else
+                    pickupMenu.DisableNode(node);
+            }
+        }
+        private static void SetSubtitle(String subtitle)
+        {
+            pickupMenu.centerNode.SetSubtitle($"<color=#CC840066>[ </color>{subtitle}<color=#CC840066> ]</color>");
+        }
+        public static void TogglePerms()
+        {
+            //TODO change the whole system to be based on overides, not selections.
         }
         public static void updateNodePriorityDisplay(zMenu.zMenuNode node, uint itemID)
         {
@@ -338,6 +516,7 @@ namespace ZombieTweak2.zMenu
             updateNodePriorityDisplay(node, itemID);
         }
     }
+    [Obsolete]
     public static class SelectionMenuClass
     {
         public static Dictionary<int, bool> botSelection = new();
