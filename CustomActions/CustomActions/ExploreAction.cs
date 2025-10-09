@@ -21,6 +21,31 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
         {
             return true;
         }
+        public static bool ToggleExplorePerm(int index)
+        {
+            SetExplorePerm(index, !ExplorePerms[index]);
+            return GetExplorePerm(index);
+        }
+        public static bool ToggleExplorePerm(PlayerAgent agent)
+        {
+            return ToggleExplorePerm(agent.Owner.PlayerSlotIndex());
+        }
+        public static bool ToggleExplorePerm(PlayerAIBot bot)
+        {
+            return ToggleExplorePerm(bot.Agent);
+        }
+        public static void SetExplorePerm(int index, bool allowed)
+        {
+            ExplorePerms[index] = allowed;
+        }
+        public static void SetExplorePerm(PlayerAgent agent, bool allowed)
+        {
+            SetExplorePerm(agent.Owner.PlayerSlotIndex(), allowed);
+        }
+        public static void SetExplorePerm(PlayerAIBot bot, bool allowed)
+        {
+            SetExplorePerm(bot.Agent, allowed);
+        }
         public static bool GetExplorePerm(PlayerAIBot bot)
         {
             return GetExplorePerm(bot.Agent);

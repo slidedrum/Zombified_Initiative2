@@ -11,6 +11,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.AI;
 using ZombieTweak2;
+using ZombieTweak2.zMenu;
 using static BoundingBox;
 
 namespace Zombified_Initiative
@@ -355,6 +356,31 @@ namespace Zombified_Initiative
                         box = box,
                     };
                     findbleObjectMap[cell].Add(newFindable);
+                    if (newFindable.pingSyle == eNavMarkerStyle.PlayerPingResourceLocker || newFindable.pingSyle == eNavMarkerStyle.PlayerPingResourceBox)
+                    {
+                        var container = newFindable.gameObject.GetComponent<LG_ResourceContainer_Storage>();
+                        if (container != null)
+                        {
+                            var items = GetItemsFromLocker(container);
+                            foreach ( var item in items )
+                            {
+                                var ping = item.GetComponentInChildren<PlayerPingTarget>();
+                                if (ping != null)
+                                {
+                                    BoundingBox itemBox = new(ping.gameObject,BoundingSource.Renderers);
+                                    FindableObject NewItemFindable = new()
+                                    {
+                                        gameObject = item.gameObject,
+                                        type = typeof(PlayerPingTarget),
+                                        pingSyle = ping.PingTargetStyle, //TODO speed this up?
+                                        found = false,
+                                        box = itemBox,
+                                    };
+                                    findbleObjectMap[cell].Add(NewItemFindable);
+                                }
+                            }
+                        }//TODO this nesting is insane.
+                    }
                 }
             }
         }
@@ -531,7 +557,7 @@ namespace Zombified_Initiative
         }
         public static Dictionary<int, Vector3> lastCheckedPosition = new();
         public static float staticRange = 5.0f;
-
+        public static float staticRangeTimeout = 2f;
         public static void UpdateFindables(PlayerAgent agent)
         {
             if (lastCheckedPosition.ContainsKey(agent.gameObject.GetInstanceID()) && Vector3.Distance(lastCheckedPosition[agent.gameObject.GetInstanceID()], agent.transform.position) < staticRange)
@@ -544,10 +570,12 @@ namespace Zombified_Initiative
             return;
         }
         public static float visiblityThreshold = 0.2f;
-        public static float verticalOffset = 1.5f;
-        public static Queue<(FindableObject,PlayerAgent)> findsQueue = new();
+        public static float verticalOffset = 2f;
+        public static OrderedSet<(FindableObject,PlayerAgent)> findsQueue = new();
+        public static int vizChecksPerFrame = 10;
         public static void FindsQueu()
         {
+            int vizChecks = 0;
             while (findsQueue.Count > 0) 
             { 
                 var item = findsQueue.Dequeue();
@@ -570,7 +598,6 @@ namespace Zombified_Initiative
                 findable.lastCheckedVis[agent.Owner.PlayerSlotIndex()] = Time.time;
 
                 // Check visibility / distance
-                Vector3 dir = findable.box.Center - agent.Position + Vector3.up * 1.5f;
                 zVisibilityManager.visSettings settings = new()
                 {
                     observerOffest = Vector3.up * verticalOffset,
@@ -582,8 +609,16 @@ namespace Zombified_Initiative
                     findable.found = true;
                     GuiManager.AttemptSetPlayerPingStatus(agent, true, findable.box.Center, style: findable.pingSyle);
                     ZiMain.log.LogInfo($"Found object {findable.type}! {gameObject.name}");
+                    var levelItem = findable.gameObject.GetComponent<ItemInLevel>();
+                    if (levelItem != null)
+                    {
+                        string friendlyName = levelItem.ItemDataBlock.publicName;
+                        PickupMenuClass.Encounter(friendlyName);
+                    }
                 }
-                break;
+                vizChecks++;
+                if (vizChecks >= vizChecksPerFrame)
+                    break;
             }
         }
         public static void UpdatefindsQue(PlayerAgent agent)
@@ -606,7 +641,8 @@ namespace Zombified_Initiative
 
                     foreach (var findable in findables)
                     {
-                        findsQueue.Enqueue((findable,agent));
+                        if (!findable.found)
+                            findsQueue.Enqueue((findable,agent));
                     }
                 }
             }

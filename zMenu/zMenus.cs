@@ -409,6 +409,15 @@ namespace ZombieTweak2.zMenu
             pickupMenu.centerNode.AddListener(zMenuManager.nodeEvent.WhileSelected, UpdateCatagoryByScroll);
             SetCatagory("All");
         }
+        internal static void Encounter(string friendlyName)
+        {
+            if (!catagories["Encountered"].Contains(friendlyName)) 
+            {
+                catagories["Encountered"].Add(friendlyName);
+                if (catagoryIndex < catagories.Count() && catagories.Keys.ElementAt(catagoryIndex) == "Encountered")
+                    SetCatagory("Encountered");
+            }
+        }
         private static void ResetNodeSettings(uint itemID, zMenu.zMenuNode node)
         {
             if (!node.gameObject.activeInHierarchy)
@@ -515,6 +524,8 @@ namespace ZombieTweak2.zMenu
             zSlideComputer.SetBotItemPriority(itemID, Mathf.Clamp(currentPrio + (normalizedScroll * increment),0,100));
             updateNodePriorityDisplay(node, itemID);
         }
+
+
     }
     [Obsolete]
     public static class SelectionMenuClass

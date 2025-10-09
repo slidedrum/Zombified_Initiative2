@@ -146,6 +146,38 @@ namespace ZombieTweak2
             _list.Clear();
             _dict.Clear();
         }
+        /// <summary>
+        /// Adds an item to the end of the queue if not already present.
+        /// </summary>
+        public bool Enqueue(T item)
+        {
+            return Add(item);
+        }
+
+        /// <summary>
+        /// Removes and returns the item at the front of the queue.
+        /// Throws InvalidOperationException if empty.
+        /// </summary>
+        public T Dequeue()
+        {
+            if (_list.Count == 0)
+                throw new InvalidOperationException("The OrderedSet is empty.");
+
+            T item = _list[0];
+            Remove(item);
+            return item;
+        }
+
+        /// <summary>
+        /// Returns (but does not remove) the item at the front of the queue.
+        /// </summary>
+        public T Peek()
+        {
+            if (_list.Count == 0)
+                throw new InvalidOperationException("The OrderedSet is empty.");
+
+            return _list[0];
+        }
         public bool Contains(T item) => _dict.ContainsKey(item);
 
         public T this[int index] => _list[index];
