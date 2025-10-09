@@ -62,7 +62,7 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
         public PlayerBotActionTravel.Descriptor travelAction = null;
         public new class Descriptor : CustomActionBase.Descriptor
         {
-            public new int Prio = 5;
+            public new float Prio = 3;
             float lastLooked = 0;
             public bool canExplore = true;
             float lookCooldown = 5;
@@ -103,7 +103,7 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
             }
             public override void compareAction(ref PlayerBotActionBase.Descriptor bestAction)
             {
-                if (!canExplore)
+                if (!GetExplorePerm(Bot))
                     return;
                 if (lastLooked == 0)
                     lastLooked = Time.time;
@@ -129,12 +129,12 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
                 }
                 if (maxprio > Prio)
                     return;
-                if (zVisitedManager.GetUnexploredLocation(Bot.Agent.Position, 0, 30) == null)
+                lastLooked = Time.time;
+                if (zVisitedManager.GetUnexploredLocation(Bot.Agent.Position, 0, 30) == null) //TODO this is very perf intensive when not finding anything.
                     return;
                 if (bestAction == null || Prio > bestAction.Prio)
                 {
                     bestAction = this;
-                    lastLooked = Time.time;
                 }
             }
             public override void OnQueued()
@@ -162,20 +162,12 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
             //ZiMain.sendChatMessage("Here I go exploring because I feel like it.",m_bot.Agent);
             state = StateEnum.lookingForUnexplored;
         }
-        public void ToggleCanExplore()
-        {
-            int index = this.m_bot.Agent.Owner.PlayerSlotIndex();
-            bool allowed = ExplorePerms[index];
-            ExplorePerms[index] = !allowed;
-        }
         public override bool Update()
         {
             base.Update();
-            if (!GetExplorePerm(m_bot))
+            if (!GetExplorePerm(m_bot) && !DescBase.IsCompleted())
             {
-                m_bot.StopAction(travelAction);
-                state = StateEnum.Finished;
-                return false;
+                Stop();
             }
             if (state == StateEnum.lookingForUnexplored)
             {
@@ -297,6 +289,10 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
         public override void Stop()
         {
             base.Stop();
+            if (travelAction != null && !travelAction.IsTerminated())
+                m_bot.StopAction(travelAction);
+            state = StateEnum.Finished;
+            DescBase.SetCompletionStatus(PlayerBotActionBase.Descriptor.StatusType.Stopped);
         }
         public enum StateEnum
         {

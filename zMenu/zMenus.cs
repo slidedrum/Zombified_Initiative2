@@ -5,8 +5,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEngine;
+using ZombieTweak2.zRootBotPlayerAction.CustomActions;
 using Zombified_Initiative;
-using static ZombieTweak2.zMenu.AutomaticActionMenuClass;
 
 namespace ZombieTweak2.zMenu
 {
@@ -85,10 +85,12 @@ namespace ZombieTweak2.zMenu
             autoActionMenus.Add(zMenuManager.createMenu("Follow", AutoActionMenu));
             autoActionMenus.Add(zMenuManager.createMenu("Unlock", AutoActionMenu));
             //Custom actions
-            autoActionMenus.Add(zMenuManager.createMenu("Explore", AutoActionMenu));
+            var exploremenu = zMenuManager.createMenu("Explore", AutoActionMenu);
+            autoActionMenus.Add(exploremenu);
 
-            PickupMenuClass.setUpItemNodes(pickupmenu);
-            ShareMenuClass.setUpPackNodes(shareMenu);
+            ExploreMenuClass.Setup(exploremenu);
+            PickupMenuClass.Setup(pickupmenu);
+            ShareMenuClass.Setup(shareMenu);
 
             catagories["Favorites"] = new();
             catagories["Favorites"].Add("Pickup");
@@ -153,11 +155,36 @@ namespace ZombieTweak2.zMenu
             AutoActionMenu.centerNode.SetSubtitle($"<color=#CC840066>[ </color>{subtitle}<color=#CC840066> ]</color>");
         }
     }
+    public static class ExploreMenuClass
+    {
+        private static zMenu exploreMenu;
+        private static zMenu.zMenuNode exploreNode;
+        internal static void Setup(zMenu menu)
+        {
+            exploreMenu = menu;
+            exploreNode = exploreMenu.parrentMenu.GetNode(exploreMenu.centerNode.text);
+            exploreNode.ClearListeners(zMenuManager.nodeEvent.OnUnpressedSelected);
+            exploreNode.AddListener(zMenuManager.nodeEvent.OnTapped, ToggleExplorePerms);
+            exploreNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, exploreMenu.Open);
+        }
+        private static void ToggleExplorePerms()
+        {
+            var bots = zSearch.GetAllBotAgents();
+            foreach (var bot in bots)
+            {
+                ExploreAction.ToggleExplorePerm(bot);
+            }
+            if (ExploreAction.GetExplorePerm(bots[0]))
+                exploreNode.SetColor(zMenuManager.defaultColor);
+            else
+                exploreNode.SetColor(new Color(0.25f, 0f, 0f));
+        }
+    }
     public static class ShareMenuClass
     {
         public static Dictionary<uint, zMenu.zMenuNode> packNodesByID = new Dictionary<uint, zMenu.zMenuNode>();
 
-        public static void setUpPackNodes(zMenu menu)
+        public static void Setup(zMenu menu)
         {
             var resourceDataBlocks = ItemSpawnManager.m_itemDataPerInventorySlot[(int)InventorySlot.ResourcePack];
             foreach (ItemDataBlock block in resourceDataBlocks)
@@ -340,7 +367,7 @@ namespace ZombieTweak2.zMenu
         private static Dictionary<string, List<string>> catagories = new();
         private static int catagoryIndex = 1;
         private static zMenu pickupMenu;
-        public static void setUpItemNodes(zMenu menu)
+        public static void Setup(zMenu menu)
         {
             pickupMenu = menu;
             pickupMenu.radius = 25f;
