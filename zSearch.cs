@@ -26,6 +26,10 @@ namespace Zombified_Initiative
         public static Dictionary<Vector2, List<FindableObject>> findbleObjectMap = new();
         private static List<Transform> pingTransforms = new();
 
+        public static List<PlayerAgent> GetAllBotAgents()
+        {
+            return PlayerManager.PlayerAgentsInLevel.ToArray().Where(agent => agent.Owner.IsBot).ToList();
+        }
         public static GameObject GetClosestObjectInLookDirection(Transform baseTransform,List<GameObject> candidates,float maxAngle = 180f, Vector3? candidateOffset = null, Vector3? baseOffset = null)
         {
             //TODO add some optional leeway for very close objects
@@ -129,7 +133,7 @@ namespace Zombified_Initiative
             return new List<GameObject>();
         }
         public static int AgentSearchIndex = 0;
-        public static float searchTiming = 0.2f;
+        public static float searchTiming = 0.5f;
         public static float lastSearched = 0f;
         public static void Update()
         {
@@ -557,7 +561,7 @@ namespace Zombified_Initiative
         }
         public static Dictionary<int, Vector3> lastCheckedPosition = new();
         public static float staticRange = 5.0f;
-        public static float staticRangeTimeout = 2f;
+        public static float staticRangeTimeout = 5f;
         public static void UpdateFindables(PlayerAgent agent)
         {
             if (lastCheckedPosition.ContainsKey(agent.gameObject.GetInstanceID()) && Vector3.Distance(lastCheckedPosition[agent.gameObject.GetInstanceID()], agent.transform.position) < staticRange)

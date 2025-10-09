@@ -1,7 +1,9 @@
-﻿using HarmonyLib;
+﻿using AIGraph;
+using HarmonyLib;
 using Il2CppMono.Security.Interface;
 using Player;
 using System.Diagnostics.Metrics;
+using UnityEngine;
 using ZombieTweak2.zRootBotPlayerAction.CustomActions;
 
 namespace ZombieTweak2.zRootBotPlayerAction.Patches
@@ -15,6 +17,7 @@ namespace ZombieTweak2.zRootBotPlayerAction.Patches
         {
             //We need to reset the best action watcher before we start calling vanilla actions.
             var data = zActions.GetOrCreateData(__instance);
+            data.consideringActions = true;
             data.bestAction = null;
             switch (DramaManager.CurrentStateEnum)
             {
@@ -83,6 +86,42 @@ namespace ZombieTweak2.zRootBotPlayerAction.Patches
             
             return true;
         }
+        [HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.UpdateActionCollectItem))]
+        [HarmonyPrefix]
+        public static void PreUpdateActionCollectItem(RootPlayerBotAction __instance, ref PlayerBotActionBase.Descriptor bestAction)
+        {
+            var data = zActions.GetOrCreateData(__instance);
+            data.consideringCollectItem = true;
+        }
+        [HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.UpdateActionCollectItem))]
+        [HarmonyPostfix]
+        public static void PostUpdateActionCollectItem(RootPlayerBotAction __instance, ref PlayerBotActionBase.Descriptor bestAction)
+        {
+            var data = zActions.GetOrCreateData(__instance);
+            data.consideringCollectItem = false;
+        }
+
+        [HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.GetActivityEpicenter))]
+        [HarmonyPrefix]
+        public static void PreGetActivityEpicenter(RootPlayerBotAction __instance, ref AIG_CourseNode courseNode, ref Vector3 centerPosition)
+        {
+            //This should allow bots to pickup items automatically when far away from leader.
+
+            var data = zActions.GetOrCreateData(__instance);
+            if (!data.consideringCollectItem)
+                return;
+            data.actualLeader = __instance.m_bot.SyncValues.Leader;
+            __instance.m_bot.SyncValues.Leader = null;
+        }
+        [HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.GetActivityEpicenter))]
+        [HarmonyPostfix]
+        public static void PostGetActivityEpicenter(RootPlayerBotAction __instance, ref AIG_CourseNode courseNode, ref Vector3 centerPosition)
+        {
+            var data = zActions.GetOrCreateData(__instance);
+            if (!data.consideringCollectItem)
+                return;
+            __instance.m_bot.SyncValues.Leader = data.actualLeader;
+        }
         [HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.Update))]
         [HarmonyPostfix]
         public static void PostUpdate(RootPlayerBotAction __instance, ref bool __result)
@@ -90,6 +129,8 @@ namespace ZombieTweak2.zRootBotPlayerAction.Patches
             //after vanilla actions eval we need to eval custom actions.
             //Whatever vanilla action is best still gets called no matter what, might want to chagne that?  Might not be a problem?
             var data = zActions.GetOrCreateData(__instance);
+            data.consideringActions = false;
+            var baseAction = data.bestAction;
             foreach (var act in data.customActions)
             {
                 act.compareAction(ref data.bestAction);

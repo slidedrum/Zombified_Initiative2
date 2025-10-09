@@ -32,7 +32,7 @@ namespace ZombieTweak2
         private static PlayerAgent localPlayer;
         public static Vector3[] CapsuleCorners;
         public static HashSet<VisitNode> allnodes = new();
-        public static VisitNode GetUnexploredLocation(Vector3 position, int depth = 0,int maxDepth = 0, OrderedSet<VisitNode> searched = null)
+        public static VisitNode GetUnexploredLocation(Vector3 position, int depth = 0,int maxDepth = 0, OrderedSet<VisitNode> searched = null) // TODO create an async version of this with a cache of unexplored locations
         {
             if (maxDepth == 0)
                 maxDepth = unexploredMaxDepth;
