@@ -1,4 +1,5 @@
-﻿using GameData;
+﻿using CollisionRundown.Features.HUDs;
+using GameData;
 using Player;
 using System;
 using System.Collections.Generic;
@@ -29,7 +30,7 @@ namespace ZombieTweak2.zMenu
             zMenuManager.createMenu("Contextual Actions", zMenuManager.mainMenu);
             zMenuManager.createMenu("Settings", zMenuManager.mainMenu);
             zMenuManager.createMenu("Voice menu", zMenuManager.mainMenu);
-            zMenuManager.createMenu("Debug", zMenuManager.mainMenu);
+            DebugMenuClass.Setup(zMenuManager.createMenu("Debug", zMenuManager.mainMenu));
         }
         [Obsolete]
         public static zMenu.zMenuNode UpdateIndicatorForNode(zMenu.zMenuNode node, Dictionary<int, bool> selectionPickUpPerms)
@@ -304,6 +305,62 @@ namespace ZombieTweak2.zMenu
     }
     public static class DebugMenuClass
     {
+        public static zMenu debugMenu;
+        public static zMenu debugNodeMenu;
+        public static zMenu debugNodeSettingsMenu;
+        public static zMenu debugCameraCullingMenu;
+
+        public static void Setup(zMenu menu)
+        {
+            //debugMenu = zMenuManager.createMenu("debug", zMenuManager.mainMenu);
+            debugMenu = menu;
+            debugNodeMenu = zMenuManager.createMenu("Nodes", debugMenu);
+            debugNodeSettingsMenu = zMenuManager.createMenu("Settings", debugNodeMenu);
+            debugCameraCullingMenu = zMenuManager.createMenu("Camera culling", debugMenu);
+            debugMenu.AddNode("Show title prompt", InGameTitle.DisplayDefault).AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, debugMenu.Close); ;
+            debugMenu.AddNode("ChecVis")
+                .AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, zDebug.setCheckVizTarget)
+                .AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, zDebug.debugCheckViz)
+                .AddListener(zMenuManager.nodeEvent.OnHeldImmediate, zDebug.toggleVisCheck)
+                .AddListener(zMenuManager.nodeEvent.OnHeldImmediate, zMenuManager.CloseAllMenues)
+                .AddListener(zMenuManager.nodeEvent.OnTappedExclusive, zMenuManager.CloseAllMenues)
+                .AddListener(zMenuManager.nodeEvent.OnDoubleTapped, zDebug.setVisCheck, false)
+                .AddListener(zMenuManager.nodeEvent.OnDoubleTapped, zMenuManager.CloseAllMenues)
+            ;
+            debugMenu.AddNode("Find unexplored", zDebug.MarkUnexploredArea);
+            debugMenu.AddNode("SendBotToExplore", zDebug.SendClosestBotToExplore);
+            debugMenu.AddNode("Show corners", zDebug.debugCorners);
+            //debugMenu.AddNode("Toggle explore",ExploreAction.ToggleCanExplore);
+            debugNodeMenu.AddNode("Node I'm looking at", zDebug.GetNodeImLookingAT, [zMenuManager.mainMenu.gameObject.transform]);
+            debugNodeMenu.AddNode("Toggle Nodes", zDebug.ToggleNodes);
+            debugNodeMenu.AddNode("Toggle Connections", zDebug.ToggleConnections);
+            debugNodeMenu.AddNode("Toggle Node Info", zDebug.ToggleNodeInfo);
+            debugNodeSettingsMenu.radius = 30;
+            var gridSizeNode = debugNodeSettingsMenu.AddNode("Grid Size");
+            gridSizeNode.AddListener(zMenuManager.nodeEvent.WhileSelected, DebugMenuClass.ChangeValueBasedOnMouseWheel, [DebugValueToChange.NodeGridSize, gridSizeNode, 0.1f]);
+            gridSizeNode.SetSubtitle($"{zVisitedManager.NodeGridSize}");
+            var mapGridSizeNode = debugNodeSettingsMenu.AddNode("Map Grid Size");
+            mapGridSizeNode.AddListener(zMenuManager.nodeEvent.WhileSelected, DebugMenuClass.ChangeValueBasedOnMouseWheel, [DebugValueToChange.NodeMapSize, mapGridSizeNode, 1f]);
+            mapGridSizeNode.SetSubtitle($"{zVisitedManager.NodeMapGridSize}");
+            var visitDistanceNode = debugNodeSettingsMenu.AddNode("Visit distnace");
+            visitDistanceNode.AddListener(zMenuManager.nodeEvent.WhileSelected, DebugMenuClass.ChangeValueBasedOnMouseWheel, [DebugValueToChange.NodeVisitDistance, visitDistanceNode, 0.5f]);
+            visitDistanceNode.SetSubtitle($"{zVisitedManager.NodeVisitDistance}");
+            var propigationAmmountNode = debugNodeSettingsMenu.AddNode("Propigation ammount");
+            propigationAmmountNode.AddListener(zMenuManager.nodeEvent.WhileSelected, DebugMenuClass.ChangeValueBasedOnMouseWheel, [DebugValueToChange.PropigationAmmount, propigationAmmountNode, 1f]);
+            propigationAmmountNode.SetSubtitle($"{zVisitedManager.propigationAmmount}");
+            var propigationSameCountNode = debugNodeSettingsMenu.AddNode("Propigation sample count");
+            propigationSameCountNode.AddListener(zMenuManager.nodeEvent.WhileSelected, DebugMenuClass.ChangeValueBasedOnMouseWheel, [DebugValueToChange.PropigationSampleCount, propigationSameCountNode, 1f]);
+            propigationSameCountNode.SetSubtitle($"{zVisitedManager.propigationSampleCount}");
+            var nodesPerFrameNode = debugNodeSettingsMenu.AddNode("Nodes per frame");
+            nodesPerFrameNode.AddListener(zMenuManager.nodeEvent.WhileSelected, DebugMenuClass.ChangeValueBasedOnMouseWheel, [DebugValueToChange.NodesCreatedPerFrame, nodesPerFrameNode, 1f]);
+            nodesPerFrameNode.SetSubtitle($"{zVisitedManager.nodesCreatedPerFrame}");
+            var connectionChecksPerFrameNode = debugNodeSettingsMenu.AddNode("Connections per frame");
+            connectionChecksPerFrameNode.AddListener(zMenuManager.nodeEvent.WhileSelected, DebugMenuClass.ChangeValueBasedOnMouseWheel, [DebugValueToChange.connectionChecksPerFrame, connectionChecksPerFrameNode, 1f]);
+            connectionChecksPerFrameNode.SetSubtitle($"{zVisitedManager.connectionChecksPerFrame}");
+            CullingMenuClass.setupCullingMenu(debugCameraCullingMenu);
+            debugCameraCullingMenu.radius = 40;
+            debugCameraCullingMenu.setNodeSize(0.5f);
+        }
         public enum DebugValueToChange
         {
             NodeGridSize,
