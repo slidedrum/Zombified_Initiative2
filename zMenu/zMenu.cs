@@ -5,6 +5,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using Zombified_Initiative;
+using static GameData.GD;
 
 namespace ZombieTweak2.zMenu
 {
@@ -46,6 +47,8 @@ namespace ZombieTweak2.zMenu
         public Vector3 RelativePosition = Vector3.zero;
 
         private Dictionary<zMenuManager.menuEvent, FlexibleEvent> eventMap;
+        private Dictionary<string, List<zMenuNode>> catagories;
+        private int catagoryIndex = 0;
 
         private FlexibleEvent OnOpened = new();
         private FlexibleEvent WhileOpened = new();
@@ -86,6 +89,73 @@ namespace ZombieTweak2.zMenu
             centerNode = new zMenuNode(name, this, onClose).SetTitle(arg_ParrentMenu != null ? arg_ParrentMenu.name : "Close");
             parrentMenu = arg_ParrentMenu;
             Close();
+        }
+        internal void UpdateCatagoryByScroll()
+        {
+            if (catagories.Count() == 0)
+                return;
+            float scroll = Input.GetAxis("Mouse ScrollWheel");
+            int normalizedScroll = (int)Mathf.Sign(scroll);
+            if (scroll == 0f)
+                return;
+            catagoryIndex += (int)normalizedScroll;
+            if (catagoryIndex >= catagories.Count())
+                catagoryIndex = 0;
+            if (catagoryIndex < 0)
+                catagoryIndex = catagories.Count();
+            SetCatagory(catagories.Keys.ElementAt(catagoryIndex));
+        }
+        public void SetCatagory(string catagory)
+        {
+            if (!catagories.ContainsKey(catagory))
+            {
+                ZiMain.log.LogError($"Invalid catagory: {catagory} in menu {centerNode.text}");
+                return;
+            }
+            centerNode.SetSubtitle($"<color=#CC840066>[ </color>{catagory}<color=#CC840066> ]</color>");
+            if (catagory.ToLower() == "all")
+            {
+                foreach (var node in nodes)
+                {
+                    EnableNode(node);
+                }
+                return;
+            }
+            foreach (var node in nodes)
+            {
+                if (catagories[catagory].Contains(node))
+                    EnableNode(node);
+                else
+                    DisableNode(node);
+            }
+        }
+        public void AddCatagory(string catagory)
+        {
+            if (!catagories.ContainsKey(catagory))
+                catagories[catagory] = new();
+            else
+                ZiMain.log.LogWarning($"Tried to add existing catagory {catagory} in {centerNode.text} menu");
+        }
+        public void AddNodeToCatagory(string catagory, zMenuNode node)
+        {
+            if (node == null)
+            {
+                ZiMain.log.LogWarning($"Can't add null node to catagory {catagory} in menu {centerNode.text}");
+                return;
+            }
+            if (!catagories.ContainsKey(catagory))
+                AddCatagory(catagory);
+            catagories[catagory].Add(node);
+        }
+        public void AddNodeToCatagory(string catagory, string nodeName)
+        {
+            var node = GetNode(nodeName);
+            if (node == null)
+            {
+                ZiMain.log.LogWarning($"Failed to find node {nodeName} in {centerNode.text} to add to catagory {catagory}."); 
+                return;
+            }
+            AddNodeToCatagory(catagory, node);
         }
         public void UpdatePosition()
         {

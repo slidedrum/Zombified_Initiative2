@@ -84,6 +84,7 @@ namespace ZombieTweak2.zMenu
             {
                     parrentMenu.AddNode(newMenu);
             }
+            newMenu.centerNode.AddListener(nodeEvent.OnSelected, newMenu.UpdateCatagoryByScroll);
             registerMenu(newMenu);
             return newMenu;
         }
