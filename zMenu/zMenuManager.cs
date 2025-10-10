@@ -1,14 +1,10 @@
 ﻿using AK;
-using CellMenu;
 using FluffyUnderware.DevTools.Extensions;
 using Player;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using TMPro;
 using UnityEngine;
 using Zombified_Initiative;
-using static AK.SWITCHES;
 
 namespace ZombieTweak2.zMenu
 {
@@ -25,7 +21,6 @@ namespace ZombieTweak2.zMenu
         public static FPSCamera mainCamera;
         private static bool menuWasOpen = false;
         public static Color defaultColor { get; private set; } = new Color(0.25f, 0.25f, 0.25f, 0.25f);
-
 
         public static uint MainMenuOpenSound = EVENTS.GAME_MENU_CONFIRM;
         public static uint MenuOpenSound = EVENTS.GAME_MENU_CONFIRM;
@@ -84,7 +79,7 @@ namespace ZombieTweak2.zMenu
             {
                     parrentMenu.AddNode(newMenu);
             }
-            newMenu.centerNode.AddListener(nodeEvent.OnSelected, newMenu.UpdateCatagoryByScroll);
+            newMenu.centerNode.AddListener(nodeEvent.WhileSelected, newMenu.UpdateCatagoryByScroll);
             registerMenu(newMenu);
             return newMenu;
         }
@@ -215,7 +210,6 @@ namespace ZombieTweak2.zMenu
                 }
             }
         }
-
         public static void SetupCamera() {
             mainCamera = PlayerManager.GetLocalPlayerAgent().FPSCamera;
             zCameraEvents cameraEvents = mainCamera.gameObject.AddComponent<zCameraEvents>();
@@ -225,13 +219,22 @@ namespace ZombieTweak2.zMenu
             mainMenu.centerNode.AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, CloseAllMenues);
             registerMenu(mainMenu);
         }
-
         public static void ClearAllMenus()
         {
             menues.Clear();
             mainCamera = null;
             menuParrent?.Destroy();
             SetupCamera();
+        }
+        public static zMenu GetMenu(string menuName)
+        {
+            foreach (var menu in menues)
+            {
+                if (menu.centerNode.text.Contains(menuName))
+                    return menu;
+            }
+            ZiMain.log.LogWarning($"Could not find {menuName} in regestered menus.");
+            return null;
         }
     }
 }

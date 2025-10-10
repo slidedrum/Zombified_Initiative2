@@ -47,7 +47,7 @@ namespace ZombieTweak2.zMenu
         public Vector3 RelativePosition = Vector3.zero;
 
         private Dictionary<zMenuManager.menuEvent, FlexibleEvent> eventMap;
-        private Dictionary<string, List<zMenuNode>> catagories;
+        private Dictionary<string, List<zMenuNode>> catagories = new();
         private int catagoryIndex = 0;
 
         private FlexibleEvent OnOpened = new();
@@ -102,7 +102,7 @@ namespace ZombieTweak2.zMenu
             if (catagoryIndex >= catagories.Count())
                 catagoryIndex = 0;
             if (catagoryIndex < 0)
-                catagoryIndex = catagories.Count();
+                catagoryIndex = catagories.Count() - 1;
             SetCatagory(catagories.Keys.ElementAt(catagoryIndex));
         }
         public void SetCatagory(string catagory)
@@ -490,6 +490,21 @@ namespace ZombieTweak2.zMenu
             zMenuNode node = new zMenuNode(arg_Name,this,callback);
             RegisterNode(node);
             return node;
+        }
+        public zMenuNode GetNode()
+        {
+            if (parrentMenu == null)
+                ZiMain.log.LogWarning($"Can't get parrent node of {centerNode.text} because it has no parrent menu");
+            return parrentMenu.GetNode(this);
+        }
+        public zMenuNode GetNode(zMenu menu)
+        {
+            if (menu.parrentMenu != this)
+            {
+                ZiMain.log.LogWarning($"{menu.centerNode.text} is not a child of {centerNode.text}, can't get containing node.");
+                return null;
+            }
+            return GetNode(menu.centerNode.text);
         }
         public zMenuNode GetNode(string nodeName)
         {
