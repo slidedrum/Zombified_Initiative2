@@ -617,7 +617,7 @@ namespace Zombified_Initiative
                     if (levelItem != null)
                     {
                         string friendlyName = levelItem.ItemDataBlock.publicName;
-                        PickupMenuClass.Encounter(friendlyName);
+                        AutomaticActionMenuClass.PickupMenuClass.Encounter(friendlyName);
                     }
                 }
                 vizChecks++;

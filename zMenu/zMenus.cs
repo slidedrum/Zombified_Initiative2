@@ -1,4 +1,5 @@
-﻿using CollisionRundown.Features.HUDs;
+﻿using Agents;
+using CollisionRundown.Features.HUDs;
 using GameData;
 using Player;
 using System;
@@ -6,8 +7,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEngine;
+using ZombieTweak2.CustomActions.Patches;
+using ZombieTweak2.zRootBotPlayerAction;
 using ZombieTweak2.zRootBotPlayerAction.CustomActions;
 using Zombified_Initiative;
+using static Il2CppSystem.Globalization.CultureInfo;
+using static ZombieTweak2.zMenu.zMenu;
 
 namespace ZombieTweak2.zMenu
 {
@@ -79,17 +84,19 @@ namespace ZombieTweak2.zMenu
             autoActionMenus.Add(shareMenu);
             autoActionMenus.Add(zMenuManager.createMenu("Ping", AutoActionMenu));
             autoActionMenus.Add(zMenuManager.createMenu("Enemy Scanner", AutoActionMenu));
-            var pickupmenu = zMenuManager.createMenu("Pickup", AutoActionMenu);
-            autoActionMenus.Add(pickupmenu);
-            autoActionMenus.Add(zMenuManager.createMenu("Follow", AutoActionMenu));
+            var pickupMenu = zMenuManager.createMenu("Pickup", AutoActionMenu);
+            autoActionMenus.Add(pickupMenu);
+            var followMenu =zMenuManager.createMenu("Follow", AutoActionMenu);
+            autoActionMenus.Add(followMenu);
             autoActionMenus.Add(zMenuManager.createMenu("Unlock", AutoActionMenu));
             //Custom actions
             var exploremenu = zMenuManager.createMenu("Explore", AutoActionMenu);
             autoActionMenus.Add(exploremenu);
 
             ExploreMenuClass.Setup(exploremenu);
-            PickupMenuClass.Setup(pickupmenu);
+            PickupMenuClass.Setup(pickupMenu);
             ShareMenuClass.Setup(shareMenu);
+            FollowMenuClass.Setup(followMenu);
 
             catagories["Favorites"] = new();
             catagories["Favorites"].Add("Pickup");
@@ -152,177 +159,511 @@ namespace ZombieTweak2.zMenu
         {
             AutoActionMenu.centerNode.SetSubtitle($"<color=#CC840066>[ </color>{subtitle}<color=#CC840066> ]</color>");
         }
+        public static class PickupMenuClass
+        {
+            public static Dictionary<uint, zMenu.zMenuNode> prioNodesByID = new Dictionary<uint, zMenu.zMenuNode>();
+            private static Dictionary<string, List<string>> catagories = new();
+            private static int catagoryIndex = 1;
+            private static zMenu pickupMenu;
+            private static zMenu.zMenuNode pickupNode;
+            public static void Setup(zMenu menu)
+            {
+                pickupMenu = menu;
+                pickupMenu.radius = 25f;
+                pickupNode = pickupMenu.GetNode();
+
+                zMenu.zMenuNode glowstickNode = null;
+                foreach (var item in zSlideComputer.itemPrios)
+                {
+                    uint itemID = item.Key;
+                    ItemDataBlock block = ItemDataBlock.s_blockByID[itemID];
+                    string publicName = block.publicName;
+                    zMenu.zMenuNode node = null;
+                    bool isGlowstick = zSlideComputer.shortGlowStickNames.Contains(publicName);
+                    if (isGlowstick)
+                    {
+                        if (glowstickNode == null)
+                        {
+                            glowstickNode = pickupMenu.AddNode(zSlideComputer.shortGlowStickNames.FirstOrDefault());
+                            prioNodesByID[itemID] = glowstickNode;
+                        }
+                        node = glowstickNode;
+                    }
+                    else
+                    {
+                        node = pickupMenu.AddNode(publicName);
+                        prioNodesByID[itemID] = node;
+                    }
+                    //TODO uncomment then when moved over to overide system instead of selection system.
+                    //var thisNode = menu.parrentMenu.GetNode(menu.centerNode.text);
+                    //thisNode.ClearListeners(zMenuManager.nodeEvent.OnUnpressedSelected);
+                    //thisNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, menu.Open);
+                    //thisNode.AddListener(zMenuManager.nodeEvent.OnTapped, TogglePerms);
+                    node.AddListener(zMenuManager.nodeEvent.WhileSelected, ChangePrioBasedOnMouseWheel, itemID, node);
+                    node.AddListener(zMenuManager.nodeEvent.OnTapped, zSlideComputer.ToggleItemPrioDisabled, itemID);
+                    node.AddListener(zMenuManager.nodeEvent.OnTapped, updateNodePriorityDisplay, node, itemID);//TODO make these args order consistant.
+                    node.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, ResetNodeSettings, itemID, node);
+                    pickupMenu.centerNode.ClearListeners(zMenuManager.nodeEvent.OnUnpressedSelected);
+                    pickupMenu.centerNode.AddListener(zMenuManager.nodeEvent.OnTapped, pickupMenu.parrentMenu.Open);
+                    pickupMenu.centerNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, ResetNodeSettings, itemID, node);
+                    pickupMenu.AddListener(zMenuManager.menuEvent.OnOpened, updateNodePriorityDisplay, node, itemID);
+                    node.fullTextPart.SetScale(1f, 1f);
+                    node.subtitlePart.SetScale(0.75f, 0.75f);
+                    node.titlePart.SetScale(0.5f, 0.5f);
+                    node.SetSize(0.75f);
+                }
+                //pickupMenu.centerNode.AddListener(zMenuManager.nodeEvent.WhileSelected, UpdateCatagoryByScroll);
+                //ALL - ENCOUNTERED - RESOURCES - PLACEABLES - THROWABLES - FAVORITES
+                pickupMenu.AddCatagory("All");
+                pickupMenu.AddCatagory("Encountered");
+                pickupMenu.AddNodeToCatagory("Favorites", "Ammo Pack");
+                pickupMenu.AddNodeToCatagory("Favorites", "MediPack");
+                pickupMenu.AddNodeToCatagory("Favorites", "Tool Refill Pack");
+                pickupMenu.AddNodeToCatagory("Favorites", "Disinfection Pack");
+                pickupMenu.AddNodeToCatagory("Favorites", "C-Foam Grenade");
+                pickupMenu.AddNodeToCatagory("Resources", "MediPack");
+                pickupMenu.AddNodeToCatagory("Resources", "Ammo Pack");
+                pickupMenu.AddNodeToCatagory("Resources", "Tool Refill Pack");
+                pickupMenu.AddNodeToCatagory("Resources", "Disinfection Pack");
+                pickupMenu.AddNodeToCatagory("Placeables", "Lock Melter");
+                pickupMenu.AddNodeToCatagory("Placeables", "C-Foam Tripmine");
+                pickupMenu.AddNodeToCatagory("Placeables", "Explosive Trip Mine");
+                pickupMenu.AddNodeToCatagory("Throwables", "Glow Stick");
+                pickupMenu.AddNodeToCatagory("Throwables", "Fog Repeller");
+                pickupMenu.AddNodeToCatagory("Throwables", "C-Foam Grenade");
+                pickupMenu.SetCatagory("All");
+
+                pickupNode.ClearListeners(zMenuManager.nodeEvent.OnUnpressedSelected);
+                pickupNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, pickupMenu.Open);
+                pickupNode.AddListener(zMenuManager.nodeEvent.OnTapped, TogglePerms);
+            }
+            internal static void Encounter(string friendlyName)
+            {
+                if (!catagories.Keys.Contains("Encountered"))
+                {
+                    ZiMain.log.LogWarning($"Unable to encouter {friendlyName} because Encountered catagory not found in pickup menu.");
+                    return;
+                }
+                if (!catagories["Encountered"].Contains(friendlyName))
+                {
+                    catagories["Encountered"].Add(friendlyName);
+                    if (catagoryIndex < catagories.Count() && catagories.Keys.ElementAt(catagoryIndex) == "Encountered")
+                        pickupMenu.SetCatagory("Encountered");
+                }
+            }
+            private static void ResetNodeSettings(uint itemID, zMenu.zMenuNode node)
+            {
+                if (!node.gameObject.activeInHierarchy)
+                    return;
+                zSlideComputer.ResetItemPrio(itemID);
+                zSlideComputer.SetItemPrioDisabled(itemID, true);
+                updateNodePriorityDisplay(node, itemID);
+            }
+            [Obsolete]
+            public static bool pickupAllowed = true;
+            public static void TogglePerms()
+            {
+                pickupAllowed = !pickupAllowed;
+                foreach (var bot in zSearch.GetAllBotAgents())
+                {
+                    zSlideComputer.SetPickupPermission(bot.PlayerSlotIndex, pickupAllowed);
+                }
+                if (pickupAllowed)
+                {
+                    pickupNode.SetColor(zMenuManager.defaultColor);
+                    pickupMenu.centerNode.SetColor(zMenuManager.defaultColor);
+                }
+                else
+                {
+                    pickupNode.SetColor(new Color(0.25f, 0f, 0f));
+                    pickupMenu.centerNode.SetColor(new Color(0.25f, 0f, 0f));
+                }
+            }
+            public static void updateNodePriorityDisplay(zMenu.zMenuNode node, uint itemID)
+            {
+                if (zSlideComputer.itemPrios[itemID] == zSlideComputer.OriginalItemPrios[itemID])
+                {
+                    node.SetPrefix("");
+                    node.SetSuffix("");
+                }
+                else
+                {
+                    node.SetPrefix("* ");
+                    node.SetSuffix(" *");
+                }
+                string hex = ColorUtility.ToHtmlStringRGB(GetPriorityColor(zSlideComputer.GetItemPrio(itemID)));
+                node.SetSubtitle($"<color=#CC840066>[ </color><color=#{hex}>{zSlideComputer.GetItemPrio(itemID)}</color><color=#CC840066> ]</color>");
+                if (zSlideComputer.enabledItemPrios[itemID])
+                    node.SetColor(zMenuManager.defaultColor);
+                else
+                    node.SetColor(new Color(0.25f, 0f, 0f));
+            }
+            public static Color GetPriorityColor(float value)
+            {
+                // scale factor to dim colors
+                float max = 0.25f;
+
+                Color red = new Color(max, 0f, 0f);
+                Color yellow = new Color(max, max, 0f);
+                Color green = new Color(0f, max, 0f);
+                Color blue = new Color(0f, 0f, max);
+
+                if (value <= 25f)
+                    return Color.Lerp(red, yellow, value / 25f);
+                if (value <= 50f)
+                    return Color.Lerp(yellow, green, (value - 25f) / 25f);
+                return Color.Lerp(green, blue, (value - 50f) / 50f);
+            }
+            public static void ChangePrioBasedOnMouseWheel(uint itemID, zMenu.zMenuNode node, int increment = 10)
+            {
+                if (node == null || !node.gameObject.activeInHierarchy || !zSlideComputer.enabledItemPrios[itemID])
+                    return;
+                float scroll = Input.GetAxis("Mouse ScrollWheel");
+                int normalizedScroll = (int)Mathf.Sign(scroll);
+                if (scroll == 0f)
+                    return;
+                float currentPrio = zSlideComputer.GetItemPrio(itemID);
+                zSlideComputer.SetBotItemPriority(itemID, Mathf.Clamp(currentPrio + (normalizedScroll * increment), 0, 100));
+                updateNodePriorityDisplay(node, itemID);
+            }
+
+
+        }
+        public static class ShareMenuClass
+        {
+            public static Dictionary<uint, zMenu.zMenuNode> packNodesByID = new Dictionary<uint, zMenu.zMenuNode>();
+            private static zMenu shareMenu;
+            private static zMenu.zMenuNode shareNode;
+
+            public static void Setup(zMenu menu)
+            {
+                shareMenu = menu;
+                shareNode = shareMenu.GetNode();
+                var resourceDataBlocks = ItemSpawnManager.m_itemDataPerInventorySlot[(int)InventorySlot.ResourcePack];
+                foreach (ItemDataBlock block in resourceDataBlocks)
+                {
+                    uint itemID = ItemDataBlock.s_blockIDByName[block.name];
+                    string name = block.publicName;
+                    zMenu.zMenuNode node = shareMenu.AddNode(name);
+                    //TODO uncomment then when moved over to overide system instead of selection system.
+                    //var thisNode = menu.parrentMenu.GetNode(menu.centerNode.text);
+                    //thisNode.ClearListeners(zMenuManager.nodeEvent.OnUnpressedSelected);
+                    //thisNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, menu.Open);
+                    //thisNode.AddListener(zMenuManager.nodeEvent.OnTapped, TogglePerms);
+                    node.AddListener(zMenuManager.nodeEvent.OnTapped, zSlideComputer.ToggleResourceSharePermission, itemID);
+                    node.AddListener(zMenuManager.nodeEvent.OnTapped, updateNodeThresholdDisplay, node, itemID);
+                    node.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, zSlideComputer.SetResourceSharePermission, itemID, true);
+                    node.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, zSlideComputer.SetResourceThreshold, itemID, 100);
+                    node.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, updateNodeThresholdDisplay, node, itemID);
+                    node.AddListener(zMenuManager.nodeEvent.WhileSelected, ChangeThresholdBasedOnMouseWheel, itemID, node, 5);
+                    shareMenu.AddListener(zMenuManager.menuEvent.OnOpened, updateNodeThresholdDisplay, node, itemID);
+                    shareMenu.centerNode.ClearListeners(zMenuManager.nodeEvent.OnUnpressedSelected);
+                    shareMenu.centerNode.AddListener(zMenuManager.nodeEvent.OnTapped, shareMenu.parrentMenu.Open);
+                    shareMenu.centerNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, zSlideComputer.SetResourceThreshold, itemID, 100);
+                    shareMenu.centerNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, zSlideComputer.SetResourceSharePermission, itemID, true);
+                    shareMenu.centerNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, updateNodeThresholdDisplay, node, itemID);
+                    node.fullTextPart.SetScale(1f, 1f);
+                    node.subtitlePart.SetScale(0.75f, 0.75f);
+                    node.titlePart.SetScale(0.5f, 0.5f);
+                    packNodesByID[itemID] = node;
+                }
+                shareNode.ClearListeners(zMenuManager.nodeEvent.OnUnpressedSelected);
+                shareNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, shareMenu.Open);
+                shareNode.AddListener(zMenuManager.nodeEvent.OnTapped, TogglePerms);
+            }
+            public static void updateNodeThresholdDisplay(zMenu.zMenuNode node, uint itemID)
+            {
+                if (zSlideComputer.GetResourceThreshold(itemID) == 100)
+                {
+                    node.SetPrefix("");
+                    node.SetSuffix("");
+                }
+                else
+                {
+                    node.SetPrefix("* ");
+                    node.SetSuffix(" *");
+                }
+                string hex = ColorUtility.ToHtmlStringRGB(GetThresholdColor(zSlideComputer.GetResourceThreshold(itemID)));
+                node.SetSubtitle($"<color=#CC840066>[ </color><color=#{hex}>{zSlideComputer.GetResourceThreshold(itemID)}</color><color=#CC840066> ]</color>");
+                if (zSlideComputer.enabledResourceShares[itemID])
+                    node.SetColor(zMenuManager.defaultColor);
+                else
+                    node.SetColor(new Color(0.25f, 0f, 0f));
+            }
+            [Obsolete]
+            public static bool shareAllowed = true;
+            public static void TogglePerms()
+            {
+                shareAllowed = !shareAllowed;
+                foreach (var bot in zSearch.GetAllBotAgents())
+                {
+                    zSlideComputer.SetSharePermission(bot.PlayerSlotIndex, shareAllowed);
+                }
+                if (shareAllowed)
+                {
+                    shareNode.SetColor(zMenuManager.defaultColor);
+                    shareMenu.centerNode.SetColor(zMenuManager.defaultColor);
+                }
+                else
+                {
+                    shareNode.SetColor(new Color(0.25f, 0f, 0f));
+                    shareMenu.centerNode.SetColor(new Color(0.25f, 0f, 0f));
+                }
+            }
+            public static Color GetThresholdColor(float value)
+            {
+                // scale factor to dim colors
+                float max = 0.25f;
+
+                Color red = new Color(max, 0f, 0f);
+                Color yellow = new Color(max, max, 0f);
+                Color green = new Color(0f, max, 0f);
+
+                if (value <= 40f) // 0 → 40: red → yellow
+                    return Color.Lerp(red, yellow, value / 40f);
+                else // 40 → 100: yellow → green
+                    return Color.Lerp(yellow, green, (value - 40f) / 60f);
+            }
+            public static void ChangeThresholdBasedOnMouseWheel(uint itemID, zMenu.zMenuNode node, int increment = 10)
+            {
+                if (node == null || !node.gameObject.activeInHierarchy || !zSlideComputer.enabledResourceShares[itemID])
+                    return;
+                float scroll = Input.GetAxis("Mouse ScrollWheel");
+                int normalizedScroll = (int)Mathf.Sign(scroll);
+                if (scroll == 0f)
+                    return;
+                float currentThreshold = zSlideComputer.GetResourceThreshold(itemID);
+                zSlideComputer.SetResourceThreshold(itemID, Math.Clamp((int)currentThreshold + (normalizedScroll * increment), 0, 100));
+                updateNodeThresholdDisplay(node, itemID);
+            }
+        }
+        public static class ExploreMenuClass
+        {
+            private static zMenu exploreMenu;
+            private static zMenu.zMenuNode exploreNode;
+            internal static void Setup(zMenu menu)
+            {
+                exploreMenu = menu;
+                exploreNode = exploreMenu.parrentMenu.GetNode(exploreMenu.centerNode.text);
+                exploreNode.ClearListeners(zMenuManager.nodeEvent.OnUnpressedSelected);
+                exploreNode.AddListener(zMenuManager.nodeEvent.OnTapped, ToggleExplorePerms);
+                exploreNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, exploreMenu.Open);
+            }
+            private static void ToggleExplorePerms()
+            {
+                var bots = zSearch.GetAllBotAgents();
+                foreach (var bot in bots)
+                {
+                    ExploreAction.ToggleExplorePerm(bot);
+                }
+                if (ExploreAction.GetExplorePerm(bots[0]))
+                    exploreNode.SetColor(zMenuManager.defaultColor);
+                else
+                    exploreNode.SetColor(new Color(0.25f, 0f, 0f));
+            }
+        }
+        public static class FollowMenuClass
+        {
+            private static zMenu followMenu;
+            private static zMenuNode followMenuNode;
+            private static Dictionary<DRAMA_State, zMenuNode> stateNodes = new();
+            public static DRAMA_State previousState;
+            public static Color currentStateColor;
+            public static Color defaultColor;
+
+            internal static void Setup(zMenu menu)
+            {
+                defaultColor = menu.getTextColor();
+                currentStateColor = new(0f, 0.2f, 0f);
+                followMenu = menu;
+                followMenuNode = followMenu.GetNode();
+                previousState = DramaManager.CurrentStateEnum;
+                FollowActionPatch.Setup();
+                foreach (var agent in zSearch.GetAllBotAgents()) //Set default settings
+                {
+                    var data = zActions.GetOrCreateData(agent);
+                    data.followSettingsOverides = new();
+
+                } //Set default settings
+                foreach (DRAMA_State state in Enum.GetValues(typeof(DRAMA_State)))
+                {
+                    if (!FollowActionPatch.myFollowSettingsOverides.ContainsKey(state))
+                        continue;
+                    var stateNode = followMenu.AddNode(state.ToString());
+                    stateNodes[state] = stateNode;
+                    UpdateStateNode(state);
+                    stateNode.titlePart.SetScale(0.5f);
+                    stateNode.subtitlePart.SetScale(0.5f);
+                    stateNode.AddListener(zMenuManager.nodeEvent.WhileSelected, UpdateNodeBasedOnScroll, state);
+                    stateNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, ResetSettings, state);
+                }
+                followMenu.AddListener(zMenuManager.menuEvent.WhileOpened, UpdateHighlightedState);
+                followMenu.AddListener(zMenuManager.menuEvent.OnOpened, UpdateAllStateNodes);
+                followMenu.centerNode.ClearListeners(zMenuManager.nodeEvent.OnUnpressedSelected);
+                followMenu.centerNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, ResetAllStateSettings);
+                followMenu.centerNode.AddListener(zMenuManager.nodeEvent.OnTapped, followMenu.parrentMenu.Open);
+                followMenuNode.ClearListeners(zMenuManager.nodeEvent.OnUnpressedSelected);
+                followMenuNode.AddListener(zMenuManager.nodeEvent.WhileSelected, UpdateMainNodeBasedOnScroll);
+                followMenuNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, ResetSettings);
+                followMenuNode.AddListener(zMenuManager.nodeEvent.OnTapped, followMenu.Open);
+                followMenu.radius = 30f;
+                UpdateMainNode();
+            }
+            private static void ResetSettings()
+            {
+                FollowActionPatch.mainFollowerSettings = new();
+                UpdateMainNode();
+            }
+            private static void ResetAllStateSettings()
+            {
+                FollowActionPatch.followSettingsOverides.Clear();
+                foreach (var bot in zSearch.GetAllBotAgents())
+                {
+                    var data = zActions.GetOrCreateData(bot);
+                    data.followSettingsOverides.Clear();
+                }
+                foreach(var state in stateNodes.Keys)
+                {
+                    UpdateStateNode(state);
+                }
+            }
+            private static void ResetStateSettings(DRAMA_State state)
+            {
+                FollowActionPatch.followSettingsOverides.Remove(state);
+                foreach(var bot in zSearch.GetAllBotAgents())
+                {
+                    var data = zActions.GetOrCreateData(bot);
+                    data.followSettingsOverides.Remove(state);
+                }
+                UpdateStateNode(state);
+            }
+            private static void UpdateHighlightedState()
+            {
+                if (previousState == DramaManager.CurrentStateEnum)
+                    return;
+                if (stateNodes.ContainsKey(DramaManager.CurrentStateEnum))
+                {
+                    if (stateNodes.ContainsKey(previousState))
+                        stateNodes[previousState].SetColor(defaultColor);
+                    stateNodes[DramaManager.CurrentStateEnum].SetColor(currentStateColor);
+                }
+                else if (stateNodes.ContainsKey(previousState))
+                {
+                    stateNodes[previousState].SetColor(defaultColor);
+                }
+                previousState = DramaManager.CurrentStateEnum;
+
+            }
+            private static void UpdateMainNodeBasedOnScroll()
+            {
+                float scroll = Input.GetAxis("Mouse ScrollWheel");
+                int normalizedScroll = (int)Mathf.Sign(scroll);
+                if (scroll == 0f)
+                    return;
+                var node = followMenuNode;
+                var pos = Camera.main.WorldToViewportPoint(node.gameObject.transform.position);
+                pos = new Vector2(pos.x - 0.5f, pos.y - 0.5f) * -1;
+                var tempSettings = FollowActionPatch.mainFollowerSettings;
+                if (pos.y > Math.Abs(pos.x)) // TOP
+                {
+                    tempSettings.prio += normalizedScroll;
+                    tempSettings.prio = Math.Clamp(tempSettings.prio, 1, 15);
+                }
+                else if (pos.x > 0) // RIGHT
+                {
+                    tempSettings.followLeaderMaxDistance += normalizedScroll;
+                    tempSettings.followLeaderMaxDistance = Math.Clamp(tempSettings.followLeaderMaxDistance, tempSettings.followLeaderRadius, 60);
+                }
+                else // LEFT
+                {
+                    tempSettings.followLeaderRadius += normalizedScroll;
+                    tempSettings.followLeaderRadius = Math.Clamp(tempSettings.followLeaderRadius, 1, tempSettings.followLeaderMaxDistance);
+                }
+                FollowActionPatch.mainFollowerSettings = tempSettings;
+                foreach (var agent in zSearch.GetAllBotAgents())
+                {
+                    var data = zActions.GetOrCreateData(agent);
+                    data.followSettingsOverides = FollowActionPatch.followSettingsOverides;
+                }
+                UpdateMainNode();
+            }
+            private static void UpdateMainNode()
+            {
+                var node = followMenuNode;
+                if (!FollowActionPatch.mainFollowerSettings.Equals(FollowActionPatch.defaultFollowSettings))
+                {
+                    node.SetPrefix("* ");
+                    node.SetSuffix(" *");
+                }
+                else
+                {
+                    node.SetPrefix("");
+                    node.SetSuffix("");
+                }
+                node.SetTitle($"Prio <color=#CC840066>[</color>{FollowActionPatch.mainFollowerSettings.prio}<color=#CC840066>]</color>");
+                node.SetSubtitle($"Range <color=#CC840066>[</color>{FollowActionPatch.mainFollowerSettings.followLeaderRadius}/{FollowActionPatch.mainFollowerSettings.followLeaderMaxDistance}<color=#CC840066>]</color>");
+            }
+            private static void UpdateNodeBasedOnScroll(DRAMA_State state)
+            {
+                float scroll = Input.GetAxis("Mouse ScrollWheel");
+                int normalizedScroll = (int)Mathf.Sign(scroll);
+                if (scroll == 0f)
+                    return;
+                var node = stateNodes[state];
+                var pos = Camera.main.WorldToViewportPoint(node.gameObject.transform.position);
+                pos = new Vector2(pos.x - 0.5f, pos.y - 0.5f) * -1;
+                var tempSettings = FollowActionPatch.followSettingsOverides.GetValueOrDefault(state, FollowActionPatch.mainFollowerSettings);
+                if (pos.y > Math.Abs(pos.x)) // TOP
+                {
+                    tempSettings.prio += normalizedScroll;
+                    tempSettings.prio = Math.Clamp(tempSettings.prio, 1, 15);
+                }
+                else if (pos.x > 0) // RIGHT
+                {
+                    tempSettings.followLeaderMaxDistance += normalizedScroll;
+                    tempSettings.followLeaderMaxDistance = Math.Clamp(tempSettings.followLeaderMaxDistance, tempSettings.followLeaderRadius, 60);
+                }
+                else // LEFT
+                {
+                    tempSettings.followLeaderRadius += normalizedScroll;
+                    tempSettings.followLeaderRadius = Math.Clamp(tempSettings.followLeaderRadius, 1, tempSettings.followLeaderMaxDistance);
+                }
+                FollowActionPatch.followSettingsOverides[state] = tempSettings;
+                if (tempSettings.Equals(FollowActionPatch.mainFollowerSettings))
+                    FollowActionPatch.followSettingsOverides.Remove(state);
+                foreach (var agent in zSearch.GetAllBotAgents())
+                {
+                    var data = zActions.GetOrCreateData(agent);
+                    data.followSettingsOverides = FollowActionPatch.followSettingsOverides;
+                }
+                UpdateStateNode(state);
+            }
+            private static void UpdateAllStateNodes()
+            {
+                foreach(var state in stateNodes.Keys)
+                {
+                    UpdateStateNode(state);
+                }
+            }
+            private static void UpdateStateNode(DRAMA_State state)
+            {
+                var node = stateNodes[state];
+                if (!FollowActionPatch.followSettingsOverides.ContainsKey(state) || FollowActionPatch.followSettingsOverides[state].Equals(FollowActionPatch.mainFollowerSettings))
+                {
+                    node.SetPrefix("");
+                    node.SetSuffix("");
+                }
+                else
+                {
+                    node.SetPrefix("* ");
+                    node.SetSuffix(" *");
+                }
+                node.SetTitle($"Prio <color=#CC840066>[</color>{FollowActionPatch.followSettingsOverides.GetValueOrDefault(state, FollowActionPatch.mainFollowerSettings).prio}<color=#CC840066>]</color>"); //Holy shit this is a mess, TODO clean this.
+                node.SetSubtitle($"Range <color=#CC840066>[</color>{FollowActionPatch.followSettingsOverides.GetValueOrDefault(state, FollowActionPatch.mainFollowerSettings).followLeaderRadius}/{FollowActionPatch.followSettingsOverides.GetValueOrDefault(state, FollowActionPatch.mainFollowerSettings).followLeaderMaxDistance}<color=#CC840066>]</color>");
+            }
+        }
     }
-    public static class ExploreMenuClass
-    {
-        private static zMenu exploreMenu;
-        private static zMenu.zMenuNode exploreNode;
-        internal static void Setup(zMenu menu)
-        {
-            exploreMenu = menu;
-            exploreNode = exploreMenu.parrentMenu.GetNode(exploreMenu.centerNode.text);
-            exploreNode.ClearListeners(zMenuManager.nodeEvent.OnUnpressedSelected);
-            exploreNode.AddListener(zMenuManager.nodeEvent.OnTapped, ToggleExplorePerms);
-            exploreNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, exploreMenu.Open);
-        }
-        private static void ToggleExplorePerms()
-        {
-            var bots = zSearch.GetAllBotAgents();
-            foreach (var bot in bots)
-            {
-                ExploreAction.ToggleExplorePerm(bot);
-            }
-            if (ExploreAction.GetExplorePerm(bots[0]))
-                exploreNode.SetColor(zMenuManager.defaultColor);
-            else
-                exploreNode.SetColor(new Color(0.25f, 0f, 0f));
-        }
-    }
-    public static class ShareMenuClass
-    {
-        public static Dictionary<uint, zMenu.zMenuNode> packNodesByID = new Dictionary<uint, zMenu.zMenuNode>();
-        private static zMenu shareMenu;
-        private static zMenu.zMenuNode shareNode;
 
-        public static void Setup(zMenu menu)
-        {
-            shareMenu = menu;
-            shareNode = shareMenu.GetNode();
-            var resourceDataBlocks = ItemSpawnManager.m_itemDataPerInventorySlot[(int)InventorySlot.ResourcePack];
-            foreach (ItemDataBlock block in resourceDataBlocks)
-            {
-                uint itemID = ItemDataBlock.s_blockIDByName[block.name];
-                string name = block.publicName;
-                zMenu.zMenuNode node = shareMenu.AddNode(name);
-                //TODO uncomment then when moved over to overide system instead of selection system.
-                //var thisNode = menu.parrentMenu.GetNode(menu.centerNode.text);
-                //thisNode.ClearListeners(zMenuManager.nodeEvent.OnUnpressedSelected);
-                //thisNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, menu.Open);
-                //thisNode.AddListener(zMenuManager.nodeEvent.OnTapped, TogglePerms);
-                node.AddListener(zMenuManager.nodeEvent.OnTapped, zSlideComputer.ToggleResourceSharePermission, itemID);
-                node.AddListener(zMenuManager.nodeEvent.OnTapped, updateNodeThresholdDisplay, node, itemID);
-                node.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, zSlideComputer.SetResourceSharePermission, itemID, true);
-                node.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, zSlideComputer.SetResourceThreshold, itemID, 100);
-                node.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, updateNodeThresholdDisplay, node, itemID);
-                node.AddListener(zMenuManager.nodeEvent.WhileSelected, ChangeThresholdBasedOnMouseWheel, itemID, node, 5);
-                shareMenu.AddListener(zMenuManager.menuEvent.OnOpened, updateNodeThresholdDisplay, node, itemID);
-                shareMenu.centerNode.ClearListeners(zMenuManager.nodeEvent.OnUnpressedSelected);
-                shareMenu.centerNode.AddListener(zMenuManager.nodeEvent.OnTapped, shareMenu.parrentMenu.Open);
-                shareMenu.centerNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, zSlideComputer.SetResourceThreshold, itemID, 100);
-                shareMenu.centerNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, zSlideComputer.SetResourceSharePermission, itemID, true);
-                shareMenu.centerNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, updateNodeThresholdDisplay, node, itemID);
-                node.fullTextPart.SetScale(1f, 1f);
-                node.subtitlePart.SetScale(0.75f, 0.75f);
-                node.titlePart.SetScale(0.5f, 0.5f);
-                packNodesByID[itemID] = node;
-            }
-            shareNode.ClearListeners(zMenuManager.nodeEvent.OnUnpressedSelected);
-            shareNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, shareMenu.Open);
-            shareNode.AddListener(zMenuManager.nodeEvent.OnTapped, TogglePerms);
-        }
-        public static void updateNodeThresholdDisplay(zMenu.zMenuNode node, uint itemID)
-        {
-            if (zSlideComputer.GetResourceThreshold(itemID) == 100)
-            {
-                node.SetPrefix("");
-                node.SetSuffix("");
-            }
-            else
-            {
-                node.SetPrefix("* ");
-                node.SetSuffix(" *");
-            }
-            string hex = ColorUtility.ToHtmlStringRGB(GetThresholdColor(zSlideComputer.GetResourceThreshold(itemID)));
-            node.SetSubtitle($"<color=#CC840066>[ </color><color=#{hex}>{zSlideComputer.GetResourceThreshold(itemID)}</color><color=#CC840066> ]</color>");
-            if (zSlideComputer.enabledResourceShares[itemID])
-                node.SetColor(zMenuManager.defaultColor);
-            else
-                node.SetColor(new Color(0.25f, 0f, 0f));
-        }
-        [Obsolete]
-        public static bool shareAllowed = true;
-        public static void TogglePerms()
-        {
-            shareAllowed = !shareAllowed;
-            foreach (var bot in zSearch.GetAllBotAgents())
-            {
-                zSlideComputer.SetSharePermission(bot.PlayerSlotIndex, shareAllowed);
-            }
-            if (shareAllowed)
-            {
-                shareNode.SetColor(zMenuManager.defaultColor);
-                shareMenu.centerNode.SetColor(zMenuManager.defaultColor);
-            }
-            else
-            {
-                shareNode.SetColor(new Color(0.25f, 0f, 0f));
-                shareMenu.centerNode.SetColor(new Color(0.25f, 0f, 0f));
-            }
-        }
-        public static Color GetThresholdColor(float value)
-        {
-            // scale factor to dim colors
-            float max = 0.25f;
-
-            Color red = new Color(max, 0f, 0f);
-            Color yellow = new Color(max, max, 0f);
-            Color green = new Color(0f, max, 0f);
-
-            if (value <= 40f) // 0 → 40: red → yellow
-                return Color.Lerp(red, yellow, value / 40f);
-            else // 40 → 100: yellow → green
-                return Color.Lerp(yellow, green, (value - 40f) / 60f);
-        }
-        public static void ChangeThresholdBasedOnMouseWheel(uint itemID, zMenu.zMenuNode node, int increment = 10)
-        {
-            if (node == null || !node.gameObject.activeInHierarchy || !zSlideComputer.enabledResourceShares[itemID])
-                return;
-            float scroll = Input.GetAxis("Mouse ScrollWheel");
-            int normalizedScroll = (int)Mathf.Sign(scroll);
-            if (scroll == 0f)
-                return;
-            float currentThreshold = zSlideComputer.GetResourceThreshold(itemID);
-            zSlideComputer.SetResourceThreshold(itemID, Math.Clamp((int)currentThreshold + (normalizedScroll * increment), 0,100));
-            updateNodeThresholdDisplay(node, itemID);
-        }
-    }
-    public static class CullingMenuClass
-    {
-        public static void setupCullingMenu(zMenu menu) 
-        {
-            for (int i = 0; i < 32; i++)
-            {
-                string name = LayerMask.LayerToName(i);
-                if (string.IsNullOrEmpty(name))
-                    continue;
-                Camera camera = Camera.main;
-                var node = menu.AddNode(name);
-                node.AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, ToggleLayer, camera, i, node);
-            }
-        }
-        public static void ToggleLayer(Camera camera, int layer, zMenu.zMenuNode node)
-        {
-            if (camera == null)
-            {
-                Debug.LogWarning("Camera is null!");
-                return;
-            }
-
-            if (layer < 0 || layer > 31)
-            {
-                Debug.LogWarning("Layer index out of range (0-31)!");
-                return;
-            }
-
-            // XOR the bit for the layer to toggle it
-            camera.cullingMask ^= 1 << layer;
-            bool isVisible = (camera.cullingMask & (1 << layer)) != 0;
-            if (isVisible)
-                node.SetColor(new Color(0, 0.2f, 0));
-            else
-                node.SetColor(new Color(0.2f, 0, 0));
-        }
-    }
     public static class DebugMenuClass
     {
         public static zMenu debugMenu;
@@ -437,177 +778,45 @@ namespace ZombieTweak2.zMenu
             }
             node.SetSubtitle($"{value}");
         }
-    }
-    public static class PickupMenuClass
-    {
-        public static Dictionary<uint,zMenu.zMenuNode> prioNodesByID = new Dictionary<uint,zMenu.zMenuNode>();
-        private static Dictionary<string, List<string>> catagories = new();
-        private static int catagoryIndex = 1;
-        private static zMenu pickupMenu;
-        private static zMenu.zMenuNode pickupNode;
-        public static void Setup(zMenu menu)
+        public static class CullingMenuClass
         {
-            pickupMenu = menu;
-            pickupMenu.radius = 25f;
-            pickupNode = pickupMenu.GetNode();
-
-            zMenu.zMenuNode glowstickNode = null;
-            foreach (var item in zSlideComputer.itemPrios)
+            public static void setupCullingMenu(zMenu menu)
             {
-                uint itemID = item.Key;
-                ItemDataBlock block = ItemDataBlock.s_blockByID[itemID];
-                string publicName = block.publicName;
-                zMenu.zMenuNode node = null;
-                bool isGlowstick = zSlideComputer.shortGlowStickNames.Contains(publicName);
-                if (isGlowstick)
+                for (int i = 0; i < 32; i++)
                 {
-                    if (glowstickNode == null)
-                    {
-                        glowstickNode = pickupMenu.AddNode(zSlideComputer.shortGlowStickNames.FirstOrDefault());
-                        prioNodesByID[itemID] = glowstickNode;
-                    }
-                    node = glowstickNode;
+                    string name = LayerMask.LayerToName(i);
+                    if (string.IsNullOrEmpty(name))
+                        continue;
+                    Camera camera = Camera.main;
+                    var node = menu.AddNode(name);
+                    node.AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, ToggleLayer, camera, i, node);
                 }
+            }
+            public static void ToggleLayer(Camera camera, int layer, zMenu.zMenuNode node)
+            {
+                if (camera == null)
+                {
+                    Debug.LogWarning("Camera is null!");
+                    return;
+                }
+
+                if (layer < 0 || layer > 31)
+                {
+                    Debug.LogWarning("Layer index out of range (0-31)!");
+                    return;
+                }
+
+                // XOR the bit for the layer to toggle it
+                camera.cullingMask ^= 1 << layer;
+                bool isVisible = (camera.cullingMask & (1 << layer)) != 0;
+                if (isVisible)
+                    node.SetColor(new Color(0, 0.2f, 0));
                 else
-                {
-                    node = pickupMenu.AddNode(publicName);
-                    prioNodesByID[itemID] = node;
-                }
-                //TODO uncomment then when moved over to overide system instead of selection system.
-                //var thisNode = menu.parrentMenu.GetNode(menu.centerNode.text);
-                //thisNode.ClearListeners(zMenuManager.nodeEvent.OnUnpressedSelected);
-                //thisNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, menu.Open);
-                //thisNode.AddListener(zMenuManager.nodeEvent.OnTapped, TogglePerms);
-                node.AddListener(zMenuManager.nodeEvent.WhileSelected, ChangePrioBasedOnMouseWheel, itemID, node);
-                node.AddListener(zMenuManager.nodeEvent.OnTapped, zSlideComputer.ToggleItemPrioDisabled, itemID);
-                node.AddListener(zMenuManager.nodeEvent.OnTapped, updateNodePriorityDisplay, node, itemID);//TODO make these args order consistant.
-                node.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, ResetNodeSettings, itemID, node);
-                pickupMenu.centerNode.ClearListeners(zMenuManager.nodeEvent.OnUnpressedSelected);
-                pickupMenu.centerNode.AddListener(zMenuManager.nodeEvent.OnTapped, pickupMenu.parrentMenu.Open);
-                pickupMenu.centerNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, ResetNodeSettings, itemID, node);
-                pickupMenu.AddListener(zMenuManager.menuEvent.OnOpened, updateNodePriorityDisplay, node, itemID);
-                node.fullTextPart.SetScale(1f, 1f);
-                node.subtitlePart.SetScale(0.75f, 0.75f);
-                node.titlePart.SetScale(0.5f, 0.5f);
-                node.SetSize(0.75f);
-            }
-            //pickupMenu.centerNode.AddListener(zMenuManager.nodeEvent.WhileSelected, UpdateCatagoryByScroll);
-            //ALL - ENCOUNTERED - RESOURCES - PLACEABLES - THROWABLES - FAVORITES
-            pickupMenu.AddCatagory("All");
-            pickupMenu.AddCatagory("Encountered");
-            pickupMenu.AddNodeToCatagory("Favorites", "Ammo Pack");
-            pickupMenu.AddNodeToCatagory("Favorites", "MediPack");
-            pickupMenu.AddNodeToCatagory("Favorites", "Tool Refill Pack");
-            pickupMenu.AddNodeToCatagory("Favorites", "Disinfection Pack");
-            pickupMenu.AddNodeToCatagory("Favorites", "C-Foam Grenade");
-            pickupMenu.AddNodeToCatagory("Resources",  "MediPack");
-            pickupMenu.AddNodeToCatagory("Resources",  "Ammo Pack");
-            pickupMenu.AddNodeToCatagory("Resources",  "Tool Refill Pack");
-            pickupMenu.AddNodeToCatagory("Resources",  "Disinfection Pack");
-            pickupMenu.AddNodeToCatagory("Placeables", "Lock Melter");
-            pickupMenu.AddNodeToCatagory("Placeables", "C-Foam Tripmine");
-            pickupMenu.AddNodeToCatagory("Placeables", "Explosive Trip Mine");
-            pickupMenu.AddNodeToCatagory("Throwables", "Glow Stick");
-            pickupMenu.AddNodeToCatagory("Throwables", "Fog Repeller");
-            pickupMenu.AddNodeToCatagory("Throwables", "C-Foam Grenade");
-            pickupMenu.SetCatagory("All");
-
-            pickupNode.ClearListeners(zMenuManager.nodeEvent.OnUnpressedSelected);
-            pickupNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, pickupMenu.Open);
-            pickupNode.AddListener(zMenuManager.nodeEvent.OnTapped, TogglePerms);
-        }
-        internal static void Encounter(string friendlyName)
-        {
-            if (!catagories.Keys.Contains("Encountered"))
-            {
-                ZiMain.log.LogWarning($"Unable to encouter {friendlyName} because Encountered catagory not found in pickup menu.");
-                return;
-            }
-            if (!catagories["Encountered"].Contains(friendlyName)) 
-            {
-                catagories["Encountered"].Add(friendlyName);
-                if (catagoryIndex < catagories.Count() && catagories.Keys.ElementAt(catagoryIndex) == "Encountered")
-                    pickupMenu.SetCatagory("Encountered");
+                    node.SetColor(new Color(0.2f, 0, 0));
             }
         }
-        private static void ResetNodeSettings(uint itemID, zMenu.zMenuNode node)
-        {
-            if (!node.gameObject.activeInHierarchy)
-                return;
-            zSlideComputer.ResetItemPrio(itemID);
-            zSlideComputer.SetItemPrioDisabled(itemID, true);
-            updateNodePriorityDisplay(node, itemID);
-        }
-        [Obsolete]
-        public static bool pickupAllowed = true;
-        public static void TogglePerms()
-        {
-            pickupAllowed = !pickupAllowed;
-            foreach(var bot in zSearch.GetAllBotAgents())
-            {
-                zSlideComputer.SetPickupPermission(bot.PlayerSlotIndex, pickupAllowed);
-            }
-            if (pickupAllowed)
-            {
-                pickupNode.SetColor(zMenuManager.defaultColor);
-                pickupMenu.centerNode.SetColor(zMenuManager.defaultColor);
-            }
-            else
-            {
-                pickupNode.SetColor(new Color(0.25f, 0f, 0f));
-                pickupMenu.centerNode.SetColor(new Color(0.25f, 0f, 0f));
-            }
-        }
-        public static void updateNodePriorityDisplay(zMenu.zMenuNode node, uint itemID)
-        {
-            if (zSlideComputer.itemPrios[itemID] == zSlideComputer.OriginalItemPrios[itemID])
-            {
-                node.SetPrefix("");
-                node.SetSuffix("");
-            }
-            else
-            {
-                node.SetPrefix("* ");
-                node.SetSuffix(" *");
-            }
-            string hex = ColorUtility.ToHtmlStringRGB(GetPriorityColor(zSlideComputer.GetItemPrio(itemID)));
-            node.SetSubtitle($"<color=#CC840066>[ </color><color=#{hex}>{zSlideComputer.GetItemPrio(itemID)}</color><color=#CC840066> ]</color>");
-            if (zSlideComputer.enabledItemPrios[itemID])
-                node.SetColor(zMenuManager.defaultColor);
-            else
-                node.SetColor(new Color(0.25f,0f,0f));
-        }
-        public static Color GetPriorityColor(float value)
-        {
-            // scale factor to dim colors
-            float max = 0.25f;
-
-            Color red = new Color(max, 0f, 0f);
-            Color yellow = new Color(max, max, 0f);
-            Color green = new Color(0f, max, 0f);
-            Color blue = new Color(0f, 0f, max);
-
-            if (value <= 25f)
-                return Color.Lerp(red, yellow, value / 25f);
-            if (value <= 50f)
-                return Color.Lerp(yellow, green, (value - 25f) / 25f);
-            return Color.Lerp(green, blue, (value - 50f) / 50f);
-        }
-        public static void ChangePrioBasedOnMouseWheel(uint itemID, zMenu.zMenuNode node, int increment = 10)
-        {
-            if (node == null || !node.gameObject.activeInHierarchy || !zSlideComputer.enabledItemPrios[itemID])
-                return;
-            float scroll = Input.GetAxis("Mouse ScrollWheel");
-            int normalizedScroll = (int)Mathf.Sign(scroll);
-            if (scroll == 0f)
-                return;
-            float currentPrio = zSlideComputer.GetItemPrio(itemID);
-            zSlideComputer.SetBotItemPriority(itemID, Mathf.Clamp(currentPrio + (normalizedScroll * increment),0,100));
-            updateNodePriorityDisplay(node, itemID);
-        }
-
-
     }
+
     public static class SettingsMenuClass
     {
         public static float menuSizeStep = 0.1f;

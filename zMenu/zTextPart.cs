@@ -8,8 +8,6 @@ namespace ZombieTweak2.zMenu
 {
     public partial class zMenu
     {
-        public partial class zMenuNode
-        {
             public class TextPart
             {
                 //This is my text handler.  It's not pretty, but it's mine.
@@ -52,7 +50,7 @@ namespace ZombieTweak2.zMenu
                 private TextMeshPro textMesh;
 
                 public RectTransform rect { get; private set; }
-                public TextPart(zMenuNode parent, string arg_Text)
+                public TextPart(GameObject parent, string arg_Text, Color color)
                 {
                     // Steal TextMeshPro from a reference object
                     GameObject reference = GameObject.Find("GUI/CellUI_Camera(Clone)/NavMarkerLayer/NavMarkerGeneric(Clone)/IconHolder/Title");
@@ -67,13 +65,13 @@ namespace ZombieTweak2.zMenu
 
                     gameObject.name = $"TextPart {arg_Text}";
                     rect = gameObject.GetComponent<RectTransform>();
-                    rect.SetParent(parent.rect.transform, false);
+                    rect.SetParent(parent.transform, false);
 
                     textMesh = gameObject.GetComponent<TextMeshPro>();
                     textMesh.enableAutoSizing = false;
                     textMesh.fontSize = 2.5f;
                     textMesh.alignment = TextAlignmentOptions.Center;
-                    textMesh.color = parent.color;
+                    textMesh.color = color;
                     textMesh.text = arg_Text;
 
                     rect.anchoredPosition = Vector2.zero; // center inside node
@@ -103,6 +101,11 @@ namespace ZombieTweak2.zMenu
                 public TextPart SetPosition(float x, float y)
                 {
                     rect.anchoredPosition = new Vector2(x, y);
+                    return this;
+                }
+                public TextPart SetScale(float scale)
+                {
+                    SetScale(scale, scale, 1);
                     return this;
                 }
                 public TextPart SetScale(Vector2 scale)
@@ -141,6 +144,5 @@ namespace ZombieTweak2.zMenu
                     return textColor;
                 }
             }
-        }
     }
 }

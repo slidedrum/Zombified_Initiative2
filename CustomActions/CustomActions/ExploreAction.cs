@@ -68,7 +68,7 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
             float lookCooldown = 5;
             List<string> typeIgnoreList = [
                 typeof(RootPlayerBotAction).FullName,
-                typeof(PlayerBotActionFollow).FullName,
+                //typeof(PlayerBotActionFollow).FullName,
                 typeof(PlayerBotActionIdle).FullName,
                 typeof(PlayerBotActionLook).FullName,
             ];

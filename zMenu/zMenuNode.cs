@@ -196,10 +196,10 @@ namespace ZombieTweak2.zMenu
                 fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
                 fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
 
-                titlePart = new TextPart(this, $"{title}").SetScale(0.75f, 0.75f).SetColor(new Color(0.2f, 0.2f, 0.2f, 1f));
-                fullTextPart = new TextPart(this, $"{text}");
-                subtitlePart = new TextPart(this, $"{title}").SetScale(0.75f, 0.75f).SetColor(new Color(0.1f, 0.1f, 0.1f, 1f));
-                descriptionPart = new TextPart(this, description);
+                titlePart = new TextPart(gameObject, $"{title}", new Color(0.2f, 0.2f, 0.2f, 1f)).SetScale(0.75f, 0.75f);
+                fullTextPart = new TextPart(gameObject, $"{text}", parrentMenu.textColor);
+                subtitlePart = new TextPart(gameObject, $"{title}", new Color(0.1f, 0.1f, 0.1f, 1f)).SetScale(0.75f, 0.75f);
+                descriptionPart = new TextPart(gameObject, description, parrentMenu.textColor);
 
                 text = arg_Name;
 
