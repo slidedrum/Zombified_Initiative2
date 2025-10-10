@@ -148,10 +148,10 @@ namespace ZombieTweak2.zMenu
             FaceCamera();
             setVisiblity(true);
             ArrangeNodes();
-            zMenu oldMenu = zMenuManager.currentMenu;
+            zMenuManager.previousMenu = zMenuManager.currentMenu;
             zMenuManager.currentMenu = this;
-            if (oldMenu != null && oldMenu != this)
-                oldMenu.Close();
+            if (zMenuManager.previousMenu != null && zMenuManager.previousMenu != this)
+                zMenuManager.previousMenu.Close();
             OnOpened.Invoke();
             return this;
         }

@@ -20,6 +20,7 @@ namespace ZombieTweak2.zMenu
         private static bool playerInControll = false;
         public static zMenu mainMenu { get; private set; }
         public static zMenu currentMenu { get; internal set; }
+        public static zMenu previousMenu { get; internal set; }
         private static zMenu.zMenuNode selectedNode;
         public static FPSCamera mainCamera;
         private static bool menuWasOpen = false;
