@@ -68,7 +68,7 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
             float lookCooldown = 5;
             List<string> typeIgnoreList = [
                 typeof(RootPlayerBotAction).FullName,
-                //typeof(PlayerBotActionFollow).FullName,
+                typeof(PlayerBotActionFollow).FullName,
                 typeof(PlayerBotActionIdle).FullName,
                 typeof(PlayerBotActionLook).FullName,
             ];
@@ -130,7 +130,13 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
                 if (maxprio > Prio)
                     return;
                 lastLooked = Time.time;
-                if (zVisitedManager.GetUnexploredLocation(Bot.Agent.Position, 0, 30) == null) //TODO this is very perf intensive when not finding anything.
+                var unexploredNode = zVisitedManager.GetUnexploredLocation(Bot.Agent.Position, 0, 30);//TODO this is very perf intensive when not finding anything.  Maybe cache them somehow?
+                if (unexploredNode == null) 
+                    return;
+                var followAction = Bot.m_rootAction.Cast<RootPlayerBotAction.Descriptor>().ActionBase.Cast<RootPlayerBotAction>().m_followLeaderAction.Cast<PlayerBotActionFollow.Descriptor>();
+                var leaderPos = followAction.Client.transform.position;
+                var followPrio = followAction.Prio;
+                if (followPrio > Prio && Vector3.Distance(unexploredNode.position, leaderPos) > RootPlayerBotAction.s_followLeaderRadius) // There might be a better way to do this, todo look into how collect item stays within range.
                     return;
                 if (bestAction == null || Prio > bestAction.Prio)
                 {
@@ -174,7 +180,13 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
                 if (UnexploredNode == null)
                 {
                     UnexploredNode = zVisitedManager.GetUnexploredLocation(m_bot.Agent.Position);
-                    if (UnexploredNode == null)
+                    var followAction = m_bot.m_rootAction.Cast<RootPlayerBotAction.Descriptor>().ActionBase.Cast<RootPlayerBotAction>().m_followLeaderAction.Cast<PlayerBotActionFollow.Descriptor>();
+                    var leaderPos = followAction.Client.transform.position;
+                    var distance = Vector3.Distance(leaderPos, UnexploredNode.position);
+                    var followPrio = followAction.Prio;
+                    if (UnexploredNode == null || 
+                        (RootPlayerBotAction.s_followLeaderRadius < distance && //Too far
+                          followPrio > DescBase.Prio)) // and too important
                     {
                         DescBase.SetCompletionStatus(PlayerBotActionBase.Descriptor.StatusType.Successful);
                         state = StateEnum.Finished;
