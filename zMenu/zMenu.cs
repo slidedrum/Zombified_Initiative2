@@ -47,7 +47,7 @@ namespace ZombieTweak2.zMenu
         public Vector3 RelativePosition = Vector3.zero;
 
         private Dictionary<zMenuManager.menuEvent, FlexibleEvent> eventMap;
-        private Dictionary<string, List<zMenuNode>> catagories = new();
+        internal Dictionary<string, List<zMenuNode>> catagories = new();
         private int catagoryIndex = 0;
 
         private FlexibleEvent OnOpened = new();
@@ -105,6 +105,28 @@ namespace ZombieTweak2.zMenu
             if (catagoryIndex < 0)
                 catagoryIndex = catagories.Count() - 1;
             SetCatagory(catagories.Keys.ElementAt(catagoryIndex));
+        }
+        public void UpdateCatagoryNodes()
+        {
+            if (catagoryIndex >= catagories.Count())
+                return;
+            string catagory = catagories.Keys.ElementAt(catagoryIndex);
+            centerNode.SetSubtitle($"<color=#CC840066>[ </color>{catagory}<color=#CC840066> ]</color>");
+            if (catagory.ToLower() == "all")
+            {
+                foreach (var node in nodes)
+                {
+                    EnableNode(node);
+                }
+                return;
+            }
+            foreach (var node in nodes)
+            {
+                if (catagories[catagory].Contains(node))
+                    EnableNode(node);
+                else
+                    DisableNode(node);
+            }
         }
         public void SetCatagory(string catagory)
         {

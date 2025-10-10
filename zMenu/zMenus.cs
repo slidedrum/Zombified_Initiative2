@@ -232,23 +232,25 @@ namespace ZombieTweak2.zMenu
                 pickupMenu.AddNodeToCatagory("Throwables", "Fog Repeller");
                 pickupMenu.AddNodeToCatagory("Throwables", "C-Foam Grenade");
                 pickupMenu.SetCatagory("All");
-
+                pickupMenu.AddListener(zMenuManager.menuEvent.OnOpened, pickupMenu.UpdateCatagoryNodes);
                 pickupNode.ClearListeners(zMenuManager.nodeEvent.OnUnpressedSelected);
                 pickupNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, pickupMenu.Open);
                 pickupNode.AddListener(zMenuManager.nodeEvent.OnTapped, TogglePerms);
             }
             internal static void Encounter(string friendlyName)
             {
-                if (!catagories.Keys.Contains("Encountered"))
+                var node = pickupMenu.GetNode(friendlyName);
+                if (node == null)
+                    return;
+                if (!pickupMenu.catagories.Keys.Contains("Encountered"))
                 {
                     ZiMain.log.LogWarning($"Unable to encouter {friendlyName} because Encountered catagory not found in pickup menu.");
                     return;
                 }
-                if (!catagories["Encountered"].Contains(friendlyName))
+                if (!pickupMenu.catagories["Encountered"].Contains(node))
                 {
-                    catagories["Encountered"].Add(friendlyName);
-                    if (catagoryIndex < catagories.Count() && catagories.Keys.ElementAt(catagoryIndex) == "Encountered")
-                        pickupMenu.SetCatagory("Encountered");
+                    pickupMenu.AddNodeToCatagory("Encountered", node);
+                    pickupMenu.UpdateCatagoryNodes();
                 }
             }
             private static void ResetNodeSettings(uint itemID, zMenu.zMenuNode node)
