@@ -93,6 +93,10 @@ namespace ZombieTweak2.zRootBotPlayerAction.Patches
             ClassInjector.RegisterTypeInIl2Cpp(typeof(CustomActionBase));
             ClassInjector.RegisterTypeInIl2Cpp(typeof(ExploreAction.Descriptor));
             ClassInjector.RegisterTypeInIl2Cpp(typeof(ExploreAction));
+            ClassInjector.RegisterTypeInIl2Cpp(typeof(ClearRoomAction.Descriptor));
+            ClassInjector.RegisterTypeInIl2Cpp(typeof(ClearRoomAction));
+            ClearRoomAction.Descriptor m_clearRoomAction = new ClearRoomAction.Descriptor(__instance);
+            data.customActions.Add(m_clearRoomAction);
             CustomActionBase.Descriptor m_testAction = new CustomActionBase.Descriptor(__instance);
             data.customActions.Add(m_testAction);
             ExploreAction.Descriptor m_exploreAction = new ExploreAction.Descriptor(__instance);
