@@ -65,6 +65,7 @@ namespace ZombieTweak2.zMenu
         public float rotationalOffset = 0f;
         private Color textColor = zMenuManager.defaultColor;
         private zMenuNode selectedNode;
+        private RectTransform rect;
 
         public zMenu(string arg_Name, zMenu arg_ParrentMenu = null)
         {
@@ -289,11 +290,15 @@ namespace ZombieTweak2.zMenu
             var scaler = canvasGO.AddComponent<CanvasScaler>();
             scaler.dynamicPixelsPerUnit = 10f;
 
-            RectTransform rect = canvasGO.GetComponent<RectTransform>();
+            rect = canvasGO.GetComponent<RectTransform>();
             rect.localPosition = Vector3.zero;      // center inside menu
             rect.localScale = canvasScale;  // scale down so it’s not huge
             gameObject.transform.position = zMenuManager.mainCamera.Position + zMenuManager.mainCamera.transform.forward * 1f;
             gameObject.transform.rotation = Quaternion.LookRotation(gameObject.transform.position - zMenuManager.mainCamera.Position);
+        }
+        internal void Setsize(float scale)
+        {
+            rect.localScale = canvasScale * scale;
         }
         public zMenu ArrangeNodes()
         {

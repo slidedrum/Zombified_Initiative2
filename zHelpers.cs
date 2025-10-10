@@ -5,8 +5,17 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
 using System.Reflection;
+using UnityEngine;
 namespace ZombieTweak2
 {
+    public static class zHelpers
+    {
+        public static float Round(float value, int decimalPlaces)
+        {
+            float multiplier = Mathf.Pow(10f, decimalPlaces);
+            return Mathf.Round(value * multiplier) / multiplier;
+        }
+    }
     public class FlexibleMethodDefinition
     {
         // This is a mostly AI generated class.
@@ -190,6 +199,7 @@ namespace ZombieTweak2
 
         public List<T> ToList() => new(_list);
     }
+
     public static class Default
     {
         //This was added by an AI, not 100% sure why it's needed. ¯\_(ツ)_/¯

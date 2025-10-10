@@ -26,7 +26,7 @@ namespace ZombieTweak2.zMenu
             AutomaticActionMenuClass.Setup(zMenuManager.createMenu("Automatic Actions", zMenuManager.mainMenu));
             zMenuManager.createMenu("Manual Actions", zMenuManager.mainMenu);
             zMenuManager.createMenu("Contextual Actions", zMenuManager.mainMenu);
-            zMenuManager.createMenu("Settings", zMenuManager.mainMenu);
+            SettingsMenuClass.Setup(zMenuManager.createMenu("Settings", zMenuManager.mainMenu));
             zMenuManager.createMenu("Voice menu", zMenuManager.mainMenu);
             DebugMenuClass.Setup(zMenuManager.createMenu("Debug", zMenuManager.mainMenu));
         }
@@ -123,7 +123,6 @@ namespace ZombieTweak2.zMenu
             }
             SetCatagory(catagories.Keys.ElementAt(catagoryIndex));
         }
-
         internal static void SetCatagory(string catagory)
         {
             if (catagory == "All")
@@ -608,6 +607,45 @@ namespace ZombieTweak2.zMenu
         }
 
 
+    }
+    public static class SettingsMenuClass
+    {
+        public static float menuSizeStep = 0.1f;
+        public static zMenu scaleMenu;
+        public static zMenu.zMenuNode scaleNode;
+
+        public static void Setup(zMenu menu)
+        {
+ 
+            scaleMenu = menu;
+            scaleNode = scaleMenu.AddNode("Scale");
+            scaleNode.AddListener(zMenuManager.nodeEvent.WhileSelected, UpdateScaleByScroll);
+            scaleMenu.centerNode.AddListener(zMenuManager.nodeEvent.WhileSelected, UpdateScaleByScroll);
+            scaleNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, ResetScale);
+            UpdateScaleNodeSubtitle();
+        }
+        private static void ResetScale()
+        {
+            zMenuManager.menuSizeScaler = 1;
+            UpdateScaleNodeSubtitle();
+            zMenuManager.SetMenusScale(zMenuManager.menuSizeScaler);
+        }
+        private static void UpdateScaleByScroll()
+        {
+            float scroll = Input.GetAxis("Mouse ScrollWheel");
+            int normalizedScroll = (int)Mathf.Sign(scroll);
+            if (scroll == 0f)
+                return;
+            UpdateScaleNodeSubtitle();
+            zMenuManager.menuSizeScaler += normalizedScroll * menuSizeStep;
+            zMenuManager.menuSizeScaler = zHelpers.Round(zMenuManager.menuSizeScaler, 1);
+            zMenuManager.menuSizeScaler = Math.Clamp(zMenuManager.menuSizeScaler, 0.3f, 5f);
+            zMenuManager.SetMenusScale(zMenuManager.menuSizeScaler);
+        }
+        private static void UpdateScaleNodeSubtitle()
+        {
+            scaleNode.SetSubtitle($"<color=#CC840066>[ </color>{zMenuManager.menuSizeScaler}<color=#CC840066> ]</color>");
+        }
     }
     [Obsolete]
     public static class SelectionMenuClass

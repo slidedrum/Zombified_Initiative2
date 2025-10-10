@@ -67,6 +67,10 @@ namespace ZombieTweak2.zMenu
         internal static bool pressable;
         internal static zMenu.zMenuNode pressedNode;
 
+        internal static float menuSizeScaler = 1.0f;
+        private static float angleTollerance = 45f;
+        private static float nodeAngleTollerance = 10f;
+
         public static zMenu createMenu(string name, zMenu parrentMenu = null, bool autoAddNode = true)
         {
             zMenu newMenu = new zMenu(name, parrentMenu);
@@ -114,7 +118,7 @@ namespace ZombieTweak2.zMenu
                         nodeDict[node.gameObject] = node;
                     }
                     List<GameObject> nodeList = nodeDict.Keys.ToList();
-                    GameObject selectedNodeObject = zSearch.GetClosestObjectInLookDirection(mainCamera.transform, nodeList, 10f);
+                    GameObject selectedNodeObject = zSearch.GetClosestObjectInLookDirection(mainCamera.transform, nodeList, nodeAngleTollerance * menuSizeScaler);
                     selectedNode = null;
                     if (selectedNodeObject != null)
                     {
@@ -137,9 +141,9 @@ namespace ZombieTweak2.zMenu
                         Vector3 angleToTarget = (currentMenu.gameObject.transform.position - mainCamera.Position).normalized;
                         Vector3 cameraAngle = mainCamera.transform.forward;
                         float angleDelta = Vector3.Angle(cameraAngle, angleToTarget);
-                        if (angleDelta > 45) //close if we're looking too far away. 
+                        if (angleDelta > angleTollerance * menuSizeScaler) //close if we're looking too far away. 
                             CloseAllMenues();
-                        else if (zSearch.GetClosestObjectInLookDirection(mainCamera.transform, nodeList, 20f) == null) //close if we're not looking near a node with a wider tolerance.
+                        else if (zSearch.GetClosestObjectInLookDirection(mainCamera.transform, nodeList, nodeAngleTollerance * menuSizeScaler * 2) == null) //close if we're not looking near a node with a wider tolerance.
                             CloseAllMenues();
                     }
                 }
@@ -235,6 +239,13 @@ namespace ZombieTweak2.zMenu
             }
             ZiMain.log.LogWarning($"Could not find {menuName} in regestered menus.");
             return null;
+        }
+        public static void SetMenusScale(float scale)
+        {
+            foreach(var menu in menues)
+            {
+                menu.Setsize(scale);
+            }
         }
     }
 }
