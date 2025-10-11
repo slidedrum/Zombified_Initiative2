@@ -1,6 +1,7 @@
 ﻿using Agents;
 using CollisionRundown.Features.HUDs;
 using GameData;
+using Il2CppSystem.Xml.Schema;
 using Player;
 using System;
 using System.Collections.Generic;
@@ -196,8 +197,8 @@ namespace ZombieTweak2.zMenu
             public static Dictionary<uint, zMenu.zMenuNode> prioNodesByID = new Dictionary<uint, zMenu.zMenuNode>();
             private static Dictionary<string, List<string>> catagories = new();
             private static int catagoryIndex = 1;
-            private static zMenu pickupMenu;
-            private static zMenu.zMenuNode pickupNode;
+            public static zMenu pickupMenu;
+            public static zMenu.zMenuNode pickupNode;
             public static void Setup(zMenu menu)
             {
                 pickupMenu = menu;
@@ -360,14 +361,12 @@ namespace ZombieTweak2.zMenu
                 zSlideComputer.SetBotItemPriority(itemID, Mathf.Clamp(currentPrio + (normalizedScroll * increment), 0, 100));
                 updateNodePriorityDisplay(node, itemID);
             }
-
-
         }
         public static class ShareMenuClass
         {
             public static Dictionary<uint, zMenu.zMenuNode> packNodesByID = new Dictionary<uint, zMenu.zMenuNode>();
-            private static zMenu shareMenu;
-            private static zMenu.zMenuNode shareNode;
+            public static zMenu shareMenu;
+            public static zMenu.zMenuNode shareNode;
 
             public static void Setup(zMenu menu)
             {
@@ -849,7 +848,6 @@ namespace ZombieTweak2.zMenu
             }
         }
     }
-
     public static class SettingsMenuClass
     {
         public static float menuSizeStep = 0.1f;

@@ -146,6 +146,18 @@ namespace ZombieTweak2.zNetworking
             }
             zSlideComputer.SetPickupPermission(playerID, allowed, sender);
             //zMenus.UpdateIndicatorForNode(zMenus.permissionMenu.GetNode("Pickups"), zSlideComputer.PickUpPerms);
+            var node = AutomaticActionMenuClass.PickupMenuClass.pickupNode;
+            var menu = AutomaticActionMenuClass.PickupMenuClass.pickupMenu;
+            if (allowed)
+            {
+                node.SetColor(zMenuManager.defaultColor);
+                menu.centerNode.SetColor(zMenuManager.defaultColor);
+            }
+            else
+            {
+                node.SetColor(new Color(0.25f, 0f, 0f));
+                menu.centerNode.SetColor(new Color(0.25f, 0f, 0f));
+            }
         }
         internal static void ReciveSetSharePermission(ulong sender, pStructs.pSharePermission info)
         {
@@ -160,6 +172,18 @@ namespace ZombieTweak2.zNetworking
             }
             zSlideComputer.SetSharePermission(playerID, allowed, sender);
             //zMenus.UpdateIndicatorForNode(zMenus.permissionMenu.GetNode("Share"), zSlideComputer.SharePerms);
+            var node = AutomaticActionMenuClass.ShareMenuClass.shareNode;
+            var menu = AutomaticActionMenuClass.ShareMenuClass.shareMenu;
+            if (allowed)
+            {
+                node.SetColor(zMenuManager.defaultColor);
+                menu.centerNode.SetColor(zMenuManager.defaultColor);
+            }
+            else
+            {
+                node.SetColor(new Color(0.25f, 0f, 0f));
+                menu.centerNode.SetColor(new Color(0.25f, 0f, 0f));
+            }
         }
         internal static void ReciveRequestToPickupItem(ulong sender, pStructs.pPickupItemInfo info)
         {
