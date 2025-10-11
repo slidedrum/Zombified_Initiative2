@@ -236,7 +236,7 @@ public class ZombifiedPatches
     //    if (instance.m_bot.RequestAction(descriptor))
     //    {
     //        instance.m_travelAction = descriptor;
-    //        instance.SetState(PlayerBotActionHighlight.State.Move);
+    //        instance.SetState(PlayerBotActionHighlight.State.NeedsToMove);
     //        return false;
     //    }
     //    instance.m_desc.SetCompletionStatus(PlayerBotActionBase.Descriptor.StatusType.Failed);

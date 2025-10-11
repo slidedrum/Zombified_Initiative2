@@ -232,14 +232,14 @@ namespace ZombieTweak2.zRootBotPlayerAction.Patches
         }
         //[HarmonyPatch(typeof(PlayerAIBot), nameof(PlayerAIBot.SetEnabled))]
         //[HarmonyPrefix]
-        //public static bool SetEnabled(PlayerAIBot instance, bool state)
+        //public static bool SetEnabled(PlayerAIBot instance, bool State)
         //{
         //    var data = zActions.GetOrCreateData(instance);
-        //    if (state == instance.enabled)
+        //    if (State == instance.enabled)
         //    {
         //        return false;
         //    }
-        //    if (state)
+        //    if (State)
         //    {
         //        NavMeshHit navMeshHit;
         //        if (NavMesh.SamplePosition(instance.m_playerAgent.Position, out navMeshHit, 3f, -1))
@@ -284,7 +284,7 @@ namespace ZombieTweak2.zRootBotPlayerAction.Patches
         //        }
         //        while (hasRemoved);
         //    }
-        //    instance.enabled = state;
+        //    instance.enabled = State;
         //    return false;
         //}
         [HarmonyPatch(typeof(PlayerAIBot), nameof(PlayerAIBot.StartAction))]

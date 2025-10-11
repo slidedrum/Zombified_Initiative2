@@ -104,6 +104,7 @@ namespace ZombieTweak2.zMenu
                     zMenus.CreateMenus();
                     zSlideComputer.Init();
                     zSearch.findbleObjectMap.Clear();
+                    zSearch.courseNodeFindableObjectCache.Clear();
                     zVisitedManager.Setup();
                 }
                 bool menuOpen = currentMenu != null;

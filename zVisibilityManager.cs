@@ -706,7 +706,7 @@ namespace ZombieTweak2
             ////PreLitVolume.Current.UpdateFogVolume = true;
             ////PreLitVolume.Current.UpdateLitVolume = true;
             ////PreLitVolume.Current.UpdateIndirectVolume = true;
-            //// Step 5: Move renderTextureAtlas destination CPU mem,
+            //// Step 5: NeedsToMove renderTextureAtlas destination CPU mem,
 
             //HelperMethods.CopyTextureAtlasToCpu();
             //if (VisDebug.debugMode)

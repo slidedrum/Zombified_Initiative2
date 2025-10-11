@@ -29,7 +29,7 @@ namespace ZombieTweak2.zMenu
         public static void CreateMenus()
         {
             AutomaticActionMenuClass.Setup(zMenuManager.createMenu("Automatic Actions", zMenuManager.mainMenu));
-            zMenuManager.createMenu("Manual Actions", zMenuManager.mainMenu);
+            ManualActionMenuClass.Setup(zMenuManager.createMenu("Manual Actions", zMenuManager.mainMenu));
             zMenuManager.createMenu("Contextual Actions", zMenuManager.mainMenu);
             SettingsMenuClass.Setup(zMenuManager.createMenu("Settings", zMenuManager.mainMenu));
             zMenuManager.createMenu("Voice menu", zMenuManager.mainMenu);
@@ -63,6 +63,38 @@ namespace ZombieTweak2.zMenu
             node.subtitle = sbSubtitle;
             node.subtitlePart.SetScale(0.5f, 0.5f);
             return node;
+        }
+    }
+    public static class ManualActionMenuClass
+    {
+        public static zMenu manualActionMenu;
+        public static zMenu.zMenuNode manuActionNode;
+        public static void Setup(zMenu menu)
+        {
+            manualActionMenu = menu;
+            manuActionNode = manualActionMenu.GetNode();
+            manualActionMenu.AddNode("Clear Room", StartClearRoomAction);
+        }
+        public static void StartClearRoomAction()
+        {
+            PlayerAgent playerAgent = PlayerManager.GetLocalPlayerAgent();
+            PlayerAIBot bot = null;
+            PlayerAgent botAgent = null;
+            float closestDistance = float.MaxValue;
+            foreach (var agent in PlayerManager.PlayerAgentsInLevel)
+            {
+                if (!agent.Owner.IsBot || !agent.Alive)
+                    continue;
+                float distance = Vector3.Distance(agent.Position, playerAgent.Position);
+                if (distance < closestDistance)
+                {
+                    closestDistance = distance;
+                    botAgent = agent;
+                    bot = agent.gameObject.GetComponent<PlayerAIBot>();
+                }
+            }
+            var action = new ClearRoomAction.Descriptor(bot);
+            bot.StartAction(action);
         }
     }
     public static class AutomaticActionMenuClass
@@ -665,7 +697,6 @@ namespace ZombieTweak2.zMenu
             }
         }
     }
-
     public static class DebugMenuClass
     {
         public static zMenu debugMenu;

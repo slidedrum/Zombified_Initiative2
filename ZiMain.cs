@@ -61,12 +61,12 @@ using static ZombieTweak2.zNetworking.pStructs;
  -- TODO -- Make smart select pick up turrets
  -- TODO -- Fix bot extra data only updating when you look away
  -- TODO -- Detect end of extra info string instead of assuming this is the last thing for better compat with other mods.
- -- TODO -- Move methods arround to other classes that make more sense
+ -- TODO -- NeedsToMove methods arround to other classes that make more sense
  -- TODO -- Handle bots joining/leaving or any other way the bot count can change mid mission.
  -- TODO -- Error when exiting q menu if radial menu is open
  -- TODO -- Unheld selected node event might have problems.
  -- TODO -- Double tap smart select on a bot to have them follow you.
- -- TODO -- Move updateNodeThresholdDisplay and similar to the set methds not as node listeners.
+ -- TODO -- NeedsToMove updateNodeThresholdDisplay and similar to the set methds not as node listeners.
  -- TODO -- Add option to let bots open lockers
  -- TODO -- Add per bot overides for individual share/pickup perms.
  -- TODO -- Add options menu with things like default states and key rebinding
@@ -75,9 +75,9 @@ using static ZombieTweak2.zNetworking.pStructs;
  -- TODO -- Add STFU button
  -- TODO -- Add option for menue's to have seprate x/y scale.
  -- TODO -- Use a string builder ZiMain.onActionRemoved
- -- TODO -- Move/refactor  GetAgent and getpStruct methods in ZiMain
+ -- TODO -- NeedsToMove/refactor  GetAgent and getpStruct methods in ZiMain
  -- TODO -- Nullchecks in SendBotToShareResourcePack
- -- TODO -- Move SetRelativePosition into a listener so it can be disabled.
+ -- TODO -- NeedsToMove SetRelativePosition into a listener so it can be disabled.
  -- TODO -- Add option to change menu close angle
  -- TODO -- Make text parts in nodes private and add setters and getters for font stuff.
  -- TODO -- Add menu title and subtitle. Use that for tooltips.

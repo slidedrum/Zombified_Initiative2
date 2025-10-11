@@ -12,10 +12,12 @@ using Zombified_Initiative;
 
 namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
 {
-    internal class ExploreAction : CustomActionBase
+    public class ExploreAction : CustomActionBase
     {
+        private Descriptor customDescBase;
         private StateEnum state = StateEnum.None;
-        VisitNode UnexploredNode = null;
+        public VisitNode UnexploredNode = null;
+        public bool positionAllowed = false;
         public static Dictionary<int, bool> ExplorePerms = new(); //bot.Agent.Owner.PlayerSlotIndex()
         public static new bool Setup()
         {
@@ -63,6 +65,7 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
         public new class Descriptor : CustomActionBase.Descriptor
         {
             public new float Prio = 3;
+            public ExploreAction exploreBase;
             float lastLooked = 0;
             public bool canExplore = true;
             float lookCooldown = 5;
@@ -79,6 +82,9 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
                 typeof(PlayerBotActionHighlight).FullName,
                 typeof(PlayerBotActionShareResourcePack).FullName,
             ];
+            public FlexibleMethodDefinition limiationsCheck;
+            public bool respectFollowDistance = true;
+            public bool stopOnEnemyFound = true;
             public Descriptor() : base(ClassInjector.DerivedConstructorPointer<Descriptor>())
             {
                 ClassInjector.DerivedConstructorBody(this);
@@ -152,7 +158,6 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
             {
                 return new ExploreAction(this);
             }
-
         }
         public ExploreAction() : base(ClassInjector.DerivedConstructorPointer<CustomActionBase>())
         {//Don't use!
@@ -166,6 +171,8 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
         public ExploreAction(Descriptor desc) : base(desc)
         {// Use this.
             //ZiMain.sendChatMessage("Here I go exploring because I feel like it.",m_bot.Agent);
+            customDescBase = desc;
+            desc.exploreBase = this;
             state = StateEnum.lookingForUnexplored;
         }
         public override bool Update()
@@ -180,13 +187,21 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
                 if (UnexploredNode == null)
                 {
                     UnexploredNode = zVisitedManager.GetUnexploredLocation(m_bot.Agent.Position);
+                    if (UnexploredNode == null)
+                        state = StateEnum.Finished;
                     var followAction = m_bot.m_rootAction.Cast<RootPlayerBotAction.Descriptor>().ActionBase.Cast<RootPlayerBotAction>().m_followLeaderAction.Cast<PlayerBotActionFollow.Descriptor>();
                     var leaderPos = followAction.Client.transform.position;
                     var distance = Vector3.Distance(leaderPos, UnexploredNode.position);
                     var followPrio = followAction.Prio;
-                    if (UnexploredNode == null || 
+                    positionAllowed = true; //This is a really janky way to handle a return type.  TODO make this cleaner.
+                    if (customDescBase.limiationsCheck != null)
+                    {
+                        customDescBase.limiationsCheck.Invoke(customDescBase); //This will update positionAllowed
+                    }
+                    if (!positionAllowed || 
+                        UnexploredNode == null || 
                         (RootPlayerBotAction.s_followLeaderRadius < distance && //Too far
-                          followPrio > DescBase.Prio)) // and too important
+                          followPrio > DescBase.Prio && customDescBase.respectFollowDistance))// and too important
                     {
                         DescBase.SetCompletionStatus(PlayerBotActionBase.Descriptor.StatusType.Successful);
                         state = StateEnum.Finished;
@@ -236,7 +251,7 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
             }
             else if (state == StateEnum.Moving) 
             {
-                if (HasFoundEnemies())
+                if (customDescBase.stopOnEnemyFound && HasFoundEnemies())
                 {
                     m_bot.StopAction(travelAction);
                     state = StateEnum.Finished;

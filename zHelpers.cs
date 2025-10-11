@@ -38,6 +38,32 @@ namespace ZombieTweak2
         {
             return new FlexibleMethodDefinition(d);
         }
+        public object? Invoke()
+        {
+            return Invoke(args);
+        }
+
+        public object? Invoke(params object[] suppliedArgs)
+        {
+            if (method == null)
+                throw new InvalidOperationException("No method assigned to FlexibleMethodDefinition.");
+
+            var finalArgs = suppliedArgs?.Length > 0 ? suppliedArgs : args;
+
+            try
+            {
+                return method.DynamicInvoke(finalArgs);
+            }
+            catch (TargetParameterCountException e)
+            {
+                throw new InvalidOperationException(
+                    $"Parameter count mismatch. Expected {method.Method.GetParameters().Length}, got {finalArgs?.Length ?? 0}.", e);
+            }
+            catch (Exception e)
+            {
+                throw new TargetInvocationException($"Error invoking method '{method.Method.Name}'.", e);
+            }
+        }
     }
     public class FlexibleEvent
     {

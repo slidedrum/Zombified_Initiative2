@@ -6,6 +6,7 @@ using UnityEngine;
 public class TemplateAction : CustomActionBase
 {
     //This is an example of how you can set up your own custom action!
+    Descriptor customDescBase = null;
     public static new bool Setup() //This will be called when your class is regestered, it should return true if your action will even activate on it's own, or false if it's an exclusively manual action.
     {
         return true;
@@ -13,6 +14,7 @@ public class TemplateAction : CustomActionBase
     public new class Descriptor : CustomActionBase.Descriptor
     {
         //This is an example of how you can set up your own custom descriptor!
+        public TemplateAction customBase;
         public Descriptor() : base(ClassInjector.DerivedConstructorPointer<Descriptor>()) // Don't use this!  Needed for il2cpp nonsense.
         {
             ClassInjector.DerivedConstructorBody(this);
@@ -84,6 +86,8 @@ public class TemplateAction : CustomActionBase
     }// Don't use this!  Needed for il2cpp nonsense.
     public TemplateAction(Descriptor desc) : base(desc)
     {
+        customDescBase = desc;
+        desc.customBase = this; // You'll need a refrence back to your custom descriptor
         //Use this constructor.
         //This means your action is starting!
     }

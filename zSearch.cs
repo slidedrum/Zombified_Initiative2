@@ -1,5 +1,4 @@
-﻿using Agents;
-using AIGraph;
+﻿using AIGraph;
 using Enemies;
 using Il2CppInterop.Runtime;
 using LevelGeneration;
@@ -19,11 +18,12 @@ namespace Zombified_Initiative
     public static class zSearch
     {
         //this class is for finding stuff inside the world.
-        public static HashSet<AIG_CourseNode> CheckedNodes = new();
+        public static HashSet<string> CheckedNodes = new();
         public static float foundDistance = 30f;
         private static PlayerAgent localPlayer = null;
         public static int MapCellSise = 5;
         public static Dictionary<Vector2, List<FindableObject>> findbleObjectMap = new();
+        public static Dictionary<string, List<FindableObject>> courseNodeFindableObjectCache = new(); //This should perfectly mirror findbleObjectMap but I'm not 100% sure if I missed anything.  If weird bugs come up, this is where to look.
         private static List<Transform> pingTransforms = new();
 
         public static List<PlayerAgent> GetAllBotAgents()
@@ -144,7 +144,11 @@ namespace Zombified_Initiative
             if (localPlayer.Owner.refSessionMode != SNetwork.eReplicationMode.Playing)
             {
                 if (findbleObjectMap.Count > 0)
+                {
                     findbleObjectMap.Clear();
+                    courseNodeFindableObjectCache.Clear();
+                }
+                    
                 return;
             }
             bool playerInControll = FocusStateManager.CurrentState == eFocusState.FPS || FocusStateManager.CurrentState == eFocusState.Dead || FocusStateManager.CurrentState == eFocusState.FPS_CommunicationDialog;
@@ -165,21 +169,48 @@ namespace Zombified_Initiative
                 }
             }
             FindsQueu();
-            CleanFindableObjectMap();
+            CleanFindableObjectMaps();
         }
 
-        private static void CleanFindableObjectMap()
+        private static void CleanFindableObjectMaps()
         {
             var emptyKeys = new List<Vector2>();
+            var emptyCourseNodes = new HashSet<AIG_CourseNode>();
 
             foreach (var kvp in findbleObjectMap)
             {
-                kvp.Value.RemoveAll(f => f == null || !f.gameObject.activeInHierarchy);
-                if (kvp.Value.Count == 0)
+                var list = kvp.Value;
+                var toRemove = new List<FindableObject>();
+
+                // Collect invalids once
+                foreach (var f in list)
+                {
+                    if (f == null || !f.gameObject.activeInHierarchy)
+                        toRemove.Add(f);
+                }
+
+                foreach (var f in toRemove)
+                {
+                    list.Remove(f);
+
+                    if (f?.courseNode != null &&
+                        courseNodeFindableObjectCache.TryGetValue(f.courseNode.Name, out var courseList))
+                    {
+                        courseList.Remove(f);
+                        if (courseList.Count == 0)
+                            emptyCourseNodes.Add(f.courseNode);
+                    }
+                }
+
+                if (list.Count == 0)
                     emptyKeys.Add(kvp.Key);
             }
+
             foreach (var key in emptyKeys)
                 findbleObjectMap.Remove(key);
+
+            foreach (var node in emptyCourseNodes)
+                courseNodeFindableObjectCache.Remove(node.Name);
         }
 
         public class PingTargetTransform
@@ -198,122 +229,42 @@ namespace Zombified_Initiative
                 Type type = null;
                 switch (ping.PingTargetStyle)
                 {
+                    case eNavMarkerStyle.PlayerInCompass:
+                    case eNavMarkerStyle.PlayerPingSign:
+                    case eNavMarkerStyle.LocationBeaconNoText:
+                    case eNavMarkerStyle.TerminalPing:
                     case eNavMarkerStyle.LocationBeacon:
-                        break;
-
                     case eNavMarkerStyle.PlayerPingLookat:
-                        break;
-
                     case eNavMarkerStyle.PlayerPingEnemy:
-                        break;
-
-                    case eNavMarkerStyle.PlayerPingAmmo:
-                        type = typeof(LG_GenericTerminalItem);
-                        break;
-
-                    case eNavMarkerStyle.PlayerPingHealth:
-                        type = typeof(LG_GenericTerminalItem);
-                        break;
-
-                    case eNavMarkerStyle.PlayerPingLoot:
-                        type = typeof(LG_PickupItem_Sync);
-                        break;
-
-                    case eNavMarkerStyle.PlayerPingTerminal:
-                        type = typeof(LG_GenericTerminalItem);
-                        break;
-
                     case eNavMarkerStyle.PlayerPingCaution:
                         break;
-
+                    case eNavMarkerStyle.PlayerPingAmmo:
+                    case eNavMarkerStyle.PlayerPingHealth:
+                    case eNavMarkerStyle.PlayerPingTerminal:
                     case eNavMarkerStyle.PlayerPingHSU:
-                        type = typeof(LG_GenericTerminalItem);
-                        break;
-
                     case eNavMarkerStyle.PlayerPingDoor:
-                        type = typeof(LG_GenericTerminalItem);
-                        break;
-
                     case eNavMarkerStyle.PlayerPingResourceLocker:
-                        type = typeof(LG_GenericTerminalItem);
-                        break;
-
                     case eNavMarkerStyle.PlayerPingResourceBox:
-                        type = typeof(LG_GenericTerminalItem);
-                        break;
-
-                    case eNavMarkerStyle.PlayerInCompass:
-                        break;
-
-                    case eNavMarkerStyle.PlayerPingSign:
-                        break;
-
-                    case eNavMarkerStyle.LocationBeaconNoText:
-                        break;
-
-                    case eNavMarkerStyle.TerminalPing:
-                        break;
-
+                    case eNavMarkerStyle.PlayerPingPickupObjectiveItem:
+                    case eNavMarkerStyle.PlayerPingToolRefill:
+                    case eNavMarkerStyle.PlayerPingSecurityDoor:
+                    case eNavMarkerStyle.PlayerPingBulkheadDoor:
+                    case eNavMarkerStyle.PlayerPingApexDoor:
+                    case eNavMarkerStyle.PlayerPingBloodDoor:
+                    case eNavMarkerStyle.PlayerPingSecurityCheckpointDoor:
+                    case eNavMarkerStyle.PlayerPingBulkheadCheckpointDoor:
+                    case eNavMarkerStyle.PlayerPingApexCheckpointDoor:
+                    case eNavMarkerStyle.PlayerPingBloodCheckpointDoor:
+                    case eNavMarkerStyle.PlayerPingBulkheadDC:
                     case eNavMarkerStyle.PlayerPingGenerator:
-                        type = typeof(LG_GenericTerminalItem);
-                        break;
-
                     case eNavMarkerStyle.PlayerPingDisinfection:
-                        type = typeof(LG_GenericTerminalItem);
-                        break;
-
                     case eNavMarkerStyle.PlayerPingCarryItem:
                         type = typeof(LG_GenericTerminalItem);
                         break;
-
                     case eNavMarkerStyle.PlayerPingConsumable:
+                    case eNavMarkerStyle.PlayerPingLoot:
                         type = typeof(LG_PickupItem_Sync);
                         break;
-
-                    case eNavMarkerStyle.PlayerPingPickupObjectiveItem:
-                        type = typeof(LG_GenericTerminalItem);
-                        break;
-
-                    case eNavMarkerStyle.PlayerPingToolRefill:
-                        type = typeof(LG_GenericTerminalItem);
-                        break;
-
-                    case eNavMarkerStyle.PlayerPingSecurityDoor:
-                        type = typeof(LG_GenericTerminalItem);
-                        break;
-
-                    case eNavMarkerStyle.PlayerPingBulkheadDoor:
-                        type = typeof(LG_GenericTerminalItem);
-                        break;
-
-                    case eNavMarkerStyle.PlayerPingApexDoor:
-                        type = typeof(LG_GenericTerminalItem);
-                        break;
-
-                    case eNavMarkerStyle.PlayerPingBloodDoor:
-                        type = typeof(LG_GenericTerminalItem);
-                        break;
-
-                    case eNavMarkerStyle.PlayerPingSecurityCheckpointDoor:
-                        type = typeof(LG_GenericTerminalItem);
-                        break;
-
-                    case eNavMarkerStyle.PlayerPingBulkheadCheckpointDoor:
-                        type = typeof(LG_GenericTerminalItem);
-                        break;
-
-                    case eNavMarkerStyle.PlayerPingApexCheckpointDoor:
-                        type = typeof(LG_GenericTerminalItem);
-                        break;
-
-                    case eNavMarkerStyle.PlayerPingBloodCheckpointDoor:
-                        type = typeof(LG_GenericTerminalItem);
-                        break;
-
-                    case eNavMarkerStyle.PlayerPingBulkheadDC:
-                        type = typeof(LG_GenericTerminalItem);
-                        break;
-
                     default:
                         break;
                 }
@@ -359,7 +310,7 @@ namespace Zombified_Initiative
                         found = false,
                         box = box,
                     };
-                    findbleObjectMap[cell].Add(newFindable);
+                    MapFindable(newFindable);
                     if (newFindable.pingSyle == eNavMarkerStyle.PlayerPingResourceLocker || newFindable.pingSyle == eNavMarkerStyle.PlayerPingResourceBox)
                     {
                         var container = newFindable.gameObject.GetComponent<LG_ResourceContainer_Storage>();
@@ -380,13 +331,30 @@ namespace Zombified_Initiative
                                         found = false,
                                         box = itemBox,
                                     };
-                                    findbleObjectMap[cell].Add(NewItemFindable);
+                                    MapFindable(NewItemFindable);
                                 }
                             }
                         }//TODO this nesting is insane.
                     }
                 }
             }
+        }
+        public static void MapFindable(FindableObject findable)
+        {
+            var cell = new Vector2Int(
+                Mathf.FloorToInt(findable.box.Center.x / MapCellSise),
+                Mathf.FloorToInt(findable.box.Center.z / MapCellSise));
+            if (!findbleObjectMap.ContainsKey(cell))
+                findbleObjectMap[cell] = new();
+            findbleObjectMap[cell].Add(findable);
+            if(findable.courseNode == null)
+            {
+                ZiMain.log.LogWarning($"Findable {findable.gameObject.name} has no coursenode!");
+                return;
+            }
+            if (!courseNodeFindableObjectCache.ContainsKey(findable.courseNode.Name))
+                courseNodeFindableObjectCache[findable.courseNode.Name] = new();
+            courseNodeFindableObjectCache[findable.courseNode.Name].Add(findable);
         }
         public static void ProcessEnemiesIntoFindableObjectMap(EnemyAgent[] enemyAgents)
         {
@@ -411,7 +379,7 @@ namespace Zombified_Initiative
                         found = false,
                         box = box,
                     };
-                    findbleObjectMap[cell].Add(newFindable);
+                    MapFindable(newFindable);
                 }
             }
         }
@@ -654,10 +622,56 @@ namespace Zombified_Initiative
     }
     public class FindableObject
     {
-        public BoundingBox box;
         public GameObject gameObject;
-        public AIG_CourseNode courseNode;
+        private BoundingBox _box;
+        public BoundingBox box { 
+            get 
+            { 
+                if (_box != null)
+                    return _box;
+                return _box = new(gameObject, BoundingSource.Renderers);
+            }
+            set
+            {
+                _box = value;
+            }
+        }
+        private AIG_CourseNode _courseNode;
+        public AIG_CourseNode courseNode
+        {
+            get
+            {
+                if (_courseNode != null)
+                    return _courseNode;
+                AIG_CourseNode.TryGetCourseNode(dimension, box.Center,1, out _courseNode);
+                if (!zSearch.courseNodeFindableObjectCache.ContainsKey(_courseNode.Name))
+                    zSearch.courseNodeFindableObjectCache[_courseNode.Name] = new();
+                if (!zSearch.courseNodeFindableObjectCache[_courseNode.Name].Contains(this))
+                    zSearch.courseNodeFindableObjectCache[_courseNode.Name].Add(this);
+                return _courseNode;
+            }
+            set
+            {
+                _courseNode = value;
+            }
+        }
         public Type type;
+        private bool hasDim = false;
+        private eDimensionIndex _dimension;
+        public eDimensionIndex dimension {
+            get
+            {
+                if (hasDim)
+                    return _dimension;
+
+                return _dimension = Dimension.GetDimensionFromPos(gameObject.transform.position).DimensionIndex;
+            }
+            set
+            {
+                _dimension = value;
+                hasDim = true;
+            }
+        }
         public eNavMarkerStyle pingSyle;
         public bool found;
         public Dictionary<int,float> lastCheckedVis = new();

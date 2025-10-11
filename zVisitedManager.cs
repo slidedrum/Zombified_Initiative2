@@ -1,4 +1,7 @@
-﻿using Player;
+﻿using AIGraph;
+using Enemies;
+using LevelGeneration;
+using Player;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,11 +11,12 @@ using Zombified_Initiative;
 
 namespace ZombieTweak2
 {
-    public static class zVisitedManager
+    public static class zVisitedManager // TODO make the nodemap a dict with dimensions as keys.
     {
         public static int NodeMapGridSize = 10;
         public static float NodeGridSize = 2.5f;
         public static float NodeVisitDistance = 10f;
+        //public static Dictionary<eDimensionIndex, Dictionary<Vector3Int, HashSet<VisitNode>>> NodeMap = new();
         public static Dictionary<Vector3Int, HashSet<VisitNode>> NodeMap = new();
         private static bool setup = false;
         private static List<PlayerAgent> agents = new();
@@ -32,6 +36,7 @@ namespace ZombieTweak2
         private static PlayerAgent localPlayer;
         public static Vector3[] CapsuleCorners;
         public static HashSet<VisitNode> allnodes = new();
+        public static Dictionary<AIG_CourseNode, List<VisitNode>> VisitNodeCourseNodeCache = new();
         public static VisitNode GetUnexploredLocation(Vector3 position, int depth = 0,int maxDepth = 0, OrderedSet<VisitNode> searched = null) // TODO create an async version of this with a cache of unexplored locations
         {
             if (maxDepth == 0)
@@ -41,7 +46,22 @@ namespace ZombieTweak2
             var node = GetNearestNode(position);
             return node.FindUnexplored(depth,maxDepth,searched);
         }
-
+        public static bool HasCourseNodeBeenFullyExplored(AIG_CourseNode courseNode)
+        {
+            if (!VisitNodeCourseNodeCache.ContainsKey(courseNode))
+                return false;
+            return VisitNodeCourseNodeCache[courseNode].All(v => v.discovered);
+        }
+        public static List<EnemyAgent> GetFoundEnemiesInCourseNode(AIG_CourseNode courseNode)
+        {
+            var allEnemies = courseNode.m_enemiesInNode;
+            return null;
+        }
+        public static List<VisitNode> GetVisitNodesInCourseNode(AIG_CourseNode courseNode)
+        {
+            VisitNodeCourseNodeCache.TryGetValue(courseNode, out var nodes);
+            return nodes;
+        }
         public static void SetNodeMapGridSize(int size)
         {
             if (size < 1) size = 1;
@@ -185,6 +205,13 @@ namespace ZombieTweak2
         public static void MapNode(VisitNode node)
         {
             allnodes.Add(node);
+            if (node.courseNode != null)
+            {
+                if (!VisitNodeCourseNodeCache.ContainsKey(node.courseNode))
+                    VisitNodeCourseNodeCache[node.courseNode] = new();
+                if (!VisitNodeCourseNodeCache[node.courseNode].Contains(node))
+                    VisitNodeCourseNodeCache[node.courseNode].Add(node);
+            }
             var gridPos = node.GetGridPosition();
             if (!NodeMap.ContainsKey(gridPos))
                 NodeMap[gridPos] = new();
@@ -544,10 +571,39 @@ namespace ZombieTweak2
         public OrderedSet<VisitNode> connectedNodes = new();
         public HashSet<VisitNode> nearbyNodesToCheckIfConnected = new();
         private Dictionary<VisitNode, LineRenderer> connectionLines = new();
+        private AIG_CourseNode _courseNode;
+        public AIG_CourseNode courseNode { get 
+            {
+                if (_courseNode != null)
+                    return _courseNode;
+                AIG_CourseNode.TryGetCourseNode(dimension, position, 1, out _courseNode);
+                return _courseNode;
+            }
+            set
+            {
+                _courseNode = value;
+            }
+        }
+        private eDimensionIndex _dimension;
+        private bool hasDim = false;
+        public eDimensionIndex dimension 
+        { 
+            get 
+            {
+                if (hasDim)
+                {
+                    return _dimension;
+                }
+                hasDim = true;
+                return _dimension = Dimension.GetDimensionFromPos(position).DimensionIndex;
+            }
+        }
 
         public VisitNode(Vector3 pos, bool garenteedNoNodesNearby)
         {
             position = pos;
+            if (courseNode == null)
+                ZiMain.log.LogWarning($"Could not find course node for visit node at {pos}");
             zVisitedManager.MapNode(this);
             if (!garenteedNoNodesNearby || true)
             {
@@ -562,7 +618,6 @@ namespace ZombieTweak2
                     zVisitedManager.nodesThatNeedConnectionChecks.Add(this);
                 }
             }
-
         }
         public OrderedSet<VisitNode> getUnexploredNodes()
         {
