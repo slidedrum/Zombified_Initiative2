@@ -232,37 +232,33 @@ namespace ZombieTweak2
         //but I don't understand it enough to get rid of it (yet).
         public static readonly object Value = new object();
     }
-    #nullable enable
+#nullable enable
     public class OverrideChain<T>
     {
-        private OrderedDictionary Chain = new();
+        private Dictionary<string, T?> Chain = new();
         private Dictionary<string, Func<bool>?> Conditionals = new();
+        private Dictionary<string, int> priorities = new();
         private OverrideChain<T>? parrentChain = null;
         private OverrideChain<T>? childChain = null;
         private bool AllowSameValueOveride = false;
-        public List<string> Keys => Chain.Keys.Cast<string>().ToList();
-        public OverrideChain()
-        {
-        }
+        public List<string> Keys => Chain.Keys.ToList();
         public OverrideChain(OverrideChain<T> other)
         {
             if (other == null)
                 throw new ArgumentNullException(nameof(other));
-            this.Chain = new OrderedDictionary();
-            foreach (DictionaryEntry entry in other.Chain)
-            {
-                this.Chain.Add(entry.Key, entry.Value);
-            }
-            this.Conditionals = new Dictionary<string, Func<bool>?>(other.Conditionals);
+            this.Chain = new(other.Chain);
+            this.Conditionals = new(other.Conditionals);
+            this.priorities = new(other.priorities);
             this.AllowSameValueOveride = other.AllowSameValueOveride;
         }
-        public OverrideChain(string key, T? variable, Func<bool>? condition = null, bool sameValueOveride = false)
+        public OverrideChain(T variable, string key = "Default", Func<bool>? condition = null, bool sameValueOveride = false)
         {
             Chain[key] = variable;
+            priorities[key] = 0; //inital value is lowest priority
+            AllowSameValueOveride = sameValueOveride;
             if (condition == null)
                 return;
             Conditionals[key] = condition;
-            AllowSameValueOveride = sameValueOveride;
         }
         public void AllowSameValue(bool sameValueOveride)
         {
@@ -287,13 +283,6 @@ namespace ZombieTweak2
         public int Count()
         {
             return Chain.Count;
-        }
-        public void InsertOverride(string key, int index, T? variable, Func<bool>? condition = null)
-        {
-            Chain.Insert(index, key, variable);
-            if (condition == null)
-                return;
-            Conditionals[key] = condition;
         }
         public OverrideChain<T>? RemoveChildChain()
         {
@@ -348,7 +337,7 @@ namespace ZombieTweak2
         }
         public T? SetValue(string key, T? value)
         {
-            Chain[key] = null;
+            Chain[key] = default;
             if (AllowSameValueOveride || !object.Equals(GetValue(key), value))
                 Chain[key] = value;
             return value;
@@ -358,51 +347,50 @@ namespace ZombieTweak2
             Conditionals.Remove(key);
             Chain.Remove(key);
         }
-        public void RemoveOverride(int index)
+        public void AddOverride(string key, T? value, int priorityLevel, Func<bool>? condition = null)
         {
-            Conditionals.Remove(Keys[index]);
-            Chain.Remove(index);
-        }
-        public void AddOverride(string key, T? variable, Func<bool>? condition = null)
-        {
-            Chain[key] = variable;
-            if (condition == null)
-                return;
-            Conditionals[key] = condition;
+            var unconditionalValueAtPrio = priorities
+                .Where(kv => kv.Value == priorityLevel)
+                .Select(kv => kv.Key)
+                .Any(k => !Conditionals.ContainsKey(k));
+            if (condition == null && unconditionalValueAtPrio)
+                throw new InvalidOperationException($"Cannot add unconditional value '{key}' at priority {priorityLevel}, already exists.");
+            Chain[key] = value;
+            priorities[key] = priorityLevel;
+            if (condition != null)
+                Conditionals[key] = condition;
         }
         public T? GetValue(string? key = null)
         {
+            int? keyPriority = null;
             if (!string.IsNullOrEmpty(key))
             {
-                var val = ValueAt(key);
-                if (val != null)
-                    return val;
+                keyPriority = priorities[key];
+                var value = ValueAt(key, true);
+                if (value != null)
+                    return value;
             }
-            var reversedKeys = Enumerable.Reverse(Keys);
-            foreach (var k in reversedKeys)
+            var orderedKeys = priorities
+                .Where(kv => !keyPriority.HasValue || kv.Value < keyPriority.Value)
+                .OrderByDescending(kv => kv.Value)
+                .Select(kv => kv.Key);
+            foreach (var orderedKey in orderedKeys)
             {
-                var val = ValueAt(k);
-                if (val != null)
-                    return val;
+                var value = ValueAt(orderedKey, false);
+                if (value != null)
+                    return value;
             }
             return default;
         }
-        public T? ValueAt(string key)
+        public T? ValueAt(string key, bool ignoreConditionals = true)
         {
             if (string.IsNullOrEmpty(key))
                 throw new ArgumentNullException(nameof(key));
-            if (Chain.Contains(key))
-            {
-                var obj = Chain[key];
-                if (obj is T value && (!Conditionals.TryGetValue(key, out var cond) || cond?.Invoke() != false))
-                {
-                    return value;
-                }
-            }
-            if (parrentChain != null && parrentChain.Chain.Contains(key))
+            if (Chain.ContainsKey(key) && (ignoreConditionals || !Conditionals.TryGetValue(key, out var conditional) || conditional?.Invoke() == true))
+                return Chain[key];
+            if (parrentChain != null && parrentChain.Keys.Contains(key))
                 return parrentChain.ValueAt(key);
             return default;
         }
-
     }
 }

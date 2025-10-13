@@ -49,6 +49,13 @@ namespace ZombieTweak2.zMenu
         private Dictionary<zMenuManager.menuEvent, FlexibleEvent> eventMap;
         internal Dictionary<string, List<zMenuNode>> catagories = new();
         private int catagoryIndex = 0;
+        public string currentCatagoryName 
+        { 
+            get 
+            {
+                return catagories.Keys.ToArray().ElementAt(catagoryIndex);
+            }
+        }
 
         private FlexibleEvent OnOpened = new();
         private FlexibleEvent WhileOpened = new();
