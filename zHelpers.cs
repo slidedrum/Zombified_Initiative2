@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Dynamic;
 using System.Linq;
 using System.Reflection;
@@ -225,11 +226,183 @@ namespace ZombieTweak2
 
         public List<T> ToList() => new(_list);
     }
-
     public static class Default
     {
         //This was added by an AI, not 100% sure why it's needed. ¯\_(ツ)_/¯
         //but I don't understand it enough to get rid of it (yet).
         public static readonly object Value = new object();
+    }
+    #nullable enable
+    public class OverrideChain<T>
+    {
+        private OrderedDictionary Chain = new();
+        private Dictionary<string, Func<bool>?> Conditionals = new();
+        private OverrideChain<T>? parrentChain = null;
+        private OverrideChain<T>? childChain = null;
+        private bool AllowSameValueOveride = false;
+        public List<string> Keys => Chain.Keys.Cast<string>().ToList();
+        public OverrideChain()
+        {
+        }
+        public OverrideChain(OverrideChain<T> other)
+        {
+            if (other == null)
+                throw new ArgumentNullException(nameof(other));
+            this.Chain = new OrderedDictionary();
+            foreach (DictionaryEntry entry in other.Chain)
+            {
+                this.Chain.Add(entry.Key, entry.Value);
+            }
+            this.Conditionals = new Dictionary<string, Func<bool>?>(other.Conditionals);
+            this.AllowSameValueOveride = other.AllowSameValueOveride;
+        }
+        public OverrideChain(string key, T? variable, Func<bool>? condition = null, bool sameValueOveride = false)
+        {
+            Chain[key] = variable;
+            if (condition == null)
+                return;
+            Conditionals[key] = condition;
+            AllowSameValueOveride = sameValueOveride;
+        }
+        public void AllowSameValue(bool sameValueOveride)
+        {
+            AllowSameValueOveride = sameValueOveride;
+        }
+        public OverrideChain<T>? CreateParentChain()
+        {
+            if (parrentChain != null)
+                Console.WriteLine("Warning: overiding existing parrent chain");
+            OverrideChain<T> newChain = new OverrideChain<T>(this);
+            SetParrentChain(newChain);
+            newChain.SetChildChain(this);
+            return newChain;
+        }
+        public OverrideChain<T>? CreateChildChain()
+        {
+            OverrideChain<T> newChain = new OverrideChain<T>(this);
+            newChain.SetParrentChain(this);
+            SetChildChain(newChain);
+            return newChain;
+        }
+        public int Count()
+        {
+            return Chain.Count;
+        }
+        public void InsertOverride(string key, int index, T? variable, Func<bool>? condition = null)
+        {
+            Chain.Insert(index, key, variable);
+            if (condition == null)
+                return;
+            Conditionals[key] = condition;
+        }
+        public OverrideChain<T>? RemoveChildChain()
+        {
+            if (childChain == null)
+                return null;
+            var ret = childChain;
+            childChain.RemoveParrentChain();
+            childChain = null;
+            return ret;
+        }
+        public OverrideChain<T>? RemoveParrentChain()
+        {
+            if (parrentChain == null)
+                return null;
+            var ret = parrentChain;
+            parrentChain.RemoveChildChain();
+            parrentChain = null;
+            return ret;
+        }
+
+        public void SetParrentChain(OverrideChain<T> parent)
+        {
+            if (ReferenceEquals(parent, this))
+                throw new InvalidOperationException("A chain cannot be its own parent.");
+            parrentChain = parent;
+            if (parent.childChain != this)
+                parent.childChain = this;
+        }
+        public void SetChildChain(OverrideChain<T> child)
+        {
+            if (ReferenceEquals(child, this))
+                throw new InvalidOperationException("A chain cannot be its own child.");
+            childChain = child;
+            if (child.parrentChain != this)
+                child.parrentChain = this;
+        }
+        [Flags]
+        public enum PropagationDirection
+        {
+            None = 0,
+            Up = 1,
+            Down = 2,
+            Both = Up | Down
+        }
+        public void SetConditional(string key, Func<bool>? condition, PropagationDirection propagate = PropagationDirection.Both)
+        {
+            Conditionals[key] = condition;
+            if (propagate.HasFlag(PropagationDirection.Up))
+                parrentChain?.SetConditional(key, condition, PropagationDirection.Up);
+            if (propagate.HasFlag(PropagationDirection.Down))
+                childChain?.SetConditional(key, condition, PropagationDirection.Down);
+        }
+        public T? SetValue(string key, T? value)
+        {
+            Chain[key] = null;
+            if (AllowSameValueOveride || !object.Equals(GetValue(key), value))
+                Chain[key] = value;
+            return value;
+        }
+        public void RemoveOverride(string key)
+        {
+            Conditionals.Remove(key);
+            Chain.Remove(key);
+        }
+        public void RemoveOverride(int index)
+        {
+            Conditionals.Remove(Keys[index]);
+            Chain.Remove(index);
+        }
+        public void AddOverride(string key, T? variable, Func<bool>? condition = null)
+        {
+            Chain[key] = variable;
+            if (condition == null)
+                return;
+            Conditionals[key] = condition;
+        }
+        public T? GetValue(string? key = null)
+        {
+            if (!string.IsNullOrEmpty(key))
+            {
+                var val = ValueAt(key);
+                if (val != null)
+                    return val;
+            }
+            var reversedKeys = Enumerable.Reverse(Keys);
+            foreach (var k in reversedKeys)
+            {
+                var val = ValueAt(k);
+                if (val != null)
+                    return val;
+            }
+            return default;
+        }
+        public T? ValueAt(string key)
+        {
+            if (string.IsNullOrEmpty(key))
+                throw new ArgumentNullException(nameof(key));
+            if (Chain.Contains(key))
+            {
+                var obj = Chain[key];
+                if (obj is T value && (!Conditionals.TryGetValue(key, out var cond) || cond?.Invoke() != false))
+                {
+                    return value;
+                }
+            }
+            if (parrentChain != null && parrentChain.Chain.Contains(key))
+                return parrentChain.ValueAt(key);
+            return default;
+        }
+
     }
 }

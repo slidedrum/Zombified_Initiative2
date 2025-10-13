@@ -25,13 +25,13 @@ namespace ZombieTweak2.CustomActions.Patches
             }
         }
         public static followSetting defaultFollowSettings;
-        public static followSetting mainFollowerSettings;
+        public static followSetting followerSettings;
         public static Dictionary<DRAMA_State, followSetting> followSettingsOverides = new();
         public static Dictionary<DRAMA_State, followSetting> myFollowSettingsOverides = new();
         public static void Setup()
         {
             defaultFollowSettings = new();
-            mainFollowerSettings = new();
+            followerSettings = new();
             followSettingsOverides.Clear();
             myFollowSettingsOverides.Clear();
             myFollowSettingsOverides[DRAMA_State.Exploration] = new()
@@ -89,7 +89,7 @@ namespace ZombieTweak2.CustomActions.Patches
 
             var currentDramaState = DramaManager.CurrentStateEnum;
             var followSettings = data.followSettingsOverides;
-            var currentFollowSettings = followSettings.GetValueOrDefault(currentDramaState, mainFollowerSettings);
+            var currentFollowSettings = followSettings.GetValueOrDefault(currentDramaState, followerSettings);
             __instance.m_followLeaderAction.Prio = currentFollowSettings.prio;
             RootPlayerBotAction.m_prioSettings.FollowLeaderRadius = currentFollowSettings.followLeaderRadius;
             RootPlayerBotAction.s_followLeaderRadius = currentFollowSettings.followLeaderRadius;
