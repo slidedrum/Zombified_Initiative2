@@ -444,8 +444,8 @@ namespace ZombieTweak2.zMenu
                 node.gameObject.SetActive(false);
                 ArrangeNodes();
             }
-            else
-                ZiMain.log.LogWarning($"Could not find node {node.text} to disable from {name} menu");
+            //else
+            //    ZiMain.log.LogWarning($"Could not find node {node.text} to disable from {name} menu");
         }
         public void DisableNode(zMenu menu)
         {
@@ -495,8 +495,8 @@ namespace ZombieTweak2.zMenu
             {
                 EnableNode(nodeToEnable);
             }
-            else
-                ZiMain.log.LogWarning($"Could not find node {menu.centerNode.text} to enable from {name} menu");
+            //else
+            //    ZiMain.log.LogWarning($"Could not find node {menu.centerNode.text} to enable from {name} menu");
         }
         public zMenuNode AddNode(zMenu menu)
         {

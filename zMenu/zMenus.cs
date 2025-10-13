@@ -1,7 +1,5 @@
-﻿using Agents;
-using CollisionRundown.Features.HUDs;
+﻿using CollisionRundown.Features.HUDs;
 using GameData;
-using Il2CppSystem.Xml.Schema;
 using Player;
 using System;
 using System.Collections.Generic;
@@ -12,7 +10,6 @@ using ZombieTweak2.CustomActions.Patches;
 using ZombieTweak2.zRootBotPlayerAction;
 using ZombieTweak2.zRootBotPlayerAction.CustomActions;
 using Zombified_Initiative;
-using static Il2CppSystem.Globalization.CultureInfo;
 using static ZombieTweak2.zMenu.zMenu;
 
 namespace ZombieTweak2.zMenu
@@ -102,8 +99,6 @@ namespace ZombieTweak2.zMenu
     {
         public static List<zMenu> autoActionMenus = new List<zMenu>();
         private static zMenu AutoActionMenu;
-        private static int catagoryIndex = 0;
-        private static Dictionary<string, List<string>> catagories = new();
         internal static void Setup(zMenu menu)
         {
             AutoActionMenu = menu;
@@ -131,62 +126,17 @@ namespace ZombieTweak2.zMenu
             ShareMenuClass.Setup(shareMenu);
             FollowMenuClass.Setup(followMenu);
 
-            catagories["Favorites"] = new();
-            catagories["Favorites"].Add("Pickup");
-            catagories["Favorites"].Add("Pickup");
-            catagories["Favorites"].Add("Share");
-            catagories["Favorites"].Add("Explore");
-            catagories["Favorites"].Add("Follow");
-            catagories["Resources"] = new();
-            catagories["Resources"].Add("Pickup");
-            catagories["Resources"].Add("Share");
-
-            menu.centerNode.AddListener(zMenuManager.nodeEvent.WhileSelected, UpdateCatagoryByScroll);
-            SetCatagory("Favorites");
+            AutoActionMenu.AddCatagory("All");
+            AutoActionMenu.AddCatagory("Favorites");
+            AutoActionMenu.AddNodeToCatagory("Favorites","Pickup");
+            AutoActionMenu.AddNodeToCatagory("Favorites", "Share");
+            AutoActionMenu.AddNodeToCatagory("Favorites", "Explore");
+            AutoActionMenu.AddNodeToCatagory("Favorites", "Follow");
+            AutoActionMenu.AddCatagory("Resources");
+            AutoActionMenu.AddNodeToCatagory("Resources", "Pickup");
+            AutoActionMenu.AddNodeToCatagory("Resources", "Share");
+            AutoActionMenu.SetCatagory("Favorites");
             
-        }
-        private static void UpdateCatagoryByScroll()
-        {
-            float scroll = Input.GetAxis("Mouse ScrollWheel");
-            int normalizedScroll = (int)Mathf.Sign(scroll);
-            if (scroll == 0f)
-                return;
-            catagoryIndex += (int)normalizedScroll;
-            if (catagoryIndex > catagories.Count())
-                catagoryIndex = 0;
-            if (catagoryIndex < 0)
-                catagoryIndex = catagories.Count();
-            if (catagoryIndex == catagories.Count())
-            {
-                SetCatagory("All");
-                return;
-            }
-            SetCatagory(catagories.Keys.ElementAt(catagoryIndex));
-        }
-        internal static void SetCatagory(string catagory)
-        {
-            if (catagory == "All")
-            {
-                foreach (var node in AutoActionMenu.nodes)
-                {
-                    AutoActionMenu.EnableNode(node);
-                }
-                SetSubtitle("All");
-                return;
-            }
-            SetSubtitle(catagory);
-            if (!catagories.ContainsKey(catagory))
-            {
-                ZiMain.log.LogError($"Invalid auto action catagory: {catagory}.");
-                return;
-            }
-            foreach (var node in AutoActionMenu.nodes)
-            {
-                if (catagories[catagory].Contains(node.text))
-                    AutoActionMenu.EnableNode(node);
-                else
-                    AutoActionMenu.DisableNode(node);
-            }
         }
         private static void SetSubtitle(String subtitle)
         {
@@ -500,6 +450,7 @@ namespace ZombieTweak2.zMenu
             private static zMenu followMenu;
             private static zMenuNode followMenuNode;
             private static Dictionary<DRAMA_State, zMenuNode> stateNodes = new();
+            private static Dictionary<string, zMenuNode> catagoryNodes = new();
             public static DRAMA_State previousState;
             public static Color currentStateColor;
             public static Color defaultColor;
@@ -541,7 +492,15 @@ namespace ZombieTweak2.zMenu
                 maxDistance.AddOverride("Stealth", null, 1, () => { return DramaManager.CurrentStateEnum == DRAMA_State.Sneaking; });
                 maxDistance.AddOverride("Explore", null, 1, () => { return DramaManager.CurrentStateEnum == DRAMA_State.Exploration; });
 
+                catagoryNodes["Fighting"] = AddCatagoryNode("Fighting");
+                catagoryNodes["Stealth"] = AddCatagoryNode("Stealth");
+                catagoryNodes["Explore"] = AddCatagoryNode("Explore");
 
+                followMenu.AddCatagory("Basic");
+                followMenu.AddNodeToCatagory("Basic", "Fighting");
+                followMenu.AddNodeToCatagory("Basic", "Stealth");
+                followMenu.AddNodeToCatagory("Basic", "Explore");
+                followMenu.AddCatagory("Advanced");
 
                 foreach (DRAMA_State state in Enum.GetValues(typeof(DRAMA_State)))
                 {
@@ -559,9 +518,10 @@ namespace ZombieTweak2.zMenu
                     stateNode.subtitlePart.SetScale(0.5f);
                     stateNode.AddListener(zMenuManager.nodeEvent.WhileSelected, UpdateStateNodeBasedOnScroll, state);
                     stateNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, ResetStateSettings, state);
+                    followMenu.AddNodeToCatagory("Advanced", stateNode);
                 }
                 followMenu.AddListener(zMenuManager.menuEvent.WhileOpened, UpdateHighlightedState);
-                followMenu.AddListener(zMenuManager.menuEvent.OnOpened, UpdateAllStateNodes);
+                followMenu.AddListener(zMenuManager.menuEvent.OnOpened, UpdateAllNodes);
                 followMenu.centerNode.ClearListeners(zMenuManager.nodeEvent.OnUnpressedSelected);
                 followMenu.centerNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, ResetAllLocalSettings);
                 followMenu.centerNode.AddListener(zMenuManager.nodeEvent.OnTapped, followMenu.parrentMenu.Open);
@@ -571,14 +531,16 @@ namespace ZombieTweak2.zMenu
                 followMenuNode.AddListener(zMenuManager.nodeEvent.OnTapped, followMenu.Open);
                 followMenu.radius = 30f;
                 UpdateMainNode();
+                followMenu.SetCatagory("Basic");
             }
-            private static void AddCatagoryNode(string catagory)
+            private static zMenuNode AddCatagoryNode(string catagory)
             {
                 var catagoryNode = followMenu.AddNode(catagory);
                 catagoryNode.titlePart.SetScale(0.5f);
                 catagoryNode.subtitlePart.SetScale(0.5f);
                 catagoryNode.AddListener(zMenuManager.nodeEvent.WhileSelected, UpdateCatagoryNodeBasedOnScroll, catagory);
                 catagoryNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, ResetCatagorySettings, catagory);
+                return catagoryNode;
             }
             private static void ResetSettings()
             {
@@ -590,10 +552,12 @@ namespace ZombieTweak2.zMenu
             }
             private static void ResetAllLocalSettings()
             {
-                foreach (var state in FollowActionPatch.myFollowSettingsOverides.Keys)
-                {
-                    ResetStateSettings(state);
-                }
+                if (followMenu.currentCatagoryName == "Advanced")
+                    foreach (var state in stateNodes.Keys)
+                        ResetStateSettings(state);
+                else if (followMenu.currentCatagoryName == "Basic")
+                    foreach (var catagory in catagoryNodes.Keys)
+                        ResetCatagorySettings(catagory);
             }
             private static void ResetCatagorySettings(string catagory)
             {
@@ -732,11 +696,15 @@ namespace ZombieTweak2.zMenu
                 }
                 UpdateStateNode(state);
             }
-            private static void UpdateAllStateNodes()
+            private static void UpdateAllNodes()
             {
                 foreach(var state in stateNodes.Keys)
                 {
                     UpdateStateNode(state);
+                }
+                foreach (var catagory in catagoryNodes.Keys)
+                {
+                    UpdateCatagoryNode(catagory);
                 }
             }
             private static void UpdateCatagoryNode(string catagory)
