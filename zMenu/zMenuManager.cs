@@ -61,6 +61,7 @@ namespace ZombieTweak2.zMenu
             WhileSelected,
             OnDeselected,
             WhileDeselected,
+            OnCatagoryChanged,
         }
         //static settings
         //public static string menuParrentPath = "GUI/CellUI_Camera(Clone)/NavMarkerLayer";

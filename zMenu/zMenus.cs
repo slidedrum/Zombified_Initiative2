@@ -10,6 +10,7 @@ using ZombieTweak2.CustomActions.Patches;
 using ZombieTweak2.zRootBotPlayerAction;
 using ZombieTweak2.zRootBotPlayerAction.CustomActions;
 using Zombified_Initiative;
+using static FluffyUnderware.DevTools.ConditionalAttribute;
 using static ZombieTweak2.zMenu.zMenu;
 
 namespace ZombieTweak2.zMenu
@@ -454,9 +455,9 @@ namespace ZombieTweak2.zMenu
             public static DRAMA_State previousState;
             public static Color currentStateColor;
             public static Color defaultColor;
-            public static OverrideChain<int?> prio;
-            public static OverrideChain<int?> followRadius;
-            public static OverrideChain<int?> maxDistance;
+            public static OverrideTree<int?> prio = new(14);
+            public static OverrideTree<int?> followRadius = new(7);
+            public static OverrideTree<int?> maxDistance = new(10);
             private static List<DRAMA_State> fightingStates = new();
 
             internal static void Setup(zMenu menu)
@@ -482,15 +483,15 @@ namespace ZombieTweak2.zMenu
                 fightingStates.Add(DRAMA_State.Encounter);
                 fightingStates.Add(DRAMA_State.IntentionalCombat);
                 fightingStates.Add(DRAMA_State.Alert);
-                prio.AddOverride("Fighting", null, 1, () => { return fightingStates.Contains(DramaManager.CurrentStateEnum); });
-                prio.AddOverride("Stealth", null, 1, () => { return DramaManager.CurrentStateEnum == DRAMA_State.Sneaking; });
-                prio.AddOverride("Explore", null, 1, () => { return DramaManager.CurrentStateEnum == DRAMA_State.Exploration; });
-                followRadius.AddOverride("Fighting", null, 1, () => { return fightingStates.Contains(DramaManager.CurrentStateEnum); });
-                followRadius.AddOverride("Stealth", null, 1, () => { return DramaManager.CurrentStateEnum == DRAMA_State.Sneaking; });
-                followRadius.AddOverride("Explore", null, 1, () => { return DramaManager.CurrentStateEnum == DRAMA_State.Exploration; });
-                maxDistance.AddOverride("Fighting", null, 1, () => { return fightingStates.Contains(DramaManager.CurrentStateEnum); });
-                maxDistance.AddOverride("Stealth", null, 1, () => { return DramaManager.CurrentStateEnum == DRAMA_State.Sneaking; });
-                maxDistance.AddOverride("Explore", null, 1, () => { return DramaManager.CurrentStateEnum == DRAMA_State.Exploration; });
+                prio.        AddNode("Fighting", null, condition: () => { return fightingStates.Contains(DramaManager.CurrentStateEnum); });
+                prio.        AddNode("Stealth",  null, condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Sneaking; });
+                prio.        AddNode("Explore",  null, condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Exploration; });
+                followRadius.AddNode("Fighting", null, condition: () => { return fightingStates.Contains(DramaManager.CurrentStateEnum); });
+                followRadius.AddNode("Stealth",  null, condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Sneaking; });
+                followRadius.AddNode("Explore",  null, condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Exploration; });
+                maxDistance. AddNode("Fighting", null, condition: () => { return fightingStates.Contains(DramaManager.CurrentStateEnum); });
+                maxDistance. AddNode("Stealth",  null, condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Sneaking; });
+                maxDistance. AddNode("Explore",  null, condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Exploration; });
 
                 catagoryNodes["Fighting"] = AddCatagoryNode("Fighting");
                 catagoryNodes["Stealth"] = AddCatagoryNode("Stealth");
@@ -506,10 +507,22 @@ namespace ZombieTweak2.zMenu
                 {
                     if (!FollowActionPatch.myFollowSettingsOverides.ContainsKey(state))
                         continue;
-
-                    prio.AddOverride(state.ToString(), null, 2, () => { return DramaManager.CurrentStateEnum == state; });
-                    followRadius.AddOverride(state.ToString(), null, 2, () => { return DramaManager.CurrentStateEnum == state; });
-                    maxDistance.AddOverride(state.ToString(), null, 2, () => { return DramaManager.CurrentStateEnum == state; });
+                    string parentNode = "Default";
+                    switch (state)
+                    {
+                        case DRAMA_State.Sneaking:
+                            parentNode = "Stealth";
+                            break;
+                        case DRAMA_State.Exploration:
+                            parentNode = "Explore";
+                            break;
+                        case var s when fightingStates.Contains(s):
+                            parentNode = "Fighting";
+                            break;
+                    }
+                    prio.AddNode(state.ToString(), null, parentNode, () => { return DramaManager.CurrentStateEnum == state; });
+                    followRadius.AddNode(state.ToString(), null, parentNode, () => { return DramaManager.CurrentStateEnum == state; });
+                    maxDistance.AddNode(state.ToString(), null, parentNode, () => { return DramaManager.CurrentStateEnum == state; });
 
                     var stateNode = followMenu.AddNode(state.ToString());
                     stateNodes[state] = stateNode;
@@ -522,6 +535,7 @@ namespace ZombieTweak2.zMenu
                 }
                 followMenu.AddListener(zMenuManager.menuEvent.WhileOpened, UpdateHighlightedState);
                 followMenu.AddListener(zMenuManager.menuEvent.OnOpened, UpdateAllNodes);
+                followMenu.AddListener(zMenuManager.menuEvent.OnCatagoryChanged, UpdateAllNodes);
                 followMenu.centerNode.ClearListeners(zMenuManager.nodeEvent.OnUnpressedSelected);
                 followMenu.centerNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, ResetAllLocalSettings);
                 followMenu.centerNode.AddListener(zMenuManager.nodeEvent.OnTapped, followMenu.parrentMenu.Open);

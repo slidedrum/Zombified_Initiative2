@@ -65,6 +65,7 @@ namespace ZombieTweak2.zMenu
         private FlexibleEvent WhileSelected = new();
         private FlexibleEvent OnDeselected = new();
         private FlexibleEvent WhileDeselected = new();
+        private FlexibleEvent OnCatagoryChanged = new();
 
         //settings
         private Vector3 canvasScale = new Vector3(0.003f, 0.003f, 0.003f); //Really small because it's really close to the camera.
@@ -84,7 +85,8 @@ namespace ZombieTweak2.zMenu
                                     { zMenuManager.menuEvent.OnSelected, OnSelected },
                                     { zMenuManager.menuEvent.WhileSelected, WhileSelected },
                                     { zMenuManager.menuEvent.OnDeselected, OnDeselected },
-                                    { zMenuManager.menuEvent.WhileDeselected, WhileDeselected }};
+                                    { zMenuManager.menuEvent.WhileDeselected, WhileDeselected },
+                                    { zMenuManager.menuEvent.OnCatagoryChanged, OnCatagoryChanged }};
             name = arg_Name;
             gameObject = new GameObject($"zMenu {name}");
             gameObject.transform.SetParent(zMenuManager.menuParrent.transform);
@@ -118,7 +120,7 @@ namespace ZombieTweak2.zMenu
             if (catagoryIndex >= catagories.Count())
                 return;
             string catagory = catagories.Keys.ElementAt(catagoryIndex);
-            centerNode.SetSubtitle($"<color=#CC840066>[ </color>{catagory}<color=#CC840066> ]</color>");
+            centerNode.SetSubtitle($"<color=#00CC8466>[ </color>{catagory}<color=#00CC8466> ]</color>");
             if (catagory.ToLower() == "all")
             {
                 foreach (var node in nodes)
@@ -142,7 +144,7 @@ namespace ZombieTweak2.zMenu
                 ZiMain.log.LogError($"Invalid catagory: {catagory} in menu {centerNode.text}");
                 return;
             }
-            centerNode.SetSubtitle($"<color=#CC840066>[ </color>{catagory}<color=#CC840066> ]</color>");
+            centerNode.SetSubtitle($"<color=#00CC8466>[ </color>{catagory}<color=#00CC8466> ]</color>");
             if (catagory.ToLower() == "all")
             {
                 foreach (var node in nodes)
@@ -158,6 +160,7 @@ namespace ZombieTweak2.zMenu
                 else
                     DisableNode(node);
             }
+            OnCatagoryChanged.Invoke();
         }
         public void AddCatagory(string catagory)
         {

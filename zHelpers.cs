@@ -7,6 +7,7 @@ using System.Dynamic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
+using static Il2CppSystem.Linq.Expressions.Interpreter.CastInstruction.CastInstructionNoT;
 namespace ZombieTweak2
 {
     public static class zHelpers
@@ -233,164 +234,100 @@ namespace ZombieTweak2
         public static readonly object Value = new object();
     }
 #nullable enable
-    public class OverrideChain<T>
+    public class OverrideTree<T>
     {
-        private Dictionary<string, T?> Chain = new();
-        private Dictionary<string, Func<bool>?> Conditionals = new();
-        private Dictionary<string, int> priorities = new();
-        private OverrideChain<T>? parrentChain = null;
-        private OverrideChain<T>? childChain = null;
-        private bool AllowSameValueOveride = false;
-        public List<string> Keys => Chain.Keys.ToList();
-        public OverrideChain(OverrideChain<T> other)
+        public Dictionary<string, Node> nodes { get; private set; } = new(StringComparer.Ordinal); //For O(1) lookup, starting search in the middle of a tree
+        public Node rootNode { get; private set; }
+        public class Node
         {
-            if (other == null)
-                throw new ArgumentNullException(nameof(other));
-            this.Chain = new(other.Chain);
-            this.Conditionals = new(other.Conditionals);
-            this.priorities = new(other.priorities);
-            this.AllowSameValueOveride = other.AllowSameValueOveride;
+            public string Key { get; }
+            public T? Value { get; set; }
+            public Func<bool>? Condition { get; }
+            public bool IsRoot => Parent == null;
+            public Node? Parent { get; private set; }
+            public List<Node> Children { get; } = new();
+            internal Node(string key, T? value, Func<bool>? condition = null) //If you don't supply a parent, you MUST supply a value
+            {
+                Key = key;
+                Value = value;
+                Condition = condition;
+            }
+            internal Node(string key, Node parent, T? value = default, Func<bool>? condition = null) //If you supply a parent, you can opt to not supply a value
+            {
+                Key = key;
+                Value = value;
+                Condition = condition;
+                Parent = parent;
+            }
+            public T? GetValue(bool checkParent = false) //Traverse down the tree to get value
+            {
+                if (Value != null) return Value;
+                foreach (var node in Children)
+                {
+                    if (node.Condition != null && !node.Condition.Invoke())
+                        continue;
+                    var childValue = node.GetValue();
+                    if (childValue != null)
+                    {
+                        return childValue;
+                    }
+                }
+                if (checkParent)
+                    return ValueAt();
+                return default;
+            }
+            public T? ValueAt() //Traverse up the tree to get value
+            {
+                if (Value != null) return Value;
+                if (Parent == null)
+                    throw new InvalidOperationException("Root node has null value.");
+                return Parent.ValueAt();
+            }
+            public void SetValue(T? value)
+            {
+                Value = value;
+            }
         }
-        public OverrideChain(T variable, string key = "Default", Func<bool>? condition = null, bool sameValueOveride = false)
+        public OverrideTree(T rootValue, string rootKey = "Default")
         {
-            Chain[key] = variable;
-            priorities[key] = 0; //inital value is lowest priority
-            AllowSameValueOveride = sameValueOveride;
-            if (condition == null)
-                return;
-            Conditionals[key] = condition;
+            if (rootValue == null)
+                throw new ArgumentNullException(nameof(rootValue), "Initial value can not be null");
+            rootNode = new Node(rootKey, rootValue);
+            nodes[rootKey] = rootNode;
         }
-        public void AllowSameValue(bool sameValueOveride)
+        public Node AddNode(string key, T? value, string parent, Func<bool>? condition = null)
         {
-            AllowSameValueOveride = sameValueOveride;
+            if (!nodes.ContainsKey(parent))
+                throw new KeyNotFoundException(nameof(parent));
+            var parrentNode = nodes[parent];
+            return AddNode(key, value, parrentNode, condition);
         }
-        public OverrideChain<T>? CreateParentChain()
+        public Node AddNode(string key, T? value, Node? parent = null, Func<bool>? condition = null)
         {
-            if (parrentChain != null)
-                Console.WriteLine("Warning: overiding existing parrent chain");
-            OverrideChain<T> newChain = new OverrideChain<T>(this);
-            SetParrentChain(newChain);
-            newChain.SetChildChain(this);
-            return newChain;
-        }
-        public OverrideChain<T>? CreateChildChain()
-        {
-            OverrideChain<T> newChain = new OverrideChain<T>(this);
-            newChain.SetParrentChain(this);
-            SetChildChain(newChain);
-            return newChain;
-        }
-        public int Count()
-        {
-            return Chain.Count;
-        }
-        public OverrideChain<T>? RemoveChildChain()
-        {
-            if (childChain == null)
-                return null;
-            var ret = childChain;
-            childChain.RemoveParrentChain();
-            childChain = null;
-            return ret;
-        }
-        public OverrideChain<T>? RemoveParrentChain()
-        {
-            if (parrentChain == null)
-                return null;
-            var ret = parrentChain;
-            parrentChain.RemoveChildChain();
-            parrentChain = null;
-            return ret;
-        }
+            if (nodes.ContainsKey(key))
+                throw new InvalidOperationException($"Key '{key}' already in use.");
+            if (parent == null)
+                parent = rootNode;
+            if (!nodes.Values.Contains(parent))
+                throw new InvalidOperationException($"Parent '{parent.Key}' not found.");
 
-        public void SetParrentChain(OverrideChain<T> parent)
-        {
-            if (ReferenceEquals(parent, this))
-                throw new InvalidOperationException("A chain cannot be its own parent.");
-            parrentChain = parent;
-            if (parent.childChain != this)
-                parent.childChain = this;
+            var node = new Node(key, parent, value, condition);
+            parent.Children.Add(node);
+            nodes[key] = node;
+            return node;
         }
-        public void SetChildChain(OverrideChain<T> child)
+        internal T? SetValue(string key, T? value)
         {
-            if (ReferenceEquals(child, this))
-                throw new InvalidOperationException("A chain cannot be its own child.");
-            childChain = child;
-            if (child.parrentChain != this)
-                child.parrentChain = this;
+            if (!nodes.ContainsKey(key))
+                throw new KeyNotFoundException(nameof(key));
+            nodes[key].SetValue(value);
+            return GetValue(key);
         }
-        [Flags]
-        public enum PropagationDirection
+        internal T? GetValue(string key)
         {
-            None = 0,
-            Up = 1,
-            Down = 2,
-            Both = Up | Down
-        }
-        public void SetConditional(string key, Func<bool>? condition, PropagationDirection propagate = PropagationDirection.Both)
-        {
-            Conditionals[key] = condition;
-            if (propagate.HasFlag(PropagationDirection.Up))
-                parrentChain?.SetConditional(key, condition, PropagationDirection.Up);
-            if (propagate.HasFlag(PropagationDirection.Down))
-                childChain?.SetConditional(key, condition, PropagationDirection.Down);
-        }
-        public T? SetValue(string key, T? value)
-        {
-            Chain[key] = default;
-            if (AllowSameValueOveride || !object.Equals(GetValue(key), value))
-                Chain[key] = value;
-            return value;
-        }
-        public void RemoveOverride(string key)
-        {
-            Conditionals.Remove(key);
-            Chain.Remove(key);
-        }
-        public void AddOverride(string key, T? value, int priorityLevel, Func<bool>? condition = null)
-        {
-            var unconditionalValueAtPrio = priorities
-                .Where(kv => kv.Value == priorityLevel)
-                .Select(kv => kv.Key)
-                .Any(k => !Conditionals.ContainsKey(k));
-            if (condition == null && unconditionalValueAtPrio)
-                throw new InvalidOperationException($"Cannot add unconditional value '{key}' at priority {priorityLevel}, already exists.");
-            Chain[key] = value;
-            priorities[key] = priorityLevel;
-            if (condition != null)
-                Conditionals[key] = condition;
-        }
-        public T? GetValue(string? key = null)
-        {
-            int? keyPriority = null;
-            if (!string.IsNullOrEmpty(key))
-            {
-                keyPriority = priorities[key];
-                var value = ValueAt(key, true);
-                if (value != null)
-                    return value;
-            }
-            var orderedKeys = priorities
-                .Where(kv => !keyPriority.HasValue || kv.Value < keyPriority.Value)
-                .OrderByDescending(kv => kv.Value)
-                .Select(kv => kv.Key);
-            foreach (var orderedKey in orderedKeys)
-            {
-                var value = ValueAt(orderedKey, false);
-                if (value != null)
-                    return value;
-            }
-            return default;
-        }
-        public T? ValueAt(string key, bool ignoreConditionals = true)
-        {
-            if (string.IsNullOrEmpty(key))
-                throw new ArgumentNullException(nameof(key));
-            if (Chain.ContainsKey(key) && (ignoreConditionals || !Conditionals.TryGetValue(key, out var conditional) || conditional?.Invoke() == true))
-                return Chain[key];
-            if (parrentChain != null && parrentChain.Keys.Contains(key))
-                return parrentChain.ValueAt(key);
-            return default;
+            if (!nodes.ContainsKey(key))
+                throw new KeyNotFoundException(nameof(key));
+            return nodes[key].GetValue(true);
         }
     }
 }
