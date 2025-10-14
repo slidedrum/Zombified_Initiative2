@@ -562,29 +562,33 @@ namespace ZombieTweak2.zMenu
                 foreach ( var bot in allbots)
                 {
                     var data = zActions.GetOrCreateData(bot);
-                    var followAction = bot.m_rootAction.Cast<RootPlayerBotAction.Descriptor>().ActionBase.Cast<RootPlayerBotAction>().m_followLeaderAction.Cast<PlayerBotActionFollow.Descriptor>();
                     if (allowed)
                     {
-                        if (data.actualLeader == null)
+                        if (bot.SyncValues.Leader != bot.Agent)//Leader was changed to something else, don't revert
                         {
-                            ZiMain.log.LogWarning($"Follow leader for {bot.Agent.PlayerName} not found.  Reseting to local player");
+                            data.actualLeader = bot.SyncValues.Leader;
+                            continue; 
+                        }
+                        if (data.actualLeader == bot.Agent)
+                        {
+                            ZiMain.log.LogWarning($"Actual leader for {bot.Agent.PlayerName} got lost.  Reseting to local player");
                             data.actualLeader = PlayerManager.GetLocalPlayerAgent();
                         }
-                        followAction.Client = data.actualLeader;
+                        bot.SyncValues.Leader = data.actualLeader;
 
                     }
                     else
                     {
-                        if (followAction.Client == null)
+                        if (bot.SyncValues.Leader == bot.Agent)
                         {
                             ZiMain.log.LogWarning($"Follow leader for {bot.Agent.PlayerName} got lost.  Reseting to local player");
                             data.actualLeader = PlayerManager.GetLocalPlayerAgent();
                         }
                         else 
                         {
-                            data.actualLeader = followAction.Client; // Backup the real leader
+                            data.actualLeader = bot.SyncValues.Leader; // Backup the real leader
                         }
-                        followAction.Client = bot.Agent; // Set leader to itself
+                        bot.SyncValues.Leader = bot.Agent; // Set leader to itself
                     }
                 }
                 UpdateToggleStateColors();
