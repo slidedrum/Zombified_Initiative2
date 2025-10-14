@@ -5,7 +5,6 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using Zombified_Initiative;
-using static GameData.GD;
 
 namespace ZombieTweak2.zMenu
 {
@@ -74,7 +73,7 @@ namespace ZombieTweak2.zMenu
         private Color textColor = zMenuManager.defaultColor;
         private zMenuNode selectedNode;
         private RectTransform rect;
-
+        
         public zMenu(string arg_Name, zMenu arg_ParrentMenu = null)
         {
             eventMap = new Dictionary<zMenuManager.menuEvent, FlexibleEvent>(){ //I think all invokes are covered?  Might be missing one.

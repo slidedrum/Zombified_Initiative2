@@ -1,5 +1,6 @@
 ﻿using CollisionRundown.Features.HUDs;
 using GameData;
+using Il2CppSystem.Data;
 using Player;
 using System;
 using System.Collections.Generic;
@@ -462,9 +463,7 @@ namespace ZombieTweak2.zMenu
 
             internal static void Setup(zMenu menu)
             {
-                prio = new(14);
-                followRadius = new(7);
-                maxDistance = new(10);
+
 
                 defaultColor = menu.getTextColor();
                 currentStateColor = new(0f, 0.2f, 0f);
@@ -483,15 +482,22 @@ namespace ZombieTweak2.zMenu
                 fightingStates.Add(DRAMA_State.Encounter);
                 fightingStates.Add(DRAMA_State.IntentionalCombat);
                 fightingStates.Add(DRAMA_State.Alert);
-                prio.        AddNode("Fighting", null, condition: () => { return fightingStates.Contains(DramaManager.CurrentStateEnum); });
-                prio.        AddNode("Stealth",  null, condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Sneaking; });
-                prio.        AddNode("Explore",  null, condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Exploration; });
-                followRadius.AddNode("Fighting", null, condition: () => { return fightingStates.Contains(DramaManager.CurrentStateEnum); });
-                followRadius.AddNode("Stealth",  null, condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Sneaking; });
-                followRadius.AddNode("Explore",  null, condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Exploration; });
-                maxDistance. AddNode("Fighting", null, condition: () => { return fightingStates.Contains(DramaManager.CurrentStateEnum); });
-                maxDistance. AddNode("Stealth",  null, condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Sneaking; });
-                maxDistance. AddNode("Explore",  null, condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Exploration; });
+
+                prio = new(14);
+                followRadius = new(7);
+                maxDistance = new(10);
+                prio.        AddNode("Main",     null);
+                prio.        AddNode("Fighting", null, "Main", condition: () => { return fightingStates.Contains(DramaManager.CurrentStateEnum); });
+                prio.        AddNode("Stealth",  null, "Main", condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Sneaking; });
+                prio.        AddNode("Explore",  null, "Main", condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Exploration; });
+                followRadius.AddNode("Main",     null);
+                followRadius.AddNode("Fighting", null, "Main", condition: () => { return fightingStates.Contains(DramaManager.CurrentStateEnum); });
+                followRadius.AddNode("Stealth",  null, "Main", condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Sneaking; });
+                followRadius.AddNode("Explore",  null, "Main", condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Exploration; });
+                maxDistance. AddNode("Main",     null);
+                maxDistance. AddNode("Fighting", null, "Main", condition: () => { return fightingStates.Contains(DramaManager.CurrentStateEnum); });
+                maxDistance. AddNode("Stealth",  null, "Main", condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Sneaking; });
+                maxDistance. AddNode("Explore",  null, "Main", condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Exploration; });
 
                 catagoryNodes["Fighting"] = AddCatagoryNode("Fighting");
                 catagoryNodes["Stealth"] = AddCatagoryNode("Stealth");
@@ -507,7 +513,7 @@ namespace ZombieTweak2.zMenu
                 {
                     if (!FollowActionPatch.myFollowSettingsOverides.ContainsKey(state))
                         continue;
-                    string parentNode = "Default";
+                    string parentNode = "Main";
                     switch (state)
                     {
                         case DRAMA_State.Sneaking:
@@ -526,7 +532,7 @@ namespace ZombieTweak2.zMenu
 
                     var stateNode = followMenu.AddNode(state.ToString());
                     stateNodes[state] = stateNode;
-                    UpdateStateNode(state);
+                    UpdateNodeSettingsDisplay(stateNode);
                     stateNode.titlePart.SetScale(0.5f);
                     stateNode.subtitlePart.SetScale(0.5f);
                     stateNode.AddListener(zMenuManager.nodeEvent.WhileSelected, UpdateStateNodeBasedOnScroll, state);
@@ -544,7 +550,8 @@ namespace ZombieTweak2.zMenu
                 followMenuNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, ResetSettings);
                 followMenuNode.AddListener(zMenuManager.nodeEvent.OnTapped, followMenu.Open);
                 followMenu.radius = 30f;
-                UpdateMainNode();
+                //UpdateMainNode();
+                UpdateNodeSettingsDisplay(followMenuNode);
                 followMenu.SetCatagory("Basic");
             }
             private static zMenuNode AddCatagoryNode(string catagory)
@@ -559,10 +566,10 @@ namespace ZombieTweak2.zMenu
             private static void ResetSettings()
             {
                 FollowActionPatch.followerSettings = new();
-                prio.SetValue("Default", 14);
-                followRadius.SetValue("Default", 7);
-                maxDistance.SetValue("Default", 10);
-                UpdateMainNode();
+                prio.SetValue("Main", null);
+                followRadius.SetValue("Main", null);
+                maxDistance.SetValue("Main", null);
+                UpdateNodeSettingsDisplay(followMenuNode);
             }
             private static void ResetAllLocalSettings()
             {
@@ -578,7 +585,7 @@ namespace ZombieTweak2.zMenu
                 prio.SetValue(catagory, null);
                 followRadius.SetValue(catagory, null);
                 maxDistance.SetValue(catagory, null);
-                UpdateCatagoryNode(catagory);
+                UpdateNodeSettingsDisplay(followMenu.GetNode(catagory));
             }
             private static void ResetStateSettings(DRAMA_State state)
             {
@@ -591,24 +598,47 @@ namespace ZombieTweak2.zMenu
                     var data = zActions.GetOrCreateData(bot);
                     data.followSettingsOverides.Remove(state);
                 }
-                UpdateStateNode(state);
+                UpdateNodeSettingsDisplay(followMenu.GetNode(state.ToString()));
             }
-            private static void UpdateHighlightedState()
+            private static void UpdateHighlightedState(bool breakOnSameState = true)
             {
-                if (previousState == DramaManager.CurrentStateEnum)
+                if (breakOnSameState && previousState == DramaManager.CurrentStateEnum)
                     return;
-                if (stateNodes.ContainsKey(DramaManager.CurrentStateEnum))
+                if (followMenu.currentCatagoryName == "Advanced")
                 {
-                    if (stateNodes.ContainsKey(previousState))
+                    if (stateNodes.ContainsKey(DramaManager.CurrentStateEnum))
+                    {
+                        if (stateNodes.ContainsKey(previousState))
+                            stateNodes[previousState].SetColor(defaultColor);
+                        stateNodes[DramaManager.CurrentStateEnum].SetColor(currentStateColor);
+                    }
+                    else if (stateNodes.ContainsKey(previousState))
+                    {
                         stateNodes[previousState].SetColor(defaultColor);
-                    stateNodes[DramaManager.CurrentStateEnum].SetColor(currentStateColor);
+                    }
                 }
-                else if (stateNodes.ContainsKey(previousState))
+                if (followMenu.currentCatagoryName == "Advanced")
                 {
-                    stateNodes[previousState].SetColor(defaultColor);
+                    switch (DramaManager.CurrentStateEnum)
+                    {
+                        case DRAMA_State.Sneaking:
+                            catagoryNodes["Stealth"].SetColor(currentStateColor);
+                            catagoryNodes["Fighting"].SetColor(defaultColor);
+                            catagoryNodes["Explore"].SetColor(defaultColor);
+                            break;
+                        case DRAMA_State.Exploration:
+                            catagoryNodes["Stealth"].SetColor(defaultColor);
+                            catagoryNodes["Fighting"].SetColor(defaultColor);
+                            catagoryNodes["Explore"].SetColor(currentStateColor);
+                            break;
+                        case var s when fightingStates.Contains(s):
+                            catagoryNodes["Stealth"].SetColor(defaultColor);
+                            catagoryNodes["Fighting"].SetColor(currentStateColor);
+                            catagoryNodes["Explore"].SetColor(defaultColor);
+                            break;
+                    }
                 }
                 previousState = DramaManager.CurrentStateEnum;
-
             }
             private static void UpdateMainNodeBasedOnScroll()
             {
@@ -621,39 +651,24 @@ namespace ZombieTweak2.zMenu
                 pos = new Vector2(pos.x - 0.5f, pos.y - 0.5f) * -1;
                 if (pos.y > Math.Abs(pos.x)) // TOP
                 {
-                    FollowActionPatch.followerSettings.prio = (int)prio.SetValue("Default", Math.Clamp((int)prio.GetValue("Default") + normalizedScroll, 1, 15));
+                    FollowActionPatch.followerSettings.prio = (int)prio.SetValue("Main", Math.Clamp((int)prio.GetValue("Main") + normalizedScroll, 1, 15));
                 }
                 else if (pos.x > 0) // RIGHT
                 {
-                    FollowActionPatch.followerSettings.followLeaderMaxDistance = (int)maxDistance.SetValue("Default", Math.Clamp((int)maxDistance.GetValue("Default") + normalizedScroll, (int)followRadius.GetValue("Default"), 60));
+                    FollowActionPatch.followerSettings.followLeaderMaxDistance = (int)maxDistance.SetValue("Main", Math.Clamp((int)maxDistance.GetValue("Main") + normalizedScroll, (int)followRadius.GetValue("Main"), 60));
                 }
                 else // LEFT
                 {
-                    FollowActionPatch.followerSettings.followLeaderRadius = (int)followRadius.SetValue("Default", Math.Clamp((int)followRadius.GetValue("Default") + normalizedScroll, 1, (int)maxDistance.GetValue("Default")));
+                    FollowActionPatch.followerSettings.followLeaderRadius = (int)followRadius.SetValue("Main", Math.Clamp((int)followRadius.GetValue("Main") + normalizedScroll, 1, (int)maxDistance.GetValue("Main")));
                 }
                 foreach (var agent in zSearch.GetAllBotAgents())
                 {
                     var data = zActions.GetOrCreateData(agent);
                     data.followSettingsOverides = FollowActionPatch.followSettingsOverides;
                 }
-                UpdateMainNode();
+                UpdateNodeSettingsDisplay(node);
             }
-            private static void UpdateMainNode()
-            {
-                var node = followMenuNode;
-                if (!FollowActionPatch.followerSettings.Equals(FollowActionPatch.defaultFollowSettings))
-                {
-                    node.SetPrefix("* ");
-                    node.SetSuffix(" *");
-                }
-                else
-                {
-                    node.SetPrefix("");
-                    node.SetSuffix("");
-                }
-                node.SetTitle($"Prio <color=#CC840066>[</color>{FollowActionPatch.followerSettings.prio}<color=#CC840066>]</color>");
-                node.SetSubtitle($"Range <color=#CC840066>[</color>{FollowActionPatch.followerSettings.followLeaderRadius}/{FollowActionPatch.followerSettings.followLeaderMaxDistance}<color=#CC840066>]</color>");
-            }
+
             private static void UpdateCatagoryNodeBasedOnScroll(string catagory)
             {
                 float scroll = Input.GetAxis("Mouse ScrollWheel");
@@ -680,7 +695,7 @@ namespace ZombieTweak2.zMenu
                     var data = zActions.GetOrCreateData(agent);
                     data.followSettingsOverides = FollowActionPatch.followSettingsOverides;
                 }
-                UpdateCatagoryNode(catagory);
+                UpdateNodeSettingsDisplay(node);
             }
             private static void UpdateStateNodeBasedOnScroll(DRAMA_State state)
             {
@@ -708,23 +723,25 @@ namespace ZombieTweak2.zMenu
                     var data = zActions.GetOrCreateData(agent);
                     data.followSettingsOverides = FollowActionPatch.followSettingsOverides;
                 }
-                UpdateStateNode(state);
+                UpdateNodeSettingsDisplay(node);
             }
             private static void UpdateAllNodes()
             {
-                foreach(var state in stateNodes.Keys)
+                foreach(var Node in stateNodes.Values)
                 {
-                    UpdateStateNode(state);
+                    UpdateNodeSettingsDisplay(Node);
                 }
-                foreach (var catagory in catagoryNodes.Keys)
+                foreach (var node in catagoryNodes.Values)
                 {
-                    UpdateCatagoryNode(catagory);
+                    UpdateNodeSettingsDisplay(node);
                 }
             }
-            private static void UpdateCatagoryNode(string catagory)
+            private static void UpdateNodeSettingsDisplay(zMenuNode node)
             {
-                var node = followMenu.GetNode(catagory);
-                if (prio.GetValue("Default") == prio.GetValue(catagory) && followRadius.GetValue("Default") == followRadius.GetValue(catagory) && maxDistance.GetValue("Default") == maxDistance.GetValue(catagory))
+                string text = node.text;
+                if (node == followMenuNode)
+                    text = "Main";
+                if (prio.nodes[text].Parent.GetValue(true) == prio.GetValue(text) && followRadius.nodes[text].Parent.GetValue(true) == followRadius.GetValue(text) && maxDistance.nodes[text].Parent.GetValue(true) == maxDistance.GetValue(text)) //Holy shit this is a mess, TODO clean this.
                 {
                     node.SetPrefix("");
                     node.SetSuffix("");
@@ -734,24 +751,8 @@ namespace ZombieTweak2.zMenu
                     node.SetPrefix("* ");
                     node.SetSuffix(" *");
                 }
-                node.SetTitle($"Prio <color=#CC840066>[</color>{prio.GetValue(catagory)}<color=#CC840066>]</color>"); //Holy shit this is a mess, TODO clean this.
-                node.SetSubtitle($"Range <color=#CC840066>[</color>{followRadius.GetValue(catagory)}/{maxDistance.GetValue(catagory)}<color=#CC840066>]</color>");
-            }
-            private static void UpdateStateNode(DRAMA_State state)
-            {
-                var node = stateNodes[state];
-                if (prio.GetValue("Default") == prio.GetValue(state.ToString()) && followRadius.GetValue("Default") == followRadius.GetValue(state.ToString()) && maxDistance.GetValue("Default") == maxDistance.GetValue(state.ToString()))
-                {
-                    node.SetPrefix("");
-                    node.SetSuffix("");
-                }
-                else
-                {
-                    node.SetPrefix("* ");
-                    node.SetSuffix(" *");
-                }
-                node.SetTitle($"Prio <color=#CC840066>[</color>{prio.GetValue(state.ToString())}<color=#CC840066>]</color>"); //Holy shit this is a mess, TODO clean this.
-                node.SetSubtitle($"Range <color=#CC840066>[</color>{followRadius.GetValue(state.ToString())}/{maxDistance.GetValue(state.ToString())}<color=#CC840066>]</color>");
+                node.SetTitle($"Prio <color=#CC840066>[</color>{prio.GetValue(text)}<color=#CC840066>]</color>"); 
+                node.SetSubtitle($"Range <color=#CC840066>[</color>{followRadius.GetValue(text)}/{maxDistance.GetValue(text)}<color=#CC840066>]</color>");
             }
         }
     }
