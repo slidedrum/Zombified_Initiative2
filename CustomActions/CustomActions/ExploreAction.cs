@@ -178,7 +178,7 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
         public override bool Update()
         {
             base.Update();
-            if (!GetExplorePerm(m_bot) && !DescBase.IsCompleted())
+            if (!GetExplorePerm(m_bot) && !customDescBase.IsCompleted())
             {
                 Stop();
             }
@@ -201,9 +201,9 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
                     if (!positionAllowed || 
                         UnexploredNode == null || 
                         (RootPlayerBotAction.s_followLeaderRadius < distance && //Too far
-                          followPrio > DescBase.Prio && customDescBase.respectFollowDistance))// and too important
+                          followPrio > customDescBase.Prio && customDescBase.respectFollowDistance))// and too important
                     {
-                        DescBase.SetCompletionStatus(PlayerBotActionBase.Descriptor.StatusType.Successful);
+                        customDescBase.SetCompletionStatus(PlayerBotActionBase.Descriptor.StatusType.Successful);
                         state = StateEnum.Finished;
                         return false;
                     }
@@ -241,11 +241,18 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
             }
             else if (state == StateEnum.Finished)
             {
-                if (travelAction.Status == PlayerBotActionBase.Descriptor.StatusType.Successful)
-                    ZiMain.sendChatMessage("I have looked everywhere!");
-                if (travelAction.Status == PlayerBotActionBase.Descriptor.StatusType.Active)
-                    ZiMain.log.LogWarning("Travel action still active somehow.");
-                DescBase.SetCompletionStatus(travelAction.Status);
+                if (travelAction != null)
+                {
+                    if (travelAction.Status == PlayerBotActionBase.Descriptor.StatusType.Successful)
+                        ZiMain.sendChatMessage("I have looked everywhere!");
+                    if (travelAction.Status == PlayerBotActionBase.Descriptor.StatusType.Active)
+                        ZiMain.log.LogWarning("Travel action still active somehow.");
+                    customDescBase.SetCompletionStatus(travelAction.Status);
+                }
+                else
+                {
+                    customDescBase.SetCompletionStatus(PlayerBotActionBase.Descriptor.StatusType.Stopped);
+                }
                 Stop();
                 return true;
             }
@@ -253,14 +260,16 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
             {
                 if (customDescBase.stopOnEnemyFound && HasFoundEnemies())
                 {
-                    m_bot.StopAction(travelAction);
                     state = StateEnum.Finished;
+                    if (travelAction != null)
+                        m_bot.StopAction(travelAction);
                     return false;
                 }
                 if (UnexploredNode != null && UnexploredNode.discovered)
                 {
-                    m_bot.StopAction(travelAction);
                     state = StateEnum.lookingForUnexplored;
+                    if (travelAction != null)
+                        m_bot.StopAction(travelAction);
                     return false;
                 }
             }
@@ -319,7 +328,7 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
             if (travelAction != null && !travelAction.IsTerminated())
                 m_bot.StopAction(travelAction);
             state = StateEnum.Finished;
-            DescBase.SetCompletionStatus(PlayerBotActionBase.Descriptor.StatusType.Stopped);
+            customDescBase.SetCompletionStatus(PlayerBotActionBase.Descriptor.StatusType.Stopped);
         }
         public enum StateEnum
         {
