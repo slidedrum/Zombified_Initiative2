@@ -148,6 +148,13 @@ namespace ZombieTweak2.zMenu
                         else if (zSearch.GetClosestObjectInLookDirection(mainCamera.transform, nodeList, nodeAngleTollerance * menuSizeScaler * 2) == null) //close if we're not looking near a node with a wider tolerance.
                             CloseAllMenues();
                     }
+                    if (Input.GetKeyDown(KeyCode.Escape))
+                    {
+                        if (currentMenu.parrentMenu == null)
+                            currentMenu.Close();
+                        else
+                            currentMenu.parrentMenu.Open();
+                    }
                 }
                 else if (FocusStateManager.CurrentState == eFocusState.FPS_CommunicationDialog && menuWasOpen)
                 {
