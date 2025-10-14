@@ -255,9 +255,9 @@ namespace ZombieTweak2
                 Condition = condition;
                 Parent = parent;
             }
-            public T? GetValue(bool checkParent = false) //Traverse down the tree to get value
+            public T? GetValue() //Traverse down the tree to get deepest value
             {
-                if (Value != null) return Value;
+                T? ret = ValueAt();
                 foreach (var node in Children)
                 {
                     if (node.Condition != null && !node.Condition.Invoke())
@@ -265,14 +265,29 @@ namespace ZombieTweak2
                     var childValue = node.GetValue();
                     if (childValue != null)
                     {
-                        return childValue;
+                        ret = childValue;
                     }
                 }
-                if (checkParent)
-                    return ValueAt();
-                return default;
+                return ret;
             }
-            public T? ValueAt() //Traverse up the tree to get value
+            //public T? GetValue(bool checkParent = false) //Traverse down the tree to get value
+            //{
+            //    if (Value != null) return Value;
+            //    foreach (var node in Children)
+            //    {
+            //        if (node.Condition != null && !node.Condition.Invoke())
+            //            continue;
+            //        var childValue = node.GetValue();
+            //        if (childValue != null)
+            //        {
+            //            return childValue;
+            //        }
+            //    }
+            //    if (checkParent)
+            //        return ValueAt();
+            //    return default;
+            //}
+            public T? ValueAt() //Traverse up the tree to get value at given node
             {
                 if (Value != null) return Value;
                 if (Parent == null)
@@ -317,15 +332,11 @@ namespace ZombieTweak2
             if (!nodes.ContainsKey(key))
                 throw new KeyNotFoundException(nameof(key));
             nodes[key].SetValue(value);
-            return GetValue(key);
+            return ValueAt(key);
         }
-        public T? GetValue(string? key = null)
+        public T? GetValue()
         {
-            if (string.IsNullOrEmpty(key))
-                key = "Default";
-            if (!nodes.ContainsKey(key))
-                throw new KeyNotFoundException(nameof(key));
-            return nodes[key].GetValue(true);
+            return rootNode.GetValue();
         }
         public T? ValueAt(string key)
         {

@@ -459,6 +459,7 @@ namespace ZombieTweak2.zMenu
             public static OverrideTree<int?> prio = new(14);
             public static OverrideTree<int?> followRadius = new(7);
             public static OverrideTree<int?> maxDistance = new(10);
+            public static OverrideTree<bool?> followEnabled = new(true);
             private static List<DRAMA_State> fightingStates = new();
             private static List<DRAMA_State> ignoredStates = new();
 
@@ -483,6 +484,8 @@ namespace ZombieTweak2.zMenu
                 prio = new(14);
                 followRadius = new(7);
                 maxDistance = new(10);
+                followEnabled = new(true);
+                followEnabled.AddNode("Main", true);
                 prio.        AddNode("Follow",     null);
                 prio.        AddNode("Fighting", null, "Follow", condition: () => { return fightingStates.Contains(DramaManager.CurrentStateEnum); });
                 prio.        AddNode("Stealth",  null, "Follow", condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Sneaking; });
@@ -554,7 +557,50 @@ namespace ZombieTweak2.zMenu
 
             private static void ToggleFollowEnabled()
             {
-                
+                bool allowed = (bool)followEnabled.SetValue("Main", !(bool)followEnabled.GetValue()); // Invert value
+                var allbots = ZiMain.GetBotList();
+                foreach ( var bot in allbots)
+                {
+                    var data = zActions.GetOrCreateData(bot);
+                    var followAction = bot.m_rootAction.Cast<RootPlayerBotAction.Descriptor>().ActionBase.Cast<RootPlayerBotAction>().m_followLeaderAction.Cast<PlayerBotActionFollow.Descriptor>();
+                    if (allowed)
+                    {
+                        if (data.actualLeader == null)
+                        {
+                            ZiMain.log.LogWarning($"Follow leader for {bot.Agent.PlayerName} not found.  Reseting to local player");
+                            data.actualLeader = PlayerManager.GetLocalPlayerAgent();
+                        }
+                        followAction.Client = data.actualLeader;
+
+                    }
+                    else
+                    {
+                        if (followAction.Client == null)
+                        {
+                            ZiMain.log.LogWarning($"Follow leader for {bot.Agent.PlayerName} got lost.  Reseting to local player");
+                            data.actualLeader = PlayerManager.GetLocalPlayerAgent();
+                        }
+                        else 
+                        {
+                            data.actualLeader = followAction.Client; // Backup the real leader
+                        }
+                        followAction.Client = bot.Agent; // Set leader to itself
+                    }
+                }
+                UpdateToggleStateColors();
+            }
+            private static void UpdateToggleStateColors()
+            {
+                if ((bool)followEnabled.GetValue())
+                {
+                    followMenuNode.SetColor(zMenuManager.defaultColor);
+                    followMenu.centerNode.SetColor(zMenuManager.defaultColor);
+                }
+                else
+                {
+                    followMenuNode.SetColor(new Color(0.25f, 0f, 0f));
+                    followMenu.centerNode.SetColor(new Color(0.25f, 0f, 0f));
+                }
             }
 
             private static zMenuNode AddCatagoryNode(string catagory)
@@ -630,15 +676,15 @@ namespace ZombieTweak2.zMenu
                 pos = new Vector2(pos.x - 0.5f, pos.y - 0.5f) * -1;
                 if (pos.y > Math.Abs(pos.x)) // TOP
                 {
-                    prio.SetValue(text, Math.Clamp((int)prio.GetValue(text) + normalizedScroll, 1, 15));
+                    prio.SetValue(text, Math.Clamp((int)prio.ValueAt(text) + normalizedScroll, 1, 15));
                 }
                 else if (pos.x > 0) // RIGHT
                 {
-                    maxDistance.SetValue(text, Math.Clamp((int)maxDistance.GetValue(text) + normalizedScroll, (int)followRadius.GetValue(text), 60));
+                    maxDistance.SetValue(text, Math.Clamp((int)maxDistance.ValueAt(text) + normalizedScroll, (int)followRadius.ValueAt(text), 60));
                 }
                 else // LEFT
                 {
-                    followRadius.SetValue(text, Math.Clamp((int)followRadius.GetValue(text) + normalizedScroll, 1, (int)maxDistance.GetValue(text)));
+                    followRadius.SetValue(text, Math.Clamp((int)followRadius.ValueAt(text) + normalizedScroll, 1, (int)maxDistance.ValueAt(text)));
                 }
                 UpdateNodeSettingsDisplay(node);
             }
@@ -648,10 +694,6 @@ namespace ZombieTweak2.zMenu
                 {
                     UpdateNodeSettingsDisplay(Node);
                 }
-                //foreach (var node in catagoryNodes.Values)
-                //{
-                //    UpdateNodeSettingsDisplay(node);
-                //}
             }
             private static void UpdateNodeSettingsDisplay(zMenuNode node)
             {

@@ -68,6 +68,7 @@ namespace ZombieTweak2.CustomActions.Patches
             data.bestAction = null;
 
             //TODO set up parralell overideTrees for each bot
+            //TODO if this gets called every frame, maybe cache the values untill something changes in overide tree
             __instance.         m_followLeaderAction.Prio =         (float)AutomaticActionMenuClass.FollowMenuClass.prio.GetValue();
             RootPlayerBotAction.m_prioSettings.FollowLeaderRadius = (float)AutomaticActionMenuClass.FollowMenuClass.followRadius.GetValue();
             RootPlayerBotAction.s_followLeaderRadius =              (float)AutomaticActionMenuClass.FollowMenuClass.followRadius.GetValue();
