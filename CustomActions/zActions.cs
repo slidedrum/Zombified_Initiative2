@@ -1,8 +1,5 @@
 ﻿using Player;
-using System;
 using System.Collections.Generic;
-using Zombified_Initiative;
-using static ZombieTweak2.zRootBotPlayerAction.Patches.RootPlayerBotActionPatch;
 
 namespace ZombieTweak2.zRootBotPlayerAction
 {
@@ -13,7 +10,6 @@ namespace ZombieTweak2.zRootBotPlayerAction
         public bool consideringActions = false;
         public bool consideringCollectItem = false;
         public PlayerAgent actualLeader = null;
-        public Dictionary<DRAMA_State, ZombieTweak2.CustomActions.Patches.FollowActionPatch.followSetting> followSettingsOverides = new();
         public Il2CppSystem.Collections.Generic.List<PlayerBotActionBase> m_actions { get; set; } = new();
         public Il2CppSystem.Collections.Generic.List<PlayerBotActionBase.Descriptor> m_queuedActions { get; set; } = new();
     }

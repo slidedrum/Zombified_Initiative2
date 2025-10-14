@@ -1,13 +1,9 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Dynamic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
-using static Il2CppSystem.Linq.Expressions.Interpreter.CastInstruction.CastInstructionNoT;
 namespace ZombieTweak2
 {
     public static class zHelpers
@@ -316,18 +312,26 @@ namespace ZombieTweak2
             nodes[key] = node;
             return node;
         }
-        internal T? SetValue(string key, T? value)
+        public T? SetValue(string key, T? value)
         {
             if (!nodes.ContainsKey(key))
                 throw new KeyNotFoundException(nameof(key));
             nodes[key].SetValue(value);
             return GetValue(key);
         }
-        internal T? GetValue(string key)
+        public T? GetValue(string? key = null)
         {
+            if (string.IsNullOrEmpty(key))
+                key = "Default";
             if (!nodes.ContainsKey(key))
                 throw new KeyNotFoundException(nameof(key));
             return nodes[key].GetValue(true);
+        }
+        public T? ValueAt(string key)
+        {
+            if (!nodes.ContainsKey(key))
+                throw new KeyNotFoundException(nameof(key));
+            return nodes[key].ValueAt();
         }
     }
 }
