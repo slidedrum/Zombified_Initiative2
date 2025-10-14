@@ -46,9 +46,16 @@ namespace ZombieTweak2.zMenu
         public Vector3 RelativePosition = Vector3.zero;
 
         private Dictionary<zMenuManager.menuEvent, FlexibleEvent> eventMap;
-        internal Dictionary<string, List<zMenuNode>> catagories = new();
+        public Dictionary<string, List<zMenuNode>> catagories = new();
+        public List<zMenuNode> currentCatagory 
+        { 
+            get 
+            {
+                return catagories[currentCatagoryName];
+            } 
+        }
         private int catagoryIndex = 0;
-        public string currentCatagoryName 
+        public string currentCatagoryName
         { 
             get 
             {
