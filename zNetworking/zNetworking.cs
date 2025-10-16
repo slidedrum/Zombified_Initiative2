@@ -235,7 +235,6 @@ namespace ZombieTweak2.zNetworking
             PlayerAIBot aiBot = sender.gameObject.GetComponent<PlayerAIBot>();
             ZiMain.SendBotToShareResourcePack(aiBot, receiver, commander, netSender);
         }
-
         internal static void ReciveRequestToKillEnemy(ulong netSender, pStructs.pAttackEnemyInfo info)
         {
             ZiMain.log.LogInfo("Recived request to kill enemy!");
@@ -258,6 +257,13 @@ namespace ZombieTweak2.zNetworking
             }
             PlayerAIBot aiBot = aiBotAgent.gameObject.GetComponent<PlayerAIBot>();
             ZiMain.SendBotToKillEnemy(aiBot, enemy, commander, netSender);
+        }
+        internal static void ReciveRequestToChangeFollowAction(ulong netSender, pStructs.pFollowActionInfo info)
+        {
+            ZiMain.log.LogInfo("Recived request to update follow action settings!");
+            if (!SNet.IsMaster)
+                return;
+            
         }
     }
 }

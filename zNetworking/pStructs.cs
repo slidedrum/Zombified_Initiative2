@@ -126,5 +126,11 @@ namespace ZombieTweak2.zNetworking
             public pPlayerAgent receiver;
             public pPlayerAgent commander;
         }
+        internal struct pFollowActionInfo
+        {
+            public float prio;
+            public float radius;
+            public float maxRadius;
+        }
     }
 }

@@ -1,17 +1,14 @@
 ﻿using CollisionRundown.Features.HUDs;
 using GameData;
-using Il2CppSystem.Data;
 using Player;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using UnityEngine;
 using ZombieTweak2.CustomActions.Patches;
 using ZombieTweak2.zRootBotPlayerAction;
 using ZombieTweak2.zRootBotPlayerAction.CustomActions;
 using Zombified_Initiative;
-using static FluffyUnderware.DevTools.ConditionalAttribute;
 using static ZombieTweak2.zMenu.zMenu;
 
 namespace ZombieTweak2.zMenu
@@ -19,8 +16,6 @@ namespace ZombieTweak2.zMenu
     public static class zMenus
     {
         //This is the class that actually creates the menue instances
-        //This is spesific to ZI
-        //Very unfinished atm
         public static List<zMenu> botMenus;
         private static string endcolor = "</color>";
         private static string enabledColor = "<color=#FFA50066>";
@@ -34,35 +29,6 @@ namespace ZombieTweak2.zMenu
             SettingsMenuClass.Setup(zMenuManager.createMenu("Settings", zMenuManager.mainMenu));
             zMenuManager.createMenu("Voice menu", zMenuManager.mainMenu);
             DebugMenuClass.Setup(zMenuManager.createMenu("Debug", zMenuManager.mainMenu));
-        }
-        [Obsolete]
-        public static zMenu.zMenuNode UpdateIndicatorForNode(zMenu.zMenuNode node, Dictionary<int, bool> selectionPickUpPerms)
-        {
-            ZiMain.log.LogInfo($"Updatin selections for node {node.text}");
-            
-            string sbSubtitle = "[";
-            var last = selectionPickUpPerms.Last();
-            foreach (var bot in selectionPickUpPerms)
-            {
-                if (bot.Value)
-                    sbSubtitle += enabledColor;
-                else
-                    sbSubtitle += disabledColor;
-                PlayerAgent agent;
-                int id = bot.Key;
-                PlayerManager.TryGetPlayerAgent(ref id, out agent);
-                string name = agent.PlayerName;
-                name = Regex.Replace(name, "<[^>]+>", "");
-                sbSubtitle += name[0];
-                sbSubtitle += endcolor;
-                if (bot.Key != last.Key)
-                    sbSubtitle += ',';
-                else
-                    sbSubtitle += ']';
-            }
-            node.subtitle = sbSubtitle;
-            node.subtitlePart.SetScale(0.5f, 0.5f);
-            return node;
         }
     }
     public static class ManualActionMenuClass
@@ -139,10 +105,6 @@ namespace ZombieTweak2.zMenu
             AutoActionMenu.AddNodeToCatagory("Resources", "Share");
             AutoActionMenu.SetCatagory("Favorites");
             
-        }
-        private static void SetSubtitle(String subtitle)
-        {
-            AutoActionMenu.centerNode.SetSubtitle($"<color=#CC840066>[ </color>{subtitle}<color=#CC840066> ]</color>");
         }
         public static class PickupMenuClass
         {
@@ -554,7 +516,6 @@ namespace ZombieTweak2.zMenu
                 UpdateNodeSettingsDisplay(followMenuNode);
                 followMenu.SetCatagory("Basic");
             }
-
             private static void ToggleFollowEnabled()
             {
                 bool allowed = (bool)followEnabled.SetValue("Main", !(bool)followEnabled.GetValue()); // Invert value
@@ -606,7 +567,6 @@ namespace ZombieTweak2.zMenu
                     followMenu.centerNode.SetColor(new Color(0.25f, 0f, 0f));
                 }
             }
-
             private static zMenuNode AddCatagoryNode(string catagory)
             {
                 var catagoryNode = followMenu.AddNode(catagory);
