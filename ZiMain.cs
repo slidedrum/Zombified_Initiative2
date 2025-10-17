@@ -15,10 +15,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using ZombieTweak2;
-using ZombieTweak2.zMenu;
 using ZombieTweak2.zNetworking;
 using ZombieTweak2.zRootBotPlayerAction;
 using static ZombieTweak2.zNetworking.pStructs;
+using SlideMenu;
 
 /*
  == TODO == Priority: Clean up the mess I made creating custom actions.
@@ -167,16 +167,16 @@ public class ZiMain : BasePlugin
         EventAPI.OnManagersSetup += () =>
         {
             zUpdater.CreateInstance();
-            zUpdater.onUpdate.Listen(zMenuManager.Update);
+            zUpdater.onUpdate.Listen(sMenuManager.Update);
             zUpdater.onUpdate.Listen(zSmartSelect.Update);
             zUpdater.onUpdate.Listen(zActionSub.Update);
             zUpdater.onUpdate.Listen(zSearch.Update);
             zUpdater.onUpdate.Listen(zDebug.debugUpdate);
             zUpdater.onUpdate.Listen(zVisitedManager.Update);
-            zUpdater.onLateUpdate.Listen(zMenuManager.LateUpdate);
+            zUpdater.onLateUpdate.Listen(sMenuManager.LateUpdate);
         };
         LG_Factory.add_OnFactoryBuildDone((Action)zSlideComputer.Init);
-        LG_Factory.add_OnFactoryBuildDone((Action)zMenuManager.SetupCamera);
+        LG_Factory.add_OnFactoryBuildDone((Action)sMenuManager.SetupCamera);
         LG_Factory.add_OnFactoryBuildDone((Action)zMenus.CreateMenus);
 
     }
@@ -501,7 +501,7 @@ public class ZiMain : BasePlugin
             Haste = haste,
         };
         PlayerVoiceManager.WantToSay(commander.CharacterID, AK.EVENTS.PLAY_CL_GRABTHEITEM);
-        FlexibleMethodDefinition barkback = new FlexibleMethodDefinition(PlayerVoiceManager.WantToSay, [aiBot.Agent.CharacterID, AK.EVENTS.PLAY_CL_WILLDO]);
+        ZombieTweak2.FlexibleMethodDefinition barkback = new ZombieTweak2.FlexibleMethodDefinition(PlayerVoiceManager.WantToSay, [aiBot.Agent.CharacterID, AK.EVENTS.PLAY_CL_WILLDO]);
         zUpdater.InvokeStatic(barkback, 1f);
         sendChatMessage($"Picking up {item.PublicName}",aiBot.Agent,commander);
         zActions.manualActions.Add(desc);
@@ -592,7 +592,7 @@ public class ZiMain : BasePlugin
             }
         }
         var descriptor = SendBotToKillEnemy(aiBot, closestEnemy, commander);
-        FlexibleMethodDefinition callback = new(SendBotToClearCurrentRoom,[aiBot,commander, netsender]);
+        ZombieTweak2.FlexibleMethodDefinition callback = new(SendBotToClearCurrentRoom,[aiBot,commander, netsender]);
         zActionSub.addOnTerminated(descriptor, callback);
     }
 } // plugin

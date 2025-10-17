@@ -10,7 +10,6 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.AI;
 using ZombieTweak2;
-using ZombieTweak2.zMenu;
 using static BoundingBox;
 
 namespace Zombified_Initiative

@@ -10,7 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using XInputDotNetPure;
-using ZombieTweak2.zMenu;
+using SlideMenu;
 using ZombieTweak2.zNetworking;
 using Zombified_Initiative;
 using static ZombieTweak2.zNetworking.pStructs;
@@ -388,7 +388,7 @@ namespace ZombieTweak2
             //playerIndex = 0;// UnityEngine.Random.RandomRangeInt(0, numPlayers);
             PlayerAgent agent = PlayerManager.PlayerAgentsInLevel[playerIndex];
             visObserver = agent.GetHeadCamTransform().parent.gameObject;//PlayerManager.GetLocalPlayerAgent().FPSCamera.gameObject;
-            Transform menuTransform = zMenuManager.mainMenu.gameObject.transform;
+            Transform menuTransform = sMenuManager.mainMenu.gameObject.transform;
             visTarget = zSearch.GetClosestObjectInLookDirection(menuTransform, zSearch.GetGameObjectsWithLookDirection<EnemyAgent>(menuTransform), 180f);
         }
         internal static void debugCheckViz()
@@ -527,7 +527,7 @@ namespace ZombieTweak2
                 new ColliderMaterial().GetIl2CppType(),
                 new PlayerAgent().GetIl2CppType(),
             };
-            Transform menuTransform = zMenuManager.mainMenu.gameObject.transform;
+            Transform menuTransform = sMenuManager.mainMenu.gameObject.transform;
             var target = zSearch.GetClosestObjectInLookDirection(menuTransform, zSearch.GetGameObjectsWithLookDirection(menuTransform, types));
             if (target == null)
             {

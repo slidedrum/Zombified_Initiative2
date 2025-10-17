@@ -4,13 +4,13 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
-using Zombified_Initiative;
+using ZombieTweak2;
 
-namespace ZombieTweak2.zMenu
+namespace SlideMenu
 {
-    public partial class zMenu 
+    public partial class sMenu 
     {
-        public partial class zMenuNode
+        public partial class sMenuNode
         {
             //This is a menu node instance, there if you want to create one, call the parrent menu.addnode not this.
 
@@ -87,7 +87,7 @@ namespace ZombieTweak2.zMenu
             public int frameLastPressedAt = Time.frameCount;
             public float timeLastPressedAt = Time.time;
             public float lastTapTime = Time.time;
-            public zMenu parrentMenu;
+            public sMenu parrentMenu;
 
             private readonly FlexibleEvent OnPressed = new();
             private readonly FlexibleEvent WhilePressed = new();
@@ -109,13 +109,18 @@ namespace ZombieTweak2.zMenu
             private readonly FlexibleEvent OnHeldImmediate = new();
             private readonly FlexibleEvent OnHeldImmediateSelected = new();
 
-            private Dictionary<zMenuManager.nodeEvent, FlexibleEvent> eventMap;
+            private Dictionary<sMenuManager.nodeEvent, FlexibleEvent> eventMap;
             public TextPart fullTextPart;//todo make these private and add setters and getters for font stuff.
             public TextPart titlePart;
             public TextPart subtitlePart;
             public TextPart descriptionPart;
+            public GameObject gameObject;
+            private GameObject TextPartGameObject;
             private RectTransform rect;
+            internal GameObject backgroundObject;
+            internal RawImage backgroundImage;
             private SelectionColorHandler selectionColorHandler;
+            private bool hasHoverText = false;
             private Color _color;
             public Color color
             {
@@ -141,50 +146,60 @@ namespace ZombieTweak2.zMenu
                         SetColor(_color);
                 }
             }
-            public GameObject gameObject;
+
 
 
             //settings
             private float holdThreshold = 0.2f;
             private float doubleTapThreshold = 0.3f;
 
-            public zMenuNode(string arg_Name, zMenu arg_parrentMenu, FlexibleMethodDefinition arg_Callback)
+            public sMenuNode(string arg_Name, sMenu arg_parrentMenu, FlexibleMethodDefinition arg_Callback)
             {
 
-                eventMap = new Dictionary<zMenuManager.nodeEvent, FlexibleEvent>(){
-                    { zMenuManager.nodeEvent.OnPressed, OnPressed },
-                    { zMenuManager.nodeEvent.WhilePressed, WhilePressed },
-                    { zMenuManager.nodeEvent.OnUnpressed, OnUnpressed },
-                    { zMenuManager.nodeEvent.OnUnpressedSelected, OnUnpressedSelected },
-                    { zMenuManager.nodeEvent.WhileUnpressed, WhileUnpressed },
-                    { zMenuManager.nodeEvent.OnSelected, OnSelected },
-                    { zMenuManager.nodeEvent.WhileSelected, WhileSelected },
-                    { zMenuManager.nodeEvent.OnDeselected, OnDeselected },
-                    { zMenuManager.nodeEvent.WhileDeselected, WhileDeselected },
-                    { zMenuManager.nodeEvent.OnDoubleTapped, OnDoubleTapped },
-                    { zMenuManager.nodeEvent.OnTapped, OnTapped },
-                    { zMenuManager.nodeEvent.OnHeld, OnHeld },
-                    { zMenuManager.nodeEvent.WhileHeld, WhileHeld },
-                    { zMenuManager.nodeEvent.OnHeldSelected, OnHeldSelected },
-                    { zMenuManager.nodeEvent.WhileHeldSelected, WhileHeldSelected },
-                    { zMenuManager.nodeEvent.OnHeldImmediate, OnHeldImmediate },
-                    { zMenuManager.nodeEvent.OnHeldImmediateSelected, OnHeldImmediateSelected },
-                    { zMenuManager.nodeEvent.OnTappedExclusive, OnTappedExclusive },
+                eventMap = new Dictionary<sMenuManager.nodeEvent, FlexibleEvent>(){
+                    { sMenuManager.nodeEvent.OnPressed, OnPressed },
+                    { sMenuManager.nodeEvent.WhilePressed, WhilePressed },
+                    { sMenuManager.nodeEvent.OnUnpressed, OnUnpressed },
+                    { sMenuManager.nodeEvent.OnUnpressedSelected, OnUnpressedSelected },
+                    { sMenuManager.nodeEvent.WhileUnpressed, WhileUnpressed },
+                    { sMenuManager.nodeEvent.OnSelected, OnSelected },
+                    { sMenuManager.nodeEvent.WhileSelected, WhileSelected },
+                    { sMenuManager.nodeEvent.OnDeselected, OnDeselected },
+                    { sMenuManager.nodeEvent.WhileDeselected, WhileDeselected },
+                    { sMenuManager.nodeEvent.OnDoubleTapped, OnDoubleTapped },
+                    { sMenuManager.nodeEvent.OnTapped, OnTapped },
+                    { sMenuManager.nodeEvent.OnHeld, OnHeld },
+                    { sMenuManager.nodeEvent.WhileHeld, WhileHeld },
+                    { sMenuManager.nodeEvent.OnHeldSelected, OnHeldSelected },
+                    { sMenuManager.nodeEvent.WhileHeldSelected, WhileHeldSelected },
+                    { sMenuManager.nodeEvent.OnHeldImmediate, OnHeldImmediate },
+                    { sMenuManager.nodeEvent.OnHeldImmediateSelected, OnHeldImmediateSelected },
+                    { sMenuManager.nodeEvent.OnTappedExclusive, OnTappedExclusive },
                 };
-                gameObject = new GameObject($"zMenuNode {arg_Name}");
+
+                gameObject = new($"sMenuNode {arg_Name}");
                 gameObject.transform.SetParent(arg_parrentMenu.getCanvas().transform, false);
+                backgroundObject = new GameObject("Background");
+                TextPartGameObject = new GameObject($"TextParts");
+                TextPartGameObject.transform.SetParent(gameObject.transform, false);
+                backgroundObject.transform.SetParent(gameObject.transform, false);
+                backgroundObject.transform.localPosition = new Vector3(0,0,30f); //Move background behind text
+                backgroundImage = backgroundObject.AddComponent<RawImage>();
+                backgroundImage.texture = sMenuManager.DefaultBackgroundImage;
+
 
                 rect = gameObject.AddComponent<RectTransform>();
                 rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
                 rect.anchoredPosition = Vector2.zero;
                 rect.localScale = Vector3.one;
-                rect.sizeDelta = new Vector2(300, 0);
+
+                //rect.sizeDelta = new Vector2(300, 0);
 
                 parrentMenu = arg_parrentMenu;
                 if (arg_Callback != null) OnUnpressedSelected.Listen(arg_Callback);
                 color = parrentMenu.getTextColor();
 
-                VerticalLayoutGroup layout = gameObject.AddComponent<VerticalLayoutGroup>();
+                VerticalLayoutGroup layout = TextPartGameObject.AddComponent<VerticalLayoutGroup>();
                 layout.childAlignment = TextAnchor.MiddleCenter;
                 layout.spacing = 2f;
                 layout.childControlWidth = true;
@@ -192,26 +207,25 @@ namespace ZombieTweak2.zMenu
                 layout.childForceExpandWidth = true;
                 layout.childForceExpandHeight = false;
 
-                ContentSizeFitter fitter = gameObject.AddComponent<ContentSizeFitter>();
+                ContentSizeFitter fitter = TextPartGameObject.AddComponent<ContentSizeFitter>();
                 fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-                fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+                fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-                titlePart = new TextPart(gameObject, $"{title}", new Color(0.2f, 0.2f, 0.2f, 1f)).SetScale(0.75f, 0.75f);
-                fullTextPart = new TextPart(gameObject, $"{text}", parrentMenu.textColor);
-                subtitlePart = new TextPart(gameObject, $"{title}", new Color(0.1f, 0.1f, 0.1f, 1f)).SetScale(0.75f, 0.75f);
-                descriptionPart = new TextPart(gameObject, description, parrentMenu.textColor);
+                (titlePart = new TextPart(TextPartGameObject, $"{title}", new Color(0.2f, 0.2f, 0.2f, 1f)).SetScale(0.75f, 0.75f)).gameObject.name = "Title";
+                (fullTextPart = new TextPart(TextPartGameObject, $"{text}", parrentMenu.textColor)).gameObject.name = "Text";
+                (subtitlePart = new TextPart(TextPartGameObject, $"{title}", new Color(0.1f, 0.1f, 0.1f, 1f)).SetScale(0.75f, 0.75f)).gameObject.name = "Subtitle";
+                (descriptionPart = new TextPart(TextPartGameObject, description, parrentMenu.textColor)).gameObject.name = "Description";
 
                 text = arg_Name;
 
-
                 selectionColorHandler = new SelectionColorHandler(this);
-                AddListener(zMenuManager.nodeEvent.OnSelected, selectionColorHandler.onSelected);
-                AddListener(zMenuManager.nodeEvent.OnDeselected, selectionColorHandler.OnDeselected);
-                AddListener(zMenuManager.nodeEvent.OnPressed, selectionColorHandler.OnPressed);
-                AddListener(zMenuManager.nodeEvent.OnUnpressed, selectionColorHandler.OnUnpressed);
-                parrentMenu.AddListener(zMenuManager.menuEvent.OnClosed, selectionColorHandler.onClosed);
+                AddListener(sMenuManager.nodeEvent.OnSelected, selectionColorHandler.onSelected);
+                AddListener(sMenuManager.nodeEvent.OnDeselected, selectionColorHandler.OnDeselected);
+                AddListener(sMenuManager.nodeEvent.OnPressed, selectionColorHandler.OnPressed);
+                AddListener(sMenuManager.nodeEvent.OnUnpressed, selectionColorHandler.OnUnpressed);
+                parrentMenu.AddListener(sMenuManager.menuEvent.OnClosed, selectionColorHandler.onClosed);
             }
-            public zMenuNode Update()
+            public sMenuNode Update()
             {
                 if (selected)
                 {
@@ -224,7 +238,7 @@ namespace ZombieTweak2.zMenu
                     WhileUnpressed.Invoke();
                 //if (pressed && Time.frameCount - frameLastPressedAt > 2)
                 //    Unpress();
-                FaceCamera();
+                //FaceCamera();
                 return this;
             }
             public Vector3 GetRelativePosition()
@@ -237,70 +251,69 @@ namespace ZombieTweak2.zMenu
                 Vector3 worldPos = parrentMenu.gameObject.transform.TransformPoint(scaledLocalPos);
 
                 // relative to camera
-                return zMenuManager.mainCamera.Position - worldPos;
+                return sMenuManager.mainCamera.transform.position - worldPos;
             }
-
-            public zMenuNode SetPosition(float x, float y)
+            public sMenuNode SetPosition(float x, float y)
             {
                 SetPosition(new Vector2(x, y));
                 return this;
             }
-            public zMenuNode SetPosition(Vector2 pos)
+            public sMenuNode SetPosition(Vector2 pos)
             {
                 rect.anchoredPosition = pos;
                 return this;
             }
-            public zMenuNode SetSize(float scale)
+            public sMenuNode SetSize(float scale)
             {
                 return SetSize(new Vector3(scale, scale, scale));
             }
-            public zMenuNode SetSize(float x, float y)
+            public sMenuNode SetSize(float x, float y)
             {
                 SetSize(new Vector2(x, y));
                 return this;
             }
-            public zMenuNode SetSize(Vector2 scale)
+            public sMenuNode SetSize(Vector2 scale)
             {
                 SetSize(new Vector3(scale.x, scale.y, rect.localScale.z));
                 return this;
             }
-            public zMenuNode SetSize(float x, float y, float z)
+            public sMenuNode SetSize(float x, float y, float z)
             {
                 SetSize(new Vector3(x,y,z));
                 return this;
             }
-            public zMenuNode SetSize(Vector3 scale) //main passthrough
+            public sMenuNode SetSize(Vector3 scale) //main passthrough
             {
                 rect.localScale = scale;
                 return this;
             }
-            public zMenuNode SetCloseMenuOnPress(bool close)
+            public sMenuNode SetCloseMenuOnPress(bool close)
             {
                 closeOnPress = close;
                 return this;
             }
-            public zMenuNode FaceCamera()
+            public sMenuNode FaceCamera()
             {
-                Quaternion rotation = Quaternion.LookRotation(gameObject.transform.position - zMenuManager.mainCamera.Position);
+                Quaternion rotation = Quaternion.LookRotation(gameObject.transform.position - sMenuManager.mainCamera.transform.position);
                 setRotation(rotation);
                 return this;
             }
-            public zMenuNode setRotation(Quaternion rot)
+            public sMenuNode setRotation(Quaternion rot)
             {
                 gameObject.transform.rotation = rot;
                 return this;
             }
-            public zMenuNode Select()
+            public sMenuNode Select()
             {
 
                 if (selected) return this;
                 selected = true;
-                SetSize(1.5f);
+                SetSize(sMenuManager.selectedNodeSizeMultiplier);
                 OnSelected.Invoke();
                 parrentMenu.OnSelected.Invoke();
                 return this;
             }
-            public zMenuNode Deselect()
+            public sMenuNode Deselect()
             {
                 if (!selected) return this;
                 selected = false;
@@ -309,7 +322,7 @@ namespace ZombieTweak2.zMenu
                 parrentMenu.OnDeselected.Invoke();
                 return this;
             }
-            public zMenuNode Pressing()
+            public sMenuNode Pressing()
             {
                 frameLastPressedAt = Time.frameCount;
                 timeLastPressedAt = Time.time;
@@ -326,7 +339,6 @@ namespace ZombieTweak2.zMenu
                     }
                     else
                     {
-                        ZiMain.log.LogInfo(fullText + " was held");
                         held = true;
                         if (selected)
                             OnHeldImmediateSelected.Invoke();
@@ -335,21 +347,20 @@ namespace ZombieTweak2.zMenu
                 }
                 return this;
             }
-            public zMenuNode Press()
+            public sMenuNode Press()
             {
                 frameFirstPressedAt = Time.frameCount;
                 timeFirstPressedAt = Time.time;
                 pressed = true;
-                ZiMain.log.LogInfo(fullText + "was pressed");
                 OnPressed.Invoke();
                 if (closeOnPress)
                 {
-                    zMenuManager.CloseAllMenues();
+                    sMenuManager.CloseAllMenues();
                     return this;
                 }
                 return this;
             }
-            public zMenuNode Unpress()
+            public sMenuNode Unpress()
             {
 
                 if (pressed)
@@ -365,16 +376,14 @@ namespace ZombieTweak2.zMenu
                     // If released quickly enough = tap
                     if (Time.time - timeFirstPressedAt < holdThreshold)
                     {
-                        ZiMain.log.LogInfo(fullText + "was tapped");
                         OnTapped.Invoke();
                         if (Time.time - lastTapTime <= doubleTapThreshold)
                         {
-                            ZiMain.log.LogInfo(fullText + "was double tapped!");
                             OnDoubleTapped.Invoke();
                         }
                         else
                         {
-                            zUpdater.InvokeStatic(new FlexibleMethodDefinition(InvokeTappedExclusive), doubleTapThreshold - (Time.deltaTime / 2));
+                            zUpdater.InvokeStatic(new ZombieTweak2.FlexibleMethodDefinition(InvokeTappedExclusive), doubleTapThreshold - (Time.deltaTime / 2));
                         }
                         lastTapTime = Time.time;
                     }
@@ -388,20 +397,24 @@ namespace ZombieTweak2.zMenu
                 // If no second tap happened (lastTapTime is still within threshold window)
                 if (Time.time - lastTapTime >= doubleTapThreshold - Time.deltaTime && !pressed)
                 {
-                    ZiMain.log.LogInfo(fullText + "was single tapped!");
                     OnTappedExclusive.Invoke();
                 }
             }
-            public zMenuNode AddListener(zMenuManager.nodeEvent arg_event, Action arg_method)
+            //public sMenuNode AddListener<T>(sMenuManager.nodeEvent arg_event, Action<T> method, T arg)
+            //{
+            //    AddListener(arg_event, method, arg);
+            //    return this;
+            //}
+            public sMenuNode AddListener(sMenuManager.nodeEvent arg_event, Action arg_method)
             {
                 return AddListener(arg_event, (FlexibleMethodDefinition)arg_method);
             }
-            public zMenuNode AddListener(zMenuManager.nodeEvent arg_event, Delegate method, params object[] args)
+            public sMenuNode AddListener(sMenuManager.nodeEvent arg_event, Delegate method, params object[] args)
             {
                 var flex = new FlexibleMethodDefinition(method, args);
                 return AddListener(arg_event, flex);
             }
-            public zMenuNode AddListener(zMenuManager.nodeEvent arg_event, FlexibleMethodDefinition arg_method)
+            public sMenuNode AddListener(sMenuManager.nodeEvent arg_event, FlexibleMethodDefinition arg_method)
             {
                 if (eventMap.TryGetValue(arg_event, out var flexEvent))
                 {
@@ -409,7 +422,7 @@ namespace ZombieTweak2.zMenu
                 }
                 return this;
             }
-            public zMenuNode RemoveListener(zMenuManager.nodeEvent arg_event, Action arg_method)
+            public sMenuNode RemoveListener(sMenuManager.nodeEvent arg_event, Action arg_method)
             {
                 if (eventMap.TryGetValue(arg_event, out var flexEvent))
                 {
@@ -417,7 +430,7 @@ namespace ZombieTweak2.zMenu
                 }
                 return this;
             }
-            public zMenuNode RemoveListener(zMenuManager.nodeEvent arg_event, FlexibleMethodDefinition arg_method)
+            public sMenuNode RemoveListener(sMenuManager.nodeEvent arg_event, FlexibleMethodDefinition arg_method)
             {
                 if (eventMap.TryGetValue(arg_event, out var flexEvent))
                 {
@@ -425,7 +438,7 @@ namespace ZombieTweak2.zMenu
                 }
                 return this;
             }
-            public zMenuNode ClearListeners(zMenuManager.nodeEvent arg_event)
+            public sMenuNode ClearListeners(sMenuManager.nodeEvent arg_event)
             {
                 if (eventMap.TryGetValue(arg_event, out var flexEvent))
                 {
@@ -433,37 +446,37 @@ namespace ZombieTweak2.zMenu
                 }
                 return this;
             }
-            public zMenuNode SetTitle(string arg_Title)
+            public sMenuNode SetTitle(string arg_Title)
             {
                 title = arg_Title ?? string.Empty;
                 return this;
             }
-            public zMenuNode SetSubtitle(string arg_Subtitle)
+            public sMenuNode SetSubtitle(string arg_Subtitle)
             {
                 subtitle = arg_Subtitle ?? string.Empty;
                 return this;
             }
-            public zMenuNode SetDescription(string arg_Description)
+            public sMenuNode SetDescription(string arg_Description)
             {
                 description = arg_Description ?? string.Empty;
                 return this;
             }
-            public zMenuNode SetText(string arg_Text)
+            public sMenuNode SetText(string arg_Text)
             {
                 text = arg_Text ?? string.Empty;
                 return this;
             }
-            public zMenuNode SetPrefix(string arg_Prefix)
+            public sMenuNode SetPrefix(string arg_Prefix)
             {
                 prefix = arg_Prefix ?? string.Empty;
                 return this;
             }
-            public zMenuNode SetSuffix(string arg_Suffix)
+            public sMenuNode SetSuffix(string arg_Suffix)
             {
                 suffix = arg_Suffix ?? string.Empty;
                 return this;
             }
-            public zMenuNode SetColor(Color arg_Color)
+            public sMenuNode SetColor(Color arg_Color)
             {
                 color = arg_Color;
                 List<TextPart> textParts = GetTextParts();
@@ -475,6 +488,28 @@ namespace ZombieTweak2.zMenu
                     final.b += ColorOffset.b;
                     final.a = arg_Color.a;
                     part.SetColor(final);
+                }
+                return this;
+            }
+            public sMenuNode AddHoverText(sMenuPannel.Side side, string[] textList)
+            {
+                foreach (var text in textList)
+                {
+                    AddHoverText(side, text);
+                }
+                return this;
+            }
+            public sMenuNode AddHoverText(sMenuPannel.Side side, string text)
+            {
+                var pannel = parrentMenu.AddPannel(side);
+                string key = gameObject.GetInstanceID().ToString();
+                pannel.addLine(text, key);
+                pannel.SetLineVisible(false, text, key);
+                if (!hasHoverText)
+                {
+                    AddListener(sMenuManager.nodeEvent.OnSelected, () => pannel.SetKeyVisible(true, key));
+                    AddListener(sMenuManager.nodeEvent.OnDeselected, () => pannel.SetKeyVisible(false, key));
+                    hasHoverText = true;
                 }
                 return this;
             }
@@ -507,16 +542,15 @@ namespace ZombieTweak2.zMenu
                 if (fullTextPart != null)
                     fullTextPart.SetText(fullText);
             }
-
             private class SelectionColorHandler
             {
-                private zMenuNode node;
+                private sMenuNode node;
                 private bool selected = false;
                 private bool pressed = false;
                 private static Color selectedOffset = new Color(0.1f, 0.1f, 0.1f);
                 private static Color pressedOffset = new Color(0.3f, 0.2f, 0.5f);
 
-                public SelectionColorHandler(zMenuNode Node)
+                public SelectionColorHandler(sMenuNode Node)
                 {
                     node = Node;
                 }

@@ -4,17 +4,16 @@ using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using Zombified_Initiative;
 
-namespace ZombieTweak2.zMenu
+namespace SlideMenu
 {
 
-    public partial class zMenu
+    public partial class sMenu
     {
         // This class is the menu instance.
 
         private string name;
-        public IEnumerable<zMenuNode> allNodes
+        public IEnumerable<sMenuNode> allNodes
         {
             get 
             {
@@ -23,21 +22,21 @@ namespace ZombieTweak2.zMenu
                 return new[] { centerNode }.Concat(nodes.Where(n => n != centerNode));
             }
         }
-        public OrderedSet<zMenuNode> nodes { get; private set; } = new();
-        public OrderedSet<zMenuNode> disabledNodes { get; private set; } = new();
-        public  zMenuNode centerNode { get; private set; }
-        private zMenu _parrentMenu;
+        public OrderedSet<sMenuNode> nodes { get; private set; } = new();
+        public OrderedSet<sMenuNode> disabledNodes { get; private set; } = new();
+        public  sMenuNode centerNode { get; private set; }
+        private sMenu _parrentMenu;
         internal int frameOpenedAt = Time.frameCount;
         internal float timeOpenedAt = Time.time;
-        public zMenu parrentMenu { 
+        public sMenu parrentMenu { 
             get => _parrentMenu; 
             private set 
             {
                 _parrentMenu = value;
                 if (value != null)
                 {
-                    centerNode.ClearListeners(zMenuManager.nodeEvent.OnUnpressedSelected);
-                    centerNode.AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, _parrentMenu.Open);
+                    centerNode.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
+                    centerNode.AddListener(sMenuManager.nodeEvent.OnUnpressedSelected, _parrentMenu.Open);
                 }
             } 
         }
@@ -45,9 +44,9 @@ namespace ZombieTweak2.zMenu
         private Canvas canvas;
         public Vector3 RelativePosition = Vector3.zero;
 
-        private Dictionary<zMenuManager.menuEvent, FlexibleEvent> eventMap;
-        public Dictionary<string, List<zMenuNode>> catagories = new();
-        public List<zMenuNode> currentCatagory 
+        private Dictionary<sMenuManager.menuEvent, FlexibleEvent> eventMap;
+        public Dictionary<string, List<sMenuNode>> catagories = new();
+        public List<sMenuNode> currentCatagory 
         { 
             get 
             {
@@ -73,37 +72,43 @@ namespace ZombieTweak2.zMenu
         private FlexibleEvent WhileDeselected = new();
         private FlexibleEvent OnCatagoryChanged = new();
 
+        private int pannelPositionWorkaround = 0; //TODO fix this properly
+
         //settings
         private Vector3 canvasScale = new Vector3(0.003f, 0.003f, 0.003f); //Really small because it's really close to the camera.
-        public float radius = 20f;
+        public float radius;
         public float rotationalOffset = 0f;
-        private Color textColor = zMenuManager.defaultColor;
-        private zMenuNode selectedNode;
+        private Color textColor = sMenuManager.defaultColor;
+        private sMenuNode selectedNode;
         private RectTransform rect;
-        
-        public zMenu(string arg_Name, zMenu arg_ParrentMenu = null)
+        Dictionary<sMenuPannel.Side, sMenuPannel> pannels = new();
+
+        public sMenu(string arg_Name, sMenu arg_ParrentMenu = null)
         {
-            eventMap = new Dictionary<zMenuManager.menuEvent, FlexibleEvent>(){ //I think all invokes are covered?  Might be missing one.
-                                    { zMenuManager.menuEvent.OnOpened, OnOpened },
-                                    { zMenuManager.menuEvent.WhileOpened, WhileOpened },
-                                    { zMenuManager.menuEvent.OnClosed, OnClosed },
-                                    { zMenuManager.menuEvent.WhileClosed, WhileClosed },
-                                    { zMenuManager.menuEvent.OnSelected, OnSelected },
-                                    { zMenuManager.menuEvent.WhileSelected, WhileSelected },
-                                    { zMenuManager.menuEvent.OnDeselected, OnDeselected },
-                                    { zMenuManager.menuEvent.WhileDeselected, WhileDeselected },
-                                    { zMenuManager.menuEvent.OnCatagoryChanged, OnCatagoryChanged }};
+            eventMap = new Dictionary<sMenuManager.menuEvent, FlexibleEvent>(){ //I think all invokes are covered?  Might be missing one.
+                                    { sMenuManager.menuEvent.OnOpened, OnOpened },
+                                    { sMenuManager.menuEvent.WhileOpened, WhileOpened },
+                                    { sMenuManager.menuEvent.OnClosed, OnClosed },
+                                    { sMenuManager.menuEvent.WhileClosed, WhileClosed },
+                                    { sMenuManager.menuEvent.OnSelected, OnSelected },
+                                    { sMenuManager.menuEvent.WhileSelected, WhileSelected },
+                                    { sMenuManager.menuEvent.OnDeselected, OnDeselected },
+                                    { sMenuManager.menuEvent.WhileDeselected, WhileDeselected },
+                                    { sMenuManager.menuEvent.OnCatagoryChanged, OnCatagoryChanged }};
+            radius = sMenuManager.defaultRadius;
             name = arg_Name;
-            gameObject = new GameObject($"zMenu {name}");
-            gameObject.transform.SetParent(zMenuManager.menuParrent.transform);
+            gameObject = new GameObject($"sMenu {name}");
+            gameObject.transform.SetParent(sMenuManager.menuParrent.transform);
             setupCanvas();
             FlexibleMethodDefinition onClose;
             if (arg_ParrentMenu != null)
                 onClose = new FlexibleMethodDefinition(arg_ParrentMenu.Open);
             else
                 onClose = new FlexibleMethodDefinition(Close);
-            centerNode = new zMenuNode(name, this, onClose).SetTitle(arg_ParrentMenu != null ? arg_ParrentMenu.name : "Close");
+            centerNode = new sMenuNode(name, this, onClose).SetTitle(arg_ParrentMenu != null ? arg_ParrentMenu.name : "Close");
             parrentMenu = arg_ParrentMenu;
+            //Open();
+            //ArrangeNodes();
             Close();
         }
         internal void UpdateCatagoryByScroll()
@@ -147,7 +152,6 @@ namespace ZombieTweak2.zMenu
         {
             if (!catagories.ContainsKey(catagory))
             {
-                ZiMain.log.LogError($"Invalid catagory: {catagory} in menu {centerNode.text}");
                 return;
             }
             centerNode.SetSubtitle($"<color=#00CC8466>[ </color>{catagory}<color=#00CC8466> ]</color>");
@@ -166,20 +170,19 @@ namespace ZombieTweak2.zMenu
                 else
                     DisableNode(node);
             }
+            
+            UpdatePannelPositions();
             OnCatagoryChanged.Invoke();
         }
         public void AddCatagory(string catagory)
         {
             if (!catagories.ContainsKey(catagory))
                 catagories[catagory] = new();
-            else
-                ZiMain.log.LogWarning($"Tried to add existing catagory {catagory} in {centerNode.text} menu");
         }
-        public void AddNodeToCatagory(string catagory, zMenuNode node)
+        public void AddNodeToCatagory(string catagory, sMenuNode node)
         {
             if (node == null)
             {
-                ZiMain.log.LogWarning($"Can't add null node to catagory {catagory} in menu {centerNode.text}");
                 return;
             }
             if (!catagories.ContainsKey(catagory))
@@ -191,14 +194,13 @@ namespace ZombieTweak2.zMenu
             var node = GetNode(nodeName);
             if (node == null)
             {
-                ZiMain.log.LogWarning($"Failed to find node {nodeName} in {centerNode.text} to add to catagory {catagory}."); 
                 return;
             }
             AddNodeToCatagory(catagory, node);
         }
         public void UpdatePosition()
         {
-            Vector3 newpos = zMenuManager.mainCamera.Position - RelativePosition;
+            Vector3 newpos = sMenuManager.mainCamera.transform.position - RelativePosition;
             setPosition(newpos);
         }
         public void Update()
@@ -216,68 +218,79 @@ namespace ZombieTweak2.zMenu
                 WhileSelected.Invoke();
             else
                 WhileDeselected.Invoke();
+            if (pannelPositionWorkaround < 2)
+                _UpdatePannelPositions();
         }
         public void Lateupdate()
-        {
-        }
-        public void PreRender()
         {
             UpdatePosition();
             FaceCamera();
         }
-        public zMenu Close()
+        public void PreRender()
+        {
+
+        }
+        public sMenu Close()
         {
             setVisiblity(false);
-            if (zMenuManager.currentMenu == this)
-                zMenuManager.currentMenu = null;
+            if (sMenuManager.currentMenu == this)
+                sMenuManager.currentMenu = null;
             OnClosed.Invoke();
             return this; 
         }
-        public zMenu Open()
+        public void Open()
         {
-            FocusStateManager.ChangeState(eFocusState.FPS_CommunicationDialog);
+            //FocusStateManager.ChangeState(eFocusState.FPS_CommunicationDialog);
             timeOpenedAt = Time.time;
             frameOpenedAt = Time.frameCount;
-            if (!zMenuManager.menues.Contains(this))
-                ZiMain.log.LogWarning($"Unregestered menu opened! ({name}) It may not close properly.");
-            //if (RelativePosition == Vector3.zero)
-            //{
-                if (parrentMenu == null)
-                { 
-                    if (RelativePosition == Vector3.zero)
-                        MoveInfrontOfCamera();
-                }
-                else
-                { 
-                    //TODO move SetRelativePosition into a listener so it can be disabled.
-                    var node = parrentMenu.GetNode(name);
-                    SetRelativePosition(zMenuManager.mainCamera.Position - node.gameObject.transform.position);
-                }
-            //}
+            if (parrentMenu == null)
+            { 
+                if (RelativePosition == Vector3.zero)
+                    MoveInfrontOfCamera();
+            }
+            else
+            { 
+                //TODO move SetRelativePosition into a listener so it can be disabled.
+                var node = parrentMenu.GetNode(name);
+                SetRelativePosition(sMenuManager.mainCamera.transform.position - node.gameObject.transform.position);
+            }
             FaceCamera();
             setVisiblity(true);
             ArrangeNodes();
-            zMenuManager.previousMenu = zMenuManager.currentMenu;
-            zMenuManager.currentMenu = this;
-            if (zMenuManager.previousMenu != null && zMenuManager.previousMenu != this)
-                zMenuManager.previousMenu.Close();
+            sMenuManager.previousMenu = sMenuManager.currentMenu;
+            sMenuManager.currentMenu = this;
+            if (sMenuManager.previousMenu != null && sMenuManager.previousMenu != this)
+                sMenuManager.previousMenu.Close();
             OnOpened.Invoke();
-            return this;
         }
-        public zMenu SetRelativePosition(float x, float y, float z)
+        public sMenuPannel AddPannel(sMenuPannel.Side side, string initialText = "")
+        {
+            sMenuPannel newPannel = new sMenuPannel(side, this);
+            if (pannels.ContainsKey(side))
+            {
+                if (initialText != "")
+                    pannels[side].addLine(initialText);
+                return pannels[side];
+            }
+            if (initialText != "")
+                newPannel.addLine(initialText);
+            pannels[side] = newPannel;
+            return newPannel;
+        }
+        public sMenu SetRelativePosition(float x, float y, float z)
         {
             return SetRelativePosition(new Vector3 (x, y, z));
         }
-        public zMenu SetRelativePosition(Vector3 relativePosition)
+        public sMenu SetRelativePosition(Vector3 relativePosition)
         {
             RelativePosition = relativePosition;
-            return setPosition(zMenuManager.mainCamera.Position - RelativePosition);
+            return setPosition(sMenuManager.mainCamera.transform.position - RelativePosition);
         }
-        public zMenu ResetRelativePosition(bool setPos = true)
+        public sMenu ResetRelativePosition(bool setPos = true)
         {
             RelativePosition = Vector3.zero;
             if (setPos)
-                return setPosition(zMenuManager.mainCamera.Position - RelativePosition);
+                return setPosition(sMenuManager.mainCamera.transform.position - RelativePosition);
             return this;
         }
         private void AddDebugVisuals()
@@ -331,14 +344,14 @@ namespace ZombieTweak2.zMenu
             rect = canvasGO.GetComponent<RectTransform>();
             rect.localPosition = Vector3.zero;      // center inside menu
             rect.localScale = canvasScale;  // scale down so it’s not huge
-            gameObject.transform.position = zMenuManager.mainCamera.Position + zMenuManager.mainCamera.transform.forward * 1f;
-            gameObject.transform.rotation = Quaternion.LookRotation(gameObject.transform.position - zMenuManager.mainCamera.Position);
+            gameObject.transform.position = sMenuManager.mainCamera.transform.position + sMenuManager.mainCamera.transform.forward * 1f;
+            gameObject.transform.rotation = Quaternion.LookRotation(gameObject.transform.position - sMenuManager.mainCamera.transform.position);
         }
         internal void Setsize(float scale)
         {
             rect.localScale = canvasScale * scale;
         }
-        public zMenu ArrangeNodes()
+        public sMenu ArrangeNodes()
         {
             var activeNodes = nodes.Where(n => n.gameObject.activeInHierarchy).ToList();
             float additionalOffset = 0f;
@@ -350,70 +363,86 @@ namespace ZombieTweak2.zMenu
 
             int count = activeNodes.Count;
 
-            if (count == 0)
-                return this;
-
-            for (int i = 0; i < count; i++)
+            if (count != 0)
             {
-                // Calculate angle for this node (start at top, go clockwise)
-                float angle = 2 * Mathf.PI / count * i - Mathf.PI / 2 + offsetRadians;
+                for (int i = 0; i < count; i++)
+                {
+                    // Calculate angle for this node (start at top, go clockwise)
+                    float angle = 2 * Mathf.PI / count * i - Mathf.PI / 2 + offsetRadians;
 
-                // Compute x and y positions (flip Y for clockwise)
-                float x = radius * Mathf.Cos(angle);
-                float y = -radius * Mathf.Sin(angle); // flip sign for clockwise
+                    // Compute x and y positions (flip Y for clockwise)
+                    float x = radius * Mathf.Cos(angle);
+                    float y = -radius * Mathf.Sin(angle); // flip sign for clockwise
 
-                // Set node position
-                activeNodes[i].SetPosition(x, y);
+                    // Set node position
+                    activeNodes[i].SetPosition(x, y);
+                }
             }
-
+            UpdatePannelPositions();
             return this;
         }
-        public zMenu MoveInfrontOfCamera()
+        public sMenu UpdatePannelPositions()
         {
-            Vector3 position = zMenuManager.mainCamera.Position + zMenuManager.mainCamera.transform.forward * 0.25f;
-            return SetRelativePosition(zMenuManager.mainCamera.Position - position);
+            pannelPositionWorkaround = 0;
+            return _UpdatePannelPositions();
         }
-        public zMenu FaceCamera(bool menuOnly = false)
+        private sMenu _UpdatePannelPositions()
         {
-            Quaternion rotation = Quaternion.LookRotation(gameObject.transform.position - zMenuManager.mainCamera.Position);
+            pannelPositionWorkaround++;
+            foreach (var pannel in pannels.Values)
+            {
+                pannel.UpdatePosition();
+            }
+            return this;
+        }
+        public sMenu MoveInfrontOfCamera()
+        {
+            Vector3 position = sMenuManager.mainCamera.transform.position + sMenuManager.mainCamera.transform.forward * 1f;
+            return SetRelativePosition(sMenuManager.mainCamera.transform.position - position);
+        }
+        public sMenu FaceCamera(bool menuOnly = false)
+        {
+            
+            Quaternion rotation = Quaternion.LookRotation(gameObject.transform.position - sMenuManager.mainCamera.transform.position);
+            setRotation(rotation);
             if (!menuOnly)
-                foreach (var node in nodes)
+                foreach (var node in allNodes)
                     node.FaceCamera();
-            return setRotation(rotation); 
+            return this;
         }
-        public zMenu setPosition(float x, float y, float z)
+        public sMenu setPosition(float x, float y, float z)
         {
             return setPosition(new Vector3(x, y, z));
         }
-        public zMenu setPosition(Vector3 pos)
+        public sMenu setPosition(Vector3 pos)
         {
             gameObject.transform.position = pos;
             return this;
         }
-        public zMenu setLocalPosition(float x, float y, float z)
+        public sMenu setLocalPosition(float x, float y, float z)
         {
             return setLocalPosition(new Vector3(x, y, z));
         }
-        public zMenu setLocalPosition(Vector3 pos)
+        public sMenu setLocalPosition(Vector3 pos)
         {
             gameObject.transform.localPosition = pos;
             return this;
         }
-        public zMenu setRotation(Quaternion rot)
+        public sMenu setRotation(Quaternion rot)
         {
             gameObject.transform.rotation = rot;
             return this;
         }
-        public zMenu AddListener(zMenuManager.menuEvent arg_event, Action arg_method)
+        public sMenu AddListener(sMenuManager.menuEvent arg_event, Action arg_method)
         {
             return AddListener(arg_event, (FlexibleMethodDefinition)arg_method);
         }
-        public zMenu AddListener(zMenuManager.menuEvent arg_event, Delegate method, params object[] args)
+        public sMenu AddListener(sMenuManager.menuEvent arg_event, Delegate method, params object[] args)
         {
             var flex = new FlexibleMethodDefinition(method, args);
             return AddListener(arg_event, flex);
         }
-        public zMenu AddListener(zMenuManager.menuEvent arg_event, FlexibleMethodDefinition arg_method)
+        public sMenu AddListener(sMenuManager.menuEvent arg_event, FlexibleMethodDefinition arg_method)
         {
             if (eventMap.TryGetValue(arg_event, out var flexEvent))
             {
@@ -421,7 +450,7 @@ namespace ZombieTweak2.zMenu
             }
             return this;
         }
-        public zMenu RemoveListener(zMenuManager.menuEvent arg_event, Action arg_method)
+        public sMenu RemoveListener(sMenuManager.menuEvent arg_event, Action arg_method)
         {
             if (eventMap.TryGetValue(arg_event, out var flexEvent))
             {
@@ -429,7 +458,7 @@ namespace ZombieTweak2.zMenu
             }
             return this;
         }
-        public zMenu RemoveListener(zMenuManager.menuEvent arg_event, FlexibleMethodDefinition arg_method)
+        public sMenu RemoveListener(sMenuManager.menuEvent arg_event, FlexibleMethodDefinition arg_method)
         {
             if (eventMap.TryGetValue(arg_event, out var flexEvent))
             {
@@ -437,7 +466,7 @@ namespace ZombieTweak2.zMenu
             }
             return this;
         }
-        public zMenu ClearListeners(zMenuManager.menuEvent arg_event)
+        public sMenu ClearListeners(sMenuManager.menuEvent arg_event)
         {
             if (eventMap.TryGetValue(arg_event, out var flexEvent))
             {
@@ -445,7 +474,7 @@ namespace ZombieTweak2.zMenu
             }
             return this;
         }
-        public void DisableNode(zMenuNode node)
+        public void DisableNode(sMenuNode node)
         {
             if (!disabledNodes.Contains(node))
             {
@@ -456,15 +485,13 @@ namespace ZombieTweak2.zMenu
             //else
             //    ZiMain.log.LogWarning($"Could not find node {node.text} to disable from {name} menu");
         }
-        public void DisableNode(zMenu menu)
+        public void DisableNode(sMenu menu)
         {
             var nodeToDisable = nodes.FirstOrDefault(n => n.text == menu.centerNode.text);
             if (nodeToDisable != null)
             {
                 DisableNode(nodeToDisable);
             }
-            else
-                ZiMain.log.LogWarning($"Could not find node {menu.centerNode.text} to disable from {name} menu");
         }
         public void DisableNode(string nodeText)
         {
@@ -473,10 +500,8 @@ namespace ZombieTweak2.zMenu
             {
                 DisableNode(nodeToDisable);
             }
-            else
-                ZiMain.log.LogWarning($"Could not find node {nodeText} to disable from {name} menu");
         }
-        public void EnableNode(zMenuNode node)
+        public void EnableNode(sMenuNode node)
         {
             if (disabledNodes.Contains(node))
             {
@@ -484,8 +509,6 @@ namespace ZombieTweak2.zMenu
                 node.gameObject.SetActive(true);
                 ArrangeNodes();
             }
-            else
-                ZiMain.log.LogWarning($"Could not find node {node.text} to enable from {name} menu");
         }
         public void EnableNode(string nodeText)
         {
@@ -494,10 +517,8 @@ namespace ZombieTweak2.zMenu
             {
                 EnableNode(nodeToEnable);
             }
-            else
-                ZiMain.log.LogWarning($"Could not find node {nodeText} to enable from {name} menu");
         }
-        public void EnableNode(zMenu menu)
+        public void EnableNode(sMenu menu)
         {
             var nodeToEnable = disabledNodes.FirstOrDefault(n => n.text == menu.centerNode.text);
             if (nodeToEnable != null)
@@ -507,66 +528,63 @@ namespace ZombieTweak2.zMenu
             //else
             //    ZiMain.log.LogWarning($"Could not find node {menu.centerNode.text} to enable from {name} menu");
         }
-        public zMenuNode AddNode(zMenu menu)
+        public sMenuNode AddNode(sMenu menu)
         {
             FlexibleMethodDefinition callback = new FlexibleMethodDefinition(menu.Open);
             menu.parrentMenu = this;
             return AddNode(menu.name, callback);
         }
-        public zMenuNode AddNode(string arg_Name) 
+        public sMenuNode AddNode(string arg_Name) 
         {
             Action callback = null;
             return AddNode(arg_Name, callback);
         }
-        public zMenuNode AddNode(string arg_Name, Delegate method, params object[] args)
+        public sMenuNode AddNode(string arg_Name, Delegate method, params object[] args)
         {
             FlexibleMethodDefinition callback = new FlexibleMethodDefinition(method, args);
             return AddNode(arg_Name, callback);
         }
-        public zMenuNode AddNode(string arg_Name, Action arg_callback)
+        public sMenuNode AddNode(string arg_Name, Action arg_callback)
         {
             FlexibleMethodDefinition callback = new(arg_callback);
             return AddNode(arg_Name,callback);
         }
-        public zMenuNode AddNode(string arg_Name, FlexibleMethodDefinition callback)
+        public sMenuNode AddNode(string arg_Name, FlexibleMethodDefinition callback)
         {
-            zMenuNode node = new zMenuNode(arg_Name,this,callback);
+            sMenuNode node = new sMenuNode(arg_Name,this,callback);
             RegisterNode(node);
+            ArrangeNodes();
             return node;
         }
-        public zMenuNode GetNode()
+        public sMenuNode GetNode()
         {
-            if (parrentMenu == null)
-                ZiMain.log.LogWarning($"Can't get parrent node of {centerNode.text} because it has no parrent menu");
             return parrentMenu.GetNode(this);
         }
-        public zMenuNode GetNode(zMenu menu)
+        public sMenuNode GetNode(sMenu menu)
         {
             if (menu.parrentMenu != this)
             {
-                ZiMain.log.LogWarning($"{menu.centerNode.text} is not a child of {centerNode.text}, can't get containing node.");
                 return null;
             }
             return GetNode(menu.centerNode.text);
         }
-        public zMenuNode GetNode(string nodeName)
+        public sMenuNode GetNode(string nodeName)
         {
-            foreach (zMenuNode node in allNodes)
+            foreach (sMenuNode node in allNodes)
             {
                 if (node.text == nodeName)
                 {
                     return node;
                 }
             }
-            ZiMain.log.LogError($"Node {nodeName} not found in menu {name}");
             return null;
         }
-        public zMenu RegisterNode(zMenuNode node)
+        public sMenu RegisterNode(sMenuNode node)
         {
             nodes.Add(node);
             return this;
         }
-        public zMenu setVisiblity(bool visible)
+        public sMenu setVisiblity(bool visible)
         {
             gameObject.SetActive(visible);
             return this;
@@ -581,10 +599,61 @@ namespace ZombieTweak2.zMenu
         }
         public void setNodeSize(float size)
         {
-            foreach (zMenuNode node in nodes)
+            foreach (sMenuNode node in nodes)
             {
                 node.SetSize(size);
             }
+        }
+        public Rect GetNodeBounds()
+        {
+            float xmin = float.MaxValue;
+            float ymin = float.MaxValue;
+            float xmax = float.MinValue;
+            float ymax = float.MinValue;
+
+            // Save the parent scale and temporarily reset it
+            foreach (var node in allNodes)
+            {
+                var nodeTransform = node.gameObject.transform;
+
+                // Temporarily normalize node scale to make rect math consistent
+                var actualNodeScale = nodeTransform.localScale;
+                nodeTransform.localScale = Vector3.one * sMenuManager.selectedNodeSizeMultiplier;
+
+                // Get all rects under this node
+                var rects = node.gameObject.GetComponentsInChildren<RectTransform>();
+                foreach (var rectTransform in rects)
+                {
+                    // Get the rect in the rectTransform's local space
+                    Rect rect = rectTransform.rect;
+
+                    // Compute the 4 local corners
+                    Vector3[] corners = new Vector3[4];
+                    corners[0] = new Vector3(rect.xMin, rect.yMin, 0);
+                    corners[1] = new Vector3(rect.xMax, rect.yMin, 0);
+                    corners[2] = new Vector3(rect.xMax, rect.yMax, 0);
+                    corners[3] = new Vector3(rect.xMin, rect.yMax, 0);
+
+                    // Transform each corner into the coordinate space of the main gameObject
+                    for (int i = 0; i < 4; i++)
+                    {
+                        Vector3 world = rectTransform.TransformPoint(corners[i]);
+                        Vector3 localToParent = gameObject.transform.InverseTransformPoint(world);
+                        localToParent.x /= canvas.transform.localScale.x;
+                        localToParent.y /= canvas.transform.localScale.y;
+                        localToParent.z /= canvas.transform.localScale.z;
+
+                        xmin = Mathf.Min(xmin, localToParent.x);
+                        xmax = Mathf.Max(xmax, localToParent.x);
+                        ymin = Mathf.Min(ymin, localToParent.y);
+                        ymax = Mathf.Max(ymax, localToParent.y);
+                    }
+                }
+
+                // Restore node scale
+                nodeTransform.localScale = actualNodeScale;
+            }
+            return Rect.MinMaxRect(xmin, ymin, xmax, ymax);
         }
     }
 }

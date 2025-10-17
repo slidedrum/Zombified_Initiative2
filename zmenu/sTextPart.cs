@@ -1,12 +1,10 @@
-﻿using FluffyUnderware.Curvy.Generator;
-using FluffyUnderware.DevTools.Extensions;
-using TMPro;
+﻿using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace ZombieTweak2.zMenu
+namespace SlideMenu
 {
-    public partial class zMenu
+    public partial class sMenu
     {
             public class TextPart
             {
@@ -33,7 +31,6 @@ namespace ZombieTweak2.zMenu
                             I_SetColor(_textColor);
                     }
                 }
-
                 private Color _colorOffset;
                 public Color ColorOffset
                 {
@@ -48,42 +45,35 @@ namespace ZombieTweak2.zMenu
                 }
                 public GameObject gameObject { get; private set; }
                 private TextMeshPro textMesh;
-
                 public RectTransform rect { get; private set; }
                 public TextPart(GameObject parent, string arg_Text, Color color)
                 {
-                    // Steal TextMeshPro from a reference object
-                    GameObject reference = GameObject.Find("GUI/CellUI_Camera(Clone)/NavMarkerLayer/NavMarkerGeneric(Clone)/IconHolder/Title");
-                    gameObject = Object.Instantiate(reference);
-                    gameObject.GetComponent<NavMarkerComponent>().Destroy();
+                    gameObject = new();
                     gameObject.transform.position = Vector3.zero;
                     gameObject.transform.rotation = Quaternion.identity;
                     gameObject.transform.localScale = Vector3.one;
                     gameObject.layer = 0;
                     gameObject.tag = "Untagged";
                     gameObject.SetActive(true);
-
+                    gameObject.transform.SetParent(parent.transform, false);
                     gameObject.name = $"TextPart {arg_Text}";
-                    rect = gameObject.GetComponent<RectTransform>();
-                    rect.SetParent(parent.transform, false);
 
-                    textMesh = gameObject.GetComponent<TextMeshPro>();
-                    textMesh.enableAutoSizing = false;
-                    textMesh.fontSize = 2.5f;
-                    textMesh.alignment = TextAlignmentOptions.Center;
-                    textMesh.color = color;
-                    textMesh.text = arg_Text;
-
+                    rect = gameObject.AddComponent<RectTransform>();
                     rect.anchoredPosition = Vector2.zero; // center inside node
                     rect.localScale = Vector3.one;
-
                     rect.sizeDelta = new Vector2(300, 0);
+
+                    textMesh = gameObject.AddComponent<TextMeshPro>();
+                    textMesh.enableAutoSizing = false;
+                    textMesh.fontSize = sMenuManager.defaultFontSize;
+                    textMesh.alignment = TextAlignmentOptions.Center;
+                    textMesh.color = color;
+                    text = arg_Text;
 
                     ContentSizeFitter fitter = gameObject.AddComponent<ContentSizeFitter>();
                     fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-                    fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+                    fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
                 }
-
                 //TODO
                 //set font
                 //set alignment

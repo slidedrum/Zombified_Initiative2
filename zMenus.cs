@@ -1,6 +1,7 @@
 ﻿using CollisionRundown.Features.HUDs;
 using GameData;
 using Player;
+using SlideMenu;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,33 +10,32 @@ using ZombieTweak2.CustomActions.Patches;
 using ZombieTweak2.zRootBotPlayerAction;
 using ZombieTweak2.zRootBotPlayerAction.CustomActions;
 using Zombified_Initiative;
-using static ZombieTweak2.zMenu.zMenu;
 
-namespace ZombieTweak2.zMenu
+namespace ZombieTweak2
 {
     public static class zMenus
     {
         //This is the class that actually creates the menue instances
-        public static List<zMenu> botMenus;
+        public static List<sMenu> botMenus;
         private static string endcolor = "</color>";
         private static string enabledColor = "<color=#FFA50066>";
         private static string disabledColor = "<color=#CCCCCC33>";
 
         public static void CreateMenus()
         {
-            AutomaticActionMenuClass.Setup(zMenuManager.createMenu("Automatic Actions", zMenuManager.mainMenu));
-            ManualActionMenuClass.Setup(zMenuManager.createMenu("Manual Actions", zMenuManager.mainMenu));
-            zMenuManager.createMenu("Contextual Actions", zMenuManager.mainMenu);
-            SettingsMenuClass.Setup(zMenuManager.createMenu("Settings", zMenuManager.mainMenu));
-            zMenuManager.createMenu("Voice menu", zMenuManager.mainMenu);
-            DebugMenuClass.Setup(zMenuManager.createMenu("Debug", zMenuManager.mainMenu));
+            AutomaticActionMenuClass.Setup(sMenuManager.createMenu("Automatic Actions", sMenuManager.mainMenu));
+            ManualActionMenuClass.Setup(sMenuManager.createMenu("Manual Actions", sMenuManager.mainMenu));
+            sMenuManager.createMenu("Contextual Actions", sMenuManager.mainMenu);
+            SettingsMenuClass.Setup(sMenuManager.createMenu("Settings", sMenuManager.mainMenu));
+            sMenuManager.createMenu("Voice menu", sMenuManager.mainMenu);
+            DebugMenuClass.Setup(sMenuManager.createMenu("Debug", sMenuManager.mainMenu));
         }
     }
     public static class ManualActionMenuClass
     {
-        public static zMenu manualActionMenu;
-        public static zMenu.zMenuNode manuActionNode;
-        public static void Setup(zMenu menu)
+        public static sMenu manualActionMenu;
+        public static sMenu.sMenuNode manuActionNode;
+        public static void Setup(sMenu menu)
         {
             manualActionMenu = menu;
             manuActionNode = manualActionMenu.GetNode();
@@ -65,29 +65,33 @@ namespace ZombieTweak2.zMenu
     }
     public static class AutomaticActionMenuClass
     {
-        public static List<zMenu> autoActionMenus = new List<zMenu>();
-        private static zMenu AutoActionMenu;
-        internal static void Setup(zMenu menu)
+        public static List<sMenu> autoActionMenus = new List<sMenu>();
+        private static sMenu AutoActionMenu;
+        internal static void Setup(sMenu menu)
         {
             AutoActionMenu = menu;
-            AutoActionMenu.radius = 30f;
+            AutoActionMenu.radius = 130f;
             //Vanilla actions
-            autoActionMenus.Add(zMenuManager.createMenu("Tag Enemies", AutoActionMenu));
-            autoActionMenus.Add(zMenuManager.createMenu("Attack", AutoActionMenu));
-            autoActionMenus.Add(zMenuManager.createMenu("Revive", AutoActionMenu));
-            autoActionMenus.Add(zMenuManager.createMenu("Bioscan", AutoActionMenu));
-            var shareMenu = zMenuManager.createMenu("Share", AutoActionMenu);
+            autoActionMenus.Add(sMenuManager.createMenu("Tag Enemies", AutoActionMenu));
+            autoActionMenus.Add(sMenuManager.createMenu("Attack", AutoActionMenu));
+            autoActionMenus.Add(sMenuManager.createMenu("Revive", AutoActionMenu));
+            autoActionMenus.Add(sMenuManager.createMenu("Bioscan", AutoActionMenu));
+            var shareMenu = sMenuManager.createMenu("Share", AutoActionMenu);
             autoActionMenus.Add(shareMenu);
-            autoActionMenus.Add(zMenuManager.createMenu("Ping", AutoActionMenu));
-            autoActionMenus.Add(zMenuManager.createMenu("Enemy Scanner", AutoActionMenu));
-            var pickupMenu = zMenuManager.createMenu("Pickup", AutoActionMenu);
+            autoActionMenus.Add(sMenuManager.createMenu("Ping", AutoActionMenu));
+            autoActionMenus.Add(sMenuManager.createMenu("Enemy Scanner", AutoActionMenu));
+            var pickupMenu = sMenuManager.createMenu("Pickup", AutoActionMenu);
             autoActionMenus.Add(pickupMenu);
-            var followMenu =zMenuManager.createMenu("Follow", AutoActionMenu);
+            var followMenu = sMenuManager.createMenu("Follow", AutoActionMenu);
             autoActionMenus.Add(followMenu);
-            autoActionMenus.Add(zMenuManager.createMenu("Unlock", AutoActionMenu));
+            autoActionMenus.Add(sMenuManager.createMenu("Unlock", AutoActionMenu));
             //Custom actions
-            var exploremenu = zMenuManager.createMenu("Explore", AutoActionMenu);
+            var exploremenu = sMenuManager.createMenu("Explore", AutoActionMenu);
             autoActionMenus.Add(exploremenu);
+
+            menu.AddPannel(sMenu.sMenuPannel.Side.right, "Tap => toggle");
+            menu.AddPannel(sMenu.sMenuPannel.Side.right, "Double tap => submenu");
+            menu.AddPannel(sMenu.sMenuPannel.Side.right, "Hold => reset");
 
             ExploreMenuClass.Setup(exploremenu);
             PickupMenuClass.Setup(pickupMenu);
@@ -96,7 +100,7 @@ namespace ZombieTweak2.zMenu
 
             AutoActionMenu.AddCatagory("All");
             AutoActionMenu.AddCatagory("Favorites");
-            AutoActionMenu.AddNodeToCatagory("Favorites","Pickup");
+            AutoActionMenu.AddNodeToCatagory("Favorites", "Pickup");
             AutoActionMenu.AddNodeToCatagory("Favorites", "Share");
             AutoActionMenu.AddNodeToCatagory("Favorites", "Explore");
             AutoActionMenu.AddNodeToCatagory("Favorites", "Follow");
@@ -104,28 +108,28 @@ namespace ZombieTweak2.zMenu
             AutoActionMenu.AddNodeToCatagory("Resources", "Pickup");
             AutoActionMenu.AddNodeToCatagory("Resources", "Share");
             AutoActionMenu.SetCatagory("Favorites");
-            
+
         }
         public static class PickupMenuClass
         {
-            public static Dictionary<uint, zMenu.zMenuNode> prioNodesByID = new Dictionary<uint, zMenu.zMenuNode>();
+            public static Dictionary<uint, sMenu.sMenuNode> prioNodesByID = new Dictionary<uint, sMenu.sMenuNode>();
             private static Dictionary<string, List<string>> catagories = new();
             private static int catagoryIndex = 1;
-            public static zMenu pickupMenu;
-            public static zMenu.zMenuNode pickupNode;
-            public static void Setup(zMenu menu)
+            public static sMenu pickupMenu;
+            public static sMenu.sMenuNode pickupNode;
+            public static void Setup(sMenu menu)
             {
                 pickupMenu = menu;
-                pickupMenu.radius = 25f;
+                pickupMenu.radius = 125f;
                 pickupNode = pickupMenu.GetNode();
 
-                zMenu.zMenuNode glowstickNode = null;
+                sMenu.sMenuNode glowstickNode = null;
                 foreach (var item in zSlideComputer.itemPrios)
                 {
                     uint itemID = item.Key;
                     ItemDataBlock block = ItemDataBlock.s_blockByID[itemID];
                     string publicName = block.publicName;
-                    zMenu.zMenuNode node = null;
+                    sMenu.sMenuNode node = null;
                     bool isGlowstick = zSlideComputer.shortGlowStickNames.Contains(publicName);
                     if (isGlowstick)
                     {
@@ -143,23 +147,23 @@ namespace ZombieTweak2.zMenu
                     }
                     //TODO uncomment then when moved over to overide system instead of selection system.
                     //var thisNode = menu.parrentMenu.GetNode(menu.centerNode.text);
-                    //thisNode.ClearListeners(zMenuManager.nodeEvent.OnUnpressedSelected);
-                    //thisNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, menu.Open);
-                    //thisNode.AddListener(zMenuManager.nodeEvent.OnTapped, TogglePerms);
-                    node.AddListener(zMenuManager.nodeEvent.WhileSelected, ChangePrioBasedOnMouseWheel, itemID, node);
-                    node.AddListener(zMenuManager.nodeEvent.OnTapped, zSlideComputer.ToggleItemPrioDisabled, itemID);
-                    node.AddListener(zMenuManager.nodeEvent.OnTapped, updateNodePriorityDisplay, node, itemID);//TODO make these args order consistant.
-                    node.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, ResetNodeSettings, itemID, node);
-                    pickupMenu.centerNode.ClearListeners(zMenuManager.nodeEvent.OnUnpressedSelected);
-                    pickupMenu.centerNode.AddListener(zMenuManager.nodeEvent.OnTapped, pickupMenu.parrentMenu.Open);
-                    pickupMenu.centerNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, ResetNodeSettings, itemID, node);
-                    pickupMenu.AddListener(zMenuManager.menuEvent.OnOpened, updateNodePriorityDisplay, node, itemID);
+                    //thisNode.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
+                    //thisNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, menu.Open);
+                    //thisNode.AddListener(sMenuManager.nodeEvent.OnTapped, TogglePerms);
+                    node.AddListener(sMenuManager.nodeEvent.WhileSelected, ChangePrioBasedOnMouseWheel, itemID, node);
+                    node.AddListener(sMenuManager.nodeEvent.OnTapped, zSlideComputer.ToggleItemPrioDisabled, itemID);
+                    node.AddListener(sMenuManager.nodeEvent.OnTapped, updateNodePriorityDisplay, node, itemID);//TODO make these args order consistant.
+                    node.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, ResetNodeSettings, itemID, node);
+                    pickupMenu.centerNode.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
+                    pickupMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnTapped, pickupMenu.parrentMenu.Open);
+                    pickupMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, ResetNodeSettings, itemID, node);
+                    pickupMenu.AddListener(sMenuManager.menuEvent.OnOpened, updateNodePriorityDisplay, node, itemID);
                     node.fullTextPart.SetScale(1f, 1f);
                     node.subtitlePart.SetScale(0.75f, 0.75f);
                     node.titlePart.SetScale(0.5f, 0.5f);
                     node.SetSize(0.75f);
                 }
-                //pickupMenu.centerNode.AddListener(zMenuManager.nodeEvent.WhileSelected, UpdateCatagoryByScroll);
+                //pickupMenu.centerNode.AddListener(sMenuManager.nodeEvent.WhileSelected, UpdateCatagoryByScroll);
                 //ALL - ENCOUNTERED - RESOURCES - PLACEABLES - THROWABLES - FAVORITES
                 pickupMenu.AddCatagory("All");
                 pickupMenu.AddCatagory("Encountered");
@@ -179,10 +183,10 @@ namespace ZombieTweak2.zMenu
                 pickupMenu.AddNodeToCatagory("Throwables", "Fog Repeller");
                 pickupMenu.AddNodeToCatagory("Throwables", "C-Foam Grenade");
                 pickupMenu.SetCatagory("All");
-                pickupMenu.AddListener(zMenuManager.menuEvent.OnOpened, pickupMenu.UpdateCatagoryNodes);
-                pickupNode.ClearListeners(zMenuManager.nodeEvent.OnUnpressedSelected);
-                pickupNode.AddListener(zMenuManager.nodeEvent.OnTapped, TogglePerms);
-                pickupNode.AddListener(zMenuManager.nodeEvent.OnDoubleTapped, pickupMenu.Open);
+                pickupMenu.AddListener(sMenuManager.menuEvent.OnOpened, pickupMenu.UpdateCatagoryNodes);
+                pickupNode.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
+                pickupNode.AddListener(sMenuManager.nodeEvent.OnTapped, TogglePerms);
+                pickupNode.AddListener(sMenuManager.nodeEvent.OnDoubleTapped, pickupMenu.Open);
             }
             internal static void Encounter(string friendlyName)
             {
@@ -200,7 +204,7 @@ namespace ZombieTweak2.zMenu
                     pickupMenu.UpdateCatagoryNodes();
                 }
             }
-            private static void ResetNodeSettings(uint itemID, zMenu.zMenuNode node)
+            private static void ResetNodeSettings(uint itemID, sMenu.sMenuNode node)
             {
                 if (!node.gameObject.activeInHierarchy)
                     return;
@@ -219,8 +223,8 @@ namespace ZombieTweak2.zMenu
                 }
                 if (pickupAllowed)
                 {
-                    pickupNode.SetColor(zMenuManager.defaultColor);
-                    pickupMenu.centerNode.SetColor(zMenuManager.defaultColor);
+                    pickupNode.SetColor(sMenuManager.defaultColor);
+                    pickupMenu.centerNode.SetColor(sMenuManager.defaultColor);
                 }
                 else
                 {
@@ -228,7 +232,7 @@ namespace ZombieTweak2.zMenu
                     pickupMenu.centerNode.SetColor(new Color(0.25f, 0f, 0f));
                 }
             }
-            public static void updateNodePriorityDisplay(zMenu.zMenuNode node, uint itemID)
+            public static void updateNodePriorityDisplay(sMenu.sMenuNode node, uint itemID)
             {
                 if (zSlideComputer.itemPrios[itemID] == zSlideComputer.OriginalItemPrios[itemID])
                 {
@@ -243,7 +247,7 @@ namespace ZombieTweak2.zMenu
                 string hex = ColorUtility.ToHtmlStringRGB(GetPriorityColor(zSlideComputer.GetItemPrio(itemID)));
                 node.SetSubtitle($"<color=#CC840066>[ </color><color=#{hex}>{zSlideComputer.GetItemPrio(itemID)}</color><color=#CC840066> ]</color>");
                 if (zSlideComputer.enabledItemPrios[itemID])
-                    node.SetColor(zMenuManager.defaultColor);
+                    node.SetColor(sMenuManager.defaultColor);
                 else
                     node.SetColor(new Color(0.25f, 0f, 0f));
             }
@@ -263,7 +267,7 @@ namespace ZombieTweak2.zMenu
                     return Color.Lerp(yellow, green, (value - 25f) / 25f);
                 return Color.Lerp(green, blue, (value - 50f) / 50f);
             }
-            public static void ChangePrioBasedOnMouseWheel(uint itemID, zMenu.zMenuNode node, int increment = 10)
+            public static void ChangePrioBasedOnMouseWheel(uint itemID, sMenu.sMenuNode node, int increment = 10)
             {
                 if (node == null || !node.gameObject.activeInHierarchy || !zSlideComputer.enabledItemPrios[itemID])
                     return;
@@ -278,11 +282,11 @@ namespace ZombieTweak2.zMenu
         }
         public static class ShareMenuClass
         {
-            public static Dictionary<uint, zMenu.zMenuNode> packNodesByID = new Dictionary<uint, zMenu.zMenuNode>();
-            public static zMenu shareMenu;
-            public static zMenu.zMenuNode shareNode;
+            public static Dictionary<uint, sMenu.sMenuNode> packNodesByID = new Dictionary<uint, sMenu.sMenuNode>();
+            public static sMenu shareMenu;
+            public static sMenu.sMenuNode shareNode;
 
-            public static void Setup(zMenu menu)
+            public static void Setup(sMenu menu)
             {
                 shareMenu = menu;
                 shareNode = shareMenu.GetNode();
@@ -291,34 +295,34 @@ namespace ZombieTweak2.zMenu
                 {
                     uint itemID = ItemDataBlock.s_blockIDByName[block.name];
                     string name = block.publicName;
-                    zMenu.zMenuNode node = shareMenu.AddNode(name);
+                    sMenu.sMenuNode node = shareMenu.AddNode(name);
                     //TODO uncomment then when moved over to overide system instead of selection system.
                     //var thisNode = menu.parrentMenu.GetNode(menu.centerNode.text);
-                    //thisNode.ClearListeners(zMenuManager.nodeEvent.OnUnpressedSelected);
-                    //thisNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, menu.Open);
-                    //thisNode.AddListener(zMenuManager.nodeEvent.OnTapped, TogglePerms);
-                    node.AddListener(zMenuManager.nodeEvent.OnTapped, zSlideComputer.ToggleResourceSharePermission, itemID);
-                    node.AddListener(zMenuManager.nodeEvent.OnTapped, updateNodeThresholdDisplay, node, itemID);
-                    node.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, zSlideComputer.SetResourceSharePermission, itemID, true);
-                    node.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, zSlideComputer.SetResourceThreshold, itemID, 100);
-                    node.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, updateNodeThresholdDisplay, node, itemID);
-                    node.AddListener(zMenuManager.nodeEvent.WhileSelected, ChangeThresholdBasedOnMouseWheel, itemID, node, 5);
-                    shareMenu.AddListener(zMenuManager.menuEvent.OnOpened, updateNodeThresholdDisplay, node, itemID);
-                    shareMenu.centerNode.ClearListeners(zMenuManager.nodeEvent.OnUnpressedSelected);
-                    shareMenu.centerNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, zSlideComputer.SetResourceThreshold, itemID, 100);
-                    shareMenu.centerNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, zSlideComputer.SetResourceSharePermission, itemID, true);
-                    shareMenu.centerNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, updateNodeThresholdDisplay, node, itemID);
+                    //thisNode.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
+                    //thisNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, menu.Open);
+                    //thisNode.AddListener(sMenuManager.nodeEvent.OnTapped, TogglePerms);
+                    node.AddListener(sMenuManager.nodeEvent.OnTapped, zSlideComputer.ToggleResourceSharePermission, itemID);
+                    node.AddListener(sMenuManager.nodeEvent.OnTapped, updateNodeThresholdDisplay, node, itemID);
+                    node.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, zSlideComputer.SetResourceSharePermission, itemID, true);
+                    node.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, zSlideComputer.SetResourceThreshold, itemID, 100);
+                    node.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, updateNodeThresholdDisplay, node, itemID);
+                    node.AddListener(sMenuManager.nodeEvent.WhileSelected, ChangeThresholdBasedOnMouseWheel, itemID, node, 5);
+                    shareMenu.AddListener(sMenuManager.menuEvent.OnOpened, updateNodeThresholdDisplay, node, itemID);
+                    shareMenu.centerNode.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
+                    shareMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, zSlideComputer.SetResourceThreshold, itemID, 100);
+                    shareMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, zSlideComputer.SetResourceSharePermission, itemID, true);
+                    shareMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, updateNodeThresholdDisplay, node, itemID);
                     node.fullTextPart.SetScale(1f, 1f);
                     node.subtitlePart.SetScale(0.75f, 0.75f);
                     node.titlePart.SetScale(0.5f, 0.5f);
                     packNodesByID[itemID] = node;
                 }
-                shareMenu.centerNode.AddListener(zMenuManager.nodeEvent.OnTapped, shareMenu.parrentMenu.Open);
-                shareNode.ClearListeners(zMenuManager.nodeEvent.OnUnpressedSelected);
-                shareNode.AddListener(zMenuManager.nodeEvent.OnTapped, TogglePerms);
-                shareNode.AddListener(zMenuManager.nodeEvent.OnDoubleTapped, shareMenu.Open);
+                shareMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnTapped, shareMenu.parrentMenu.Open);
+                shareNode.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
+                shareNode.AddListener(sMenuManager.nodeEvent.OnTapped, TogglePerms);
+                shareNode.AddListener(sMenuManager.nodeEvent.OnDoubleTapped, shareMenu.Open);
             }
-            public static void updateNodeThresholdDisplay(zMenu.zMenuNode node, uint itemID)
+            public static void updateNodeThresholdDisplay(sMenu.sMenuNode node, uint itemID)
             {
                 if (zSlideComputer.GetResourceThreshold(itemID) == 100)
                 {
@@ -333,7 +337,7 @@ namespace ZombieTweak2.zMenu
                 string hex = ColorUtility.ToHtmlStringRGB(GetThresholdColor(zSlideComputer.GetResourceThreshold(itemID)));
                 node.SetSubtitle($"<color=#CC840066>[ </color><color=#{hex}>{zSlideComputer.GetResourceThreshold(itemID)}</color><color=#CC840066> ]</color>");
                 if (zSlideComputer.enabledResourceShares[itemID])
-                    node.SetColor(zMenuManager.defaultColor);
+                    node.SetColor(sMenuManager.defaultColor);
                 else
                     node.SetColor(new Color(0.25f, 0f, 0f));
             }
@@ -348,8 +352,8 @@ namespace ZombieTweak2.zMenu
                 }
                 if (shareAllowed)
                 {
-                    shareNode.SetColor(zMenuManager.defaultColor);
-                    shareMenu.centerNode.SetColor(zMenuManager.defaultColor);
+                    shareNode.SetColor(sMenuManager.defaultColor);
+                    shareMenu.centerNode.SetColor(sMenuManager.defaultColor);
                 }
                 else
                 {
@@ -371,7 +375,7 @@ namespace ZombieTweak2.zMenu
                 else // 40 → 100: yellow → green
                     return Color.Lerp(yellow, green, (value - 40f) / 60f);
             }
-            public static void ChangeThresholdBasedOnMouseWheel(uint itemID, zMenu.zMenuNode node, int increment = 10)
+            public static void ChangeThresholdBasedOnMouseWheel(uint itemID, sMenu.sMenuNode node, int increment = 10)
             {
                 if (node == null || !node.gameObject.activeInHierarchy || !zSlideComputer.enabledResourceShares[itemID])
                     return;
@@ -386,15 +390,15 @@ namespace ZombieTweak2.zMenu
         }
         public static class ExploreMenuClass
         {
-            private static zMenu exploreMenu;
-            private static zMenu.zMenuNode exploreNode;
-            internal static void Setup(zMenu menu)
+            private static sMenu exploreMenu;
+            private static sMenu.sMenuNode exploreNode;
+            internal static void Setup(sMenu menu)
             {
                 exploreMenu = menu;
                 exploreNode = exploreMenu.parrentMenu.GetNode(exploreMenu.centerNode.text);
-                exploreNode.ClearListeners(zMenuManager.nodeEvent.OnUnpressedSelected);
-                exploreNode.AddListener(zMenuManager.nodeEvent.OnTapped, ToggleExplorePerms);
-                exploreNode.AddListener(zMenuManager.nodeEvent.OnDoubleTapped, exploreMenu.Open);
+                exploreNode.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
+                exploreNode.AddListener(sMenuManager.nodeEvent.OnTapped, ToggleExplorePerms);
+                exploreNode.AddListener(sMenuManager.nodeEvent.OnDoubleTapped, exploreMenu.Open);
             }
             private static void ToggleExplorePerms()
             {
@@ -404,17 +408,17 @@ namespace ZombieTweak2.zMenu
                     ExploreAction.ToggleExplorePerm(bot);
                 }
                 if (ExploreAction.GetExplorePerm(bots[0]))
-                    exploreNode.SetColor(zMenuManager.defaultColor);
+                    exploreNode.SetColor(sMenuManager.defaultColor);
                 else
                     exploreNode.SetColor(new Color(0.25f, 0f, 0f));
             }
         }
         public static class FollowMenuClass
         {
-            private static zMenu followMenu;
-            private static zMenuNode followMenuNode;
-            private static Dictionary<DRAMA_State, zMenuNode> stateNodes = new();
-            private static Dictionary<string, zMenuNode> catagoryNodes = new();
+            private static sMenu followMenu;
+            private static sMenu.sMenuNode followMenuNode;
+            private static Dictionary<DRAMA_State, sMenu.sMenuNode> stateNodes = new();
+            private static Dictionary<string, sMenu.sMenuNode> catagoryNodes = new();
             public static DRAMA_State previousState;
             public static Color currentStateColor;
             public static Color defaultColor;
@@ -425,7 +429,7 @@ namespace ZombieTweak2.zMenu
             private static List<DRAMA_State> fightingStates = new();
             private static List<DRAMA_State> ignoredStates = new();
 
-            internal static void Setup(zMenu menu)
+            internal static void Setup(sMenu menu)
             {
 
 
@@ -448,18 +452,18 @@ namespace ZombieTweak2.zMenu
                 maxDistance = new(10);
                 followEnabled = new(true);
                 followEnabled.AddNode("Main", true);
-                prio.        AddNode("Follow",     null);
-                prio.        AddNode("Fighting", null, "Follow", condition: () => { return fightingStates.Contains(DramaManager.CurrentStateEnum); });
-                prio.        AddNode("Stealth",  null, "Follow", condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Sneaking; });
-                prio.        AddNode("Explore",  null, "Follow", condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Exploration; });
-                followRadius.AddNode("Follow",     null);
+                prio.AddNode("Follow", null);
+                prio.AddNode("Fighting", null, "Follow", condition: () => { return fightingStates.Contains(DramaManager.CurrentStateEnum); });
+                prio.AddNode("Stealth", null, "Follow", condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Sneaking; });
+                prio.AddNode("Explore", null, "Follow", condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Exploration; });
+                followRadius.AddNode("Follow", null);
                 followRadius.AddNode("Fighting", null, "Follow", condition: () => { return fightingStates.Contains(DramaManager.CurrentStateEnum); });
-                followRadius.AddNode("Stealth",  null, "Follow", condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Sneaking; });
-                followRadius.AddNode("Explore",  null, "Follow", condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Exploration; });
-                maxDistance. AddNode("Follow",     null);
-                maxDistance. AddNode("Fighting", null, "Follow", condition: () => { return fightingStates.Contains(DramaManager.CurrentStateEnum); });
-                maxDistance. AddNode("Stealth",  null, "Follow", condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Sneaking; });
-                maxDistance. AddNode("Explore",  null, "Follow", condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Exploration; });
+                followRadius.AddNode("Stealth", null, "Follow", condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Sneaking; });
+                followRadius.AddNode("Explore", null, "Follow", condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Exploration; });
+                maxDistance.AddNode("Follow", null);
+                maxDistance.AddNode("Fighting", null, "Follow", condition: () => { return fightingStates.Contains(DramaManager.CurrentStateEnum); });
+                maxDistance.AddNode("Stealth", null, "Follow", condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Sneaking; });
+                maxDistance.AddNode("Explore", null, "Follow", condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Exploration; });
 
                 catagoryNodes["Fighting"] = AddCatagoryNode("Fighting");
                 catagoryNodes["Stealth"] = AddCatagoryNode("Stealth");
@@ -470,6 +474,13 @@ namespace ZombieTweak2.zMenu
                 followMenu.AddNodeToCatagory("Basic", "Stealth");
                 followMenu.AddNodeToCatagory("Basic", "Explore");
                 followMenu.AddCatagory("Advanced");
+
+                followMenu.AddPannel(sMenu.sMenuPannel.Side.bottom, "Top: Priority, how important is staing in range?");
+                followMenu.AddPannel(sMenu.sMenuPannel.Side.bottom, "Bottom left: Range, how close should the bots be?");
+                followMenu.AddPannel(sMenu.sMenuPannel.Side.bottom, "Bottom right: Max distance, When should bots sprint?");
+                followMenu.AddPannel(sMenu.sMenuPannel.Side.right, "Scroll => change setting");
+                followMenu.AddPannel(sMenu.sMenuPannel.Side.right, "Hold => reset");
+
 
                 foreach (DRAMA_State state in Enum.GetValues(typeof(DRAMA_State)))
                 {
@@ -497,22 +508,22 @@ namespace ZombieTweak2.zMenu
                     UpdateNodeSettingsDisplay(stateNode);
                     stateNode.titlePart.SetScale(0.5f);
                     stateNode.subtitlePart.SetScale(0.5f);
-                    stateNode.AddListener(zMenuManager.nodeEvent.WhileSelected, UpdateNodeBasedOnScroll, stateNode);
-                    stateNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, ResetSettings, stateNode);
+                    stateNode.AddListener(sMenuManager.nodeEvent.WhileSelected, UpdateNodeBasedOnScroll, stateNode);
+                    stateNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, ResetSettings, stateNode);
                     followMenu.AddNodeToCatagory("Advanced", stateNode);
                 }
-                followMenu.AddListener(zMenuManager.menuEvent.WhileOpened, UpdateHighlightedState);
-                followMenu.AddListener(zMenuManager.menuEvent.OnOpened, UpdateAllNodes);
-                followMenu.AddListener(zMenuManager.menuEvent.OnCatagoryChanged, UpdateAllNodes);
-                followMenu.centerNode.ClearListeners(zMenuManager.nodeEvent.OnUnpressedSelected);
-                followMenu.centerNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, ResetAllLocalSettings);
-                followMenu.centerNode.AddListener(zMenuManager.nodeEvent.OnTapped, followMenu.parrentMenu.Open);
-                followMenuNode.ClearListeners(zMenuManager.nodeEvent.OnUnpressedSelected);
-                followMenuNode.AddListener(zMenuManager.nodeEvent.WhileSelected, UpdateNodeBasedOnScroll, followMenuNode);
-                followMenuNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, ResetSettings, followMenuNode);
-                followMenuNode.AddListener(zMenuManager.nodeEvent.OnTapped, ToggleFollowEnabled);
-                followMenuNode.AddListener(zMenuManager.nodeEvent.OnDoubleTapped, followMenu.Open);
-                followMenu.radius = 30f;
+                followMenu.AddListener(sMenuManager.menuEvent.WhileOpened, UpdateHighlightedState);
+                followMenu.AddListener(sMenuManager.menuEvent.OnOpened, UpdateAllNodes);
+                followMenu.AddListener(sMenuManager.menuEvent.OnCatagoryChanged, UpdateAllNodes);
+                followMenu.centerNode.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
+                followMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, ResetAllLocalSettings);
+                followMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnTapped, followMenu.parrentMenu.Open);
+                followMenuNode.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
+                followMenuNode.AddListener(sMenuManager.nodeEvent.WhileSelected, UpdateNodeBasedOnScroll, followMenuNode);
+                followMenuNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, ResetSettings, followMenuNode);
+                followMenuNode.AddListener(sMenuManager.nodeEvent.OnTapped, ToggleFollowEnabled);
+                followMenuNode.AddListener(sMenuManager.nodeEvent.OnDoubleTapped, followMenu.Open);
+                followMenu.radius = 130f;
                 UpdateNodeSettingsDisplay(followMenuNode);
                 followMenu.SetCatagory("Basic");
             }
@@ -520,7 +531,7 @@ namespace ZombieTweak2.zMenu
             {
                 bool allowed = (bool)followEnabled.SetValue("Main", !(bool)followEnabled.GetValue()); // Invert value
                 var allbots = ZiMain.GetBotList();
-                foreach ( var bot in allbots)
+                foreach (var bot in allbots)
                 {
                     var data = zActions.GetOrCreateData(bot);
                     if (allowed)
@@ -528,7 +539,7 @@ namespace ZombieTweak2.zMenu
                         if (bot.SyncValues.Leader != bot.Agent)//Leader was changed to something else, don't revert
                         {
                             data.actualLeader = bot.SyncValues.Leader;
-                            continue; 
+                            continue;
                         }
                         if (data.actualLeader == bot.Agent)
                         {
@@ -545,7 +556,7 @@ namespace ZombieTweak2.zMenu
                             ZiMain.log.LogWarning($"Follow leader for {bot.Agent.PlayerName} got lost.  Reseting to local player");
                             data.actualLeader = PlayerManager.GetLocalPlayerAgent();
                         }
-                        else 
+                        else
                         {
                             data.actualLeader = bot.SyncValues.Leader; // Backup the real leader
                         }
@@ -558,8 +569,8 @@ namespace ZombieTweak2.zMenu
             {
                 if ((bool)followEnabled.GetValue())
                 {
-                    followMenuNode.SetColor(zMenuManager.defaultColor);
-                    followMenu.centerNode.SetColor(zMenuManager.defaultColor);
+                    followMenuNode.SetColor(sMenuManager.defaultColor);
+                    followMenu.centerNode.SetColor(sMenuManager.defaultColor);
                 }
                 else
                 {
@@ -567,16 +578,16 @@ namespace ZombieTweak2.zMenu
                     followMenu.centerNode.SetColor(new Color(0.25f, 0f, 0f));
                 }
             }
-            private static zMenuNode AddCatagoryNode(string catagory)
+            private static sMenu.sMenuNode AddCatagoryNode(string catagory)
             {
                 var catagoryNode = followMenu.AddNode(catagory);
                 catagoryNode.titlePart.SetScale(0.5f);
                 catagoryNode.subtitlePart.SetScale(0.5f);
-                catagoryNode.AddListener(zMenuManager.nodeEvent.WhileSelected, UpdateNodeBasedOnScroll, catagoryNode);
-                catagoryNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, ResetSettings, catagoryNode);
+                catagoryNode.AddListener(sMenuManager.nodeEvent.WhileSelected, UpdateNodeBasedOnScroll, catagoryNode);
+                catagoryNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, ResetSettings, catagoryNode);
                 return catagoryNode;
             }
-            private static void ResetSettings(zMenuNode node)
+            private static void ResetSettings(sMenu.sMenuNode node)
             {
                 string text = node.text;
                 prio.SetValue(text, null);
@@ -629,7 +640,7 @@ namespace ZombieTweak2.zMenu
                 }
                 previousState = DramaManager.CurrentStateEnum;
             }
-            private static void UpdateNodeBasedOnScroll(zMenuNode node)
+            private static void UpdateNodeBasedOnScroll(sMenu.sMenuNode node)
             {
                 float scroll = Input.GetAxis("Mouse ScrollWheel");
                 int normalizedScroll = (int)Mathf.Sign(scroll);
@@ -654,17 +665,17 @@ namespace ZombieTweak2.zMenu
             }
             private static void UpdateAllNodes()
             {
-                foreach(var Node in followMenu.nodes)
+                foreach (var Node in followMenu.nodes)
                 {
                     UpdateNodeSettingsDisplay(Node);
                 }
             }
-            private static void UpdateNodeSettingsDisplay(zMenuNode node)
+            private static void UpdateNodeSettingsDisplay(sMenu.sMenuNode node)
             {
                 string text = node.text;
-                if (prio.nodes[text].Parent.ValueAt()         == prio.ValueAt(text) && 
-                    followRadius.nodes[text].Parent.ValueAt() == followRadius.ValueAt(text) && 
-                    maxDistance.nodes[text].Parent.ValueAt()  == maxDistance.ValueAt(text)) //Holy shit this is a mess, TODO clean this.
+                if (prio.nodes[text].Parent.ValueAt() == prio.ValueAt(text) &&
+                    followRadius.nodes[text].Parent.ValueAt() == followRadius.ValueAt(text) &&
+                    maxDistance.nodes[text].Parent.ValueAt() == maxDistance.ValueAt(text)) //Holy shit this is a mess, TODO clean this.
                 {
                     node.SetPrefix("");
                     node.SetSuffix("");
@@ -674,67 +685,67 @@ namespace ZombieTweak2.zMenu
                     node.SetPrefix("* ");
                     node.SetSuffix(" *");
                 }
-                node.SetTitle($"Prio <color=#CC840066>[</color>{prio.ValueAt(text)}<color=#CC840066>]</color>"); 
+                node.SetTitle($"Prio <color=#CC840066>[</color>{prio.ValueAt(text)}<color=#CC840066>]</color>");
                 node.SetSubtitle($"Range <color=#CC840066>[</color>{followRadius.ValueAt(text)}/{maxDistance.ValueAt(text)}<color=#CC840066>]</color>");
             }
         }
     }
     public static class DebugMenuClass
     {
-        public static zMenu debugMenu;
-        public static zMenu debugNodeMenu;
-        public static zMenu debugNodeSettingsMenu;
-        public static zMenu debugCameraCullingMenu;
+        public static sMenu debugMenu;
+        public static sMenu debugNodeMenu;
+        public static sMenu debugNodeSettingsMenu;
+        public static sMenu debugCameraCullingMenu;
 
-        public static void Setup(zMenu menu)
+        public static void Setup(sMenu menu)
         {
-            //debugMenu = zMenuManager.createMenu("debug", zMenuManager.mainMenu);
+            //debugMenu = sMenuManager.createMenu("debug", sMenuManager.mainMenu);
             debugMenu = menu;
-            debugNodeMenu = zMenuManager.createMenu("Nodes", debugMenu);
-            debugNodeSettingsMenu = zMenuManager.createMenu("Settings", debugNodeMenu);
-            debugCameraCullingMenu = zMenuManager.createMenu("Camera culling", debugMenu);
-            debugMenu.AddNode("Show title prompt", InGameTitle.DisplayDefault).AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, debugMenu.Close); ;
+            debugNodeMenu = sMenuManager.createMenu("Nodes", debugMenu);
+            debugNodeSettingsMenu = sMenuManager.createMenu("Settings", debugNodeMenu);
+            debugCameraCullingMenu = sMenuManager.createMenu("Camera culling", debugMenu);
+            debugMenu.AddNode("Show title prompt", InGameTitle.DisplayDefault).AddListener(sMenuManager.nodeEvent.OnUnpressedSelected, debugMenu.Close); ;
             debugMenu.AddNode("ChecVis")
-                .AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, zDebug.setCheckVizTarget)
-                .AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, zDebug.debugCheckViz)
-                .AddListener(zMenuManager.nodeEvent.OnHeldImmediate, zDebug.toggleVisCheck)
-                .AddListener(zMenuManager.nodeEvent.OnHeldImmediate, zMenuManager.CloseAllMenues)
-                .AddListener(zMenuManager.nodeEvent.OnTappedExclusive, zMenuManager.CloseAllMenues)
-                .AddListener(zMenuManager.nodeEvent.OnDoubleTapped, zDebug.setVisCheck, false)
-                .AddListener(zMenuManager.nodeEvent.OnDoubleTapped, zMenuManager.CloseAllMenues)
+                .AddListener(sMenuManager.nodeEvent.OnUnpressedSelected, zDebug.setCheckVizTarget)
+                .AddListener(sMenuManager.nodeEvent.OnUnpressedSelected, zDebug.debugCheckViz)
+                .AddListener(sMenuManager.nodeEvent.OnHeldImmediate, zDebug.toggleVisCheck)
+                .AddListener(sMenuManager.nodeEvent.OnHeldImmediate, sMenuManager.CloseAllMenues)
+                .AddListener(sMenuManager.nodeEvent.OnTappedExclusive, sMenuManager.CloseAllMenues)
+                .AddListener(sMenuManager.nodeEvent.OnDoubleTapped, zDebug.setVisCheck, false)
+                .AddListener(sMenuManager.nodeEvent.OnDoubleTapped, sMenuManager.CloseAllMenues)
             ;
             debugMenu.AddNode("Find unexplored", zDebug.MarkUnexploredArea);
             debugMenu.AddNode("SendBotToExplore", zDebug.SendClosestBotToExplore);
             debugMenu.AddNode("Show corners", zDebug.debugCorners);
             //debugMenu.AddNode("Toggle explore",ExploreAction.ToggleCanExplore);
-            debugNodeMenu.AddNode("Node I'm looking at", zDebug.GetNodeImLookingAT, [zMenuManager.mainMenu.gameObject.transform]);
+            debugNodeMenu.AddNode("Node I'm looking at", zDebug.GetNodeImLookingAT, [sMenuManager.mainMenu.gameObject.transform]);
             debugNodeMenu.AddNode("Toggle Nodes", zDebug.ToggleNodes);
             debugNodeMenu.AddNode("Toggle Connections", zDebug.ToggleConnections);
             debugNodeMenu.AddNode("Toggle Node Info", zDebug.ToggleNodeInfo);
-            debugNodeSettingsMenu.radius = 30;
+            debugNodeSettingsMenu.radius = 130;
             var gridSizeNode = debugNodeSettingsMenu.AddNode("Grid Size");
-            gridSizeNode.AddListener(zMenuManager.nodeEvent.WhileSelected, DebugMenuClass.ChangeValueBasedOnMouseWheel, [DebugValueToChange.NodeGridSize, gridSizeNode, 0.1f]);
+            gridSizeNode.AddListener(sMenuManager.nodeEvent.WhileSelected, DebugMenuClass.ChangeValueBasedOnMouseWheel, [DebugValueToChange.NodeGridSize, gridSizeNode, 0.1f]);
             gridSizeNode.SetSubtitle($"{zVisitedManager.NodeGridSize}");
             var mapGridSizeNode = debugNodeSettingsMenu.AddNode("Map Grid Size");
-            mapGridSizeNode.AddListener(zMenuManager.nodeEvent.WhileSelected, DebugMenuClass.ChangeValueBasedOnMouseWheel, [DebugValueToChange.NodeMapSize, mapGridSizeNode, 1f]);
+            mapGridSizeNode.AddListener(sMenuManager.nodeEvent.WhileSelected, DebugMenuClass.ChangeValueBasedOnMouseWheel, [DebugValueToChange.NodeMapSize, mapGridSizeNode, 1f]);
             mapGridSizeNode.SetSubtitle($"{zVisitedManager.NodeMapGridSize}");
             var visitDistanceNode = debugNodeSettingsMenu.AddNode("Visit distnace");
-            visitDistanceNode.AddListener(zMenuManager.nodeEvent.WhileSelected, DebugMenuClass.ChangeValueBasedOnMouseWheel, [DebugValueToChange.NodeVisitDistance, visitDistanceNode, 0.5f]);
+            visitDistanceNode.AddListener(sMenuManager.nodeEvent.WhileSelected, DebugMenuClass.ChangeValueBasedOnMouseWheel, [DebugValueToChange.NodeVisitDistance, visitDistanceNode, 0.5f]);
             visitDistanceNode.SetSubtitle($"{zVisitedManager.NodeVisitDistance}");
             var propigationAmmountNode = debugNodeSettingsMenu.AddNode("Propigation ammount");
-            propigationAmmountNode.AddListener(zMenuManager.nodeEvent.WhileSelected, DebugMenuClass.ChangeValueBasedOnMouseWheel, [DebugValueToChange.PropigationAmmount, propigationAmmountNode, 1f]);
+            propigationAmmountNode.AddListener(sMenuManager.nodeEvent.WhileSelected, DebugMenuClass.ChangeValueBasedOnMouseWheel, [DebugValueToChange.PropigationAmmount, propigationAmmountNode, 1f]);
             propigationAmmountNode.SetSubtitle($"{zVisitedManager.propigationAmmount}");
             var propigationSameCountNode = debugNodeSettingsMenu.AddNode("Propigation sample count");
-            propigationSameCountNode.AddListener(zMenuManager.nodeEvent.WhileSelected, DebugMenuClass.ChangeValueBasedOnMouseWheel, [DebugValueToChange.PropigationSampleCount, propigationSameCountNode, 1f]);
+            propigationSameCountNode.AddListener(sMenuManager.nodeEvent.WhileSelected, DebugMenuClass.ChangeValueBasedOnMouseWheel, [DebugValueToChange.PropigationSampleCount, propigationSameCountNode, 1f]);
             propigationSameCountNode.SetSubtitle($"{zVisitedManager.propigationSampleCount}");
             var nodesPerFrameNode = debugNodeSettingsMenu.AddNode("Nodes per frame");
-            nodesPerFrameNode.AddListener(zMenuManager.nodeEvent.WhileSelected, DebugMenuClass.ChangeValueBasedOnMouseWheel, [DebugValueToChange.NodesCreatedPerFrame, nodesPerFrameNode, 1f]);
+            nodesPerFrameNode.AddListener(sMenuManager.nodeEvent.WhileSelected, DebugMenuClass.ChangeValueBasedOnMouseWheel, [DebugValueToChange.NodesCreatedPerFrame, nodesPerFrameNode, 1f]);
             nodesPerFrameNode.SetSubtitle($"{zVisitedManager.nodesCreatedPerFrame}");
             var connectionChecksPerFrameNode = debugNodeSettingsMenu.AddNode("Connections per frame");
-            connectionChecksPerFrameNode.AddListener(zMenuManager.nodeEvent.WhileSelected, DebugMenuClass.ChangeValueBasedOnMouseWheel, [DebugValueToChange.connectionChecksPerFrame, connectionChecksPerFrameNode, 1f]);
+            connectionChecksPerFrameNode.AddListener(sMenuManager.nodeEvent.WhileSelected, DebugMenuClass.ChangeValueBasedOnMouseWheel, [DebugValueToChange.connectionChecksPerFrame, connectionChecksPerFrameNode, 1f]);
             connectionChecksPerFrameNode.SetSubtitle($"{zVisitedManager.connectionChecksPerFrame}");
             CullingMenuClass.setupCullingMenu(debugCameraCullingMenu);
-            debugCameraCullingMenu.radius = 40;
+            debugCameraCullingMenu.radius = 140;
             debugCameraCullingMenu.setNodeSize(0.5f);
         }
         public enum DebugValueToChange
@@ -747,7 +758,7 @@ namespace ZombieTweak2.zMenu
             NodesCreatedPerFrame,
             connectionChecksPerFrame,
         }
-        public static void ChangeValueBasedOnMouseWheel(DebugValueToChange valueToChange, zMenu.zMenuNode node, float increment = 0.1f)
+        public static void ChangeValueBasedOnMouseWheel(DebugValueToChange valueToChange, sMenu.sMenuNode node, float increment = 0.1f)
         {
             if (node == null || !node.gameObject.activeInHierarchy)
                 return;
@@ -780,11 +791,11 @@ namespace ZombieTweak2.zMenu
                     value = zVisitedManager.propigationSampleCount;
                     break;
                 case DebugValueToChange.NodesCreatedPerFrame:
-                    zVisitedManager.nodesCreatedPerFrame = Math.Max((int)offset + zVisitedManager.nodesCreatedPerFrame,1);
+                    zVisitedManager.nodesCreatedPerFrame = Math.Max((int)offset + zVisitedManager.nodesCreatedPerFrame, 1);
                     value = zVisitedManager.nodesCreatedPerFrame;
                     break;
                 case DebugValueToChange.connectionChecksPerFrame:
-                    zVisitedManager.connectionChecksPerFrame = Math.Max((int)offset + zVisitedManager.connectionChecksPerFrame,1);
+                    zVisitedManager.connectionChecksPerFrame = Math.Max((int)offset + zVisitedManager.connectionChecksPerFrame, 1);
                     value = zVisitedManager.connectionChecksPerFrame;
                     break;
                 default:
@@ -795,7 +806,7 @@ namespace ZombieTweak2.zMenu
         }
         public static class CullingMenuClass
         {
-            public static void setupCullingMenu(zMenu menu)
+            public static void setupCullingMenu(sMenu menu)
             {
                 for (int i = 0; i < 32; i++)
                 {
@@ -804,10 +815,10 @@ namespace ZombieTweak2.zMenu
                         continue;
                     Camera camera = Camera.main;
                     var node = menu.AddNode(name);
-                    node.AddListener(zMenuManager.nodeEvent.OnUnpressedSelected, ToggleLayer, camera, i, node);
+                    node.AddListener(sMenuManager.nodeEvent.OnUnpressedSelected, ToggleLayer, camera, i, node);
                 }
             }
-            public static void ToggleLayer(Camera camera, int layer, zMenu.zMenuNode node)
+            public static void ToggleLayer(Camera camera, int layer, sMenu.sMenuNode node)
             {
                 if (camera == null)
                 {
@@ -834,24 +845,24 @@ namespace ZombieTweak2.zMenu
     public static class SettingsMenuClass
     {
         public static float menuSizeStep = 0.1f;
-        public static zMenu scaleMenu;
-        public static zMenu.zMenuNode scaleNode;
+        public static sMenu scaleMenu;
+        public static sMenu.sMenuNode scaleNode;
 
-        public static void Setup(zMenu menu)
+        public static void Setup(sMenu menu)
         {
- 
+
             scaleMenu = menu;
             scaleNode = scaleMenu.AddNode("Scale");
-            scaleNode.AddListener(zMenuManager.nodeEvent.WhileSelected, UpdateScaleByScroll);
-            scaleMenu.centerNode.AddListener(zMenuManager.nodeEvent.WhileSelected, UpdateScaleByScroll);
-            scaleNode.AddListener(zMenuManager.nodeEvent.OnHeldImmediate, ResetScale);
+            scaleNode.AddListener(sMenuManager.nodeEvent.WhileSelected, UpdateScaleByScroll);
+            scaleMenu.centerNode.AddListener(sMenuManager.nodeEvent.WhileSelected, UpdateScaleByScroll);
+            scaleNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, ResetScale);
             UpdateScaleNodeSubtitle();
         }
         private static void ResetScale()
         {
-            zMenuManager.menuSizeScaler = 1;
+            sMenuManager.menuSizeScaler = 1;
             UpdateScaleNodeSubtitle();
-            zMenuManager.SetMenusScale(zMenuManager.menuSizeScaler);
+            sMenuManager.SetMenusScale(sMenuManager.menuSizeScaler);
         }
         private static void UpdateScaleByScroll()
         {
@@ -860,21 +871,21 @@ namespace ZombieTweak2.zMenu
             if (scroll == 0f)
                 return;
             UpdateScaleNodeSubtitle();
-            zMenuManager.menuSizeScaler += normalizedScroll * menuSizeStep;
-            zMenuManager.menuSizeScaler = zHelpers.Round(zMenuManager.menuSizeScaler, 1);
-            zMenuManager.menuSizeScaler = Math.Clamp(zMenuManager.menuSizeScaler, 0.3f, 5f);
-            zMenuManager.SetMenusScale(zMenuManager.menuSizeScaler);
+            sMenuManager.menuSizeScaler += normalizedScroll * menuSizeStep;
+            sMenuManager.menuSizeScaler = zHelpers.Round(sMenuManager.menuSizeScaler, 1);
+            sMenuManager.menuSizeScaler = Math.Clamp(sMenuManager.menuSizeScaler, 0.3f, 5f);
+            sMenuManager.SetMenusScale(sMenuManager.menuSizeScaler);
         }
         private static void UpdateScaleNodeSubtitle()
         {
-            scaleNode.SetSubtitle($"<color=#CC840066>[ </color>{zMenuManager.menuSizeScaler}<color=#CC840066> ]</color>");
+            scaleNode.SetSubtitle($"<color=#CC840066>[ </color>{sMenuManager.menuSizeScaler}<color=#CC840066> ]</color>");
         }
     }
     [Obsolete]
     public static class SelectionMenuClass
     {
         public static Dictionary<int, bool> botSelection = new();
-        public static Dictionary<int, zMenu.zMenuNode> selectionBotNodes = new();
+        public static Dictionary<int, sMenu.sMenuNode> selectionBotNodes = new();
         public static Color selectedColor = new Color(0.25f, 0.16175f, 0.0f);
         public static PlayerAIBot toggleBotSelection(PlayerAIBot bot)
         {
@@ -934,14 +945,14 @@ namespace ZombieTweak2.zMenu
                 throw new KeyNotFoundException($"The bot {bot} is not tracked for selection.  This should't happen.");
             return false;
         }
-        public static zMenu.zMenuNode updateColorBaesdOnSelection(zMenu.zMenuNode node, PlayerAIBot bot)
+        public static sMenu.sMenuNode updateColorBaesdOnSelection(sMenu.sMenuNode node, PlayerAIBot bot)
         {
             if (checkForUntrackedBot(bot))
                 return null;
             if (botSelection[bot.Agent.Owner.PlayerSlotIndex()])
                 node.SetColor(selectedColor);
             else
-                node.SetColor(zMenuManager.defaultColor);
+                node.SetColor(sMenuManager.defaultColor);
             return node;
         }
     }

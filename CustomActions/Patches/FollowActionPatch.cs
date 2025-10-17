@@ -1,6 +1,5 @@
 ﻿using HarmonyLib;
 using Player;
-using ZombieTweak2.zMenu;
 using ZombieTweak2.zRootBotPlayerAction;
 
 namespace ZombieTweak2.CustomActions.Patches

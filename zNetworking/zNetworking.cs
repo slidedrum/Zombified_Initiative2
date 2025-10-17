@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using ZombieTweak2.zMenu;
+using SlideMenu;
 using Zombified_Initiative;
 
 namespace ZombieTweak2.zNetworking
@@ -150,8 +150,8 @@ namespace ZombieTweak2.zNetworking
             var menu = AutomaticActionMenuClass.PickupMenuClass.pickupMenu;
             if (allowed)
             {
-                node.SetColor(zMenuManager.defaultColor);
-                menu.centerNode.SetColor(zMenuManager.defaultColor);
+                node.SetColor(sMenuManager.defaultColor);
+                menu.centerNode.SetColor(sMenuManager.defaultColor);
             }
             else
             {
@@ -176,8 +176,8 @@ namespace ZombieTweak2.zNetworking
             var menu = AutomaticActionMenuClass.ShareMenuClass.shareMenu;
             if (allowed)
             {
-                node.SetColor(zMenuManager.defaultColor);
-                menu.centerNode.SetColor(zMenuManager.defaultColor);
+                node.SetColor(sMenuManager.defaultColor);
+                menu.centerNode.SetColor(sMenuManager.defaultColor);
             }
             else
             {

@@ -5,8 +5,6 @@ using Player;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using ZombieTweak2.zMenu;
 using ZombieTweak2.zNetworking;
 using Zombified_Initiative;
 using static ZombieTweak2.zNetworking.pStructs;
