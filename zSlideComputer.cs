@@ -61,6 +61,7 @@ namespace ZombieTweak2
 
 
         public static List<string> fullGlowStickNames { get; private set; }
+        public static List<uint> GlowStickIds { get; private set; }
         public static List<string> shortGlowStickNames { get; private set; }
         
 
@@ -73,10 +74,11 @@ namespace ZombieTweak2
             {
                 itemPrios[kvp.Key] = kvp.Value;
                 enabledItemPrios[kvp.Key] = true;
+                if (!PlayerAIBot.s_recognisedItemTypes.Contains(kvp.Key))
+                    PlayerAIBot.s_recognisedItemTypes.Add(kvp.Key);
             }
             RootPlayerBotAction.s_itemBasePrios = itemPrios;
-            fullGlowStickNames = new List<string> { "CONSUMABLE_GlowStick", "CONSUMABLE_GlowStick_Christmas", "CONSUMABLE_GlowStick_Halloween", "CONSUMABLE_GlowStick_Yellow" };
-            shortGlowStickNames = new List<string> { "Glow Stick", "Red Glow Stick", "Glow Stick Orange", "Glow Stick Yellow" };
+
 
             List<PlayerAIBot> playerAiBots = ZiMain.GetBotList();
             foreach (PlayerAIBot bot in playerAiBots)
@@ -87,14 +89,22 @@ namespace ZombieTweak2
             }
             foreach (ItemDataBlock block in ItemSpawnManager.m_itemDataPerInventorySlot[(int)InventorySlot.ResourcePack])
             {
-                uint itemID = ItemDataBlock.s_blockIDByName[block.name]; //there's got to be a better way to get the playerID.
+                uint itemID = ItemDataBlock.s_blockIDByName[block.name];
                 resourceThresholds[itemID] = 100;
                 enabledResourceShares[itemID] = true;
             }
         }
         public static void FirstTimeSetup()
         {
-            I_SetBotItemPriority("CONSUMABLE_GlowStick_Yellow", 10);
+            fullGlowStickNames = new List<string> { "CONSUMABLE_GlowStick", "CONSUMABLE_GlowStick_Christmas", "CONSUMABLE_GlowStick_Halloween", "CONSUMABLE_GlowStick_Yellow" };
+            shortGlowStickNames = new List<string> { "Glow Stick", "Red Glow Stick", "Glow Stick Orange", "Glow Stick Yellow" };
+            GlowStickIds = new List<uint>();
+            foreach (var glowstickName in fullGlowStickNames)
+            {
+                var glowstickID = ItemDataBlock.GetBlockID(glowstickName);
+                GlowStickIds.Add(glowstickID);
+                OriginalItemPrios[glowstickID] = 10;
+            }
             foreach (var kvp in RootPlayerBotAction.s_itemBasePrios)
             {
                 OriginalItemPrios[kvp.Key] = kvp.Value;
@@ -182,7 +192,7 @@ namespace ZombieTweak2
             {
                 return consumableItemNames[consumableItemPublicNames.IndexOf(name)];
             }
-            //ZiMain.log.LogWarning($"Name '{name}' doesn't apear to be a consumable.");
+            //ZiMain.log.LogWarning($"Name '{glowstickName}' doesn't apear to be a consumable.");
             //ZiMain.log.LogWarning($"consumableItemNames:");
             //ZiMain.log.LogWarning(string.Join("\n",consumableItemNames));
             //ZiMain.log.LogWarning($"consumableItemPublicNames:");
@@ -245,13 +255,7 @@ namespace ZombieTweak2
                 info.prio = priority;
                 NetworkAPI.InvokeEvent<pStructs.pItemPrio>("SetItemPrio",info);
             }
-            if (ItemDataBlock.s_blockByID.ContainsKey(id))
-            {
-                itemPrios[id] = priority;
-                if (!PlayerAIBot.s_recognisedItemTypes.Contains(id))
-                    PlayerAIBot.s_recognisedItemTypes.Add(id);
-                return true;
-            }
+            I_SetBotItemPriority(id, priority);
             return false;
         }
         private static bool I_SetBotItemPriority(string itemName, float priority)
@@ -259,7 +263,25 @@ namespace ZombieTweak2
             if (ItemDataBlock.s_blockIDByName.ContainsKey(itemName))
             {
                 uint id = ItemDataBlock.GetBlockID(itemName);
-                return SetBotItemPriority(id, priority);
+                return I_SetBotItemPriority(id, priority);
+            }
+            return false;
+        }
+        private static bool I_SetBotItemPriority(uint itemID, float priority)
+        {
+            if (ItemDataBlock.s_blockByID.ContainsKey(itemID))
+            {
+                itemPrios[itemID] = priority;
+                if (!PlayerAIBot.s_recognisedItemTypes.Contains(itemID))
+                    PlayerAIBot.s_recognisedItemTypes.Add(itemID);
+                if (GlowStickIds.Contains(itemID))
+                {
+                    foreach (var glowstickID in GlowStickIds)
+                    {
+                        itemPrios[glowstickID] = priority;
+                    }
+                }
+                return true;
             }
             return false;
         }

@@ -28,13 +28,13 @@ namespace SlideMenu
 
                 gameObject = new GameObject($"zMenuPannel {side}");
                 gameObject.transform.SetParent(parrentMenu.getCanvas().transform, false);
-
                 this.parrentMenu = parrentMenu;
                 color = parrentMenu.getTextColor();
 
-
-                rect = gameObject.AddComponent<RectTransform>();
-                rect.anchorMax = new Vector2(0.5f, 0.5f);
+                rect = gameObject.GetComponent<RectTransform>();
+                if (rect == null)
+                    rect = gameObject.AddComponent<RectTransform>();
+                //rect.anchorMax = new Vector2(0.5f, 0.5f);
                 //rect.anchoredPosition = Vector2.zero + Vector2.right * parrentMenu.radius;
                 rect.localScale = Vector3.one;
                 rect.sizeDelta = new Vector2(300, 0);
@@ -42,7 +42,7 @@ namespace SlideMenu
                 VerticalLayoutGroup layout = gameObject.AddComponent<VerticalLayoutGroup>();
                 layout.childAlignment = TextAnchor.MiddleLeft;
                 layout.spacing = 2f;
-                layout.childControlWidth = true;
+                layout.childControlWidth = (side == Side.top || side == Side.bottom);
                 layout.childControlHeight = false;
                 layout.childForceExpandWidth = true;
                 layout.childForceExpandHeight = false;
@@ -50,8 +50,9 @@ namespace SlideMenu
                 ContentSizeFitter fitter = gameObject.AddComponent<ContentSizeFitter>();
                 fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
                 fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+                UpdatePosition();
             }
-            public sMenuPannel UpdatePosition(float margin = 10f)
+            public sMenuPannel UpdatePosition(float margin = 0f)
             {
                 Rect bounds = parrentMenu.GetNodeBounds();
 
@@ -60,16 +61,29 @@ namespace SlideMenu
                 switch (side)
                 {
                     case Side.right:
+                        rect.anchorMax = new Vector2(0f, 0.5f);
+                        rect.anchorMin = new Vector2(0f, 0.5f);
+                        rect.pivot = new Vector2(0f, 0.5f);
+
                         pos = new Vector2(bounds.xMax + margin, 0);
                         break;
                     case Side.left:
-                        pos = new Vector2(bounds.xMin - margin - rect.rect.width, 0);
+                        rect.anchorMax = new Vector2(1f, 0.5f);
+                        rect.anchorMin = new Vector2(1f, 0.5f);
+                        rect.pivot = new Vector2(1f, 0.5f);
+                        pos = new Vector2(bounds.xMin - margin, 0);
                         break;
                     case Side.top:
+                        rect.anchorMax = new Vector2(0.5f, 0f);
+                        rect.anchorMin = new Vector2(0.5f, 0f);
+                        rect.pivot = new Vector2(0.5f, 0f);
                         pos = new Vector2(0, bounds.yMax + margin);
                         break;
                     case Side.bottom:
-                        pos = new Vector2(0, bounds.yMin - margin - rect.rect.height);
+                        rect.anchorMax = new Vector2(0.5f, 1f);
+                        rect.anchorMin = new Vector2(0.5f, 1f);
+                        rect.pivot = new Vector2(0.5f, 1f);
+                        pos = new Vector2(0, bounds.yMin - margin);
                         break;
                 }
                 gameObject.transform.localPosition = pos;

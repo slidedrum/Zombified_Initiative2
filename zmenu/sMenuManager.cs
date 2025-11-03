@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using ZombieTweak2;
 
 namespace SlideMenu
 {
@@ -167,40 +168,6 @@ namespace SlideMenu
                 if (menuOpen)
                 {
                     currentMenu.Lateupdate();
-                    Dictionary<GameObject, sMenu.sMenuNode> nodeDict = new(currentMenu.nodes.Count + 1);
-                    foreach (var node in currentMenu.allNodes.Where(n => n.gameObject.activeInHierarchy).ToList())
-                    {
-                        nodeDict[node.gameObject] = node;
-                    }
-                    List<GameObject> nodeList = nodeDict.Keys.ToList();
-                    GameObject selectedNodeObject = GetClosestObjectInLookDirection(mainCamera.transform, nodeList, nodeAngleTollerance * menuSizeScaler);
-                    selectedNode = null;
-                    if (selectedNodeObject != null)
-                    {
-                        nodeDict.TryGetValue(selectedNodeObject, out selectedNode);
-                    }
-                    foreach (sMenu.sMenuNode node in nodeDict.Values)
-                    {
-                        if (node == selectedNode && !node.selected)
-                        {
-                            node.Select();
-                        }
-                        if (node != selectedNode && node.selected)
-                        {
-                            node.Deselect();
-                        }
-                    }
-
-                    if (selectedNodeObject == null)
-                    {
-                        Vector3 angleToTarget = (currentMenu.gameObject.transform.position - mainCamera.transform.position).normalized;
-                        Vector3 cameraAngle = mainCamera.transform.forward;
-                        float angleDelta = Vector3.Angle(cameraAngle, angleToTarget);
-                        if (angleDelta > angleTollerance * menuSizeScaler) //close if we're looking too far away. 
-                            CloseAllMenues();
-                        else if (GetClosestObjectInLookDirection(mainCamera.transform, nodeList, nodeAngleTollerance * menuSizeScaler * 2) == null) //close if we're not looking near a node with a wider tolerance.
-                            CloseAllMenues();
-                    }
                 }
                 
             }
@@ -210,11 +177,46 @@ namespace SlideMenu
             if (playerInControll && menuOpen)
             {
                 currentMenu.PreRender();
+                Dictionary<GameObject, sMenu.sMenuNode> nodeDict = new(currentMenu.nodes.Count + 1);
+                foreach (var node in currentMenu.allNodes.Where(n => n.gameObject.activeInHierarchy).ToList())
+                {
+                    nodeDict[node.gameObject] = node;
+                }
+                List<GameObject> nodeList = nodeDict.Keys.ToList();
+                GameObject selectedNodeObject = GetClosestObjectInLookDirection(mainCamera.transform, nodeList, nodeAngleTollerance * menuSizeScaler);
+                selectedNode = null;
+                if (selectedNodeObject != null)
+                {
+                    nodeDict.TryGetValue(selectedNodeObject, out selectedNode);
+                }
+                foreach (sMenu.sMenuNode node in nodeDict.Values)
+                {
+                    if (node == selectedNode && !node.selected)
+                    {
+                        node.Select();
+                    }
+                    if (node != selectedNode && node.selected)
+                    {
+                        node.Deselect();
+                    }
+                }
 
+                if (selectedNodeObject == null)
+                {
+                    Vector3 angleToTarget = (currentMenu.gameObject.transform.position - mainCamera.transform.position).normalized;
+                    Vector3 cameraAngle = mainCamera.transform.forward;
+                    float angleDelta = Vector3.Angle(cameraAngle, angleToTarget);
+                    if (angleDelta > angleTollerance * menuSizeScaler) //close if we're looking too far away. 
+                        CloseAllMenues();
+                    else if (GetClosestObjectInLookDirection(mainCamera.transform, nodeList, nodeAngleTollerance * menuSizeScaler * 2) == null) //close if we're not looking near a node with a wider tolerance.
+                        CloseAllMenues();
+                }
             }
         }
         public static void SetupCamera() {
             mainCamera = Camera.main;
+            var cameraEcents = mainCamera.gameObject.AddComponent<zCameraEvents>();
+            cameraEcents.onPreRender.Listen(PreRender); // THis might cause double actions in some cases
             menuParrent = new GameObject("menus");
             mainMenu = new sMenu("Main");
             mainMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnUnpressedSelected, CloseAllMenues);

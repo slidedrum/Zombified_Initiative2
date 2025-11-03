@@ -228,7 +228,8 @@ namespace SlideMenu
         }
         public void PreRender()
         {
-
+            UpdatePosition();
+            FaceCamera();
         }
         public sMenu Close()
         {
@@ -265,13 +266,13 @@ namespace SlideMenu
         }
         public sMenuPannel AddPannel(sMenuPannel.Side side, string initialText = "")
         {
-            sMenuPannel newPannel = new sMenuPannel(side, this);
             if (pannels.ContainsKey(side))
             {
                 if (initialText != "")
                     pannels[side].addLine(initialText);
                 return pannels[side];
             }
+            sMenuPannel newPannel = new sMenuPannel(side, this);
             if (initialText != "")
                 newPannel.addLine(initialText);
             pannels[side] = newPannel;
