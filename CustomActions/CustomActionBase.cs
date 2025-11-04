@@ -100,6 +100,10 @@ public class CustomActionBase : PlayerBotActionBase
     {
         return _Base.GetAccessLayersRuntime();
     }
+    public new bool IsActive()
+    {
+        return this.m_descBase.Status == PlayerBotActionBase.Descriptor.StatusType.Active;
+    }
     public override void OnWarped(Vector3 position)
     {
         _Base.OnWarped(position);

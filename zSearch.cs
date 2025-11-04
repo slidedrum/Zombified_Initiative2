@@ -643,6 +643,8 @@ namespace Zombified_Initiative
                 if (_courseNode != null)
                     return _courseNode;
                 AIG_CourseNode.TryGetCourseNode(dimension, box.Center,1, out _courseNode);
+                if (_courseNode == null)
+                    return null;
                 if (!zSearch.courseNodeFindableObjectCache.ContainsKey(_courseNode.Name))
                     zSearch.courseNodeFindableObjectCache[_courseNode.Name] = new();
                 if (!zSearch.courseNodeFindableObjectCache[_courseNode.Name].Contains(this))

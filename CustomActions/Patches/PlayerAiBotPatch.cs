@@ -292,11 +292,11 @@ namespace ZombieTweak2.zRootBotPlayerAction.Patches
         public static bool StartAction(PlayerAIBot __instance, PlayerBotActionBase.Descriptor desc)
         {
             var data = zActions.GetOrCreateData(__instance);
-            if (data.consideringActions)
-            {
-                data.bestAction = desc;
-                return false;
-            }
+            //if (data. consideringActions)
+            //{
+            //    data.bestAction = desc;
+            //    return false;
+            //}
                 
             if (!desc.IsTerminated())
             {

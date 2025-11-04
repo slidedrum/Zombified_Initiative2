@@ -262,14 +262,20 @@ namespace ZombieTweak2.zRootBotPlayerAction.CustomActions
                 {
                     state = StateEnum.Finished;
                     if (travelAction != null)
+                    {
+                        travelAction.SetCompletionStatus(PlayerBotActionBase.Descriptor.StatusType.Successful);
                         m_bot.StopAction(travelAction);
+                    }
                     return false;
                 }
                 if (UnexploredNode != null && UnexploredNode.discovered)
                 {
                     state = StateEnum.lookingForUnexplored;
                     if (travelAction != null)
+                    {
+                        travelAction.SetCompletionStatus(PlayerBotActionBase.Descriptor.StatusType.Successful);
                         m_bot.StopAction(travelAction);
+                    }
                     return false;
                 }
             }

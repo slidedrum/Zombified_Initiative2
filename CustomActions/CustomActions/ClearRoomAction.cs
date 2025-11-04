@@ -157,6 +157,8 @@ public class ClearRoomAction : CustomActionBase
                 float closestDistance = float.MaxValue;
                 foreach (var enemy in foundEnemiesInNode)
                 {
+                    if (enemy?.gameObject?.transform?.position == null)
+                        continue;
                     var distance = Vector3.Distance(enemy.gameObject.transform.position, m_bot.transform.position);
                     if (distance < closestDistance)
                     {
@@ -167,6 +169,7 @@ public class ClearRoomAction : CustomActionBase
                 if (closestEnemy == null)
                 {
                     ZiMain.log.LogError("Something went horribly wrong while clear room action was looking for an enemy.");
+                    state = State.Finished;
                 }
                 target = closestEnemy.gameObject.GetComponent<EnemyAgent>();
                 state = State.NeedsToMove;
@@ -254,6 +257,7 @@ public class ClearRoomAction : CustomActionBase
                 break;
             case State.Finished:
                 ZiMain.sendChatMessage("The room is clear!", m_bot.Agent);
+                DescBase.SetCompletionStatus(PlayerBotActionBase.Descriptor.StatusType.Successful);
                 Stop();
                 break;
             default:

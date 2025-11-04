@@ -61,10 +61,10 @@ namespace ZombieTweak2.CustomActions.Patches
         [HarmonyPrefix]
         public static bool PreUpdate(RootPlayerBotAction __instance, ref bool __result)
         {
-            //We need to reset the best action watcher before we start calling vanilla actions.
-            var data = zActions.GetOrCreateData(__instance);
-            data.consideringActions = true;
-            data.bestAction = null;
+            ////We need to reset the best action watcher before we start calling vanilla actions.
+            //var data = zActions.GetOrCreateData(__instance);
+            //data.consideringActions = true;
+            //data.bestAction = null;
 
             //TODO set up parralell overideTrees for each bot
             //TODO if this gets called every frame, maybe cache the values untill something changes in overide tree
