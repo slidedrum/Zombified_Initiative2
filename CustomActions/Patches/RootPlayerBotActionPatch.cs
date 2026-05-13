@@ -5,7 +5,7 @@ using Player;
 using System.Collections.Generic;
 using System.Diagnostics.Metrics;
 using UnityEngine;
-using ZombieTweak2.zRootBotPlayerAction.CustomActions;
+//using ZombieTweak2.zRootBotPlayerAction.CustomActions;
 using static Il2CppSystem.Globalization.CultureInfo;
 
 namespace ZombieTweak2.zRootBotPlayerAction.Patches
@@ -64,16 +64,17 @@ namespace ZombieTweak2.zRootBotPlayerAction.Patches
         {
             //After running the vanilla compareisons we need to run our custom action comparisons
             //against the vanilla best action.
-            var data = zActions.GetOrCreateData(__instance);
-            foreach (var act in data.customActions)
-            {
-                act.compareAction(ref data.bestAction);
-            }
-            if (data.bestAction != null)
-            {
-                __instance.m_bot.StartAction(data.bestAction);
-            }
-            __result = !__instance.IsActive();
+            return;
+            //var data = zActions.GetOrCreateData(__instance);
+            //foreach (var act in data.customActions)
+            //{
+            //    act.compareAction(ref data.bestAction);
+            //}
+            //if (data.bestAction != null)
+            //{
+            //    __instance.m_bot.StartAction(data.bestAction);
+            //}
+            //__result = !__instance.IsActive();
         }
     }
 }

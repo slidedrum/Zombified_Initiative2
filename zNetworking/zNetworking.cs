@@ -185,6 +185,32 @@ namespace ZombieTweak2.zNetworking
                 menu.centerNode.SetColor(new Color(0.25f, 0f, 0f));
             }
         }
+        internal static void ReciveSetUnlockPermission(ulong sender, pStructs.pSharePermission info)
+        {
+            ZiMain.log.LogInfo($"Recived set unlock permision value from network!");
+            int playerID = info.playerID;
+            bool allowed = info.allowed;
+            ZiMain.log.LogInfo($"id:{playerID}, allowed:{allowed}");
+            if (!zSlideComputer.UnlockPerms.ContainsKey(playerID))
+            {
+                ZiMain.log.LogError("Unknown id recived!");
+                return;
+            }
+            zSlideComputer.SetUnlockPermission(playerID, allowed, sender);
+            //zMenus.UpdateIndicatorForNode(zMenus.permissionMenu.GetNode("Share"), zSlideComputer.SharePerms);
+            //var node = AutomaticActionMenuClass.ShareMenuClass.shareNode;
+            //var menu = AutomaticActionMenuClass.ShareMenuClass.shareMenu;
+            //if (allowed)
+            //{
+            //    node.SetColor(sMenuManager.defaultColor);
+            //    menu.centerNode.SetColor(sMenuManager.defaultColor);
+            //}
+            //else
+            //{
+            //    node.SetColor(new Color(0.25f, 0f, 0f));
+            //    menu.centerNode.SetColor(new Color(0.25f, 0f, 0f));
+            //}
+        }
         internal static void ReciveRequestToPickupItem(ulong sender, pStructs.pPickupItemInfo info)
         {
             ZiMain.log.LogInfo("Recived request to pickup item!");

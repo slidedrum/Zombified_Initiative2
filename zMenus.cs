@@ -8,7 +8,7 @@ using System.Linq;
 using UnityEngine;
 using ZombieTweak2.CustomActions.Patches;
 using ZombieTweak2.zRootBotPlayerAction;
-using ZombieTweak2.zRootBotPlayerAction.CustomActions;
+//using ZombieTweak2.zRootBotPlayerAction.CustomActions;
 using Zombified_Initiative;
 
 namespace ZombieTweak2
@@ -24,11 +24,16 @@ namespace ZombieTweak2
         public static void CreateMenus()
         {
             AutomaticActionMenuClass.Setup(sMenuManager.createMenu("Automatic Actions", sMenuManager.mainMenu));
-            ManualActionMenuClass.Setup(sMenuManager.createMenu("Manual Actions", sMenuManager.mainMenu));
-            sMenuManager.createMenu("Contextual Actions", sMenuManager.mainMenu);
+            if (ZiMain.extraActionMenus) 
+            { 
+                ManualActionMenuClass.Setup(sMenuManager.createMenu("Manual Actions", sMenuManager.mainMenu));
+                sMenuManager.createMenu("Contextual Actions", sMenuManager.mainMenu);
+            }
             SettingsMenuClass.Setup(sMenuManager.createMenu("Settings", sMenuManager.mainMenu));
-            sMenuManager.createMenu("Voice menu", sMenuManager.mainMenu);
-            DebugMenuClass.Setup(sMenuManager.createMenu("Debug", sMenuManager.mainMenu));
+            if (ZiMain.VoiceMenu)
+                sMenuManager.createMenu("Voice menu", sMenuManager.mainMenu);
+            if (ZiMain.debugMode)
+                DebugMenuClass.Setup(sMenuManager.createMenu("Debug", sMenuManager.mainMenu));
         }
     }
     public static class ManualActionMenuClass
@@ -43,24 +48,25 @@ namespace ZombieTweak2
         }
         public static void StartClearRoomAction()
         {
-            PlayerAgent playerAgent = PlayerManager.GetLocalPlayerAgent();
-            PlayerAIBot bot = null;
-            PlayerAgent botAgent = null;
-            float closestDistance = float.MaxValue;
-            foreach (var agent in PlayerManager.PlayerAgentsInLevel)
-            {
-                if (!agent.Owner.IsBot || !agent.Alive)
-                    continue;
-                float distance = Vector3.Distance(agent.Position, playerAgent.Position);
-                if (distance < closestDistance)
-                {
-                    closestDistance = distance;
-                    botAgent = agent;
-                    bot = agent.gameObject.GetComponent<PlayerAIBot>();
-                }
-            }
-            var action = new ClearRoomAction.Descriptor(bot);
-            bot.StartAction(action);
+            return;
+            //PlayerAgent playerAgent = PlayerManager.GetLocalPlayerAgent();
+            //PlayerAIBot bot = null;
+            //PlayerAgent botAgent = null;
+            //float closestDistance = float.MaxValue;
+            //foreach (var agent in PlayerManager.PlayerAgentsInLevel)
+            //{
+            //    if (!agent.Owner.IsBot || !agent.Alive)
+            //        continue;
+            //    float distance = Vector3.Distance(agent.Position, playerAgent.Position);
+            //    if (distance < closestDistance)
+            //    {
+            //        closestDistance = distance;
+            //        botAgent = agent;
+            //        bot = agent.gameObject.GetComponent<PlayerAIBot>();
+            //    }
+            //}
+            //var action = new ClearRoomAction.Descriptor(bot);
+            //bot.StartAction(action);
         }
     }
     public static class AutomaticActionMenuClass
@@ -78,25 +84,33 @@ namespace ZombieTweak2
             autoActionMenus.Add(sMenuManager.createMenu("Bioscan", AutoActionMenu));
             var shareMenu = sMenuManager.createMenu("Share", AutoActionMenu);
             autoActionMenus.Add(shareMenu);
-            autoActionMenus.Add(sMenuManager.createMenu("Ping", AutoActionMenu));
+            var pingMenu = sMenuManager.createMenu("Ping", AutoActionMenu);
+            autoActionMenus.Add(pingMenu);
             autoActionMenus.Add(sMenuManager.createMenu("Enemy Scanner", AutoActionMenu));
             var pickupMenu = sMenuManager.createMenu("Pickup", AutoActionMenu);
             autoActionMenus.Add(pickupMenu);
             var followMenu = sMenuManager.createMenu("Follow", AutoActionMenu);
             autoActionMenus.Add(followMenu);
-            autoActionMenus.Add(sMenuManager.createMenu("Unlock", AutoActionMenu));
+            
+            var unlockMenu = sMenuManager.createMenu("Unlock", AutoActionMenu);
+            autoActionMenus.Add(unlockMenu);
             //Custom actions
-            var exploremenu = sMenuManager.createMenu("Explore", AutoActionMenu);
-            autoActionMenus.Add(exploremenu);
+            if (ZiMain.customActions)
+            {
+                var exploremenu = sMenuManager.createMenu("Explore", AutoActionMenu);
+                autoActionMenus.Add(exploremenu);
+                ExploreMenuClass.Setup(exploremenu);
+            }
 
             menu.AddPannel(sMenu.sMenuPannel.Side.right, "Tap => toggle");
             menu.AddPannel(sMenu.sMenuPannel.Side.right, "Double tap => submenu");
             menu.AddPannel(sMenu.sMenuPannel.Side.right, "Hold => reset");
 
-            ExploreMenuClass.Setup(exploremenu);
             PickupMenuClass.Setup(pickupMenu);
             ShareMenuClass.Setup(shareMenu);
             FollowMenuClass.Setup(followMenu);
+            UnlockMenuClass.Setup(unlockMenu);
+            PingMenuClass.Setup(pingMenu);
 
             AutoActionMenu.AddCatagory("All");
             AutoActionMenu.AddCatagory("Favorites");
@@ -110,6 +124,67 @@ namespace ZombieTweak2
             AutoActionMenu.SetCatagory("Favorites");
 
         }
+        public static class PingMenuClass
+        {
+            public static sMenu pingMenu;
+            public static sMenu.sMenuNode pingNode;
+            public static void Setup(sMenu menu)
+            {
+
+            }
+            public static void togglePingPerms()
+            {
+                bool allowed = true;
+                foreach (var bot in zSearch.GetAllBotAgents())
+                {
+                    allowed = !zSlideComputer.GetPingPermission(bot.PlayerSlotIndex); //This is a bad way to do it, i'm setting it multiple times.  But at least untill I make it so you can have different perms for different bots, it should all be fine!
+                    zSlideComputer.SetPingPermission(bot.PlayerSlotIndex, allowed);
+                }
+                if (allowed)
+                {
+                    pingNode.SetColor(sMenuManager.defaultColor);
+                    pingMenu.centerNode.SetColor(sMenuManager.defaultColor);
+                }
+                else
+                {
+                    pingNode.SetColor(new Color(0.25f, 0f, 0f));
+                    pingMenu.centerNode.SetColor(new Color(0.25f, 0f, 0f));
+                }
+            }
+        }
+        public static class UnlockMenuClass
+        {
+            public static sMenu unlockMenu;
+            public static sMenu.sMenuNode unlockNode;
+            public static void Setup(sMenu menu)
+            {
+                unlockMenu = menu;
+                unlockNode = unlockMenu.GetNode();
+                unlockNode.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
+                unlockNode.AddListener(sMenuManager.nodeEvent.OnDoubleTapped, unlockMenu.Open);
+                unlockNode.AddListener(sMenuManager.nodeEvent.OnTapped, TogglePerms);
+            }
+            public static void TogglePerms()
+            {
+                bool allowed = true;
+                foreach (var bot in zSearch.GetAllBotAgents())
+                {
+                    allowed = !zSlideComputer.GetUnlockPermission(bot.PlayerSlotIndex); //This is a bad way to do it, i'm setting it multiple times.  But at least untill I make it so you can have different perms for different bots, it should all be fine!
+                    zSlideComputer.SetUnlockPermission(bot.PlayerSlotIndex, allowed);
+                }
+                if (allowed)
+                {
+                    unlockNode.SetColor(sMenuManager.defaultColor);
+                    unlockMenu.centerNode.SetColor(sMenuManager.defaultColor);
+                }
+                else
+                {
+                    unlockNode.SetColor(new Color(0.25f, 0f, 0f));
+                    unlockMenu.centerNode.SetColor(new Color(0.25f, 0f, 0f));
+                }
+            }
+        }
+
         public static class PickupMenuClass
         {
             public static Dictionary<uint, sMenu.sMenuNode> prioNodesByID = new Dictionary<uint, sMenu.sMenuNode>();
@@ -212,16 +287,15 @@ namespace ZombieTweak2
                 zSlideComputer.SetItemPrioDisabled(itemID, true);
                 updateNodePriorityDisplay(node, itemID);
             }
-            [Obsolete]
-            public static bool pickupAllowed = true;
             public static void TogglePerms()
             {
-                pickupAllowed = !pickupAllowed;
+                bool allowed = true;
                 foreach (var bot in zSearch.GetAllBotAgents())
                 {
-                    zSlideComputer.SetPickupPermission(bot.PlayerSlotIndex, pickupAllowed);
+                    allowed = !zSlideComputer.GetPickupPermission(bot.PlayerSlotIndex); //This is a bad way to do it, i'm setting it multiple times.  But at least untill I make it so you can have different perms for different bots, it should all be fine!
+                    zSlideComputer.SetPickupPermission(bot.PlayerSlotIndex, allowed);
                 }
-                if (pickupAllowed)
+                if (allowed)
                 {
                     pickupNode.SetColor(sMenuManager.defaultColor);
                     pickupMenu.centerNode.SetColor(sMenuManager.defaultColor);
@@ -341,16 +415,15 @@ namespace ZombieTweak2
                 else
                     node.SetColor(new Color(0.25f, 0f, 0f));
             }
-            [Obsolete]
-            public static bool shareAllowed = true;
             public static void TogglePerms()
             {
-                shareAllowed = !shareAllowed;
+                bool allowed = true;
                 foreach (var bot in zSearch.GetAllBotAgents())
                 {
-                    zSlideComputer.SetSharePermission(bot.PlayerSlotIndex, shareAllowed);
+                    allowed = !zSlideComputer.GetSharePermission(bot.PlayerSlotIndex); //This is a bad way to do it, i'm setting it multiple times.  But at least untill I make it so you can have different perms for different bots, it should all be fine!
+                    zSlideComputer.SetSharePermission(bot.PlayerSlotIndex, allowed);
                 }
-                if (shareAllowed)
+                if (allowed)
                 {
                     shareNode.SetColor(sMenuManager.defaultColor);
                     shareMenu.centerNode.SetColor(sMenuManager.defaultColor);
@@ -402,15 +475,16 @@ namespace ZombieTweak2
             }
             private static void ToggleExplorePerms()
             {
-                var bots = zSearch.GetAllBotAgents();
-                foreach (var bot in bots)
-                {
-                    ExploreAction.ToggleExplorePerm(bot);
-                }
-                if (ExploreAction.GetExplorePerm(bots[0]))
-                    exploreNode.SetColor(sMenuManager.defaultColor);
-                else
-                    exploreNode.SetColor(new Color(0.25f, 0f, 0f));
+                return;
+                //var bots = zSearch.GetAllBotAgents();
+                //foreach (var bot in bots)
+                //{
+                //    ExploreAction.ToggleExplorePerm(bot);
+                //}
+                //if (ExploreAction.GetExplorePerm(bots[0]))
+                //    exploreNode.SetColor(sMenuManager.defaultColor);
+                //else
+                //    exploreNode.SetColor(new Color(0.25f, 0f, 0f));
             }
         }
         public static class FollowMenuClass

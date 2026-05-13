@@ -21,6 +21,7 @@ namespace ZombieTweak2
         public static Il2CppSystem.Collections.Generic.Dictionary<uint, bool> enabledResourceShares = new ();
         public static Il2CppSystem.Collections.Generic.Dictionary<uint, float> OriginalItemPrios = new();
         public static Dictionary<int, bool> PickUpPerms = new (); //bot.Agent.Owner.PlayerSlotIndex()
+        public static Dictionary<int, bool> UnlockPerms = new (); //bot.Agent.Owner.PlayerSlotIndex()
         public static Dictionary<int, bool> SharePerms = new (); //bot.Agent.Owner.PlayerSlotIndex()
         public static Dictionary<int, bool> MovePerms = new (); //bot.Agent.Owner.PlayerSlotIndex()
 
@@ -86,6 +87,7 @@ namespace ZombieTweak2
                 PickUpPerms[bot.Agent.Owner.PlayerSlotIndex()] = true;
                 SharePerms[bot.Agent.Owner.PlayerSlotIndex()] = true;
                 MovePerms[bot.Agent.Owner.PlayerSlotIndex()] = true;
+                UnlockPerms[bot.Agent.Owner.PlayerSlotIndex()] = true;
             }
             foreach (ItemDataBlock block in ItemSpawnManager.m_itemDataPerInventorySlot[(int)InventorySlot.ResourcePack])
             {
@@ -545,6 +547,85 @@ namespace ZombieTweak2
                 return PickUpPerms[id];
             ZiMain.log.LogWarning($"Unknown bot asked for pickup perms id:{id}.");
             return false;
+        }
+        public static bool GetUnlockPermission(PlayerAIBot bot)
+        {
+            if (bot == null)
+            {
+                ZiMain.log.LogError($"Can't get pickup perms when bot is null");
+                return true;
+            }
+            if (bot.Agent == null)
+            {
+                ZiMain.log.LogError($"Can't get pickup perms when Agent is null");
+                return true;
+            }
+            if (bot.Agent.Owner == null)
+            {
+                ZiMain.log.LogError($"Can't get pickup perms when Owner is null");
+                return true;
+            }
+            return UnlockPerms[bot.Agent.Owner.PlayerSlotIndex()];
+        }
+        public static void SetUnlockPermission(PlayerAIBot bot, bool allowed)
+        {
+            SetUnlockPermission(bot.Agent.Owner.PlayerSlotIndex(), allowed);
+        }
+        public static void SetUnlockPermission(List<int> idList, bool allowed)
+        {
+            foreach (int id in idList)
+                SetUnlockPermission(id, allowed);
+        }
+        public static void SetUnlockPermission(List<PlayerAIBot> botList, bool allowed)
+        {
+            foreach (var bot in botList)
+                SetUnlockPermission(bot.Agent.Owner.PlayerSlotIndex(), allowed);
+        }
+        public static bool GetUnlockPermission(int id)
+        {
+            if (UnlockPerms.ContainsKey(id))
+                return UnlockPerms[id];
+            ZiMain.log.LogWarning($"Unknown bot asked for unlock perms id:{id}.");
+            return false;
+        }
+        public static void SetUnlockPermission(int playerID, bool allowed, ulong netSender = 0)
+        {
+            if (!UnlockPerms.ContainsKey(playerID))
+            {
+                ZiMain.log.LogWarning($"Tried to set unlock perm for invalid player id: {playerID}, allowed:{allowed}");
+                return;
+            }
+            if (netSender == 0)
+            {
+                pStructs.pSharePermission info = new pStructs.pSharePermission();
+                info.playerID = playerID;
+                info.allowed = allowed;
+                NetworkAPI.InvokeEvent<pStructs.pSharePermission>("SetUnlockPermission", info);
+            }
+            ZiMain.log.LogMessage($"Setting unlock perm for id {playerID} to {allowed}");
+            UnlockPerms[playerID] = allowed;
+            PlayerManager.TryGetPlayerAgent(ref playerID, out var agent);
+            if (agent != null)
+                RemoveActionsOfType(agent, typeof(PlayerBotActionUnlock));
+        }
+        public static bool GetSharePermission(PlayerAIBot bot)
+        {
+            if (bot == null)
+            {
+                ZiMain.log.LogError($"Can't get share perms when bot is null");
+                return true;
+            }
+            if (bot.Agent == null)
+            {
+                ZiMain.log.LogError($"Can't get share perms when Agent is null");
+                return true;
+            }
+            if (bot.Agent.Owner == null)
+            {
+                ZiMain.log.LogError($"Can't get share perms when Owner is null");
+                return true;
+            }
+            return SharePerms[bot.Agent.Owner.PlayerSlotIndex()];
         }
         public static bool GetSharePermission(int id)
         {

@@ -430,6 +430,14 @@ namespace SlideMenu
                 }
                 return this;
             }
+            public sMenuNode RemoveListener(sMenuManager.nodeEvent arg_event)
+            {
+                if (eventMap.TryGetValue(arg_event, out var flexEvent))
+                {
+                    flexEvent.ClearListeners();
+                }
+                return this;
+            }
             public sMenuNode RemoveListener(sMenuManager.nodeEvent arg_event, FlexibleMethodDefinition arg_method)
             {
                 if (eventMap.TryGetValue(arg_event, out var flexEvent))

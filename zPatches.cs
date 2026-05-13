@@ -481,9 +481,17 @@ public class ZombifiedPatches
         {
             bestAction = originalBestAction;
         }
-
     }
-
+    [HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.UpdateActionUnlock))]
+    [HarmonyPostfix]
+    [HarmonyPriority(Priority.Last)] //Needed for betterbots compat
+    public static void UpdateActionUnlock(RootPlayerBotAction __instance, ref PlayerBotActionBase.Descriptor bestAction)
+    {
+        if (!zSlideComputer.GetUnlockPermission(__instance.m_agent.Owner.PlayerSlotIndex()))
+        {
+            bestAction = originalBestAction;
+        }
+    }
     public static float newPrio = 0f;
     [HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.GetItemPrio))]
     [HarmonyPrefix]

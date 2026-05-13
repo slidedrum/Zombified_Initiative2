@@ -5,7 +5,7 @@ namespace ZombieTweak2.zRootBotPlayerAction
 {
     public class dataStore
     {
-        public OrderedSet<CustomActionBase.Descriptor> customActions = new();
+        //public OrderedSet<CustomActionBase.Descriptor> customActions = new();
         public PlayerBotActionBase.Descriptor bestAction = null;
         //public bool consideringActions = false;
         public PlayerAgent actualLeader = null;

@@ -93,6 +93,16 @@ namespace ZombieTweak2.zNetworking
             public int playerID;
             public bool allowed;
         }
+        public struct pUnlockPermission
+        {
+            public int playerID;
+            public bool allowed;
+        }
+        public struct pGenericPermission
+        {
+            public int playerID;
+            public bool allowed;
+        }
         public struct pSharePermission
         {
             public int playerID;

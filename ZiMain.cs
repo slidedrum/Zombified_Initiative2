@@ -104,6 +104,7 @@ using SlideMenu;
  -- TODO -- share with placed turrets
  -- TODO -- BUG -- When holding a node then look away, when you re-open menu node still highlighted.
  -- TODO -- Make "don't pick up this item" context command that lets bots pick up things, but not this spesific item/locker.
+ -- TODO -- Figure out why I can't add new struct types for network api events.  When I create a new struct, then the last arg of RegisterEvent gets treated as a method group, instead of a unity action.
 
 Want to make combine resource mod
 PreLitVolume.GetFogDensity(Vector3) could be useful
@@ -142,6 +143,11 @@ public class ZiMain : BasePlugin
     public static int approachWakeChance = 5;
     public static int wakeChancePerSecond = 20;
 
+    internal const bool debugMode = false;
+    internal const bool customActions = false;
+    internal static bool VoiceMenu = false;
+    internal static bool extraActionMenus =false;
+
     public override void Load()
     {
         HasBetterBots = IL2CPPChainloader.Instance.Plugins.ContainsKey("com.east.bb");
@@ -155,6 +161,7 @@ public class ZiMain : BasePlugin
         NetworkAPI.RegisterEvent<pResourceThreshold>        ("SetResourceThreshold",            zNetworking.reciveSetResourceThreshold);
         NetworkAPI.RegisterEvent<pResourceThresholdDisable> ("SetResourceThresholdDisable",     zNetworking.ReciveSetResourceThresholdDisable);
         NetworkAPI.RegisterEvent<pSharePermission>          ("SetSharePermission",              zNetworking.ReciveSetSharePermission);
+        NetworkAPI.RegisterEvent<pSharePermission>          ("SetUnlockPermission",             zNetworking.ReciveSetUnlockPermission); //Why does changing the struct make the final arg a method group instead of an action?  
         NetworkAPI.RegisterEvent<pPickupPermission>         ("SetPickupPermission",             zNetworking.ReciveSetPickupPermission);
         NetworkAPI.RegisterEvent<pPickupItemInfo>           ("RequestToPickupItem",             zNetworking.ReciveRequestToPickupItem);
         NetworkAPI.RegisterEvent<pShareResourceInfo>        ("RequestToShareResourcePack",      zNetworking.ReciveRequestToShareResource);

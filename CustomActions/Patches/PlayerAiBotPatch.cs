@@ -3,7 +3,7 @@ using Il2CppInterop.Runtime.Injection;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using Player;
 using UnityEngine;
-using ZombieTweak2.zRootBotPlayerAction.CustomActions;
+//using ZombieTweak2.zRootBotPlayerAction.CustomActions;
 using Zombified_Initiative;
 
 namespace ZombieTweak2.zRootBotPlayerAction.Patches
@@ -89,18 +89,18 @@ namespace ZombieTweak2.zRootBotPlayerAction.Patches
             __instance.m_queuedActions = data.m_queuedActions;
             //var m_exploreAction = new CustomActions.exploreDescriptor(instance);
             //data.customActions.Add(m_exploreAction);
-            ClassInjector.RegisterTypeInIl2Cpp(typeof(CustomActionBase.Descriptor));
-            ClassInjector.RegisterTypeInIl2Cpp(typeof(CustomActionBase));
-            ClassInjector.RegisterTypeInIl2Cpp(typeof(ExploreAction.Descriptor));
-            ClassInjector.RegisterTypeInIl2Cpp(typeof(ExploreAction));
-            ClassInjector.RegisterTypeInIl2Cpp(typeof(ClearRoomAction.Descriptor));
-            ClassInjector.RegisterTypeInIl2Cpp(typeof(ClearRoomAction));
-            ClearRoomAction.Descriptor m_clearRoomAction = new ClearRoomAction.Descriptor(__instance);
-            data.customActions.Add(m_clearRoomAction);
-            CustomActionBase.Descriptor m_testAction = new CustomActionBase.Descriptor(__instance);
-            data.customActions.Add(m_testAction);
-            ExploreAction.Descriptor m_exploreAction = new ExploreAction.Descriptor(__instance);
-            data.customActions.Add(m_exploreAction);
+                //ClassInjector.RegisterTypeInIl2Cpp(typeof(CustomActionBase.Descriptor));
+                //ClassInjector.RegisterTypeInIl2Cpp(typeof(CustomActionBase));
+                //ClassInjector.RegisterTypeInIl2Cpp(typeof(ExploreAction.Descriptor));
+                //ClassInjector.RegisterTypeInIl2Cpp(typeof(ExploreAction));
+                //ClassInjector.RegisterTypeInIl2Cpp(typeof(ClearRoomAction.Descriptor));
+                //ClassInjector.RegisterTypeInIl2Cpp(typeof(ClearRoomAction));
+                //ClearRoomAction.Descriptor m_clearRoomAction = new ClearRoomAction.Descriptor(__instance);
+                //data.customActions.Add(m_clearRoomAction);
+                //CustomActionBase.Descriptor m_testAction = new CustomActionBase.Descriptor(__instance);
+                //data.customActions.Add(m_testAction);
+                //ExploreAction.Descriptor m_exploreAction = new ExploreAction.Descriptor(__instance);
+                //data.customActions.Add(m_exploreAction);
             ZiMain.log.LogMessage("init playerbot");
         }
         //[HarmonyPatch(typeof(PlayerAIBot), nameof(PlayerAIBot.Update))]
