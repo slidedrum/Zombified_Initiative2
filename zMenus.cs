@@ -5,7 +5,9 @@ using SlideMenu;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Mail;
 using UnityEngine;
+using UnityEngine.UIElements;
 using ZombieTweak2.CustomActions.Patches;
 using ZombieTweak2.zRootBotPlayerAction;
 //using ZombieTweak2.zRootBotPlayerAction.CustomActions;
@@ -78,15 +80,16 @@ namespace ZombieTweak2
             AutoActionMenu = menu;
             AutoActionMenu.radius = 130f;
             //Vanilla actions
-            autoActionMenus.Add(sMenuManager.createMenu("Tag Enemies", AutoActionMenu));
-            autoActionMenus.Add(sMenuManager.createMenu("Attack", AutoActionMenu));
-            autoActionMenus.Add(sMenuManager.createMenu("Revive", AutoActionMenu));
-            autoActionMenus.Add(sMenuManager.createMenu("Bioscan", AutoActionMenu));
+            var bioTrackerMenu = sMenuManager.createMenu("Use BioTracker", AutoActionMenu);
+            autoActionMenus.Add(bioTrackerMenu);
+            var attackMenu = sMenuManager.createMenu("Attack", AutoActionMenu);
+            autoActionMenus.Add(attackMenu);
+            var reviveMenu = sMenuManager.createMenu("Revive", AutoActionMenu);
+            autoActionMenus.Add(reviveMenu);
             var shareMenu = sMenuManager.createMenu("Share", AutoActionMenu);
             autoActionMenus.Add(shareMenu);
             var pingMenu = sMenuManager.createMenu("Ping", AutoActionMenu);
             autoActionMenus.Add(pingMenu);
-            autoActionMenus.Add(sMenuManager.createMenu("Enemy Scanner", AutoActionMenu));
             var pickupMenu = sMenuManager.createMenu("Pickup", AutoActionMenu);
             autoActionMenus.Add(pickupMenu);
             var followMenu = sMenuManager.createMenu("Follow", AutoActionMenu);
@@ -111,6 +114,9 @@ namespace ZombieTweak2
             FollowMenuClass.Setup(followMenu);
             UnlockMenuClass.Setup(unlockMenu);
             PingMenuClass.Setup(pingMenu);
+            BioTrackerMenuClass.Setup(bioTrackerMenu);
+            AttackMenuClass.Setup(attackMenu);
+            ReviveMenuClass.Setup(reviveMenu);
 
             AutoActionMenu.AddCatagory("All");
             AutoActionMenu.AddCatagory("Favorites");
@@ -124,13 +130,164 @@ namespace ZombieTweak2
             AutoActionMenu.SetCatagory("Favorites");
 
         }
+        public static class ReviveMenuClass
+        {
+            public static sMenu reviveMenu;
+            public static sMenu.sMenuNode reviveNode;
+            public static sMenu overidesMenu;
+            public static sMenu.sMenuNode playersNode;
+            public static sMenu.sMenuNode botsNode;
+            public static Dictionary<string,sMenu.sMenuNode> overideNodes = new();
+            public static void Setup(sMenu menu)
+            {
+                reviveMenu = menu;
+                reviveNode = menu.GetNode();
+                reviveNode.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
+                reviveNode.AddListener(sMenuManager.nodeEvent.OnTapped, togglePerms);
+                reviveNode.AddListener(sMenuManager.nodeEvent.OnDoubleTapped, reviveMenu.Open);
+                playersNode = reviveMenu.AddNode("Players", togglePlayerPerms);
+                botsNode = reviveMenu.AddNode("Bots", toggleBotPerms);
+                //overidesMenu = new sMenu("overrides", reviveMenu);
+                //reviveMenu.AddNode(overidesMenu);
+                //var playerAgents = PlayerManager.PlayerAgentsInLevel;
+                //foreach (PlayerAgent agent in playerAgents)
+                //{
+                //    string name = agent.PlayerName;
+                //    overideNodes[name] = overidesMenu.AddNode(name, toggleOveridePerms, name);
+                //}
+            }
+            public static void togglePerms()
+            {
+                bool allowed = true;
+                foreach (var bot in zSearch.GetAllBotAgents())
+                {
+                    allowed = !zSlideComputer.GetRevivePermission(bot.PlayerSlotIndex); //This is a bad way to do it, i'm setting it multiple times.  But at least untill I make it so you can have different perms for different bots, it should all be fine!
+                    zSlideComputer.SetRevivePermission(bot.PlayerSlotIndex, allowed);
+                }
+                if (allowed)
+                {
+                    reviveNode.SetColor(sMenuManager.defaultColor);
+                    reviveMenu.centerNode.SetColor(sMenuManager.defaultColor);
+                }
+                else
+                {
+                    reviveNode.SetColor(new Color(0.25f, 0f, 0f));
+                    reviveMenu.centerNode.SetColor(new Color(0.25f, 0f, 0f));
+                }
+            }
+            public static void togglePlayerPerms()
+            {
+                bool allowed = true;
+                foreach (var bot in zSearch.GetAllBotAgents())
+                {
+                    allowed = !zSlideComputer.GetRevivePlayersPermission(bot.PlayerSlotIndex); //This is a bad way to do it, i'm setting it multiple times.  But at least untill I make it so you can have different perms for different bots, it should all be fine!
+                    zSlideComputer.SetRevivePlayersPermission(bot.PlayerSlotIndex, allowed);
+                }
+                if (allowed)
+                {
+                    playersNode.SetColor(sMenuManager.defaultColor);
+                }
+                else
+                {
+                    playersNode.SetColor(new Color(0.25f, 0f, 0f));
+                }
+            }
+            public static void toggleBotPerms()
+            {
+                bool allowed = true;
+                foreach (var bot in zSearch.GetAllBotAgents())
+                {
+                    allowed = !zSlideComputer.GetReviveBotsPermission(bot.PlayerSlotIndex); //This is a bad way to do it, i'm setting it multiple times.  But at least untill I make it so you can have different perms for different bots, it should all be fine!
+                    zSlideComputer.SetReviveBotsPermission(bot.PlayerSlotIndex, allowed);
+                }
+                if (allowed)
+                {
+                    botsNode.SetColor(sMenuManager.defaultColor);
+                }
+                else
+                {
+                    botsNode.SetColor(new Color(0.25f, 0f, 0f));
+                }
+            }
+        }
+
+        public static class AttackMenuClass
+        {
+            public static sMenu attackMenu;
+            public static sMenu.sMenuNode attackNode;
+            public static void Setup(sMenu menu)
+            {
+                attackMenu = menu;
+                attackNode = menu.GetNode();
+                attackNode.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
+                attackNode.AddListener(sMenuManager.nodeEvent.OnTapped, togglePerms);
+                attackNode.AddListener(sMenuManager.nodeEvent.OnDoubleTapped, attackMenu.Open);
+            }
+            public static void togglePerms()
+            {
+                bool allowed = true;
+                foreach (var bot in zSearch.GetAllBotAgents())
+                {
+                    allowed = !zSlideComputer.GetAttackPermission(bot.PlayerSlotIndex); //This is a bad way to do it, i'm setting it multiple times.  But at least untill I make it so you can have different perms for different bots, it should all be fine!
+                    zSlideComputer.SetAttackPermission(bot.PlayerSlotIndex, allowed);
+                }
+                if (allowed)
+                {
+                    attackNode.SetColor(sMenuManager.defaultColor);
+                    attackMenu.centerNode.SetColor(sMenuManager.defaultColor);
+                }
+                else
+                {
+                    attackNode.SetColor(new Color(0.25f, 0f, 0f));
+                    attackMenu.centerNode.SetColor(new Color(0.25f, 0f, 0f));
+                }
+            }
+        }
+
+        public static class BioTrackerMenuClass
+        {
+            public static sMenu bioTrackerMenu;
+            public static sMenu.sMenuNode bioTrackerNode;
+            public static void Setup(sMenu menu)
+            {
+                bioTrackerMenu = menu;
+                bioTrackerNode = menu.GetNode();
+                bioTrackerNode.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
+                bioTrackerNode.AddListener(sMenuManager.nodeEvent.OnTapped, togglePerms);
+                bioTrackerNode.AddListener(sMenuManager.nodeEvent.OnDoubleTapped, bioTrackerMenu.Open);
+            }
+            public static void togglePerms()
+            {
+                bool allowed = true;
+                foreach (var bot in zSearch.GetAllBotAgents())
+                {
+                    allowed = !zSlideComputer.GetBioTrackerPermission(bot.PlayerSlotIndex); //This is a bad way to do it, i'm setting it multiple times.  But at least untill I make it so you can have different perms for different bots, it should all be fine!
+                    zSlideComputer.SetBioTrackerPermission(bot.PlayerSlotIndex, allowed);
+                }
+                if (allowed)
+                {
+                    bioTrackerNode.SetColor(sMenuManager.defaultColor);
+                    bioTrackerMenu.centerNode.SetColor(sMenuManager.defaultColor);
+                }
+                else
+                {
+                    bioTrackerNode.SetColor(new Color(0.25f, 0f, 0f));
+                    bioTrackerMenu.centerNode.SetColor(new Color(0.25f, 0f, 0f));
+                }
+            }
+        }
+
         public static class PingMenuClass
         {
             public static sMenu pingMenu;
             public static sMenu.sMenuNode pingNode;
             public static void Setup(sMenu menu)
             {
-
+                pingMenu = menu;
+                pingNode = menu.GetNode();
+                pingNode.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
+                pingNode.AddListener(sMenuManager.nodeEvent.OnTapped, togglePingPerms);
+                pingNode.AddListener(sMenuManager.nodeEvent.OnDoubleTapped, pingMenu.Open);
             }
             public static void togglePingPerms()
             {

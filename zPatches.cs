@@ -463,35 +463,55 @@ public class ZombifiedPatches
         return false;
     }
 
-    private static PlayerBotActionBase.Descriptor originalBestAction;
     [HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.UpdateActionCollectItem))]
     [HarmonyPrefix]
-    [HarmonyPriority(Priority.First)] //Needed for betterbots compat
-    public static void FirstUpdateActionCollectItem(RootPlayerBotAction __instance, ref PlayerBotActionBase.Descriptor bestAction)
-    {
-        originalBestAction = bestAction;
-    }
-
-    [HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.UpdateActionCollectItem))]
-    [HarmonyPostfix]
     [HarmonyPriority(Priority.Last)] //Needed for betterbots compat
-    public static void UpdateActionCollectItem(RootPlayerBotAction __instance, ref PlayerBotActionBase.Descriptor bestAction)
+    public static bool UpdateActionCollectItem(RootPlayerBotAction __instance, ref PlayerBotActionBase.Descriptor bestAction)
     {
         if (!zSlideComputer.GetPickupPermission(__instance.m_agent.Owner.PlayerSlotIndex()))
-        {
-            bestAction = originalBestAction;
-        }
+            return false;
+        return true;
     }
     [HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.UpdateActionUnlock))]
-    [HarmonyPostfix]
+    [HarmonyPrefix]
     [HarmonyPriority(Priority.Last)] //Needed for betterbots compat
-    public static void UpdateActionUnlock(RootPlayerBotAction __instance, ref PlayerBotActionBase.Descriptor bestAction)
+    public static bool UpdateActionUnlock(RootPlayerBotAction __instance, ref PlayerBotActionBase.Descriptor bestAction)
     {
         if (!zSlideComputer.GetUnlockPermission(__instance.m_agent.Owner.PlayerSlotIndex()))
-        {
-            bestAction = originalBestAction;
-        }
+            return false;
+        return true;
     }
+    [HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.UpdateActionHighlight))]
+    [HarmonyPrefix]
+    [HarmonyPriority(Priority.Last)] //Needed for betterbots compat
+    public static bool UpdateActionPing(RootPlayerBotAction __instance, ref PlayerBotActionBase.Descriptor bestAction)
+    {
+        if (!zSlideComputer.GetPingPermission(__instance.m_agent.Owner.PlayerSlotIndex()))
+            return false;
+        return true;
+    }
+
+    [HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.UpdateActionTagEnemies))]
+    [HarmonyPrefix]
+    [HarmonyPriority(Priority.Last)] //Needed for betterbots compat
+    public static bool UpdateActionTagEnemies(RootPlayerBotAction __instance, ref PlayerBotActionBase.Descriptor bestAction)
+    {
+        if (!zSlideComputer.GetBioTrackerPermission(__instance.m_agent.Owner.PlayerSlotIndex()))
+            return false;
+        return true;
+    }
+
+    [HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.UpdateActionAttack))]
+    [HarmonyPrefix]
+    [HarmonyPriority(Priority.Last)] //Needed for betterbots compat
+    public static bool UpdateActionAttack(RootPlayerBotAction __instance, ref PlayerBotActionBase.Descriptor bestAction)
+    {
+        if (!zSlideComputer.GetAttackPermission(__instance.m_agent.Owner.PlayerSlotIndex()))
+            return false;
+        return true;
+    }
+
+
     public static float newPrio = 0f;
     [HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.GetItemPrio))]
     [HarmonyPrefix]

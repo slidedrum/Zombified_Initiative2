@@ -136,6 +136,7 @@ namespace Zombified_Initiative
         public static float lastSearched = 0f;
         public static void Update()
         {
+            return;
             if (localPlayer == null)
                 localPlayer = PlayerManager.GetLocalPlayerAgent();
             if (localPlayer == null)

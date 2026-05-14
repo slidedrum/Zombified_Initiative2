@@ -185,6 +185,156 @@ namespace ZombieTweak2.zNetworking
                 menu.centerNode.SetColor(new Color(0.25f, 0f, 0f));
             }
         }
+        internal static void ReciveSetPingPermission(ulong sender, pStructs.pSharePermission info)
+        {
+            ZiMain.log.LogInfo($"Recived set ping permision value from network!");
+            int playerID = info.playerID;
+            bool allowed = info.allowed;
+            ZiMain.log.LogInfo($"id:{playerID}, allowed:{allowed}");
+            if (!zSlideComputer.PingPerms.ContainsKey(playerID))
+            {
+                ZiMain.log.LogError("Unknown id recived!");
+                return;
+            }
+            zSlideComputer.SetPingPermission(playerID, allowed, sender);
+            //zMenus.UpdateIndicatorForNode(zMenus.permissionMenu.GetNode("Share"), zSlideComputer.SharePerms);
+            var node = AutomaticActionMenuClass.PingMenuClass.pingNode;
+            var menu = AutomaticActionMenuClass.PingMenuClass.pingMenu;
+            if (allowed)
+            {
+                node.SetColor(sMenuManager.defaultColor);
+                menu.centerNode.SetColor(sMenuManager.defaultColor);
+            }
+            else
+            {
+                node.SetColor(new Color(0.25f, 0f, 0f));
+                menu.centerNode.SetColor(new Color(0.25f, 0f, 0f));
+            }
+        }
+        internal static void ReciveSetRevivePermission(ulong sender, pStructs.pSharePermission info)
+        {
+            ZiMain.log.LogInfo($"Recived set revive permision value from network!");
+            int playerID = info.playerID;
+            bool allowed = info.allowed;
+            ZiMain.log.LogInfo($"id:{playerID}, allowed:{allowed}");
+            if (!zSlideComputer.RevivePerms.ContainsKey(playerID))
+            {
+                ZiMain.log.LogError("Unknown id recived!");
+                return;
+            }
+            zSlideComputer.SetRevivePermission(playerID, allowed, sender);
+            //zMenus.UpdateIndicatorForNode(zMenus.permissionMenu.GetNode("Share"), zSlideComputer.SharePerms);
+            var node = AutomaticActionMenuClass.ReviveMenuClass.reviveNode;
+            var menu = AutomaticActionMenuClass.ReviveMenuClass.reviveMenu;
+            if (allowed)
+            {
+                node.SetColor(sMenuManager.defaultColor);
+                menu.centerNode.SetColor(sMenuManager.defaultColor);
+            }
+            else
+            {
+                node.SetColor(new Color(0.25f, 0f, 0f));
+                menu.centerNode.SetColor(new Color(0.25f, 0f, 0f));
+            }
+        }
+        internal static void ReciveSetRevivePlayersPermission(ulong sender, pStructs.pSharePermission info)
+        {
+            ZiMain.log.LogInfo($"Recived set revive player permision value from network!");
+            int playerID = info.playerID;
+            bool allowed = info.allowed;
+            ZiMain.log.LogInfo($"id:{playerID}, allowed:{allowed}");
+            if (!zSlideComputer.RevivePlayersPerms.ContainsKey(playerID))
+            {
+                ZiMain.log.LogError("Unknown id recived!");
+                return;
+            }
+            zSlideComputer.SetRevivePlayersPermission(playerID, allowed, sender);
+            //zMenus.UpdateIndicatorForNode(zMenus.permissionMenu.GetNode("Share"), zSlideComputer.SharePerms);
+            var node = AutomaticActionMenuClass.ReviveMenuClass.playersNode;
+            if (allowed)
+            {
+                node.SetColor(sMenuManager.defaultColor);
+            }
+            else
+            {
+                node.SetColor(new Color(0.25f, 0f, 0f));
+            }
+        }
+        internal static void ReciveSetReviveBotsPermission(ulong sender, pStructs.pSharePermission info)
+        {
+            ZiMain.log.LogInfo($"Recived set revive bot permision value from network!");
+            int playerID = info.playerID;
+            bool allowed = info.allowed;
+            ZiMain.log.LogInfo($"id:{playerID}, allowed:{allowed}");
+            if (!zSlideComputer.ReviveBotsPerms.ContainsKey(playerID))
+            {
+                ZiMain.log.LogError("Unknown id recived!");
+                return;
+            }
+            zSlideComputer.SetReviveBotsPermission(playerID, allowed, sender);
+            //zMenus.UpdateIndicatorForNode(zMenus.permissionMenu.GetNode("Share"), zSlideComputer.SharePerms);
+            var node = AutomaticActionMenuClass.ReviveMenuClass.botsNode;
+            if (allowed)
+            {
+                node.SetColor(sMenuManager.defaultColor);
+            }
+            else
+            {
+                node.SetColor(new Color(0.25f, 0f, 0f));
+            }
+        }
+        internal static void ReciveSetBioTrackerPermission(ulong sender, pStructs.pSharePermission info)
+        {
+            ZiMain.log.LogInfo($"Recived set bioTracker permision value from network!");
+            int playerID = info.playerID;
+            bool allowed = info.allowed;
+            ZiMain.log.LogInfo($"id:{playerID}, allowed:{allowed}");
+            if (!zSlideComputer.BioTrackerPerms.ContainsKey(playerID))
+            {
+                ZiMain.log.LogError("Unknown id recived!");
+                return;
+            }
+            zSlideComputer.SetBioTrackerPermission(playerID, allowed, sender);
+            //zMenus.UpdateIndicatorForNode(zMenus.permissionMenu.GetNode("Share"), zSlideComputer.SharePerms);
+            var node = AutomaticActionMenuClass.BioTrackerMenuClass.bioTrackerNode;
+            var menu = AutomaticActionMenuClass.BioTrackerMenuClass.bioTrackerMenu;
+            if (allowed)
+            {
+                node.SetColor(sMenuManager.defaultColor);
+                menu.centerNode.SetColor(sMenuManager.defaultColor);
+            }
+            else
+            {
+                node.SetColor(new Color(0.25f, 0f, 0f));
+                menu.centerNode.SetColor(new Color(0.25f, 0f, 0f));
+            }
+        }
+        internal static void ReciveSetAttackPermission(ulong sender, pStructs.pSharePermission info)
+        {
+            ZiMain.log.LogInfo($"Recived set Attack permision value from network!");
+            int playerID = info.playerID;
+            bool allowed = info.allowed;
+            ZiMain.log.LogInfo($"id:{playerID}, allowed:{allowed}");
+            if (!zSlideComputer.AttackPerms.ContainsKey(playerID))
+            {
+                ZiMain.log.LogError("Unknown id recived!");
+                return;
+            }
+            zSlideComputer.SetAttackPermission(playerID, allowed, sender);
+            //zMenus.UpdateIndicatorForNode(zMenus.permissionMenu.GetNode("Share"), zSlideComputer.SharePerms);
+            var node = AutomaticActionMenuClass.AttackMenuClass.attackNode;
+            var menu = AutomaticActionMenuClass.AttackMenuClass.attackMenu;
+            if (allowed)
+            {
+                node.SetColor(sMenuManager.defaultColor);
+                menu.centerNode.SetColor(sMenuManager.defaultColor);
+            }
+            else
+            {
+                node.SetColor(new Color(0.25f, 0f, 0f));
+                menu.centerNode.SetColor(new Color(0.25f, 0f, 0f));
+            }
+        }
         internal static void ReciveSetUnlockPermission(ulong sender, pStructs.pSharePermission info)
         {
             ZiMain.log.LogInfo($"Recived set unlock permision value from network!");
@@ -198,18 +348,18 @@ namespace ZombieTweak2.zNetworking
             }
             zSlideComputer.SetUnlockPermission(playerID, allowed, sender);
             //zMenus.UpdateIndicatorForNode(zMenus.permissionMenu.GetNode("Share"), zSlideComputer.SharePerms);
-            //var node = AutomaticActionMenuClass.ShareMenuClass.shareNode;
-            //var menu = AutomaticActionMenuClass.ShareMenuClass.shareMenu;
-            //if (allowed)
-            //{
-            //    node.SetColor(sMenuManager.defaultColor);
-            //    menu.centerNode.SetColor(sMenuManager.defaultColor);
-            //}
-            //else
-            //{
-            //    node.SetColor(new Color(0.25f, 0f, 0f));
-            //    menu.centerNode.SetColor(new Color(0.25f, 0f, 0f));
-            //}
+            var node = AutomaticActionMenuClass.UnlockMenuClass.unlockNode;
+            var menu = AutomaticActionMenuClass.UnlockMenuClass.unlockMenu;
+            if (allowed)
+            {
+                node.SetColor(sMenuManager.defaultColor);
+                menu.centerNode.SetColor(sMenuManager.defaultColor);
+            }
+            else
+            {
+                node.SetColor(new Color(0.25f, 0f, 0f));
+                menu.centerNode.SetColor(new Color(0.25f, 0f, 0f));
+            }
         }
         internal static void ReciveRequestToPickupItem(ulong sender, pStructs.pPickupItemInfo info)
         {

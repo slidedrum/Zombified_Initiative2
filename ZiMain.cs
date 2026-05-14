@@ -162,6 +162,12 @@ public class ZiMain : BasePlugin
         NetworkAPI.RegisterEvent<pResourceThresholdDisable> ("SetResourceThresholdDisable",     zNetworking.ReciveSetResourceThresholdDisable);
         NetworkAPI.RegisterEvent<pSharePermission>          ("SetSharePermission",              zNetworking.ReciveSetSharePermission);
         NetworkAPI.RegisterEvent<pSharePermission>          ("SetUnlockPermission",             zNetworking.ReciveSetUnlockPermission); //Why does changing the struct make the final arg a method group instead of an action?  
+        NetworkAPI.RegisterEvent<pSharePermission>          ("SetPingPermission",               zNetworking.ReciveSetPingPermission); //Why does changing the struct make the final arg a method group instead of an action?  
+        NetworkAPI.RegisterEvent<pSharePermission>          ("SetBioTrackerPermission",         zNetworking.ReciveSetBioTrackerPermission); //Why does changing the struct make the final arg a method group instead of an action?
+        NetworkAPI.RegisterEvent<pSharePermission>          ("SetRevivePermission",             zNetworking.ReciveSetRevivePermission); //Why does changing the struct make the final arg a method group instead of an action?
+        NetworkAPI.RegisterEvent<pSharePermission>          ("SetRevivePlayerPermission",       zNetworking.ReciveSetRevivePlayersPermission); //Why does changing the struct make the final arg a method group instead of an action?
+        NetworkAPI.RegisterEvent<pSharePermission>          ("SetReviveBotPermission",          zNetworking.ReciveSetReviveBotsPermission); //Why does changing the struct make the final arg a method group instead of an action?
+        NetworkAPI.RegisterEvent<pSharePermission>          ("SetAttackPermission",             zNetworking.ReciveSetAttackPermission); //Why does changing the struct make the final arg a method group instead of an action?
         NetworkAPI.RegisterEvent<pPickupPermission>         ("SetPickupPermission",             zNetworking.ReciveSetPickupPermission);
         NetworkAPI.RegisterEvent<pPickupItemInfo>           ("RequestToPickupItem",             zNetworking.ReciveRequestToPickupItem);
         NetworkAPI.RegisterEvent<pShareResourceInfo>        ("RequestToShareResourcePack",      zNetworking.ReciveRequestToShareResource);
