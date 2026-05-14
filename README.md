@@ -1,6 +1,9 @@
 ### Preface 
 This started as continuation of [Zombified Initiative](https://thunderstore.io/c/gtfo/p/hirnukuono/Zombified_Initiative/) by [hirnukuono](https://thunderstore.io/c/gtfo/p/hirnukuono/) however at this point there is very little code from that mod left.
 
+### Press M to open and naviate the menu.
+### Press V to use smart select.
+
 # Intro 
 Have you ever been frustrated that a bot just used all of your disinfect as soon as you get out of the fog, even though you're going to have to go right back?!  That's the catalyst for me making this mod.  The goal of this mod is to give you the ability to have more control over the bots in GTFO, but not to give them any direct buffs or new abilities.  I want to allow you to tell them exactly what you do, and don't want them to be able to do.  
 
