@@ -145,8 +145,6 @@ namespace ZombieTweak2
                 else
                     AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediateSelected, FollowMenuClass.ResetSettings, node);
                 ActionPriorities.Add(text, new OverrideTree<float?>(defaultPrios[text]).AddNode(text, null).Tree);
-                node.AddListener(sMenuManager.nodeEvent.WhileSelected, GenericUpdatePriorityBasedOnScroll, node);
-                node.AddListener(sMenuManager.nodeEvent.OnHeldImmediateSelected, GenericResetPrioSettings, node);
                 node.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
                 node.AddListener(sMenuManager.nodeEvent.OnDoubleTapped, menu.Open);
                 GenericUpdateNodePrioDisplay(node);
@@ -1153,10 +1151,12 @@ namespace ZombieTweak2
                 }
                 previousState = DramaManager.CurrentStateEnum;
             }
+
+
             private static void UpdateNodeBasedOnScroll(sMenu.sMenuNode node)
             {
                 float scroll = Input.GetAxis("Mouse ScrollWheel");
-                int normalizedScroll = (int)Mathf.Sign(scroll);
+                float normalizedScroll = (int)Mathf.Sign(scroll);
                 if (scroll == 0f)
                     return;
                 string text = node.text;
@@ -1164,15 +1164,18 @@ namespace ZombieTweak2
                 pos = new Vector2(pos.x - 0.5f, pos.y - 0.5f) * -1;
                 if (pos.y > Math.Abs(pos.x)) // TOP
                 {
-                    prio.SetValue(text, Math.Clamp((int)prio.ValueAt(text) + normalizedScroll, 1, 15));
+                    normalizedScroll = normalizedScroll * 0.1f;
+                    float newValue = (float)prio.ValueAt(text) + normalizedScroll;
+                    newValue = (float)Math.Round(newValue, 1);
+                    prio.SetValue(text, Math.Clamp(newValue, 1, 15));
                 }
                 else if (pos.x > 0) // RIGHT
                 {
-                    maxDistance.SetValue(text, Math.Clamp((int)maxDistance.ValueAt(text) + normalizedScroll, (int)followRadius.ValueAt(text), 60));
+                    maxDistance.SetValue(text, Math.Clamp((int)maxDistance.ValueAt(text) + (int)normalizedScroll, (int)followRadius.ValueAt(text), 60));
                 }
                 else // LEFT
                 {
-                    followRadius.SetValue(text, Math.Clamp((int)followRadius.ValueAt(text) + normalizedScroll, 1, (int)maxDistance.ValueAt(text)));
+                    followRadius.SetValue(text, Math.Clamp((int)followRadius.ValueAt(text) + (int)normalizedScroll, 1, (int)maxDistance.ValueAt(text)));
                 }
                 UpdateNodeSettingsDisplay(node);
             }
