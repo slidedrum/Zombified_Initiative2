@@ -24,10 +24,6 @@ namespace ZombieTweak2
         public static Il2CppSystem.Collections.Generic.Dictionary<uint, float> OriginalItemPrios = new();
         public static Dictionary<string, Dictionary<int, bool>> perms = new();
         public static Dictionary<int, bool> PickUpPerms = new (); //bot.Agent.Owner.PlayerSlotIndex()
-        //public static Dictionary<int, bool> UnlockPerms = new (); //bot.Agent.Owner.PlayerSlotIndex()
-        //public static Dictionary<int, bool> PingPerms = new (); //bot.Agent.Owner.PlayerSlotIndex()
-        //public static Dictionary<int, bool> BioTrackerPerms = new (); //bot.Agent.Owner.PlayerSlotIndex()
-        //public static Dictionary<int, bool> RevivePerms = new (); //bot.Agent.Owner.PlayerSlotIndex()
         public static Dictionary<int, bool> RevivePlayersPerms = new (); //bot.Agent.Owner.PlayerSlotIndex()
         public static Dictionary<int, bool> ReviveBotsPerms = new (); //bot.Agent.Owner.PlayerSlotIndex()
         //public static Dictionary<int, bool> AttackPerms = new (); //bot.Agent.Owner.PlayerSlotIndex()
@@ -35,7 +31,7 @@ namespace ZombieTweak2
         public static Dictionary<int, bool> MovePerms = new (); //bot.Agent.Owner.PlayerSlotIndex()
 
 
-
+        
         public static Il2CppReferenceArray<ItemDataBlock> consumableItems 
         { 
             get 
