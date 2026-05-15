@@ -334,117 +334,106 @@ namespace ZombieTweak2
             }
             enabledResourceShares[itemID] = allowed;
         }
-        public static void ToggleBotSharePermission(int playerID)
-        {
-            if (!SharePerms.ContainsKey(playerID))
-                return;
-            SetSharePermission(playerID,!GetSharePermission(playerID));
-        }
-        public static void ToggleBotSharePermission()
-        {
-            var botSelection = SelectionMenuClass.botSelection;
-            ToggleSharePermission(botSelection);
-        }
-        public static void ToggleSharePermission(Dictionary<int, bool> botSelection)
-        {
-            var disabledCount = 0;
-            var enabledCount = 0;
-            foreach (var bot in botSelection)
-            {
-                if (!bot.Value) //unselected, ignore.
-                    continue;
-                if (GetSharePermission(bot.Key))
-                    enabledCount++;
-                else
-                    disabledCount++;
-            }
-            bool majority = enabledCount > disabledCount;
-            foreach (var bot in botSelection)
-            {
-                if (!bot.Value) //unselected, ignore.
-                    continue;
-                SetSharePermission(bot.Key, !majority);
-            }
-        }
+        //public static void ToggleSharePermission(Dictionary<int, bool> botSelection)
+        //{
+        //    var disabledCount = 0;
+        //    var enabledCount = 0;
+        //    foreach (var bot in botSelection)
+        //    {
+        //        if (!bot.Value) //unselected, ignore.
+        //            continue;
+        //        if (GetSharePermission(bot.Key))
+        //            enabledCount++;
+        //        else
+        //            disabledCount++;
+        //    }
+        //    bool majority = enabledCount > disabledCount;
+        //    foreach (var bot in botSelection)
+        //    {
+        //        if (!bot.Value) //unselected, ignore.
+        //            continue;
+        //        SetSharePermission(bot.Key, !majority);
+        //    }
+        //}
         //Using bot.Agent.Owner.PlayerSlotIndex() as a key is good for transfering over network.
         //Issues may arrise when the number of bots changes mid mission.  
         //TODO handle that
         //TODO add more variants of get/set/toggle/flip for all settings and possible ways you'd want to call it.
-        public static void FlipPickupPermission()
-        {
-            foreach (var bot in SelectionMenuClass.botSelection)
-            {
-                if (!bot.Value) //unselected, ignore.
-                    continue;
-                TogglePickupPermission(bot.Key);
-            }
-        }
-        public static void FlipPickupPermission(List<int> idList)
-        {
-            foreach (int id in idList)
-            {
-                SetPickupPermission(id, !GetPickupPermission(id));
-            }
-        }
-        public static void FlipPickupPermission(List<PlayerAIBot> botList)
-        {
-            foreach (PlayerAIBot bot in botList)
-            {
-                SetPickupPermission(bot,!GetPickupPermission(bot));
-            }
-        }
-        public static void FlipPickupPermission(Dictionary<int, bool> botSelection)
-        {
-            foreach (var bot in botSelection)
-            {
-                if (!bot.Value) //unselected, ignore.
-                    continue;
-                TogglePickupPermission(bot.Key);
-            }
-        }
-        public static void TogglePickupPermission()
-        { 
-            var botSelection = SelectionMenuClass.botSelection;
-            TogglePickupPermission(botSelection);
-        }
-        public static void TogglePickupPermission(int id)
-        {
-            SetPickupPermission(id, !GetPickupPermission(id));
-        }
-        public static void TogglePickupPermission(List<int> idList)
-        {
-            var disabledCount = 0;
-            var enabledCount = 0;
-            foreach (int id in idList)
-            {
-                if (GetPickupPermission(id))
-                    enabledCount++;
-                else
-                    disabledCount++;
-            }
-            bool majority = enabledCount > disabledCount;
-            foreach (int id in idList)
-            {
-                SetPickupPermission(id, !majority);
-            }
-        }
-        public static void TogglePickupPermission(List<PlayerAIBot> botList)
-        {
-            var disabledCount = 0;
-            var enabledCount = 0;
-            foreach (PlayerAIBot bot in botList)
-            {
-                if (GetPickupPermission(bot))
-                    enabledCount++;
-                else
-                    disabledCount++;
-            }
-            bool majority = enabledCount > disabledCount;
-            foreach (PlayerAIBot bot in botList)
-            {
-                SetPickupPermission(bot, !majority);
-            }
-        }
+        //public static void FlipPickupPermission()
+        //{
+        //    foreach (var bot in SelectionMenuClass.botSelection)
+        //    {
+        //        if (!bot.Value) //unselected, ignore.
+        //            continue;
+        //        TogglePickupPermission(bot.Key);
+        //    }
+        //}
+        //public static void FlipPickupPermission(List<int> idList)
+        //{
+        //    foreach (int id in idList)
+        //    {
+        //        SetPickupPermission(id, !GetPickupPermission(id));
+        //    }
+        //}
+        //public static void FlipPickupPermission(List<PlayerAIBot> botList)
+        //{
+        //    foreach (PlayerAIBot bot in botList)
+        //    {
+        //        SetPickupPermission(bot,!GetPickupPermission(bot));
+        //    }
+        //}
+        //public static void FlipPickupPermission(Dictionary<int, bool> botSelection)
+        //{
+        //    foreach (var bot in botSelection)
+        //    {
+        //        if (!bot.Value) //unselected, ignore.
+        //            continue;
+        //        TogglePickupPermission(bot.Key);
+        //    }
+        //}
+        //public static void TogglePickupPermission()
+        //{ 
+        //    var botSelection = SelectionMenuClass.botSelection;
+        //    TogglePickupPermission(botSelection);
+        //}
+        //public static void TogglePickupPermission(int id)
+        //{
+        //    SetPickupPermission(id, !GetPickupPermission(id));
+        //}
+        //public static void TogglePickupPermission(List<int> idList)
+        //{
+        //    var disabledCount = 0;
+        //    var enabledCount = 0;
+        //    foreach (int id in idList)
+        //    {
+        //        if (GetPickupPermission(id))
+        //            enabledCount++;
+        //        else
+        //            disabledCount++;
+        //    }
+        //    bool majority = enabledCount > disabledCount;
+        //    foreach (int id in idList)
+        //    {
+        //        SetPickupPermission(id, !majority);
+        //    }
+        //}
+        //public static void TogglePickupPermission(List<PlayerAIBot> botList)
+        //{
+        //    var disabledCount = 0;
+        //    var enabledCount = 0;
+        //    foreach (PlayerAIBot bot in botList)
+        //    {
+        //        if (GetPickupPermission(bot))
+        //            enabledCount++;
+        //        else
+        //            disabledCount++;
+        //    }
+        //    bool majority = enabledCount > disabledCount;
+        //    foreach (PlayerAIBot bot in botList)
+        //    {
+        //        SetPickupPermission(bot, !majority);
+        //    }
+        //}
         public static void TogglePickupPermission(Dictionary<int, bool> botSelection)
         {
             var disabledCount = 0;
@@ -453,7 +442,7 @@ namespace ZombieTweak2
             {
                 if (!bot.Value) //unselected, ignore.
                     continue;
-                if (GetPickupPermission(bot.Key))
+                if (GetActionPermission("Pickup", bot.Key))
                     enabledCount++;
                 else
                     disabledCount++;
@@ -463,7 +452,7 @@ namespace ZombieTweak2
             {
                 if (!bot.Value) //unselected, ignore.
                     continue;
-                SetPickupPermission(bot.Key,!majority);
+                SetActionPermission("Pickup", bot.Key,!majority);
             }
         }
         public static void RemoveActionsOfType(PlayerAgent agent, Type actionType)
@@ -487,86 +476,86 @@ namespace ZombieTweak2
                 aiBot.StopAction(action.DescBase);
             }
         }
-        public static void SetSharePermission(int playerID, bool allowed, ulong netSender = 0)
-        {
-            if (!SharePerms.ContainsKey(playerID))
-            {
-                ZiMain.log.LogWarning($"Tried to set share perm for invalid player id: {playerID}, allowed:{allowed}");
-                return;
-            }
-            if (netSender == 0)
-            {
-                pStructs.pSharePermission info = new pStructs.pSharePermission();
-                info.playerID = playerID;
-                info.allowed = allowed;
-                NetworkAPI.InvokeEvent<pStructs.pSharePermission>("SetSharePermission", info);
-            }
-            ZiMain.log.LogMessage($"Setting share perm for id {playerID} to {allowed}");
-            SharePerms[playerID] = allowed;
-            PlayerManager.TryGetPlayerAgent(ref playerID, out var agent);
-            if (agent != null)
-                RemoveActionsOfType(agent, typeof(PlayerBotActionShareResourcePack));
-        }
-        public static void SetPickupPermission(int playerID, bool allowed, ulong netSender = 0)
-        {
-            if (!PickUpPerms.ContainsKey(playerID))
-            {
-                ZiMain.log.LogWarning($"Tried to set pickup perm for invalid player id: {playerID}, allowed:{allowed}");
-                return;
-            }
-            if (netSender == 0)
-            {
-                pStructs.pPickupPermission info = new pStructs.pPickupPermission();
-                info.playerID = playerID;
-                info.allowed = allowed;
-                NetworkAPI.InvokeEvent<pStructs.pPickupPermission>("SetPickupPermission", info);
-            }
-            ZiMain.log.LogMessage($"Setting pickup perm for id {playerID} to {allowed}");
-            PickUpPerms[playerID] = allowed;
-            PlayerManager.TryGetPlayerAgent(ref playerID, out var agent);
-            if (agent != null)
-                RemoveActionsOfType(agent, typeof(PlayerBotActionCollectItem));
-        }
-        public static void SetPickupPermission(PlayerAIBot bot, bool allowed)
-        {
-            SetPickupPermission(bot.Agent.Owner.PlayerSlotIndex(), allowed);
-        }
-        public static void SetPickupPermission(List<int> idList, bool allowed)
-        {
-            foreach (int id in idList)
-                SetPickupPermission(id, allowed);
-        }
-        public static void SetPickupPermission(List<PlayerAIBot> botList, bool allowed)
-        {
-            foreach (var bot in botList)
-                SetPickupPermission(bot.Agent.Owner.PlayerSlotIndex(), allowed);
-        }
-        public static bool GetPickupPermission(PlayerAIBot bot)
-        {
-            if (bot == null)
-            {
-                ZiMain.log.LogError($"Can't get pickup perms when bot is null");
-                return true;
-            }
-            if (bot.Agent == null) 
-            { 
-                ZiMain.log.LogError($"Can't get pickup perms when Agent is null");
-                return true; 
-            }
-            if (bot.Agent.Owner == null) 
-            {
-                ZiMain.log.LogError($"Can't get pickup perms when Owner is null");
-                return true; 
-            }
-            return PickUpPerms[bot.Agent.Owner.PlayerSlotIndex()];
-        }
-        public static bool GetPickupPermission(int id)
-        {
-            if (PickUpPerms.ContainsKey(id))
-                return PickUpPerms[id];
-            ZiMain.log.LogWarning($"Unknown bot asked for pickup perms id:{id}.");
-            return false;
-        }
+        //public static void SetSharePermission(int playerID, bool allowed, ulong netSender = 0)
+        //{
+        //    if (!SharePerms.ContainsKey(playerID))
+        //    {
+        //        ZiMain.log.LogWarning($"Tried to set share perm for invalid player id: {playerID}, allowed:{allowed}");
+        //        return;
+        //    }
+        //    if (netSender == 0)
+        //    {
+        //        pStructs.pSharePermission info = new pStructs.pSharePermission();
+        //        info.playerID = playerID;
+        //        info.allowed = allowed;
+        //        NetworkAPI.InvokeEvent<pStructs.pSharePermission>("SetSharePermission", info);
+        //    }
+        //    ZiMain.log.LogMessage($"Setting share perm for id {playerID} to {allowed}");
+        //    SharePerms[playerID] = allowed;
+        //    PlayerManager.TryGetPlayerAgent(ref playerID, out var agent);
+        //    if (agent != null)
+        //        RemoveActionsOfType(agent, typeof(PlayerBotActionShareResourcePack));
+        //}
+        //public static void SetPickupPermission(int playerID, bool allowed, ulong netSender = 0)
+        //{
+        //    if (!PickUpPerms.ContainsKey(playerID))
+        //    {
+        //        ZiMain.log.LogWarning($"Tried to set pickup perm for invalid player id: {playerID}, allowed:{allowed}");
+        //        return;
+        //    }
+        //    if (netSender == 0)
+        //    {
+        //        pStructs.pPickupPermission info = new pStructs.pPickupPermission();
+        //        info.playerID = playerID;
+        //        info.allowed = allowed;
+        //        NetworkAPI.InvokeEvent<pStructs.pPickupPermission>("SetPickupPermission", info);
+        //    }
+        //    ZiMain.log.LogMessage($"Setting pickup perm for id {playerID} to {allowed}");
+        //    PickUpPerms[playerID] = allowed;
+        //    PlayerManager.TryGetPlayerAgent(ref playerID, out var agent);
+        //    if (agent != null)
+        //        RemoveActionsOfType(agent, typeof(PlayerBotActionCollectItem));
+        //}
+        //public static void SetPickupPermission(PlayerAIBot bot, bool allowed)
+        //{
+        //    SetPickupPermission(bot.Agent.Owner.PlayerSlotIndex(), allowed);
+        //}
+        //public static void SetPickupPermission(List<int> idList, bool allowed)
+        //{
+        //    foreach (int id in idList)
+        //        SetPickupPermission(id, allowed);
+        //}
+        //public static void SetPickupPermission(List<PlayerAIBot> botList, bool allowed)
+        //{
+        //    foreach (var bot in botList)
+        //        SetPickupPermission(bot.Agent.Owner.PlayerSlotIndex(), allowed);
+        //}
+        //public static bool GetPickupPermission(PlayerAIBot bot)
+        //{
+        //    if (bot == null)
+        //    {
+        //        ZiMain.log.LogError($"Can't get pickup perms when bot is null");
+        //        return true;
+        //    }
+        //    if (bot.Agent == null) 
+        //    { 
+        //        ZiMain.log.LogError($"Can't get pickup perms when Agent is null");
+        //        return true; 
+        //    }
+        //    if (bot.Agent.Owner == null) 
+        //    {
+        //        ZiMain.log.LogError($"Can't get pickup perms when Owner is null");
+        //        return true; 
+        //    }
+        //    return PickUpPerms[bot.Agent.Owner.PlayerSlotIndex()];
+        //}
+        //public static bool GetPickupPermission(int id)
+        //{
+        //    if (PickUpPerms.ContainsKey(id))
+        //        return PickUpPerms[id];
+        //    ZiMain.log.LogWarning($"Unknown bot asked for pickup perms id:{id}.");
+        //    return false;
+        //}
 
         public static bool GetActionPermission(string actionKey, int playerID)
         {
@@ -600,18 +589,26 @@ namespace ZombieTweak2
             }
             if (netSender == 0)
             {
-                pStructs.pSharePermission info = new pStructs.pSharePermission();
+                pStructs.pGenericPermission info = new pStructs.pGenericPermission();
                 info.playerID = playerID;
                 info.allowed = allowed;
-                NetworkAPI.InvokeEvent<pStructs.pSharePermission>($"Set{actionKey}Permission", info);
+                int id = AutomaticActionMenuClass.autoActionMenus.IndexOf(AutomaticActionMenuClass.autoActionMenus.FirstOrDefault(menu => menu.centerNode.text == actionKey));
+                if (id == -1)
+                {
+                    ZiMain.log.LogWarning($"Unknown actionKey '{actionKey}' when setting action perms for id:{playerID}, allowed:{allowed}.");
+                    return;
+                }
+                info.actionID = id;
+                NetworkAPI.InvokeEvent<pStructs.pGenericPermission>($"Set{actionKey}Permission", info);
             }
             ZiMain.log.LogMessage($"Setting {actionKey} perm for id {playerID} to {allowed}");
-            perms[actionKey][playerID] = allowed;
-            //TODO add a way to remove actions of a certian type.
+            perms[actionKey][playerID] = allowed;  
 
-            //PlayerManager.TryGetPlayerAgent(ref playerID, out var agent);
-            //if (agent != null)
-            //    RemoveActionsOfType(agent, typeof(PlayerBotActionUnlock));
+            PlayerManager.TryGetPlayerAgent(ref playerID, out var agent);
+            if (agent == null)
+                return;
+            foreach (Type type in AutomaticActionMenuClass.actionMap[actionKey])
+                RemoveActionsOfType(agent, type);
         }
         //public static bool GetUnlockPermission(int id)
         //{
@@ -825,31 +822,31 @@ namespace ZombieTweak2
         //    if (agent != null)
         //        RemoveActionsOfType(agent, typeof(PlayerBotActionHighlight));
         //}
-        public static bool GetSharePermission(PlayerAIBot bot)
-        {
-            if (bot == null)
-            {
-                ZiMain.log.LogError($"Can't get share perms when bot is null");
-                return true;
-            }
-            if (bot.Agent == null)
-            {
-                ZiMain.log.LogError($"Can't get share perms when Agent is null");
-                return true;
-            }
-            if (bot.Agent.Owner == null)
-            {
-                ZiMain.log.LogError($"Can't get share perms when Owner is null");
-                return true;
-            }
-            return SharePerms[bot.Agent.Owner.PlayerSlotIndex()];
-        }
-        public static bool GetSharePermission(int id)
-        {
-            if (SharePerms.ContainsKey(id))
-                return SharePerms[id];
-            ZiMain.log.LogWarning($"Unknown bot asked for share perms id:{id}.");
-            return false;
-        }
+        //public static bool GetSharePermission(PlayerAIBot bot)
+        //{
+        //    if (bot == null)
+        //    {
+        //        ZiMain.log.LogError($"Can't get share perms when bot is null");
+        //        return true;
+        //    }
+        //    if (bot.Agent == null)
+        //    {
+        //        ZiMain.log.LogError($"Can't get share perms when Agent is null");
+        //        return true;
+        //    }
+        //    if (bot.Agent.Owner == null)
+        //    {
+        //        ZiMain.log.LogError($"Can't get share perms when Owner is null");
+        //        return true;
+        //    }
+        //    return SharePerms[bot.Agent.Owner.PlayerSlotIndex()];
+        //}
+        //public static bool GetSharePermission(int id)
+        //{
+        //    if (SharePerms.ContainsKey(id))
+        //        return SharePerms[id];
+        //    ZiMain.log.LogWarning($"Unknown bot asked for share perms id:{id}.");
+        //    return false;
+        //}
     }
 }

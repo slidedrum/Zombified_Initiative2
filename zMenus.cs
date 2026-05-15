@@ -76,6 +76,26 @@ namespace ZombieTweak2
         public static List<sMenu> autoActionMenus = new List<sMenu>();
         private static sMenu AutoActionMenu;
         public static Dictionary<string, OverrideTree<float?>> ActionPriorities = new();
+        public static Dictionary<string, List<Type>> actionMap = new() 
+        {
+            {"Use BioTracker", new List<Type> { typeof(PlayerBotActionUseEnemyScanner)} },
+            {"Attack", new List<Type> { typeof(PlayerBotActionAttack) } },
+            {"Revive", new List<Type> { typeof(PlayerBotActionRevive) } },
+            {"Share", new List<Type> { typeof(PlayerBotActionShareResourcePack) } },
+            {"Ping", new List<Type> { typeof(PlayerBotActionHighlight) } },
+            {"Pickup", new List<Type> { typeof(PlayerBotActionCollectItem) } },
+            {"Follow", new List<Type> { typeof(PlayerBotActionFollow) } },
+            {"Unlock", new List<Type> { typeof(PlayerBotActionUnlock) } }
+        };
+        public static Dictionary<string, float> defaultPrios = new Dictionary<string, float>
+            {
+                { "Revive", 12f },
+                { "Share", 10f },
+                { "Ping", 4.3f },
+                { "Pickup", 4.2f },
+                { "Follow", 14f },
+                { "Unlock", 4.1f }
+            };
         internal static void Setup(sMenu _menu)
         {
             AutoActionMenu = _menu;
@@ -101,15 +121,7 @@ namespace ZombieTweak2
             var unlockMenu = sMenuManager.createMenu("Unlock", AutoActionMenu);
             autoActionMenus.Add(unlockMenu);
 
-            Dictionary<string, float> defaultPrios = new Dictionary<string, float>
-            {
-                { "Revive", 12f },
-                { "Share", 10f },
-                { "Ping", 4.3f },
-                { "Pickup", 4.2f },
-                { "Follow", 14f },
-                { "Unlock", 4.1f }
-            };
+
 
             AutoActionMenu.centerNode.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
             AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnTapped, AutoActionMenu.parrentMenu.Open);
@@ -617,8 +629,8 @@ namespace ZombieTweak2
                 bool allowed = true;
                 foreach (var bot in zSearch.GetAllBotAgents())
                 {
-                    allowed = !zSlideComputer.GetPickupPermission(bot.PlayerSlotIndex); //This is a bad way to do it, i'm setting it multiple times.  But at least untill I make it so you can have different perms for different bots, it should all be fine!
-                    zSlideComputer.SetPickupPermission(bot.PlayerSlotIndex, allowed);
+                    allowed = !zSlideComputer.GetActionPermission("Pickup", bot.PlayerSlotIndex); //This is a bad way to do it, i'm setting it multiple times.  But at least untill I make it so you can have different perms for different bots, it should all be fine!
+                    zSlideComputer.SetActionPermission("Pickup", bot.PlayerSlotIndex, allowed);
                 }
                 if (allowed)
                 {
@@ -635,7 +647,7 @@ namespace ZombieTweak2
             {
                 foreach (var bot in zSearch.GetAllBotAgents())
                 {
-                    zSlideComputer.SetPickupPermission(bot.PlayerSlotIndex, allowed);
+                    zSlideComputer.SetActionPermission("Pickup", bot.PlayerSlotIndex, allowed);
                 }
                 if (allowed)
                 {
@@ -762,8 +774,8 @@ namespace ZombieTweak2
                 bool allowed = true;
                 foreach (var bot in zSearch.GetAllBotAgents())
                 {
-                    allowed = !zSlideComputer.GetSharePermission(bot.PlayerSlotIndex); //This is a bad way to do it, i'm setting it multiple times.  But at least untill I make it so you can have different perms for different bots, it should all be fine!
-                    zSlideComputer.SetSharePermission(bot.PlayerSlotIndex, allowed);
+                    allowed = !zSlideComputer.GetActionPermission("Share", bot.PlayerSlotIndex); //This is a bad way to do it, i'm setting it multiple times.  But at least untill I make it so you can have different perms for different bots, it should all be fine!
+                    zSlideComputer.SetActionPermission("Share", bot.PlayerSlotIndex, allowed);
                 }
                 if (allowed)
                 {
@@ -780,7 +792,7 @@ namespace ZombieTweak2
             {
                 foreach (var bot in zSearch.GetAllBotAgents())
                 {
-                    zSlideComputer.SetSharePermission(bot.PlayerSlotIndex, allowed);
+                    zSlideComputer.SetActionPermission("Share", bot.PlayerSlotIndex, allowed);
                 }
                 if (allowed)
                 {

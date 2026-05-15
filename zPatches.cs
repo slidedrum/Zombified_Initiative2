@@ -468,7 +468,7 @@ public class ZombifiedPatches
     [HarmonyPriority(Priority.Last)] //Needed for betterbots compat
     public static bool UpdateActionCollectItem(RootPlayerBotAction __instance, ref PlayerBotActionBase.Descriptor bestAction)
     {
-        if (!zSlideComputer.GetPickupPermission(__instance.m_agent.Owner.PlayerSlotIndex()))
+        if (!zSlideComputer.GetActionPermission("Pickup", __instance.m_agent.Owner.PlayerSlotIndex()))
             return false;
         return true;
     }
@@ -523,7 +523,7 @@ public class ZombifiedPatches
         
         //var originalResult = __result;
         __result = 0f;
-        if (!zSlideComputer.GetPickupPermission(__instance.m_agent.Owner.PlayerSlotIndex()))
+        if (!zSlideComputer.GetActionPermission("Pickup", __instance.m_agent.Owner.PlayerSlotIndex()))
             return false;
         if (!zSlideComputer.enabledItemPrios.ContainsKey(itemID) || !zSlideComputer.enabledItemPrios[itemID])
             return false;

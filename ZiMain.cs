@@ -160,15 +160,16 @@ public class ZiMain : BasePlugin
         NetworkAPI.RegisterEvent<pItemPrio>                 ("SetItemPrio",                     zNetworking.ReciveSetItemPrio);
         NetworkAPI.RegisterEvent<pResourceThreshold>        ("SetResourceThreshold",            zNetworking.reciveSetResourceThreshold);
         NetworkAPI.RegisterEvent<pResourceThresholdDisable> ("SetResourceThresholdDisable",     zNetworking.ReciveSetResourceThresholdDisable);
-        NetworkAPI.RegisterEvent<pSharePermission>          ("SetSharePermission",              zNetworking.ReciveSetSharePermission);
-        NetworkAPI.RegisterEvent<pSharePermission>          ("SetUnlockPermission",             zNetworking.ReciveSetUnlockPermission); //Why does changing the struct make the final arg a method group instead of an action?  
-        NetworkAPI.RegisterEvent<pSharePermission>          ("SetPingPermission",               zNetworking.ReciveSetPingPermission); //Why does changing the struct make the final arg a method group instead of an action?  
-        NetworkAPI.RegisterEvent<pSharePermission>          ("SetUse BioTrackerPermission",         zNetworking.ReciveSetBioTrackerPermission); //Why does changing the struct make the final arg a method group instead of an action?
-        NetworkAPI.RegisterEvent<pSharePermission>          ("SetRevivePermission",             zNetworking.ReciveSetRevivePermission); //Why does changing the struct make the final arg a method group instead of an action?
-        NetworkAPI.RegisterEvent<pSharePermission>          ("SetRevivePlayerPermission",       zNetworking.ReciveSetRevivePlayersPermission); //Why does changing the struct make the final arg a method group instead of an action?
-        NetworkAPI.RegisterEvent<pSharePermission>          ("SetReviveBotPermission",          zNetworking.ReciveSetReviveBotsPermission); //Why does changing the struct make the final arg a method group instead of an action?
-        NetworkAPI.RegisterEvent<pSharePermission>          ("SetAttackPermission",             zNetworking.ReciveSetAttackPermission); //Why does changing the struct make the final arg a method group instead of an action?
-        NetworkAPI.RegisterEvent<pPickupPermission>         ("SetPickupPermission",             zNetworking.ReciveSetPickupPermission);
+        //NetworkAPI.RegisterEvent<pGenericPermission>      ("SetActionPermission",             zNetworking.ReciveSetActionPermission);
+        NetworkAPI.RegisterEvent<pGenericPermission>        ("SetSharePermission",              zNetworking.ReciveSetActionPermission);
+        NetworkAPI.RegisterEvent<pGenericPermission>        ("SetUnlockPermission",             zNetworking.ReciveSetActionPermission); 
+        NetworkAPI.RegisterEvent<pGenericPermission>        ("SetPingPermission",               zNetworking.ReciveSetActionPermission); 
+        NetworkAPI.RegisterEvent<pGenericPermission>        ("SetUse BioTrackerPermission",     zNetworking.ReciveSetActionPermission); 
+        NetworkAPI.RegisterEvent<pGenericPermission>        ("SetRevivePermission",             zNetworking.ReciveSetActionPermission); 
+        NetworkAPI.RegisterEvent<pSharePermission>          ("SetRevivePlayerPermission",       zNetworking.ReciveSetRevivePlayersPermission); 
+        NetworkAPI.RegisterEvent<pSharePermission>          ("SetReviveBotPermission",          zNetworking.ReciveSetReviveBotsPermission); 
+        NetworkAPI.RegisterEvent<pGenericPermission>        ("SetAttackPermission",             zNetworking.ReciveSetActionPermission); 
+        NetworkAPI.RegisterEvent<pGenericPermission>        ("SetPickupPermission",             zNetworking.ReciveSetActionPermission);
         NetworkAPI.RegisterEvent<pPickupItemInfo>           ("RequestToPickupItem",             zNetworking.ReciveRequestToPickupItem);
         NetworkAPI.RegisterEvent<pShareResourceInfo>        ("RequestToShareResourcePack",      zNetworking.ReciveRequestToShareResource);
         NetworkAPI.RegisterEvent<pAttackEnemyInfo>          ("RequestToKillEnemy",              zNetworking.ReciveRequestToKillEnemy);

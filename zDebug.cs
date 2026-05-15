@@ -344,20 +344,20 @@ namespace ZombieTweak2
             info.id = id;
             zNetworking.zNetworking.ReciveSetResourceThresholdDisable(sender, info);
         }
-        private static void TestReciveSetPickupPermissionNetwork(ulong sender, int playerID, bool allowed)
-        {
-            pStructs.pPickupPermission info = new pStructs.pPickupPermission();
-            info.allowed = allowed;
-            info.playerID = playerID;
-            zNetworking.zNetworking.ReciveSetPickupPermission(sender, info);
-        }
-        private static void TestReciveSetSharePermissionNetwork(ulong sender, int playerID, bool allowed)
-        {
-            pStructs.pSharePermission info = new pStructs.pSharePermission();
-            info.allowed = allowed;
-            info.playerID = playerID;
-            zNetworking.zNetworking.ReciveSetSharePermission(sender, info);
-        }
+        //private static void TestReciveSetPickupPermissionNetwork(ulong sender, int playerID, bool allowed)
+        //{
+        //    pStructs.pPickupPermission info = new pStructs.pPickupPermission();
+        //    info.allowed = allowed;
+        //    info.playerID = playerID;
+        //    zNetworking.zNetworking.ReciveSetPickupPermission(sender, info);
+        //}
+        //private static void TestReciveSetSharePermissionNetwork(ulong sender, int playerID, bool allowed)
+        //{
+        //    pStructs.pSharePermission info = new pStructs.pSharePermission();
+        //    info.allowed = allowed;
+        //    info.playerID = playerID;
+        //    zNetworking.zNetworking.ReciveSetSharePermission(sender, info);
+        //}
         private static void TestReciveRequestToPickupItemNetwork(ulong sender, PlayerAgent bot, ItemInLevel item)
         {
             pPickupItemInfo info = new pPickupItemInfo();
