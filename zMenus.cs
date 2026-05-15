@@ -75,9 +75,10 @@ namespace ZombieTweak2
     {
         public static List<sMenu> autoActionMenus = new List<sMenu>();
         private static sMenu AutoActionMenu;
-        internal static void Setup(sMenu menu)
+        public static Dictionary<string, OverrideTree<float?>> ActionPriorities = new();
+        internal static void Setup(sMenu _menu)
         {
-            AutoActionMenu = menu;
+            AutoActionMenu = _menu;
             AutoActionMenu.radius = 130f;
             //Vanilla actions
             var bioTrackerMenu = sMenuManager.createMenu("Use BioTracker", AutoActionMenu);
@@ -86,6 +87,7 @@ namespace ZombieTweak2
             autoActionMenus.Add(attackMenu);
             var reviveMenu = sMenuManager.createMenu("Revive", AutoActionMenu);
             autoActionMenus.Add(reviveMenu);
+            //sMenu.sMenuNode node = reviveMenu.GetNode();
             var shareMenu = sMenuManager.createMenu("Share", AutoActionMenu);
             autoActionMenus.Add(shareMenu);
             var pingMenu = sMenuManager.createMenu("Ping", AutoActionMenu);
@@ -94,9 +96,47 @@ namespace ZombieTweak2
             autoActionMenus.Add(pickupMenu);
             var followMenu = sMenuManager.createMenu("Follow", AutoActionMenu);
             autoActionMenus.Add(followMenu);
-            
+            //node.AddListener(sMenuManager.nodeEvent.WhileSelected, GenericUpdatePriorityBasedOnScroll, node);
+            //node.AddListener(sMenuManager.nodeEvent.OnHeldImmediateSelected, GenericResetPrioSettings, node);
             var unlockMenu = sMenuManager.createMenu("Unlock", AutoActionMenu);
             autoActionMenus.Add(unlockMenu);
+
+            Dictionary<string, float> defaultPrios = new Dictionary<string, float>
+            {
+                { "Revive", 12f },
+                { "Share", 10f },
+                { "Ping", 4.3f },
+                { "Pickup", 4.2f },
+                { "Follow", 14f },
+                { "Unlock", 4.1f }
+            };
+
+            AutoActionMenu.centerNode.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
+            AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnTapped, AutoActionMenu.parrentMenu.Open);
+
+            foreach (sMenu menu in autoActionMenus)
+            {
+                sMenu.sMenuNode node = menu.GetNode();
+                string text = node.text;
+                if (!defaultPrios.ContainsKey(text))
+                    continue;
+                if (text != "Follow")
+                {
+                    node.AddListener(sMenuManager.nodeEvent.WhileSelected, GenericUpdatePriorityBasedOnScroll, node);
+                    node.AddListener(sMenuManager.nodeEvent.OnHeldImmediateSelected, GenericResetPrioSettings, node);
+                    AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediateSelected, GenericResetPrioSettings, node);
+                }
+                else
+                    AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediateSelected, FollowMenuClass.ResetSettings, node);
+                ActionPriorities.Add(text, new OverrideTree<float?>(defaultPrios[text]).AddNode(text, null).Tree);
+                node.AddListener(sMenuManager.nodeEvent.WhileSelected, GenericUpdatePriorityBasedOnScroll, node);
+                node.AddListener(sMenuManager.nodeEvent.OnHeldImmediateSelected, GenericResetPrioSettings, node);
+                node.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
+                node.AddListener(sMenuManager.nodeEvent.OnDoubleTapped, menu.Open);
+                GenericUpdateNodePrioDisplay(node);
+            }
+            
+
             //Custom actions
             if (ZiMain.customActions)
             {
@@ -105,9 +145,9 @@ namespace ZombieTweak2
                 ExploreMenuClass.Setup(exploremenu);
             }
 
-            menu.AddPannel(sMenu.sMenuPannel.Side.right, "Tap => toggle");
-            menu.AddPannel(sMenu.sMenuPannel.Side.right, "Double tap => submenu");
-            menu.AddPannel(sMenu.sMenuPannel.Side.right, "Hold => reset");
+            AutoActionMenu.AddPannel(sMenu.sMenuPannel.Side.right, "Tap => toggle");
+            AutoActionMenu.AddPannel(sMenu.sMenuPannel.Side.right, "Double tap => submenu");
+            AutoActionMenu.AddPannel(sMenu.sMenuPannel.Side.right, "Hold => reset");
 
             PickupMenuClass.Setup(pickupMenu);
             ShareMenuClass.Setup(shareMenu);
@@ -129,6 +169,40 @@ namespace ZombieTweak2
             AutoActionMenu.AddNodeToCatagory("Resources", "Share");
             AutoActionMenu.SetCatagory("Favorites");
 
+        }
+        internal static void GenericUpdatePriorityBasedOnScroll(sMenu.sMenuNode node)
+        {
+            float scroll = Input.GetAxis("Mouse ScrollWheel");
+            if (scroll == 0f)
+                return;
+            float normalizedScroll = (int)Mathf.Sign(scroll) * 0.1f;
+            string text = node.text;
+            OverrideTree<float?> prio = ActionPriorities[text];
+            prio.SetValue(text, Math.Clamp(Mathf.Round(((float)prio.ValueAt(text) + normalizedScroll) * 10f) / 10f,1f,15f));
+            GenericUpdateNodePrioDisplay(node);
+        }
+        private static void GenericUpdateNodePrioDisplay(sMenu.sMenuNode node)
+        {
+            string text = node.text;
+            OverrideTree<float?> prio = ActionPriorities[text];
+            if (prio.nodes[text].IsDefaultValue())
+            {
+                node.SetPrefix("");
+                node.SetSuffix("");
+            }
+            else
+            {
+                node.SetPrefix("* ");
+                node.SetSuffix(" *");
+            }
+            node.SetTitle($"Prio <color=#CC840066>[</color>{prio.ValueAt(text)}<color=#CC840066>]</color>");
+        }
+        private static void GenericResetPrioSettings(sMenu.sMenuNode node)
+        {
+            string text = node.text;
+            OverrideTree<float?> prio = ActionPriorities[text];
+            prio.SetValue(text, null);
+            GenericUpdateNodePrioDisplay(node);
         }
         public static class ReviveMenuClass
         {
@@ -210,7 +284,6 @@ namespace ZombieTweak2
                 }
             }
         }
-
         public static class AttackMenuClass
         {
             public static sMenu attackMenu;
@@ -243,7 +316,6 @@ namespace ZombieTweak2
                 }
             }
         }
-
         public static class BioTrackerMenuClass
         {
             public static sMenu bioTrackerMenu;
@@ -276,7 +348,6 @@ namespace ZombieTweak2
                 }
             }
         }
-
         public static class PingMenuClass
         {
             public static sMenu pingMenu;
@@ -341,7 +412,6 @@ namespace ZombieTweak2
                 }
             }
         }
-
         public static class PickupMenuClass
         {
             public static Dictionary<uint, sMenu.sMenuNode> prioNodesByID = new Dictionary<uint, sMenu.sMenuNode>();
@@ -653,7 +723,7 @@ namespace ZombieTweak2
             public static DRAMA_State previousState;
             public static Color currentStateColor;
             public static Color defaultColor;
-            public static OverrideTree<int?> prio = new(14);
+            public static OverrideTree<float?> prio = AutomaticActionMenuClass.ActionPriorities["Follow"];
             public static OverrideTree<int?> followRadius = new(7);
             public static OverrideTree<int?> maxDistance = new(10);
             public static OverrideTree<bool?> followEnabled = new(true);
@@ -662,8 +732,6 @@ namespace ZombieTweak2
 
             internal static void Setup(sMenu menu)
             {
-
-
                 defaultColor = menu.getTextColor();
                 currentStateColor = new(0f, 0.2f, 0f);
                 followMenu = menu;
@@ -678,12 +746,12 @@ namespace ZombieTweak2
                 ignoredStates.Add(DRAMA_State.ElevatorGoingDown);
                 ignoredStates.Add(DRAMA_State.ElevatorIdle);
 
-                prio = new(14);
+                //prio = new(14);
                 followRadius = new(7);
                 maxDistance = new(10);
                 followEnabled = new(true);
                 followEnabled.AddNode("Main", true);
-                prio.AddNode("Follow", null);
+                //prio.AddNode("Follow", null);
                 prio.AddNode("Fighting", null, "Follow", condition: () => { return fightingStates.Contains(DramaManager.CurrentStateEnum); });
                 prio.AddNode("Stealth", null, "Follow", condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Sneaking; });
                 prio.AddNode("Explore", null, "Follow", condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Exploration; });
@@ -818,7 +886,7 @@ namespace ZombieTweak2
                 catagoryNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, ResetSettings, catagoryNode);
                 return catagoryNode;
             }
-            private static void ResetSettings(sMenu.sMenuNode node)
+            internal static void ResetSettings(sMenu.sMenuNode node)
             {
                 string text = node.text;
                 prio.SetValue(text, null);
@@ -904,9 +972,7 @@ namespace ZombieTweak2
             private static void UpdateNodeSettingsDisplay(sMenu.sMenuNode node)
             {
                 string text = node.text;
-                if (prio.nodes[text].Parent.ValueAt() == prio.ValueAt(text) &&
-                    followRadius.nodes[text].Parent.ValueAt() == followRadius.ValueAt(text) &&
-                    maxDistance.nodes[text].Parent.ValueAt() == maxDistance.ValueAt(text)) //Holy shit this is a mess, TODO clean this.
+                if (prio.nodes[text].IsDefaultValue() && followRadius.nodes[text].IsDefaultValue() && maxDistance.nodes[text].IsDefaultValue())
                 {
                     node.SetPrefix("");
                     node.SetSuffix("");

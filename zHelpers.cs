@@ -241,6 +241,7 @@ namespace ZombieTweak2
             public Func<bool>? Condition { get; }
             public bool IsRoot => Parent == null;
             public Node? Parent { get; private set; }
+            public OverrideTree<T> Tree { get; internal set; }
             public List<Node> Children { get; } = new();
             internal Node(string key, T? value, Func<bool>? condition = null) //If you don't supply a parent, you MUST supply a value
             {
@@ -270,23 +271,6 @@ namespace ZombieTweak2
                 }
                 return ret;
             }
-            //public T? GetValue(bool checkParent = false) //Traverse down the tree to get value
-            //{
-            //    if (Value != null) return Value;
-            //    foreach (var node in Children)
-            //    {
-            //        if (node.Condition != null && !node.Condition.Invoke())
-            //            continue;
-            //        var childValue = node.GetValue();
-            //        if (childValue != null)
-            //        {
-            //            return childValue;
-            //        }
-            //    }
-            //    if (checkParent)
-            //        return ValueAt();
-            //    return default;
-            //}
             public T? ValueAt() //Traverse up the tree to get value at given node
             {
                 if (Value != null) return Value;
@@ -297,6 +281,16 @@ namespace ZombieTweak2
             public void SetValue(T? value)
             {
                 Value = value;
+            }
+            public bool HasValue()
+            {
+                return Value != null;
+            }
+            public bool IsDefaultValue()
+            {
+                if (HasValue() == false)
+                    return true;
+                return EqualityComparer<T?>.Default.Equals(Parent.ValueAt(), Value);
             }
         }
         public OverrideTree(T rootValue, string rootKey = "Default")
@@ -325,6 +319,7 @@ namespace ZombieTweak2
             var node = new Node(key, parent, value, condition);
             parent.Children.Add(node);
             nodes[key] = node;
+            node.Tree = this;
             return node;
         }
         public T? SetValue(string key, T? value)

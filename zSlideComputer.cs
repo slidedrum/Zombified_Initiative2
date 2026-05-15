@@ -22,6 +22,7 @@ namespace ZombieTweak2
         public static Il2CppSystem.Collections.Generic.Dictionary<uint, bool> enabledItemPrios = new ();
         public static Il2CppSystem.Collections.Generic.Dictionary<uint, bool> enabledResourceShares = new ();
         public static Il2CppSystem.Collections.Generic.Dictionary<uint, float> OriginalItemPrios = new();
+        public static Dictionary<string, Dictionary<int, bool>> perms = new();
         public static Dictionary<int, bool> PickUpPerms = new (); //bot.Agent.Owner.PlayerSlotIndex()
         public static Dictionary<int, bool> UnlockPerms = new (); //bot.Agent.Owner.PlayerSlotIndex()
         public static Dictionary<int, bool> PingPerms = new (); //bot.Agent.Owner.PlayerSlotIndex()
@@ -566,6 +567,52 @@ namespace ZombieTweak2
             ZiMain.log.LogWarning($"Unknown bot asked for pickup perms id:{id}.");
             return false;
         }
+
+        public static bool GetActionPermission(string actionKey, int playerID)
+        {
+            if (perms.ContainsKey(actionKey))
+            {
+                if (perms[actionKey].ContainsKey(playerID))
+                    return perms[actionKey][playerID];
+                else
+                {
+                    ZiMain.log.LogWarning($"Unknown bot asked for {actionKey} perms id:{playerID}.");
+                    return true;
+                }
+            }
+            else
+            {
+                ZiMain.log.LogWarning($"Unknown actionKey '{actionKey}' when getting action perms for id:{playerID}.");
+                return false;
+            }
+        }
+        public static void SetActionPermission(string actionKey, int playerID, bool allowed, ulong netSender = 0)
+        {
+            if (!perms.ContainsKey(actionKey))
+            {
+                ZiMain.log.LogWarning($"Unknown actionKey '{actionKey}' when setting action perms for id:{playerID}, allowed:{allowed}.");
+                return;
+            }
+            if (!UnlockPerms.ContainsKey(playerID))
+            {
+                ZiMain.log.LogWarning($"Tried to set {actionKey} perm for invalid player id: {playerID}, allowed:{allowed}");
+                return;
+            }
+            if (netSender == 0)
+            {
+                pStructs.pSharePermission info = new pStructs.pSharePermission();
+                info.playerID = playerID;
+                info.allowed = allowed;
+                NetworkAPI.InvokeEvent<pStructs.pSharePermission>($"Set{actionKey}Permission", info);
+            }
+            ZiMain.log.LogMessage($"Setting {actionKey} perm for id {playerID} to {allowed}");
+            perms[actionKey][playerID] = allowed;
+            //TODO add a way to remove actions of a certian type.
+
+            //PlayerManager.TryGetPlayerAgent(ref playerID, out var agent);
+            //if (agent != null)
+            //    RemoveActionsOfType(agent, typeof(PlayerBotActionUnlock));
+        }
         public static bool GetUnlockPermission(int id)
         {
             if (UnlockPerms.ContainsKey(id))
@@ -574,39 +621,6 @@ namespace ZombieTweak2
             return false;
         }
 
-        public static bool GetUnlockPermission(PlayerAIBot bot)
-        {
-            if (bot == null)
-            {
-                ZiMain.log.LogError($"Can't get pickup perms when bot is null");
-                return true;
-            }
-            if (bot.Agent == null)
-            {
-                ZiMain.log.LogError($"Can't get pickup perms when Agent is null");
-                return true;
-            }
-            if (bot.Agent.Owner == null)
-            {
-                ZiMain.log.LogError($"Can't get pickup perms when Owner is null");
-                return true;
-            }
-            return UnlockPerms[bot.Agent.Owner.PlayerSlotIndex()];
-        }
-        public static void SetUnlockPermission(PlayerAIBot bot, bool allowed)
-        {
-            SetUnlockPermission(bot.Agent.Owner.PlayerSlotIndex(), allowed);
-        }
-        public static void SetUnlockPermission(List<int> idList, bool allowed)
-        {
-            foreach (int id in idList)
-                SetUnlockPermission(id, allowed);
-        }
-        public static void SetUnlockPermission(List<PlayerAIBot> botList, bool allowed)
-        {
-            foreach (var bot in botList)
-                SetUnlockPermission(bot.Agent.Owner.PlayerSlotIndex(), allowed);
-        }
         public static void SetUnlockPermission(int playerID, bool allowed, ulong netSender = 0)
         {
             if (!UnlockPerms.ContainsKey(playerID))
@@ -780,7 +794,7 @@ namespace ZombieTweak2
                 RemoveActionsOfType(agent, typeof(PlayerBotActionAttack));
             }
         }
-
+        
         public static bool GetPingPermission(int id)
         {
             if (PingPerms.ContainsKey(id))

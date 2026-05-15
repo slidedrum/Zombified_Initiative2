@@ -118,7 +118,6 @@ namespace SlideMenu
                 if (menuOpen)
                 {
                     currentMenu.Update();
-
                 }
                 if (Input.GetKey(KeyCode.M))
                 {
