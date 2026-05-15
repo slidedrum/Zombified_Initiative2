@@ -341,12 +341,12 @@ namespace ZombieTweak2.zNetworking
             int playerID = info.playerID;
             bool allowed = info.allowed;
             ZiMain.log.LogInfo($"id:{playerID}, allowed:{allowed}");
-            if (!zSlideComputer.UnlockPerms.ContainsKey(playerID))
+            if (!zSlideComputer.perms["Unlock"].ContainsKey(playerID))
             {
                 ZiMain.log.LogError("Unknown id recived!");
                 return;
             }
-            zSlideComputer.SetUnlockPermission(playerID, allowed, sender);
+            zSlideComputer.SetActionPermission("Unlock",playerID, allowed, sender);
             //zMenus.UpdateIndicatorForNode(zMenus.permissionMenu.GetNode("Share"), zSlideComputer.SharePerms);
             var node = AutomaticActionMenuClass.UnlockMenuClass.unlockNode;
             var menu = AutomaticActionMenuClass.UnlockMenuClass.unlockMenu;

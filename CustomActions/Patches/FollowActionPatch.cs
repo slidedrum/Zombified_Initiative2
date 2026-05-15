@@ -73,6 +73,6 @@ namespace ZombieTweak2.CustomActions.Patches
             RootPlayerBotAction.s_followLeaderRadius =              (float)AutomaticActionMenuClass.FollowMenuClass.followRadius.GetValue();
             RootPlayerBotAction.s_followLeaderMaxDistance =         (float)AutomaticActionMenuClass.FollowMenuClass.maxDistance.GetValue();
             return true;
-        }
+        } 
     }
 }

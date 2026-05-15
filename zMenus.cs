@@ -113,7 +113,7 @@ namespace ZombieTweak2
 
             AutoActionMenu.centerNode.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
             AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnTapped, AutoActionMenu.parrentMenu.Open);
-
+            List<PlayerAIBot> playerAiBots = ZiMain.GetBotList();
             foreach (sMenu menu in autoActionMenus)
             {
                 sMenu.sMenuNode node = menu.GetNode();
@@ -134,6 +134,11 @@ namespace ZombieTweak2
                 node.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
                 node.AddListener(sMenuManager.nodeEvent.OnDoubleTapped, menu.Open);
                 GenericUpdateNodePrioDisplay(node);
+
+                
+                zSlideComputer.perms.Add(text, new Dictionary<int, bool>());
+                foreach (PlayerAIBot bot in playerAiBots)
+                    zSlideComputer.perms[text].Add(bot.Agent.Owner.PlayerSlotIndex(), true);                    
             }
             
 
@@ -397,8 +402,8 @@ namespace ZombieTweak2
                 bool allowed = true;
                 foreach (var bot in zSearch.GetAllBotAgents())
                 {
-                    allowed = !zSlideComputer.GetUnlockPermission(bot.PlayerSlotIndex); //This is a bad way to do it, i'm setting it multiple times.  But at least untill I make it so you can have different perms for different bots, it should all be fine!
-                    zSlideComputer.SetUnlockPermission(bot.PlayerSlotIndex, allowed);
+                    allowed = !zSlideComputer.GetActionPermission("Unlock", bot.PlayerSlotIndex); //This is a bad way to do it, i'm setting it multiple times.  But at least untill I make it so you can have different perms for different bots, it should all be fine!
+                    zSlideComputer.SetActionPermission("Unlock", bot.PlayerSlotIndex, allowed);
                 }
                 if (allowed)
                 {

@@ -477,7 +477,7 @@ public class ZombifiedPatches
     [HarmonyPriority(Priority.Last)] //Needed for betterbots compat
     public static bool UpdateActionUnlock(RootPlayerBotAction __instance, ref PlayerBotActionBase.Descriptor bestAction)
     {
-        if (!zSlideComputer.GetUnlockPermission(__instance.m_agent.Owner.PlayerSlotIndex()))
+        if (!zSlideComputer.GetActionPermission("Unlock", __instance.m_agent.Owner.PlayerSlotIndex()))
             return false;
         return true;
     }
