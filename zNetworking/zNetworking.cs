@@ -191,12 +191,12 @@ namespace ZombieTweak2.zNetworking
             int playerID = info.playerID;
             bool allowed = info.allowed;
             ZiMain.log.LogInfo($"id:{playerID}, allowed:{allowed}");
-            if (!zSlideComputer.PingPerms.ContainsKey(playerID))
+            if (!zSlideComputer.perms["Ping"].ContainsKey(playerID))
             {
                 ZiMain.log.LogError("Unknown id recived!");
                 return;
             }
-            zSlideComputer.SetPingPermission(playerID, allowed, sender);
+            zSlideComputer.SetActionPermission("Ping", playerID, allowed, sender);
             //zMenus.UpdateIndicatorForNode(zMenus.permissionMenu.GetNode("Share"), zSlideComputer.SharePerms);
             var node = AutomaticActionMenuClass.PingMenuClass.pingNode;
             var menu = AutomaticActionMenuClass.PingMenuClass.pingMenu;
@@ -217,12 +217,12 @@ namespace ZombieTweak2.zNetworking
             int playerID = info.playerID;
             bool allowed = info.allowed;
             ZiMain.log.LogInfo($"id:{playerID}, allowed:{allowed}");
-            if (!zSlideComputer.RevivePerms.ContainsKey(playerID))
+            if (!zSlideComputer.perms["Revive"].ContainsKey(playerID))
             {
                 ZiMain.log.LogError("Unknown id recived!");
                 return;
             }
-            zSlideComputer.SetRevivePermission(playerID, allowed, sender);
+            zSlideComputer.SetActionPermission("Revive", playerID, allowed, sender);
             //zMenus.UpdateIndicatorForNode(zMenus.permissionMenu.GetNode("Share"), zSlideComputer.SharePerms);
             var node = AutomaticActionMenuClass.ReviveMenuClass.reviveNode;
             var menu = AutomaticActionMenuClass.ReviveMenuClass.reviveMenu;
@@ -289,12 +289,12 @@ namespace ZombieTweak2.zNetworking
             int playerID = info.playerID;
             bool allowed = info.allowed;
             ZiMain.log.LogInfo($"id:{playerID}, allowed:{allowed}");
-            if (!zSlideComputer.BioTrackerPerms.ContainsKey(playerID))
+            if (!zSlideComputer.perms["Use BioTracker"].ContainsKey(playerID))
             {
                 ZiMain.log.LogError("Unknown id recived!");
                 return;
             }
-            zSlideComputer.SetBioTrackerPermission(playerID, allowed, sender);
+            zSlideComputer.SetActionPermission("Use BioTracker", playerID, allowed, sender);
             //zMenus.UpdateIndicatorForNode(zMenus.permissionMenu.GetNode("Share"), zSlideComputer.SharePerms);
             var node = AutomaticActionMenuClass.BioTrackerMenuClass.bioTrackerNode;
             var menu = AutomaticActionMenuClass.BioTrackerMenuClass.bioTrackerMenu;
@@ -315,12 +315,12 @@ namespace ZombieTweak2.zNetworking
             int playerID = info.playerID;
             bool allowed = info.allowed;
             ZiMain.log.LogInfo($"id:{playerID}, allowed:{allowed}");
-            if (!zSlideComputer.AttackPerms.ContainsKey(playerID))
+            if (!zSlideComputer.perms["Attack"].ContainsKey(playerID))
             {
                 ZiMain.log.LogError("Unknown id recived!");
                 return;
             }
-            zSlideComputer.SetAttackPermission(playerID, allowed, sender);
+            zSlideComputer.SetActionPermission("Attack", playerID, allowed, sender);
             //zMenus.UpdateIndicatorForNode(zMenus.permissionMenu.GetNode("Share"), zSlideComputer.SharePerms);
             var node = AutomaticActionMenuClass.AttackMenuClass.attackNode;
             var menu = AutomaticActionMenuClass.AttackMenuClass.attackMenu;

@@ -25,12 +25,12 @@ namespace ZombieTweak2
         public static Dictionary<string, Dictionary<int, bool>> perms = new();
         public static Dictionary<int, bool> PickUpPerms = new (); //bot.Agent.Owner.PlayerSlotIndex()
         //public static Dictionary<int, bool> UnlockPerms = new (); //bot.Agent.Owner.PlayerSlotIndex()
-        public static Dictionary<int, bool> PingPerms = new (); //bot.Agent.Owner.PlayerSlotIndex()
-        public static Dictionary<int, bool> BioTrackerPerms = new (); //bot.Agent.Owner.PlayerSlotIndex()
-        public static Dictionary<int, bool> RevivePerms = new (); //bot.Agent.Owner.PlayerSlotIndex()
+        //public static Dictionary<int, bool> PingPerms = new (); //bot.Agent.Owner.PlayerSlotIndex()
+        //public static Dictionary<int, bool> BioTrackerPerms = new (); //bot.Agent.Owner.PlayerSlotIndex()
+        //public static Dictionary<int, bool> RevivePerms = new (); //bot.Agent.Owner.PlayerSlotIndex()
         public static Dictionary<int, bool> RevivePlayersPerms = new (); //bot.Agent.Owner.PlayerSlotIndex()
         public static Dictionary<int, bool> ReviveBotsPerms = new (); //bot.Agent.Owner.PlayerSlotIndex()
-        public static Dictionary<int, bool> AttackPerms = new (); //bot.Agent.Owner.PlayerSlotIndex()
+        //public static Dictionary<int, bool> AttackPerms = new (); //bot.Agent.Owner.PlayerSlotIndex()
         public static Dictionary<int, bool> SharePerms = new (); //bot.Agent.Owner.PlayerSlotIndex()
         public static Dictionary<int, bool> MovePerms = new (); //bot.Agent.Owner.PlayerSlotIndex()
 
@@ -97,10 +97,10 @@ namespace ZombieTweak2
                 SharePerms[bot.Agent.Owner.PlayerSlotIndex()] = true;
                 MovePerms[bot.Agent.Owner.PlayerSlotIndex()] = true;
                 //UnlockPerms[bot.Agent.Owner.PlayerSlotIndex()] = true;
-                PingPerms[bot.Agent.Owner.PlayerSlotIndex()] = true;
-                BioTrackerPerms[bot.Agent.Owner.PlayerSlotIndex()] = true;
-                AttackPerms[bot.Agent.Owner.PlayerSlotIndex()] = true;
-                RevivePerms[bot.Agent.Owner.PlayerSlotIndex()] = true;
+                //PingPerms[bot.Agent.Owner.PlayerSlotIndex()] = true;
+                //BioTrackerPerms[bot.Agent.Owner.PlayerSlotIndex()] = true;
+                //AttackPerms[bot.Agent.Owner.PlayerSlotIndex()] = true;
+                //RevivePerms[bot.Agent.Owner.PlayerSlotIndex()] = true;
                 RevivePlayersPerms[bot.Agent.Owner.PlayerSlotIndex()] = true;
                 ReviveBotsPerms[bot.Agent.Owner.PlayerSlotIndex()] = true;
             }
@@ -643,45 +643,38 @@ namespace ZombieTweak2
         //}
 
 
-        public static bool GetBioTrackerPermission(int id)
-        {
-            if (BioTrackerPerms.ContainsKey(id))
-                return BioTrackerPerms[id];
-            ZiMain.log.LogWarning($"Unknown bot asked for BioTracker perms id:{id}.");
-            return false;
-        }
+        //public static bool GetBioTrackerPermission(int id)
+        //{
+        //    if (BioTrackerPerms.ContainsKey(id))
+        //        return BioTrackerPerms[id];
+        //    ZiMain.log.LogWarning($"Unknown bot asked for BioTracker perms id:{id}.");
+        //    return false;
+        //}
 
-        public static void SetBioTrackerPermission(int playerID, bool allowed, ulong netSender = 0)
-        {
-            if (!BioTrackerPerms.ContainsKey(playerID))
-            {
-                ZiMain.log.LogWarning($"Tried to set BioTracker perm for invalid player id: {playerID}, allowed:{allowed}");
-                return;
-            }
-            if (netSender == 0)
-            {
-                pStructs.pSharePermission info = new pStructs.pSharePermission();
-                info.playerID = playerID;
-                info.allowed = allowed;
-                NetworkAPI.InvokeEvent<pStructs.pSharePermission>("SetBioTrackerPermission", info);
-            }
-            ZiMain.log.LogMessage($"Setting BioTracker perm for id {playerID} to {allowed}");
-            BioTrackerPerms[playerID] = allowed;
-            //PlayerManager.TryGetPlayerAgent(ref playerID, out var agent);
-            //if (agent != null)
-            //{
-            //    RemoveActionsOfType(agent, typeof(PlayerBotActionUseEnemyScanner));
-            //    RemoveActionsOfType(agent, typeof(PlayerBotActionUseBioscan));
-            //}
-        }
+        //public static void SetBioTrackerPermission(int playerID, bool allowed, ulong netSender = 0)
+        //{
+        //    if (!BioTrackerPerms.ContainsKey(playerID))
+        //    {
+        //        ZiMain.log.LogWarning($"Tried to set BioTracker perm for invalid player id: {playerID}, allowed:{allowed}");
+        //        return;
+        //    }
+        //    if (netSender == 0)
+        //    {
+        //        pStructs.pSharePermission info = new pStructs.pSharePermission();
+        //        info.playerID = playerID;
+        //        info.allowed = allowed;
+        //        NetworkAPI.InvokeEvent<pStructs.pSharePermission>("SetBioTrackerPermission", info);
+        //    }
+        //    ZiMain.log.LogMessage($"Setting BioTracker perm for id {playerID} to {allowed}");
+        //    BioTrackerPerms[playerID] = allowed;
+        //    //PlayerManager.TryGetPlayerAgent(ref playerID, out var agent);
+        //    //if (agent != null)
+        //    //{
+        //    //    RemoveActionsOfType(agent, typeof(PlayerBotActionUseEnemyScanner));
+        //    //    RemoveActionsOfType(agent, typeof(PlayerBotActionUseBioscan));
+        //    //}
+        //}
 
-        public static bool GetRevivePermission(int id)
-        {
-            if (RevivePerms.ContainsKey(id))
-                return RevivePerms[id];
-            ZiMain.log.LogWarning($"Unknown bot asked for revive perms id:{id}.");
-            return false;
-        }
         public static bool GetRevivePlayersPermission(int id)
         {
             if (RevivePlayersPerms.ContainsKey(id))
@@ -741,120 +734,97 @@ namespace ZombieTweak2
             }
         }
 
-        public static void SetRevivePermission(int playerID, bool allowed, ulong netSender = 0)
-        {
-            if (!RevivePerms.ContainsKey(playerID))
-            {
-                ZiMain.log.LogWarning($"Tried to set Revive perm for invalid player id: {playerID}, allowed:{allowed}");
-                return;
-            }
-            if (netSender == 0)
-            {
-                pStructs.pSharePermission info = new pStructs.pSharePermission();
-                info.playerID = playerID;
-                info.allowed = allowed;
-                NetworkAPI.InvokeEvent<pStructs.pSharePermission>("SetRevivePermission", info);
-            }
-            ZiMain.log.LogMessage($"Setting Revive perm for id {playerID} to {allowed}");
-            RevivePerms[playerID] = allowed;
-            PlayerManager.TryGetPlayerAgent(ref playerID, out var agent);
-            if (agent != null)
-            {
-                RemoveActionsOfType(agent, typeof(PlayerBotActionRevive));
-            }
-        }
+        //public static bool GetAttackPermission(int id)
+        //{
+        //    if (AttackPerms.ContainsKey(id))
+        //        return AttackPerms[id];
+        //    ZiMain.log.LogWarning($"Unknown bot asked for Attack perms id:{id}.");
+        //    return false;
+        //}
 
-        public static bool GetAttackPermission(int id)
-        {
-            if (AttackPerms.ContainsKey(id))
-                return AttackPerms[id];
-            ZiMain.log.LogWarning($"Unknown bot asked for Attack perms id:{id}.");
-            return false;
-        }
-
-        public static void SetAttackPermission(int playerID, bool allowed, ulong netSender = 0)
-        {
-            if (!AttackPerms.ContainsKey(playerID))
-            {
-                ZiMain.log.LogWarning($"Tried to set Attack perm for invalid player id: {playerID}, allowed:{allowed}");
-                return;
-            }
-            if (netSender == 0)
-            {
-                pStructs.pSharePermission info = new pStructs.pSharePermission();
-                info.playerID = playerID;
-                info.allowed = allowed;
-                NetworkAPI.InvokeEvent<pStructs.pSharePermission>("SetAttackPermission", info);
-            }
-            ZiMain.log.LogMessage($"Setting Attack perm for id {playerID} to {allowed}");
-            AttackPerms[playerID] = allowed;
-            PlayerManager.TryGetPlayerAgent(ref playerID, out var agent);
-            if (agent != null)
-            {
-                RemoveActionsOfType(agent, typeof(PlayerBotActionAttack));
-            }
-        }
+        //public static void SetAttackPermission(int playerID, bool allowed, ulong netSender = 0)
+        //{
+        //    if (!AttackPerms.ContainsKey(playerID))
+        //    {
+        //        ZiMain.log.LogWarning($"Tried to set Attack perm for invalid player id: {playerID}, allowed:{allowed}");
+        //        return;
+        //    }
+        //    if (netSender == 0)
+        //    {
+        //        pStructs.pSharePermission info = new pStructs.pSharePermission();
+        //        info.playerID = playerID;
+        //        info.allowed = allowed;
+        //        NetworkAPI.InvokeEvent<pStructs.pSharePermission>("SetAttackPermission", info);
+        //    }
+        //    ZiMain.log.LogMessage($"Setting Attack perm for id {playerID} to {allowed}");
+        //    AttackPerms[playerID] = allowed;
+        //    PlayerManager.TryGetPlayerAgent(ref playerID, out var agent);
+        //    if (agent != null)
+        //    {
+        //        RemoveActionsOfType(agent, typeof(PlayerBotActionAttack));
+        //    }
+        //}
         
-        public static bool GetPingPermission(int id)
-        {
-            if (PingPerms.ContainsKey(id))
-                return PingPerms[id];
-            ZiMain.log.LogWarning($"Unknown bot asked for unlock perms id:{id}.");
-            return false;
-        }
-        public static bool GetPingPermission(PlayerAIBot bot)
-        {
-            if (bot == null)
-            {
-                ZiMain.log.LogError($"Can't get pickup perms when bot is null");
-                return true;
-            }
-            if (bot.Agent == null)
-            {
-                ZiMain.log.LogError($"Can't get pickup perms when Agent is null");
-                return true;
-            }
-            if (bot.Agent.Owner == null)
-            {
-                ZiMain.log.LogError($"Can't get pickup perms when Owner is null");
-                return true;
-            }
-            return PingPerms[bot.Agent.Owner.PlayerSlotIndex()];
-        }
-        public static void SetPingPermission(PlayerAIBot bot, bool allowed)
-        {
-            SetPingPermission(bot.Agent.Owner.PlayerSlotIndex(), allowed);
-        }
-        public static void SetPingPermission(List<int> idList, bool allowed)
-        {
-            foreach (int id in idList)
-                SetPingPermission(id, allowed);
-        }
-        public static void SetPingPermission(List<PlayerAIBot> botList, bool allowed)
-        {
-            foreach (var bot in botList)
-                SetPingPermission(bot.Agent.Owner.PlayerSlotIndex(), allowed);
-        }
-        public static void SetPingPermission(int playerID, bool allowed, ulong netSender = 0)
-        {
-            if (!PingPerms.ContainsKey(playerID))
-            {
-                ZiMain.log.LogWarning($"Tried to set unlock perm for invalid player id: {playerID}, allowed:{allowed}");
-                return;
-            }
-            if (netSender == 0)
-            {
-                pStructs.pSharePermission info = new pStructs.pSharePermission();
-                info.playerID = playerID;
-                info.allowed = allowed;
-                NetworkAPI.InvokeEvent<pStructs.pSharePermission>("SetPingPermission", info);
-            }
-            ZiMain.log.LogMessage($"Setting ping perm for id {playerID} to {allowed}");
-            PingPerms[playerID] = allowed;
-            PlayerManager.TryGetPlayerAgent(ref playerID, out var agent);
-            if (agent != null)
-                RemoveActionsOfType(agent, typeof(PlayerBotActionHighlight));
-        }
+        //public static bool GetPingPermission(int id)
+        //{
+        //    if (PingPerms.ContainsKey(id))
+        //        return PingPerms[id];
+        //    ZiMain.log.LogWarning($"Unknown bot asked for unlock perms id:{id}.");
+        //    return false;
+        //}
+        //public static bool GetPingPermission(PlayerAIBot bot)
+        //{
+        //    if (bot == null)
+        //    {
+        //        ZiMain.log.LogError($"Can't get pickup perms when bot is null");
+        //        return true;
+        //    }
+        //    if (bot.Agent == null)
+        //    {
+        //        ZiMain.log.LogError($"Can't get pickup perms when Agent is null");
+        //        return true;
+        //    }
+        //    if (bot.Agent.Owner == null)
+        //    {
+        //        ZiMain.log.LogError($"Can't get pickup perms when Owner is null");
+        //        return true;
+        //    }
+        //    return PingPerms[bot.Agent.Owner.PlayerSlotIndex()];
+        //}
+        //public static void SetPingPermission(PlayerAIBot bot, bool allowed)
+        //{
+        //    SetPingPermission(bot.Agent.Owner.PlayerSlotIndex(), allowed);
+        //}
+        //public static void SetPingPermission(List<int> idList, bool allowed)
+        //{
+        //    foreach (int id in idList)
+        //        SetPingPermission(id, allowed);
+        //}
+        //public static void SetPingPermission(List<PlayerAIBot> botList, bool allowed)
+        //{
+        //    foreach (var bot in botList)
+        //        SetPingPermission(bot.Agent.Owner.PlayerSlotIndex(), allowed);
+        //}
+        //public static void SetPingPermission(int playerID, bool allowed, ulong netSender = 0)
+        //{
+        //    if (!PingPerms.ContainsKey(playerID))
+        //    {
+        //        ZiMain.log.LogWarning($"Tried to set unlock perm for invalid player id: {playerID}, allowed:{allowed}");
+        //        return;
+        //    }
+        //    if (netSender == 0)
+        //    {
+        //        pStructs.pSharePermission info = new pStructs.pSharePermission();
+        //        info.playerID = playerID;
+        //        info.allowed = allowed;
+        //        NetworkAPI.InvokeEvent<pStructs.pSharePermission>("SetPingPermission", info);
+        //    }
+        //    ZiMain.log.LogMessage($"Setting ping perm for id {playerID} to {allowed}");
+        //    PingPerms[playerID] = allowed;
+        //    PlayerManager.TryGetPlayerAgent(ref playerID, out var agent);
+        //    if (agent != null)
+        //        RemoveActionsOfType(agent, typeof(PlayerBotActionHighlight));
+        //}
         public static bool GetSharePermission(PlayerAIBot bot)
         {
             if (bot == null)

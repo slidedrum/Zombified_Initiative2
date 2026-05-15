@@ -118,6 +118,9 @@ namespace ZombieTweak2
             {
                 sMenu.sMenuNode node = menu.GetNode();
                 string text = node.text;
+                zSlideComputer.perms.Add(text, new Dictionary<int, bool>());
+                foreach (PlayerAIBot bot in playerAiBots)
+                    zSlideComputer.perms[text].Add(bot.Agent.Owner.PlayerSlotIndex(), true);
                 if (!defaultPrios.ContainsKey(text))
                     continue;
                 if (text != "Follow")
@@ -134,11 +137,6 @@ namespace ZombieTweak2
                 node.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
                 node.AddListener(sMenuManager.nodeEvent.OnDoubleTapped, menu.Open);
                 GenericUpdateNodePrioDisplay(node);
-
-                
-                zSlideComputer.perms.Add(text, new Dictionary<int, bool>());
-                foreach (PlayerAIBot bot in playerAiBots)
-                    zSlideComputer.perms[text].Add(bot.Agent.Owner.PlayerSlotIndex(), true);                    
             }
             
 
@@ -240,8 +238,8 @@ namespace ZombieTweak2
                 bool allowed = true;
                 foreach (var bot in zSearch.GetAllBotAgents())
                 {
-                    allowed = !zSlideComputer.GetRevivePermission(bot.PlayerSlotIndex); //This is a bad way to do it, i'm setting it multiple times.  But at least untill I make it so you can have different perms for different bots, it should all be fine!
-                    zSlideComputer.SetRevivePermission(bot.PlayerSlotIndex, allowed);
+                    allowed = !zSlideComputer.GetActionPermission("Revive", bot.PlayerSlotIndex); //This is a bad way to do it, i'm setting it multiple times.  But at least untill I make it so you can have different perms for different bots, it should all be fine!
+                    zSlideComputer.SetActionPermission("Revive", bot.PlayerSlotIndex, allowed);
                 }
                 if (allowed)
                 {
@@ -306,8 +304,8 @@ namespace ZombieTweak2
                 bool allowed = true;
                 foreach (var bot in zSearch.GetAllBotAgents())
                 {
-                    allowed = !zSlideComputer.GetAttackPermission(bot.PlayerSlotIndex); //This is a bad way to do it, i'm setting it multiple times.  But at least untill I make it so you can have different perms for different bots, it should all be fine!
-                    zSlideComputer.SetAttackPermission(bot.PlayerSlotIndex, allowed);
+                    allowed = !zSlideComputer.GetActionPermission("Attack", bot.PlayerSlotIndex); //This is a bad way to do it, i'm setting it multiple times.  But at least untill I make it so you can have different perms for different bots, it should all be fine!
+                    zSlideComputer.SetActionPermission("Attack", bot.PlayerSlotIndex, allowed);
                 }
                 if (allowed)
                 {
@@ -338,8 +336,8 @@ namespace ZombieTweak2
                 bool allowed = true;
                 foreach (var bot in zSearch.GetAllBotAgents())
                 {
-                    allowed = !zSlideComputer.GetBioTrackerPermission(bot.PlayerSlotIndex); //This is a bad way to do it, i'm setting it multiple times.  But at least untill I make it so you can have different perms for different bots, it should all be fine!
-                    zSlideComputer.SetBioTrackerPermission(bot.PlayerSlotIndex, allowed);
+                    allowed = !zSlideComputer.GetActionPermission("Use BioTracker", bot.PlayerSlotIndex); //This is a bad way to do it, i'm setting it multiple times.  But at least untill I make it so you can have different perms for different bots, it should all be fine!
+                    zSlideComputer.SetActionPermission("Use BioTracker", bot.PlayerSlotIndex, allowed);
                 }
                 if (allowed)
                 {
@@ -370,8 +368,8 @@ namespace ZombieTweak2
                 bool allowed = true;
                 foreach (var bot in zSearch.GetAllBotAgents())
                 {
-                    allowed = !zSlideComputer.GetPingPermission(bot.PlayerSlotIndex); //This is a bad way to do it, i'm setting it multiple times.  But at least untill I make it so you can have different perms for different bots, it should all be fine!
-                    zSlideComputer.SetPingPermission(bot.PlayerSlotIndex, allowed);
+                    allowed = !zSlideComputer.GetActionPermission("Ping", bot.PlayerSlotIndex); //This is a bad way to do it, i'm setting it multiple times.  But at least untill I make it so you can have different perms for different bots, it should all be fine!
+                    zSlideComputer.SetActionPermission("Ping", bot.PlayerSlotIndex, allowed);
                 }
                 if (allowed)
                 {

@@ -32,7 +32,7 @@ namespace ZombieTweak2.CustomActions.Patches
             {
                 return false;
             }
-            if (!zSlideComputer.GetRevivePermission(__instance.m_agent.Owner.PlayerSlotIndex()))
+            if (!zSlideComputer.GetActionPermission("Revive", __instance.m_agent.Owner.PlayerSlotIndex()))
                 return false;
             RootPlayerBotAction.s_tempObjReservation.CharacterID = __instance.m_agent.CharacterID;
             for (int i = 0; i < PlayerManager.PlayerAgentsInLevel.Count; i++)

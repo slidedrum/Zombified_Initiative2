@@ -486,7 +486,7 @@ public class ZombifiedPatches
     [HarmonyPriority(Priority.Last)] //Needed for betterbots compat
     public static bool UpdateActionPing(RootPlayerBotAction __instance, ref PlayerBotActionBase.Descriptor bestAction)
     {
-        if (!zSlideComputer.GetPingPermission(__instance.m_agent.Owner.PlayerSlotIndex()))
+        if (!zSlideComputer.GetActionPermission("Ping", __instance.m_agent.Owner.PlayerSlotIndex()))
             return false;
         return true;
     }
@@ -496,7 +496,7 @@ public class ZombifiedPatches
     [HarmonyPriority(Priority.Last)] //Needed for betterbots compat
     public static bool UpdateActionTagEnemies(RootPlayerBotAction __instance, ref PlayerBotActionBase.Descriptor bestAction)
     {
-        if (!zSlideComputer.GetBioTrackerPermission(__instance.m_agent.Owner.PlayerSlotIndex()))
+        if (!zSlideComputer.GetActionPermission("Use BioTracker", __instance.m_agent.Owner.PlayerSlotIndex()))
             return false;
         return true;
     }
@@ -506,7 +506,7 @@ public class ZombifiedPatches
     [HarmonyPriority(Priority.Last)] //Needed for betterbots compat
     public static bool UpdateActionAttack(RootPlayerBotAction __instance, ref PlayerBotActionBase.Descriptor bestAction)
     {
-        if (!zSlideComputer.GetAttackPermission(__instance.m_agent.Owner.PlayerSlotIndex()))
+        if (!zSlideComputer.GetActionPermission("Attack", __instance.m_agent.Owner.PlayerSlotIndex()))
             return false;
         return true;
     }
