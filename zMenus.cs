@@ -134,6 +134,8 @@ namespace ZombieTweak2
                 zSlideComputer.perms.Add(text, new Dictionary<int, bool>());
                 foreach (PlayerAIBot bot in playerAiBots)
                     zSlideComputer.perms[text].Add(bot.Agent.Owner.PlayerSlotIndex(), true);
+                if (text != "Follow")
+                    AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediateSelected, GenericSetAllowed, text, true);
                 if (!defaultPrios.ContainsKey(text))
                     continue;
                 if (text != "Follow")
@@ -143,7 +145,10 @@ namespace ZombieTweak2
                     AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediateSelected, GenericResetPrioSettings, node);
                 }
                 else
+                {
                     AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediateSelected, FollowMenuClass.ResetSettings, node);
+                    AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediateSelected, FollowMenuClass.setAllowed, true);
+                }
                 ActionPriorities.Add(text, new OverrideTree<float?>(defaultPrios[text]).AddNode(text, null).Tree);
                 node.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
                 node.AddListener(sMenuManager.nodeEvent.OnDoubleTapped, menu.Open);
@@ -172,14 +177,14 @@ namespace ZombieTweak2
             AttackMenuClass.Setup(attackMenu);
             ReviveMenuClass.Setup(reviveMenu);
 
-            AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, PickupMenuClass.setAllowed, true);
-            AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, ShareMenuClass.setAllowed, true);
-            AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, FollowMenuClass.setAllowed, true);
-            AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, UnlockMenuClass.setAllowed, true);
-            AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, PingMenuClass.setAllowed, true);
-            AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, BioTrackerMenuClass.setAllowed, true);
-            AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, AttackMenuClass.setAllowed, true);
-            AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, ReviveMenuClass.setAllowed, true);
+            //AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, PickupMenuClass.setAllowed, true);
+            //AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, ShareMenuClass.setAllowed, true);
+            //AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, FollowMenuClass.setAllowed, true);
+            //AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, UnlockMenuClass.setAllowed, true);
+            //AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, PingMenuClass.setAllowed, true);
+            //AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, BioTrackerMenuClass.setAllowed, true);
+            //AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, AttackMenuClass.setAllowed, true);
+            //AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, ReviveMenuClass.setAllowed, true);
 
             AutoActionMenu.AddCatagory("All");
             AutoActionMenu.AddCatagory("Favorites");
@@ -192,6 +197,28 @@ namespace ZombieTweak2
             AutoActionMenu.AddNodeToCatagory("Resources", "Share");
             AutoActionMenu.SetCatagory("Favorites");
 
+        }
+        internal static void GenericSetAllowed(string actionKey, bool allowed, bool allowDissabled = false)
+        {
+
+            sMenu menu = autoActionMenus.FirstOrDefault(menu => menu.centerNode.text == actionKey);
+            sMenu.sMenuNode node = menu.GetNode();
+            if (!node.gameObject.activeInHierarchy && !allowDissabled)
+                return;
+            foreach (var bot in zSearch.GetAllBotAgents())
+            {
+                zSlideComputer.SetActionPermission(actionKey, bot.PlayerSlotIndex, allowed);
+            }
+            if (allowed)
+            {
+                node.SetColor(sMenuManager.defaultColor);
+                menu.centerNode.SetColor(sMenuManager.defaultColor);
+            }
+            else
+            {
+                node.SetColor(new Color(0.25f, 0f, 0f));
+                menu.centerNode.SetColor(new Color(0.25f, 0f, 0f));
+            }
         }
         internal static void GenericUpdatePriorityBasedOnScroll(sMenu.sMenuNode node)
         {
@@ -222,6 +249,8 @@ namespace ZombieTweak2
         }
         private static void GenericResetPrioSettings(sMenu.sMenuNode node)
         {
+            if (!node.gameObject.activeInHierarchy)
+                return;
             string text = node.text;
             OverrideTree<float?> prio = ActionPriorities[text];
             prio.SetValue(text, null);
@@ -328,6 +357,11 @@ namespace ZombieTweak2
         {
             public static sMenu attackMenu;
             public static sMenu.sMenuNode attackNode;
+            public static sMenu.sMenuNode meleeNode;
+            //public static sMenu.sMenuNode pushNode;
+            public static sMenu.sMenuNode bulletNode;
+            public static sMenu.sMenuNode secondaryNode;
+
             public static void Setup(sMenu menu)
             {
                 attackMenu = menu;
@@ -335,6 +369,11 @@ namespace ZombieTweak2
                 attackNode.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
                 attackNode.AddListener(sMenuManager.nodeEvent.OnTapped, togglePerms);
                 attackNode.AddListener(sMenuManager.nodeEvent.OnDoubleTapped, attackMenu.Open);
+
+                meleeNode = attackMenu.AddNode("Melee", AttackActionPatch.ToggleMeansPerms, PlayerBotActionAttack.AttackMeansEnum.Melee);
+                //pushNode = attackMenu.AddNode("Push", AttackActionPatch.ToggleMeansPerms, PlayerBotActionAttack.AttackMeansEnum.Push);
+                bulletNode = attackMenu.AddNode("Guns", AttackActionPatch.ToggleMeansPerms, PlayerBotActionAttack.AttackMeansEnum.Bullet);
+                //secondaryNode = attackMenu.AddNode("Secondary", AttackActionPatch.ToggleMeansPerms, PlayerBotActionAttack.AttackMeansEnum.Special);
             }
             public static void togglePerms()
             {
@@ -969,21 +1008,22 @@ namespace ZombieTweak2
                 followMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnTapped, followMenu.parrentMenu.Open);
                 followMenuNode.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
                 followMenuNode.AddListener(sMenuManager.nodeEvent.WhileSelected, UpdateNodeBasedOnScroll, followMenuNode);
-                followMenuNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, ResetSettings, followMenuNode);
+                followMenuNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediateSelected, ResetSettings, followMenuNode);
                 followMenuNode.AddListener(sMenuManager.nodeEvent.OnTapped, TogglePerms);
                 followMenuNode.AddListener(sMenuManager.nodeEvent.OnDoubleTapped, followMenu.Open);
                 followMenu.radius = 130f;
                 UpdateNodeSettingsDisplay(followMenuNode);
                 followMenu.SetCatagory("Basic");
             }
-            public static void setAllowed(bool enabled)
+            public static void setAllowed(bool enabled, bool allowDissabled = false)
             {
                 bool current = (bool)followEnabled.GetValue();
 
                 // Already in desired state
                 if (current == enabled)
                     return;
-
+                if (!followMenuNode.gameObject.activeInHierarchy && !allowDissabled)
+                    return;
                 followEnabled.SetValue("Main", enabled);
 
                 var allbots = ZiMain.GetBotList();

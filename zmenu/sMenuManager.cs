@@ -12,6 +12,7 @@ namespace SlideMenu
         public static GameObject menuParrent;
         private static bool playerInControll = false;
         private static Texture2D _defaultBackgroundImage;
+        public static KeyCode keybinding = KeyCode.X;
         public static Texture2D DefaultBackgroundImage { 
             get 
             {
@@ -119,7 +120,7 @@ namespace SlideMenu
                 {
                     currentMenu.Update();
                 }
-                if (Input.GetKey(KeyCode.M))
+                if (Input.GetKey(keybinding))
                 {
                     if (pressable) //is this the first frame of holding the button?
                     {
