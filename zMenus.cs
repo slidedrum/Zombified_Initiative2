@@ -113,6 +113,7 @@ namespace ZombieTweak2
 
             AutoActionMenu.centerNode.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
             AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnTapped, AutoActionMenu.parrentMenu.Open);
+
             List<PlayerAIBot> playerAiBots = ZiMain.GetBotList();
             foreach (sMenu menu in autoActionMenus)
             {
@@ -160,6 +161,15 @@ namespace ZombieTweak2
             BioTrackerMenuClass.Setup(bioTrackerMenu);
             AttackMenuClass.Setup(attackMenu);
             ReviveMenuClass.Setup(reviveMenu);
+
+            AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, PickupMenuClass.setAllowed, true);
+            AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, ShareMenuClass.setAllowed, true);
+            AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, FollowMenuClass.setAllowed, true);
+            AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, UnlockMenuClass.setAllowed, true);
+            AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, PingMenuClass.setAllowed, true);
+            AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, BioTrackerMenuClass.setAllowed, true);
+            AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, AttackMenuClass.setAllowed, true);
+            AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, ReviveMenuClass.setAllowed, true);
 
             AutoActionMenu.AddCatagory("All");
             AutoActionMenu.AddCatagory("Favorites");
@@ -252,6 +262,23 @@ namespace ZombieTweak2
                     reviveMenu.centerNode.SetColor(new Color(0.25f, 0f, 0f));
                 }
             }
+            public static void setAllowed(bool allowed)
+            {
+                foreach (var bot in zSearch.GetAllBotAgents())
+                {
+                    zSlideComputer.SetActionPermission("Revive", bot.PlayerSlotIndex, allowed);
+                }
+                if (allowed)
+                {
+                    reviveNode.SetColor(sMenuManager.defaultColor);
+                    reviveMenu.centerNode.SetColor(sMenuManager.defaultColor);
+                }
+                else
+                {
+                    reviveNode.SetColor(new Color(0.25f, 0f, 0f));
+                    reviveMenu.centerNode.SetColor(new Color(0.25f, 0f, 0f));
+                }
+            }
             public static void togglePlayerPerms()
             {
                 bool allowed = true;
@@ -318,6 +345,23 @@ namespace ZombieTweak2
                     attackMenu.centerNode.SetColor(new Color(0.25f, 0f, 0f));
                 }
             }
+            public static void setAllowed(bool allowed)
+            {
+                foreach (var bot in zSearch.GetAllBotAgents())
+                {
+                    zSlideComputer.SetActionPermission("Attack", bot.PlayerSlotIndex, allowed);
+                }
+                if (allowed)
+                {
+                    attackNode.SetColor(sMenuManager.defaultColor);
+                    attackMenu.centerNode.SetColor(sMenuManager.defaultColor);
+                }
+                else
+                {
+                    attackNode.SetColor(new Color(0.25f, 0f, 0f));
+                    attackMenu.centerNode.SetColor(new Color(0.25f, 0f, 0f));
+                }
+            }
         }
         public static class BioTrackerMenuClass
         {
@@ -337,6 +381,23 @@ namespace ZombieTweak2
                 foreach (var bot in zSearch.GetAllBotAgents())
                 {
                     allowed = !zSlideComputer.GetActionPermission("Use BioTracker", bot.PlayerSlotIndex); //This is a bad way to do it, i'm setting it multiple times.  But at least untill I make it so you can have different perms for different bots, it should all be fine!
+                    zSlideComputer.SetActionPermission("Use BioTracker", bot.PlayerSlotIndex, allowed);
+                }
+                if (allowed)
+                {
+                    bioTrackerNode.SetColor(sMenuManager.defaultColor);
+                    bioTrackerMenu.centerNode.SetColor(sMenuManager.defaultColor);
+                }
+                else
+                {
+                    bioTrackerNode.SetColor(new Color(0.25f, 0f, 0f));
+                    bioTrackerMenu.centerNode.SetColor(new Color(0.25f, 0f, 0f));
+                }
+            }
+            public static void setAllowed(bool allowed)
+            {
+                foreach (var bot in zSearch.GetAllBotAgents())
+                {
                     zSlideComputer.SetActionPermission("Use BioTracker", bot.PlayerSlotIndex, allowed);
                 }
                 if (allowed)
@@ -382,6 +443,23 @@ namespace ZombieTweak2
                     pingMenu.centerNode.SetColor(new Color(0.25f, 0f, 0f));
                 }
             }
+            public static void setAllowed(bool allowed)
+            {
+                foreach (var bot in zSearch.GetAllBotAgents())
+                {
+                    zSlideComputer.SetActionPermission("Ping", bot.PlayerSlotIndex, allowed);
+                }
+                if (allowed)
+                {
+                    pingNode.SetColor(sMenuManager.defaultColor);
+                    pingMenu.centerNode.SetColor(sMenuManager.defaultColor);
+                }
+                else
+                {
+                    pingNode.SetColor(new Color(0.25f, 0f, 0f));
+                    pingMenu.centerNode.SetColor(new Color(0.25f, 0f, 0f));
+                }
+            }
         }
         public static class UnlockMenuClass
         {
@@ -401,6 +479,23 @@ namespace ZombieTweak2
                 foreach (var bot in zSearch.GetAllBotAgents())
                 {
                     allowed = !zSlideComputer.GetActionPermission("Unlock", bot.PlayerSlotIndex); //This is a bad way to do it, i'm setting it multiple times.  But at least untill I make it so you can have different perms for different bots, it should all be fine!
+                    zSlideComputer.SetActionPermission("Unlock", bot.PlayerSlotIndex, allowed);
+                }
+                if (allowed)
+                {
+                    unlockNode.SetColor(sMenuManager.defaultColor);
+                    unlockMenu.centerNode.SetColor(sMenuManager.defaultColor);
+                }
+                else
+                {
+                    unlockNode.SetColor(new Color(0.25f, 0f, 0f));
+                    unlockMenu.centerNode.SetColor(new Color(0.25f, 0f, 0f));
+                }
+            }
+            public static void setAllowed(bool allowed)
+            {
+                foreach (var bot in zSearch.GetAllBotAgents())
+                {
                     zSlideComputer.SetActionPermission("Unlock", bot.PlayerSlotIndex, allowed);
                 }
                 if (allowed)
@@ -536,6 +631,23 @@ namespace ZombieTweak2
                     pickupMenu.centerNode.SetColor(new Color(0.25f, 0f, 0f));
                 }
             }
+            public static void setAllowed(bool allowed)
+            {
+                foreach (var bot in zSearch.GetAllBotAgents())
+                {
+                    zSlideComputer.SetPickupPermission(bot.PlayerSlotIndex, allowed);
+                }
+                if (allowed)
+                {
+                    pickupNode.SetColor(sMenuManager.defaultColor);
+                    pickupMenu.centerNode.SetColor(sMenuManager.defaultColor);
+                }
+                else
+                {
+                    pickupNode.SetColor(new Color(0.25f, 0f, 0f));
+                    pickupMenu.centerNode.SetColor(new Color(0.25f, 0f, 0f));
+                }
+            }
             public static void updateNodePriorityDisplay(sMenu.sMenuNode node, uint itemID)
             {
                 if (zSlideComputer.itemPrios[itemID] == zSlideComputer.OriginalItemPrios[itemID])
@@ -651,6 +763,23 @@ namespace ZombieTweak2
                 foreach (var bot in zSearch.GetAllBotAgents())
                 {
                     allowed = !zSlideComputer.GetSharePermission(bot.PlayerSlotIndex); //This is a bad way to do it, i'm setting it multiple times.  But at least untill I make it so you can have different perms for different bots, it should all be fine!
+                    zSlideComputer.SetSharePermission(bot.PlayerSlotIndex, allowed);
+                }
+                if (allowed)
+                {
+                    shareNode.SetColor(sMenuManager.defaultColor);
+                    shareMenu.centerNode.SetColor(sMenuManager.defaultColor);
+                }
+                else
+                {
+                    shareNode.SetColor(new Color(0.25f, 0f, 0f));
+                    shareMenu.centerNode.SetColor(new Color(0.25f, 0f, 0f));
+                }
+            }
+            public static void setAllowed(bool allowed)
+            {
+                foreach (var bot in zSearch.GetAllBotAgents())
+                {
                     zSlideComputer.SetSharePermission(bot.PlayerSlotIndex, allowed);
                 }
                 if (allowed)
@@ -823,13 +952,75 @@ namespace ZombieTweak2
                 followMenuNode.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
                 followMenuNode.AddListener(sMenuManager.nodeEvent.WhileSelected, UpdateNodeBasedOnScroll, followMenuNode);
                 followMenuNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, ResetSettings, followMenuNode);
-                followMenuNode.AddListener(sMenuManager.nodeEvent.OnTapped, ToggleFollowEnabled);
+                followMenuNode.AddListener(sMenuManager.nodeEvent.OnTapped, TogglePerms);
                 followMenuNode.AddListener(sMenuManager.nodeEvent.OnDoubleTapped, followMenu.Open);
                 followMenu.radius = 130f;
                 UpdateNodeSettingsDisplay(followMenuNode);
                 followMenu.SetCatagory("Basic");
             }
-            private static void ToggleFollowEnabled()
+            public static void setAllowed(bool enabled)
+            {
+                bool current = (bool)followEnabled.GetValue();
+
+                // Already in desired state
+                if (current == enabled)
+                    return;
+
+                followEnabled.SetValue("Main", enabled);
+
+                var allbots = ZiMain.GetBotList();
+
+                foreach (var bot in allbots)
+                {
+                    var data = zActions.GetOrCreateData(bot);
+
+                    if (enabled)
+                    {
+                        // Restore original leader
+                        if (bot.SyncValues.Leader != bot.Agent)
+                        {
+                            // Leader was externally changed, preserve it
+                            data.actualLeader = bot.SyncValues.Leader;
+                            continue;
+                        }
+
+                        if (data.actualLeader == bot.Agent)
+                        {
+                            ZiMain.log.LogWarning(
+                                $"Actual leader for {bot.Agent.PlayerName} got lost. Resetting to local player");
+
+                            data.actualLeader = PlayerManager.GetLocalPlayerAgent();
+                        }
+
+                        bot.SyncValues.Leader = data.actualLeader;
+                    }
+                    else
+                    {
+                        // Disable following by setting self as leader
+                        if (bot.SyncValues.Leader == bot.Agent)
+                        {
+                            ZiMain.log.LogWarning(
+                                $"Follow leader for {bot.Agent.PlayerName} got lost. Resetting to local player");
+
+                            data.actualLeader = PlayerManager.GetLocalPlayerAgent();
+                        }
+                        else
+                        {
+                            // Backup current real leader
+                            data.actualLeader = bot.SyncValues.Leader;
+                        }
+
+                        bot.SyncValues.Leader = bot.Agent;
+                    }
+                }
+
+                UpdateToggleStateColors();
+            }
+            private static void TogglePerms()
+            {
+                setAllowed(!(bool)followEnabled.GetValue());
+            }
+            private static void OldToggleFollowEnabled()
             {
                 bool allowed = (bool)followEnabled.SetValue("Main", !(bool)followEnabled.GetValue()); // Invert value
                 var allbots = ZiMain.GetBotList();
