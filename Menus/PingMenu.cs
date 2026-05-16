@@ -1,10 +1,5 @@
 ﻿using Player;
 using SlideMenu;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ZombieTweak2.CustomActions.Patches;
 
 namespace ZombieTweak2.Menus

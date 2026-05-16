@@ -1,14 +1,11 @@
-﻿using SlideMenu;
+﻿using Player;
+using SlideMenu;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 using ZombieTweak2.CustomActions.Patches;
 using ZombieTweak2.zRootBotPlayerAction;
 using Zombified_Initiative;
-using Player;
 
 namespace ZombieTweak2.Menus
 {
