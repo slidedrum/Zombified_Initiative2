@@ -10,6 +10,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.AI;
 using ZombieTweak2;
+using ZombieTweak2.Menus;
 using static BoundingBox;
 
 namespace Zombified_Initiative
@@ -585,7 +586,7 @@ namespace Zombified_Initiative
                     if (levelItem != null)
                     {
                         string friendlyName = levelItem.ItemDataBlock.publicName;
-                        AutomaticActionMenuClass.PickupMenuClass.Encounter(friendlyName);
+                        PickupMenuClass.Encounter(friendlyName);
                     }
                 }
                 vizChecks++;

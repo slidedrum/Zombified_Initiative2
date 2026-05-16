@@ -19,6 +19,7 @@ using ZombieTweak2.zNetworking;
 using ZombieTweak2.zRootBotPlayerAction;
 using static ZombieTweak2.zNetworking.pStructs;
 using SlideMenu;
+using ZombieTweak2.Menus;
 
 /*
  == TODO == Priority: Clean up the mess I made creating custom actions.
