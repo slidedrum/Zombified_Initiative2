@@ -1,7 +1,7 @@
 ### Preface 
 This started as continuation of [Zombified Initiative](https://thunderstore.io/c/gtfo/p/hirnukuono/Zombified_Initiative/) by [hirnukuono](https://thunderstore.io/c/gtfo/p/hirnukuono/) however at this point there is very little code from that mod left.
 
-### Press M to open and naviate the menu.
+### Press X to open and naviate the menu.
 ### Press V to use smart select.
 
 # Intro 
@@ -16,7 +16,7 @@ Have you ever been frustrated that a bot just used all of your disinfect as soon
  - Control if and when bots are allowed to share items with others.
    - You can choose exactly what threshold bots are allowed to share their resources.  Only want ammo when you're below 50%?  No problem.
  - Control if bots are allowed to attack
-   - TODO control what they are allowed to attack with, do you want them to save ammo and go melee only?  No problem!
+   - Control what they are allowed to attack with, do you want them to save ammo and go melee only?  No problem!
  - Control if bots are allowed to revive players or bots.
  - Control if bots are allowed to ping things they find
  - Control if bots are allowed to smash locks
@@ -39,7 +39,7 @@ Have you ever been frustrated that a bot just used all of your disinfect as soon
  - Replace the Q menu entirely with my menu (optional) with all of it's features.
  
 ## Known issues
- - If a player or bot leaves/joins mid game, things will break.
+ - If a player or bot leaves/joins mid game, things may break.
 
 ## Features I'd like to add:
  - Option to dynamically ignore specific lockers, or lockers in a specific room, or prioritize/deprioritize lockers near a point.
