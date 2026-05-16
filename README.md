@@ -39,7 +39,7 @@ Have you ever been frustrated that a bot just used all of your disinfect as soon
  - Replace the Q menu entirely with my menu (optional) with all of it's features.
  
 ## Known issues
- - If a player or bot leaves/joins mid game, things will break.
+ - If a player or bot leaves/joins mid game, things may break.
 
 ## Features I'd like to add:
  - Option to dynamically ignore specific lockers, or lockers in a specific room, or prioritize/deprioritize lockers near a point.
