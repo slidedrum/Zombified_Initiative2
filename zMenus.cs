@@ -145,6 +145,8 @@ namespace ZombieTweak2
                 ExploreMenuClass.Setup(exploremenu);
             }
 
+            AutoActionMenu.AddPannel(sMenu.sMenuPannel.Side.bottom, "Scroll in center => change catagory");
+            AutoActionMenu.AddPannel(sMenu.sMenuPannel.Side.bottom, "Scroll on node => change priority");
             AutoActionMenu.AddPannel(sMenu.sMenuPannel.Side.right, "Tap => toggle");
             AutoActionMenu.AddPannel(sMenu.sMenuPannel.Side.right, "Double tap => submenu");
             AutoActionMenu.AddPannel(sMenu.sMenuPannel.Side.right, "Hold => reset");
