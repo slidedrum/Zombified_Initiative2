@@ -292,6 +292,11 @@ namespace ZombieTweak2
                 //pushNode = attackMenu.AddNode("Push", AttackActionPatch.ToggleMeansPerms, PlayerBotActionAttack.AttackMeansEnum.Push);
                 bulletNode = attackMenu.AddNode("Guns", AttackActionPatch.ToggleMeansPerms, PlayerBotActionAttack.AttackMeansEnum.Bullet);
                 //secondaryNode = attackMenu.AddNode("Secondary", AttackActionPatch.ToggleMeansPerms, PlayerBotActionAttack.AttackMeansEnum.Special);
+
+                attackMenu.AddPannel(sMenu.sMenuPannel.Side.bottom, "These settings are a bit janky atm.");
+                attackMenu.AddPannel(sMenu.sMenuPannel.Side.bottom, "Especially when changed in the middle of combat.");
+                attackMenu.AddPannel(sMenu.sMenuPannel.Side.bottom, "I'm pretty sure that's not the fault of the mod.");
+                attackMenu.AddPannel(sMenu.sMenuPannel.Side.bottom, "I'd like to see if I can improve it anyway.");
             }
         }
         public static class BioTrackerMenuClass
