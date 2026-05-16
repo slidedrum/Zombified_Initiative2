@@ -71,12 +71,6 @@ namespace ZombieTweak2.zNetworking
             }
             return botSelection;
         }
-        internal static void reciveTogglePickupPermission(ulong sender, pStructs.pBotSelections info)
-        {
-            ZiMain.log.LogInfo($"Recived toggle perm wiht pbotsends {info.data}");
-            botSelections = DecodeBotSelectionFromNetwork(info.data);
-            zSlideComputer.TogglePickupPermission(botSelections); //this works, it's downstream.
-        }
         internal static void ReciveSetItemPrioDisable(ulong sender, pStructs.pItemPrioDisable info)
         {
             ZiMain.log.LogInfo($"Recived set item prio disabled from network!");
@@ -150,7 +144,7 @@ namespace ZombieTweak2.zNetworking
             //    ZiMain.log.LogError($"Unknown id {playerID} recived!");
             //    return;
             //}
-            zSlideComputer.SetActionPermission(key, playerID, allowed, sender);
+            zSlideComputer.SetActionPermission(key, allowed, playerID, sender);
             //zMenus.UpdateIndicatorForNode(zMenus.permissionMenu.GetNode("Pickups"), zSlideComputer.PickUpPerms);
             if (allowed)
             {

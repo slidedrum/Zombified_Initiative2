@@ -2,15 +2,16 @@
 using AIGraph;
 using Enemies;
 using GameData;
+using GTFO.API;
 using Il2CppInterop.Runtime;
 using LevelGeneration;
 using Player;
+using SlideMenu;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using XInputDotNetPure;
-using SlideMenu;
 using ZombieTweak2.zNetworking;
 using Zombified_Initiative;
 using static ZombieTweak2.zNetworking.pStructs;
@@ -199,9 +200,19 @@ namespace ZombieTweak2
         {
             testSend.data = zNetworking.zNetworking.EncodeBotSelectionForNetwork(SelectionMenuClass.botSelection);
         }
-        private static void TestReciveTogglePickupPermission()
+        private static void TestReciveSetGenericAction(string actionKey, int playerID, bool allowed)
         {
-            zNetworking.zNetworking.reciveTogglePickupPermission(0, testSend);
+            pStructs.pGenericPermission info = new pStructs.pGenericPermission();
+            info.playerID = playerID;
+            info.allowed = allowed;
+            int id = zSlideComputer.PermissionDefinitions.KeyToId(actionKey);
+            if (id == -1)
+            {
+                ZiMain.log.LogWarning($"Unknown actionKey '{actionKey}' when setting action perms for id:{playerID}, allowed:{allowed}.");
+                return;
+            }
+            info.actionID = id;
+            NetworkAPI.InvokeEvent<pStructs.pGenericPermission>($"SetActionPermission", info);
         }
         private static bool OriginalUpdateActionShareResoursePack(RootPlayerBotAction __instance, ref PlayerBotActionBase.Descriptor bestAction)
         {

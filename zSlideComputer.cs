@@ -86,17 +86,26 @@ namespace ZombieTweak2
                 PermissionDefinition permissionDef = new PermissionDefinition(key, defaultPerm, node, actionTypesToCull, defaultPriority);
                 permissionDeffinitions.Add(key, permissionDef);
             }
-            public static void SetAllowed(string key, int playerID, bool allowed)
+            public static void SetAllowed(string key, bool allowed, int playerID = -1)
             {
                 if (!KeyExists(key))
                 {
-                    ZiMain.log.LogWarning($"Unknown actionKey '{key}' when setting action perms for id:{playerID}, allowed:{allowed}.");
+                    ZiMain.log.LogWarning($"Unknown actionKey '{key}' when setting action perms, allowed:{allowed}.");
                     return;
                 }
-                for (int i = 1; i < 4; i++)
-                    permissionDeffinitions[key].perms[i] = allowed;
+                if (playerID == -1)
+                    for (int i = 1; i < 4; i++)
+                        _SetAllowed(key, allowed, i);
+                else
+                {
+                    _SetAllowed(key, allowed, playerID);
+                }
             }
-            public static bool GetAllowed(string key, int playerID)
+            private static void  _SetAllowed(string key, bool allowed, int playerID)
+            {
+                permissionDeffinitions[key].perms[playerID] = allowed;
+            }
+            public static bool GetAllowed(string key, int playerID = 1)
             {
                 if (permissionDeffinitions.ContainsKey(key))
                 {
@@ -549,27 +558,6 @@ namespace ZombieTweak2
         //        SetPickupPermission(bot, !majority);
         //    }
         //}
-        public static void TogglePickupPermission(Dictionary<int, bool> botSelection)
-        {
-            var disabledCount = 0;
-            var enabledCount = 0;
-            foreach (var bot in botSelection)
-            {
-                if (!bot.Value) //unselected, ignore.
-                    continue;
-                if (GetActionPermission("Pickup", bot.Key))
-                    enabledCount++;
-                else
-                    disabledCount++;
-            }
-            bool majority = enabledCount > disabledCount;
-            foreach (var bot in botSelection)
-            {
-                if (!bot.Value) //unselected, ignore.
-                    continue;
-                SetActionPermission("Pickup", bot.Key,!majority);
-            }
-        }
         public static void RemoveActionsOfType(PlayerAgent agent, Type actionType)
         {
             //todo add more variants of this method with different arguments
@@ -672,17 +660,11 @@ namespace ZombieTweak2
         //    return false;
         //}
 
-        public static bool GetActionPermission(string actionKey, int playerID)
+        public static bool GetActionPermission(string actionKey, int playerID = 1)
         {
             if (zSlideComputer.PermissionDefinitions.KeyExists(actionKey))
             {
-                //if (permisionDeffinitions[actionKey].perms.ContainsKey(playerID))
-                    return zSlideComputer.PermissionDefinitions.GetAllowed(actionKey, playerID);
-                //else
-                //{
-                //    ZiMain.log.LogWarning($"Unknown bot asked for {actionKey} perms id:{playerID}.");
-                //    return true;
-                //}
+                return zSlideComputer.PermissionDefinitions.GetAllowed(actionKey, playerID);
             }
             else
             {
@@ -690,18 +672,13 @@ namespace ZombieTweak2
                 return false;
             }
         }
-        public static void SetActionPermission(string actionKey, int playerID, bool allowed, ulong netSender = 0)
+        public static void SetActionPermission(string actionKey, bool allowed, int playerID = -1, ulong netSender = 0)
         {
             if (!zSlideComputer.PermissionDefinitions.KeyExists(actionKey))
             {
                 ZiMain.log.LogWarning($"Unknown actionKey '{actionKey}' when setting action perms for id:{playerID}, allowed:{allowed}.");
                 return;
             }
-            //if (!permisionDeffinitions["Unlock"].perms.ContainsKey(playerID))
-            //{
-            //    ZiMain.log.LogWarning($"Tried to set {actionKey} perm for invalid player id: {playerID}, allowed:{allowed}");
-            //    return;
-            //}
             if (netSender == 0)
             {
                 pStructs.pGenericPermission info = new pStructs.pGenericPermission();
@@ -717,13 +694,26 @@ namespace ZombieTweak2
                 NetworkAPI.InvokeEvent<pStructs.pGenericPermission>($"SetActionPermission", info);
             }
             ZiMain.log.LogMessage($"Setting {actionKey} perm for id {playerID} to {allowed}");
-            zSlideComputer.PermissionDefinitions.SetAllowed(actionKey, playerID, allowed);  
-
-            PlayerManager.TryGetPlayerAgent(ref playerID, out var agent);
-            if (agent == null)
+            zSlideComputer.PermissionDefinitions.SetAllowed(actionKey, allowed, playerID);  
+            if (playerID != -1)
+            {
+                PlayerManager.TryGetPlayerAgent(ref playerID, out var agent);
+                if (agent == null)
+                    return;
+                foreach (Type type in zSlideComputer.PermissionDefinitions.GetActionTypesToCull(actionKey))
+                    RemoveActionsOfType(agent, type);
                 return;
-            foreach (Type type in zSlideComputer.PermissionDefinitions.GetActionTypesToCull(actionKey))
-                RemoveActionsOfType(agent, type);
+            }
+            var bots = ZiMain.GetBotList();
+            foreach (PlayerAIBot bot in bots)
+            {
+                playerID = bot.Agent.Owner.PlayerSlotIndex();
+                PlayerManager.TryGetPlayerAgent(ref playerID, out var agent);
+                if (agent == null)
+                    continue;
+                foreach (Type type in zSlideComputer.PermissionDefinitions.GetActionTypesToCull(actionKey))
+                    RemoveActionsOfType(agent, type);
+            }
         }
         //public static bool GetUnlockPermission(int id)
         //{
