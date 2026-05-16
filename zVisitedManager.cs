@@ -13,6 +13,8 @@ namespace ZombieTweak2
 {
     public static class zVisitedManager // TODO make the nodemap a dict with dimensions as keys.
     {
+        //I think this was written to handle where we have been and what we have found.  But I can't really remember.
+
         public static int NodeMapGridSize = 10;
         public static float NodeGridSize = 2.5f;
         public static float NodeVisitDistance = 10f;

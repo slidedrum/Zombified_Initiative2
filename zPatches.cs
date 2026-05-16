@@ -667,6 +667,8 @@ public class ZombifiedPatches
     [HarmonyPostfix]
     public static void CheckCollisionPatch(PlayerBotActionBase __instance, PlayerBotActionBase.Descriptor desc, bool __result)
     {
+        //Why am I hooking into this??
+
         //WTF is this?  Just a debugCube thing?
         if (__result)
         {
@@ -794,6 +796,8 @@ public class ZombifiedPatches
     [HarmonyPrefix]
     private static void UpdateMeleeAttack(PlayerBotActionAttack __instance, bool push)
     {
+        //Why am I hooking into this?? What did I change??  Was this just for debugging?  I don't remember!
+
         // 1) Stop any firing / nanoswarm actions (SafeStopAction used in decomp)
         __instance.SafeStopAction(__instance.m_fireAction);
         __instance.SafeStopAction(__instance.m_useNanoswarmAction);

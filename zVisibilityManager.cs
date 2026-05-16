@@ -16,6 +16,9 @@ namespace ZombieTweak2
 {
     public static class zVisibilityManager
     {
+        //This was some experimental fancy ways of checking if things are visible to the bots.  
+        //I kinda want to come back to this, but I probably won't be able to make it work in a way I'm satisfied with.
+
         private static Camera _observationCamera;
         public static Camera observationCamera
         {

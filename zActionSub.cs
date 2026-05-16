@@ -9,6 +9,7 @@ namespace Zombified_Initiative
 {
     public static class zActionSub
     {
+        //This is a way to hook into when actions are created and destroyed.
         //This whole class may be redundant.  I think there's a way to do this built in.  Not sure how it works yet tho.
         public static List<Action<PlayerAIBot, PlayerBotActionBase>> onAdded = new();
         public static List<Action<PlayerAIBot, PlayerBotActionBase>> onRemoved = new();

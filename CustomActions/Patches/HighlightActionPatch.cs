@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ZombieTweak2.Menus;
 
 namespace ZombieTweak2.CustomActions.Patches
 {
@@ -21,9 +22,9 @@ namespace ZombieTweak2.CustomActions.Patches
         };
         public static Dictionary<PlayerBotActionHighlight.Descriptor.TargetTypeEnum, sMenu.sMenuNode> nodes = new()
         {
-            {PlayerBotActionHighlight.Descriptor.TargetTypeEnum.Container, AutomaticActionMenuClass.PingMenuClass.containersNode },
-            {PlayerBotActionHighlight.Descriptor.TargetTypeEnum.Door, AutomaticActionMenuClass.PingMenuClass.doorsNode },
-            {PlayerBotActionHighlight.Descriptor.TargetTypeEnum.Terminal, AutomaticActionMenuClass.PingMenuClass.terminalsNode },
+            {PlayerBotActionHighlight.Descriptor.TargetTypeEnum.Container, PingMenuClass.containersNode },
+            {PlayerBotActionHighlight.Descriptor.TargetTypeEnum.Door, PingMenuClass.doorsNode },
+            {PlayerBotActionHighlight.Descriptor.TargetTypeEnum.Terminal, PingMenuClass.terminalsNode },
         };
         public static void ToggleTargetTypePerms(PlayerBotActionHighlight.Descriptor.TargetTypeEnum targetType)
         {

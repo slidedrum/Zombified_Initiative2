@@ -8,6 +8,7 @@ using System.Linq;
 using UnityEngine;
 using SlideMenu;
 using Zombified_Initiative;
+using ZombieTweak2.Menus;
 
 namespace ZombieTweak2.zNetworking
 {
@@ -77,13 +78,13 @@ namespace ZombieTweak2.zNetworking
             uint id = info.id;
             bool allowed = info.allowed;
             ZiMain.log.LogInfo($"id:{id}, allowed:{allowed}");
-            if (!AutomaticActionMenuClass.PickupMenuClass.prioNodesByID.ContainsKey(id))
+            if (!PickupMenuClass.prioNodesByID.ContainsKey(id))
             {
                 ZiMain.log.LogError("Unknown id recived!");
                 return;
             }
             zSlideComputer.SetItemPrioDisabled(id, allowed, sender);
-            AutomaticActionMenuClass.PickupMenuClass.updateNodePriorityDisplay(AutomaticActionMenuClass.PickupMenuClass.prioNodesByID[id], id);
+            PickupMenuClass.updateNodePriorityDisplay(PickupMenuClass.prioNodesByID[id], id);
         }
         internal static void ReciveSetItemPrio(ulong sender, pStructs.pItemPrio info)
         {
@@ -91,13 +92,13 @@ namespace ZombieTweak2.zNetworking
             uint id = info.id;
             float prio = info.prio;
             ZiMain.log.LogInfo($"id:{id}, prio:{prio}");
-            if (!AutomaticActionMenuClass.PickupMenuClass.prioNodesByID.ContainsKey(id))
+            if (!PickupMenuClass.prioNodesByID.ContainsKey(id))
             {
                 ZiMain.log.LogError("Unknown id recived!");
                 return;
             }
             zSlideComputer.SetBotItemPriority(id, prio, sender);
-            AutomaticActionMenuClass.PickupMenuClass.updateNodePriorityDisplay(AutomaticActionMenuClass.PickupMenuClass.prioNodesByID[id], id);
+            PickupMenuClass.updateNodePriorityDisplay(PickupMenuClass.prioNodesByID[id], id);
         }
         internal static void reciveSetResourceThreshold(ulong sender, pStructs.pResourceThreshold info)
         {
@@ -105,13 +106,13 @@ namespace ZombieTweak2.zNetworking
             uint id = info.id;
             int threshold = info.threshold;
             ZiMain.log.LogInfo($"id:{id}, threshold:{threshold}");
-            if (!AutomaticActionMenuClass.ShareMenuClass.packNodesByID.ContainsKey(id))
+            if (!ShareMenuClass.packNodesByID.ContainsKey(id))
             {
                 ZiMain.log.LogError("Unknown id recived!");
                 return;
             }
             zSlideComputer.SetResourceThreshold(id, threshold, sender);
-            AutomaticActionMenuClass.ShareMenuClass.updateNodeThresholdDisplay(AutomaticActionMenuClass.ShareMenuClass.packNodesByID[id], id);
+            ShareMenuClass.updateNodeThresholdDisplay(ShareMenuClass.packNodesByID[id], id);
         }
         internal static void ReciveSetResourceThresholdDisable(ulong sender, pStructs.pResourceThresholdDisable info)
         {
@@ -119,13 +120,13 @@ namespace ZombieTweak2.zNetworking
             uint id = info.id;
             bool allowed = info.allowed;
             ZiMain.log.LogInfo($"id:{id}, allowed:{allowed}");
-            if (!AutomaticActionMenuClass.ShareMenuClass.packNodesByID.ContainsKey(id))
+            if (!ShareMenuClass.packNodesByID.ContainsKey(id))
             {
                 ZiMain.log.LogError("Unknown id recived!");
                 return;
             }
             zSlideComputer.SetResourceSharePermission(id, allowed, sender);
-            AutomaticActionMenuClass.ShareMenuClass.updateNodeThresholdDisplay(AutomaticActionMenuClass.ShareMenuClass.packNodesByID[id], id);
+            ShareMenuClass.updateNodeThresholdDisplay(ShareMenuClass.packNodesByID[id], id);
         }
 
         internal static void ReciveSetActionPermission(ulong sender, pStructs.pGenericPermission info)

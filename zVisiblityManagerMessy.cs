@@ -11,6 +11,8 @@ namespace ZombieTweak2
 {
     internal class zVisiblityManagerMessy
     {
+        //Not sure what this is, I guess just an old version of Visibility Manager?
+
         private static Camera _observerCam;
         private static RenderTexture _renderTexture;
         private static Texture2D _tex;

@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using Player;
+using ZombieTweak2.Menus;
 using ZombieTweak2.zRootBotPlayerAction;
 
 namespace ZombieTweak2.CustomActions.Patches
@@ -69,9 +70,9 @@ namespace ZombieTweak2.CustomActions.Patches
             //TODO set up parralell overideTrees for each bot
             //TODO if this gets called every frame, maybe cache the values untill something changes in overide tree
             __instance.         m_followLeaderAction.Prio =         (float)AutomaticActionMenuClass.ActionPriorities["Follow"].GetValue();
-            RootPlayerBotAction.m_prioSettings.FollowLeaderRadius = (float)AutomaticActionMenuClass.FollowMenuClass.followRadius.GetValue();
-            RootPlayerBotAction.s_followLeaderRadius =              (float)AutomaticActionMenuClass.FollowMenuClass.followRadius.GetValue();
-            RootPlayerBotAction.s_followLeaderMaxDistance =         (float)AutomaticActionMenuClass.FollowMenuClass.maxDistance.GetValue();
+            RootPlayerBotAction.m_prioSettings.FollowLeaderRadius = (float)FollowMenuClass.followRadius.GetValue();
+            RootPlayerBotAction.s_followLeaderRadius =              (float)FollowMenuClass.followRadius.GetValue();
+            RootPlayerBotAction.s_followLeaderMaxDistance =         (float)FollowMenuClass.maxDistance.GetValue();
             return true;
         } 
     }

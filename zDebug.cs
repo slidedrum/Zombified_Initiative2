@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using XInputDotNetPure;
+using ZombieTweak2.Menus;
 using ZombieTweak2.zNetworking;
 using Zombified_Initiative;
 using static ZombieTweak2.zNetworking.pStructs;

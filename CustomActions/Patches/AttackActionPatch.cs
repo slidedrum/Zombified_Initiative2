@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ZombieTweak2.Menus;
 
 namespace ZombieTweak2.CustomActions.Patches
 {
@@ -23,9 +24,9 @@ namespace ZombieTweak2.CustomActions.Patches
         };
         public static Dictionary<PlayerBotActionAttack.AttackMeansEnum, sMenu.sMenuNode> nodes = new()
         {
-            {PlayerBotActionAttack.AttackMeansEnum.Bullet, AutomaticActionMenuClass.AttackMenuClass.bulletNode },
+            {PlayerBotActionAttack.AttackMeansEnum.Bullet, AttackMenuClass.bulletNode },
             //{PlayerBotActionAttack.AttackMeansEnum.Special, AutomaticActionMenuClass.AttackMenuClass.secondaryNode },
-            {PlayerBotActionAttack.AttackMeansEnum.Melee, AutomaticActionMenuClass.AttackMenuClass.meleeNode },
+            {PlayerBotActionAttack.AttackMeansEnum.Melee, AttackMenuClass.meleeNode },
             //{PlayerBotActionAttack.AttackMeansEnum.Push, AutomaticActionMenuClass.AttackMenuClass.pushNode },
         };
         public static void ToggleMeansPerms(PlayerBotActionAttack.AttackMeansEnum meansType)
