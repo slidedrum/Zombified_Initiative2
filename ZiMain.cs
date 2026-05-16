@@ -160,16 +160,7 @@ public class ZiMain : BasePlugin
         NetworkAPI.RegisterEvent<pItemPrio>                 ("SetItemPrio",                     zNetworking.ReciveSetItemPrio);
         NetworkAPI.RegisterEvent<pResourceThreshold>        ("SetResourceThreshold",            zNetworking.reciveSetResourceThreshold);
         NetworkAPI.RegisterEvent<pResourceThresholdDisable> ("SetResourceThresholdDisable",     zNetworking.ReciveSetResourceThresholdDisable);
-        //NetworkAPI.RegisterEvent<pGenericPermission>      ("SetActionPermission",             zNetworking.ReciveSetActionPermission);
-        NetworkAPI.RegisterEvent<pGenericPermission>        ("SetSharePermission",              zNetworking.ReciveSetActionPermission);
-        NetworkAPI.RegisterEvent<pGenericPermission>        ("SetUnlockPermission",             zNetworking.ReciveSetActionPermission); 
-        NetworkAPI.RegisterEvent<pGenericPermission>        ("SetPingPermission",               zNetworking.ReciveSetActionPermission); 
-        NetworkAPI.RegisterEvent<pGenericPermission>        ("SetUse BioTrackerPermission",     zNetworking.ReciveSetActionPermission); 
-        NetworkAPI.RegisterEvent<pGenericPermission>        ("SetRevivePermission",             zNetworking.ReciveSetActionPermission); 
-        NetworkAPI.RegisterEvent<pSharePermission>          ("SetRevivePlayerPermission",       zNetworking.ReciveSetRevivePlayersPermission); 
-        NetworkAPI.RegisterEvent<pSharePermission>          ("SetReviveBotPermission",          zNetworking.ReciveSetReviveBotsPermission); 
-        NetworkAPI.RegisterEvent<pGenericPermission>        ("SetAttackPermission",             zNetworking.ReciveSetActionPermission); 
-        NetworkAPI.RegisterEvent<pGenericPermission>        ("SetPickupPermission",             zNetworking.ReciveSetActionPermission);
+        NetworkAPI.RegisterEvent<pGenericPermission>        ("SetActionPermission",             zNetworking.ReciveSetActionPermission);
         NetworkAPI.RegisterEvent<pPickupItemInfo>           ("RequestToPickupItem",             zNetworking.ReciveRequestToPickupItem);
         NetworkAPI.RegisterEvent<pShareResourceInfo>        ("RequestToShareResourcePack",      zNetworking.ReciveRequestToShareResource);
         NetworkAPI.RegisterEvent<pAttackEnemyInfo>          ("RequestToKillEnemy",              zNetworking.ReciveRequestToKillEnemy);

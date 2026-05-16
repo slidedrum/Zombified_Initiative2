@@ -48,9 +48,9 @@ namespace ZombieTweak2.CustomActions.Patches
                         if (!__instance.m_bot.ApplyRestrictionsToRootPosition(ref position, ref prio) || (position - playerAgent.Position).sqrMagnitude <= 1f)
                         {
                             bool allowed = true;
-                            if (!zSlideComputer.GetReviveBotsPermission(__instance.m_bot.Agent.PlayerSlotIndex) && playerAgent.Owner.IsBot)
+                            if (!zSlideComputer.GetActionPermission("ReviveBots", __instance.m_bot.Agent.PlayerSlotIndex) && playerAgent.Owner.IsBot)
                                 allowed = false;
-                            else if (!zSlideComputer.GetRevivePlayersPermission(__instance.m_bot.Agent.PlayerSlotIndex) && !playerAgent.Owner.IsBot)
+                            else if (!zSlideComputer.GetActionPermission("RevivePlayers", __instance.m_bot.Agent.PlayerSlotIndex) && !playerAgent.Owner.IsBot)
                                 allowed = false;
                             //else if (!zSlideComputer.GetReviveOveridesPermission(__instance.m_bot.Agent.PlayerSlotIndex, __instance.m_reviveAction.Client.PlayerSlotIndex) ?? false)
                             //    allowed = false;

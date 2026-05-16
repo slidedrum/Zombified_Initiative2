@@ -304,7 +304,7 @@ public class ZombifiedPatches
         }
         int agentID = __instance.m_agent.Owner.PlayerSlotIndex();
         var itemID = backpackItem.ItemID;
-        if (!zSlideComputer.SharePerms[agentID])
+        if (!zSlideComputer.PermissionDefinitions.GetAllowed("Share",agentID))
         {
             //Do we have share perms?
             return false;
@@ -628,9 +628,9 @@ public class ZombifiedPatches
         if (agent == null || agent.Owner == null || !agent.Owner.IsBot)
             return;
         int playerID = agent.Owner.PlayerSlotIndex();//todo cache the ID somewhere
-        bool allowedPickup = zSlideComputer.PickUpPerms[playerID];
-        bool allowedShare = zSlideComputer.SharePerms[playerID];
-        bool allowedMove = zSlideComputer.MovePerms[playerID];
+        bool allowedPickup = zSlideComputer.PermissionDefinitions.GetAllowed("Pickup",playerID);
+        bool allowedShare = zSlideComputer.PermissionDefinitions.GetAllowed("Share",playerID);
+        bool allowedMove = zSlideComputer.PermissionDefinitions.GetAllowed("Move",playerID);
         if (original.Contains("Pickup:"))
         {
             bool dirty = false;

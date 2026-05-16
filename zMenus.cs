@@ -74,28 +74,8 @@ namespace ZombieTweak2
     public static class AutomaticActionMenuClass
     {
         public static List<sMenu> autoActionMenus = new List<sMenu>();
-        private static sMenu AutoActionMenu;
+        public static sMenu AutoActionMenu;
         public static Dictionary<string, OverrideTree<float?>> ActionPriorities = new();
-        public static Dictionary<string, List<Type>> actionMap = new() 
-        {
-            {"Use BioTracker", new List<Type> { typeof(PlayerBotActionUseEnemyScanner)} },
-            {"Attack", new List<Type> { typeof(PlayerBotActionAttack) } },
-            {"Revive", new List<Type> { typeof(PlayerBotActionRevive) } },
-            {"Share", new List<Type> { typeof(PlayerBotActionShareResourcePack) } },
-            {"Ping", new List<Type> { typeof(PlayerBotActionHighlight) } },
-            {"Pickup", new List<Type> { typeof(PlayerBotActionCollectItem) } },
-            {"Follow", new List<Type> { typeof(PlayerBotActionFollow) } },
-            {"Unlock", new List<Type> { typeof(PlayerBotActionUnlock) } }
-        };
-        public static Dictionary<string, float> defaultPrios = new Dictionary<string, float>
-            {
-                { "Revive", 12f },
-                { "Share", 10f },
-                { "Ping", 4.3f },
-                { "Pickup", 4.2f },
-                { "Follow", 14f },
-                { "Unlock", 4.1f }
-            };
         internal static void Setup(sMenu _menu)
         {
             AutoActionMenu = _menu;
@@ -121,22 +101,28 @@ namespace ZombieTweak2
             var unlockMenu = sMenuManager.createMenu("Unlock", AutoActionMenu);
             autoActionMenus.Add(unlockMenu);
 
-
-
             AutoActionMenu.centerNode.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
             AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnTapped, AutoActionMenu.parrentMenu.Open);
 
+            zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("Revive", true, reviveMenu.GetNode(), typeof(PlayerBotActionRevive), 12);
+            zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("Use BioTracker", true, bioTrackerMenu.GetNode(), typeof(PlayerBotActionUseEnemyScanner));
+            zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("Attack", true, attackMenu.GetNode(), typeof(PlayerBotActionAttack));
+            zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("Share", true, shareMenu.GetNode(), typeof(PlayerBotActionShareResourcePack), 10);
+            zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("Ping", true, pingMenu.GetNode(), typeof(PlayerBotActionHighlight), 4.3f);
+            zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("Follow", true, followMenu.GetNode(), typeof(PlayerBotActionFollow), 14f);
+            zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("Pickup", true, pickupMenu.GetNode(), typeof(PlayerBotActionFollow), 4.2f);
+            zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("Unlock", true, unlockMenu.GetNode(), typeof(PlayerBotActionUnlock), 4.1f);
+            zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("Move", true, null, typeof(PlayerBotActionWalk));
+
             List<PlayerAIBot> playerAiBots = ZiMain.GetBotList();
+                
             foreach (sMenu menu in autoActionMenus)
             {
                 sMenu.sMenuNode node = menu.GetNode();
                 string text = node.text;
-                zSlideComputer.perms.Add(text, new Dictionary<int, bool>());
-                foreach (PlayerAIBot bot in playerAiBots)
-                    zSlideComputer.perms[text].Add(bot.Agent.Owner.PlayerSlotIndex(), true);
                 if (text != "Follow")
                     AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediateSelected, GenericSetAllowed, text, true);
-                if (!defaultPrios.ContainsKey(text))
+                if (zSlideComputer.PermissionDefinitions.GetDefaultPriority(text) == 0)
                     continue;
                 if (text != "Follow")
                 {
@@ -149,7 +135,7 @@ namespace ZombieTweak2
                     AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediateSelected, FollowMenuClass.ResetSettings, node);
                     AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediateSelected, FollowMenuClass.setAllowed, true);
                 }
-                ActionPriorities.Add(text, new OverrideTree<float?>(defaultPrios[text]).AddNode(text, null).Tree);
+                ActionPriorities.Add(text, new OverrideTree<float?>(zSlideComputer.PermissionDefinitions.GetDefaultPriority(text)).AddNode(text, null).Tree);
                 node.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
                 node.AddListener(sMenuManager.nodeEvent.OnDoubleTapped, menu.Open);
                 GenericUpdateNodePrioDisplay(node);
@@ -196,7 +182,6 @@ namespace ZombieTweak2
             AutoActionMenu.AddNodeToCatagory("Resources", "Pickup");
             AutoActionMenu.AddNodeToCatagory("Resources", "Share");
             AutoActionMenu.SetCatagory("Favorites");
-
         }
         internal static void GenericSetAllowed(string actionKey, bool allowed, bool allowDissabled = false)
         {
@@ -273,6 +258,8 @@ namespace ZombieTweak2
                 reviveNode.AddListener(sMenuManager.nodeEvent.OnDoubleTapped, reviveMenu.Open);
                 playersNode = reviveMenu.AddNode("Players", togglePlayerPerms);
                 botsNode = reviveMenu.AddNode("Bots", toggleBotPerms);
+                zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("RevivePlayers", true, playersNode, typeof(PlayerBotActionRevive));
+                zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("ReviveBots", true, botsNode, typeof(PlayerBotActionRevive));
                 //overidesMenu = new sMenu("overrides", reviveMenu);
                 //reviveMenu.AddNode(overidesMenu);
                 //var playerAgents = PlayerManager.PlayerAgentsInLevel;
@@ -323,8 +310,8 @@ namespace ZombieTweak2
                 bool allowed = true;
                 foreach (var bot in zSearch.GetAllBotAgents())
                 {
-                    allowed = !zSlideComputer.GetRevivePlayersPermission(bot.PlayerSlotIndex); //This is a bad way to do it, i'm setting it multiple times.  But at least untill I make it so you can have different perms for different bots, it should all be fine!
-                    zSlideComputer.SetRevivePlayersPermission(bot.PlayerSlotIndex, allowed);
+                    allowed = !zSlideComputer.GetActionPermission("RevivePlayers", bot.PlayerSlotIndex); //This is a bad way to do it, i'm setting it multiple times.  But at least untill I make it so you can have different perms for different bots, it should all be fine!
+                    zSlideComputer.SetActionPermission("RevivePlayers", bot.PlayerSlotIndex, allowed);
                 }
                 if (allowed)
                 {
@@ -340,8 +327,8 @@ namespace ZombieTweak2
                 bool allowed = true;
                 foreach (var bot in zSearch.GetAllBotAgents())
                 {
-                    allowed = !zSlideComputer.GetReviveBotsPermission(bot.PlayerSlotIndex); //This is a bad way to do it, i'm setting it multiple times.  But at least untill I make it so you can have different perms for different bots, it should all be fine!
-                    zSlideComputer.SetReviveBotsPermission(bot.PlayerSlotIndex, allowed);
+                    allowed = !zSlideComputer.GetActionPermission("ReviveBots", bot.PlayerSlotIndex); //This is a bad way to do it, i'm setting it multiple times.  But at least untill I make it so you can have different perms for different bots, it should all be fine!
+                    zSlideComputer.SetActionPermission("ReviveBots", bot.PlayerSlotIndex, allowed);
                 }
                 if (allowed)
                 {

@@ -145,11 +145,11 @@ namespace ZombieTweak2.zNetworking
             string key = node.text;
             ZiMain.log.LogInfo($"Recived set {key} permision value from network!");
             ZiMain.log.LogInfo($"id:{playerID}, allowed:{allowed}");
-            if (!zSlideComputer.PickUpPerms.ContainsKey(playerID))
-            {
-                ZiMain.log.LogError($"Unknown id {playerID} recived!");
-                return;
-            }
+            //if (!zSlideComputer.PermissionDefinitions.GetAllowed(key,playerID))
+            //{
+            //    ZiMain.log.LogError($"Unknown id {playerID} recived!");
+            //    return;
+            //}
             zSlideComputer.SetActionPermission(key, playerID, allowed, sender);
             //zMenus.UpdateIndicatorForNode(zMenus.permissionMenu.GetNode("Pickups"), zSlideComputer.PickUpPerms);
             if (allowed)
@@ -217,52 +217,6 @@ namespace ZombieTweak2.zNetworking
         //        menu.centerNode.SetColor(new Color(0.25f, 0f, 0f));
         //    }
         //}
-        internal static void ReciveSetRevivePlayersPermission(ulong sender, pStructs.pSharePermission info)
-        {
-            ZiMain.log.LogInfo($"Recived set revive player permision value from network!");
-            int playerID = info.playerID;
-            bool allowed = info.allowed;
-            ZiMain.log.LogInfo($"id:{playerID}, allowed:{allowed}");
-            if (!zSlideComputer.RevivePlayersPerms.ContainsKey(playerID))
-            {
-                ZiMain.log.LogError("Unknown id recived!");
-                return;
-            }
-            zSlideComputer.SetRevivePlayersPermission(playerID, allowed, sender);
-            //zMenus.UpdateIndicatorForNode(zMenus.permissionMenu.GetNode("Share"), zSlideComputer.SharePerms);
-            var node = AutomaticActionMenuClass.ReviveMenuClass.playersNode;
-            if (allowed)
-            {
-                node.SetColor(sMenuManager.defaultColor);
-            }
-            else
-            {
-                node.SetColor(new Color(0.25f, 0f, 0f));
-            }
-        }
-        internal static void ReciveSetReviveBotsPermission(ulong sender, pStructs.pSharePermission info)
-        {
-            ZiMain.log.LogInfo($"Recived set revive bot permision value from network!");
-            int playerID = info.playerID;
-            bool allowed = info.allowed;
-            ZiMain.log.LogInfo($"id:{playerID}, allowed:{allowed}");
-            if (!zSlideComputer.ReviveBotsPerms.ContainsKey(playerID))
-            {
-                ZiMain.log.LogError("Unknown id recived!");
-                return;
-            }
-            zSlideComputer.SetReviveBotsPermission(playerID, allowed, sender);
-            //zMenus.UpdateIndicatorForNode(zMenus.permissionMenu.GetNode("Share"), zSlideComputer.SharePerms);
-            var node = AutomaticActionMenuClass.ReviveMenuClass.botsNode;
-            if (allowed)
-            {
-                node.SetColor(sMenuManager.defaultColor);
-            }
-            else
-            {
-                node.SetColor(new Color(0.25f, 0f, 0f));
-            }
-        }
         internal static void ReciveRequestToPickupItem(ulong sender, pStructs.pPickupItemInfo info)
         {
             ZiMain.log.LogInfo("Recived request to pickup item!");
