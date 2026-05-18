@@ -121,7 +121,7 @@ namespace ZombieTweak2.Menus
                 {
                     node.AddListener(sMenuManager.nodeEvent.OnHeldImmediateSelected, GenericResetPrioSettings, node);
                     AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediateSelected, GenericResetPrioSettings, node);
-                    ActionPriorities.Add(text, new OverrideTree<float?>(defaultPiority).AddNode(text, null).Tree);
+                    ActionPriorities.Add(text, new OverrideTree<float?>(defaultPiority, debugIdent: text).AddNode(text, null).Tree);
                     node.AddListener(sMenuManager.nodeEvent.WhileSelected, GenericUpdatePriorityBasedOnScroll, node);
                     GenericUpdateNodePrioDisplay(node);
                 }

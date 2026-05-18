@@ -15,7 +15,7 @@ namespace ZombieTweak2.Menus
         private static int catagoryIndex = 1;
         public static sMenu pickupMenu;
         public static sMenu.sMenuNode pickupNode;
-        public static OverrideTree<int?> pickupDistance = new(15);
+        public static OverrideTree<int?> pickupDistance = new(15, debugIdent: "pickupDistance");
         public static void Setup(sMenu menu)
         {
             pickupMenu = menu;

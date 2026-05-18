@@ -294,6 +294,8 @@ namespace ZombieTweak2.zNetworking
         }
         internal static void RequestToSetBoolOverideTree(ulong netSender, pStructs.pBoolOverideTreeInfo info)
         {
+            ZiMain.log.LogDebug("Recived request to update bool override tree!");
+            ZiMain.log.LogDebug($"treeID:{info.treeID}, keyId:{info.keyId}, isNull:{info.isNull}, value:{info.value}");
             int treeID = info.treeID;
             uint keyId = info.keyId;
             bool isNull = info.isNull;
@@ -307,6 +309,8 @@ namespace ZombieTweak2.zNetworking
         }
         internal static void RequestToSetIntOverideTree(ulong netSender, pStructs.pIntOverideTreeInfo info)
         {
+            ZiMain.log.LogDebug("Recived request to update int override tree!");
+            ZiMain.log.LogDebug($"treeID:{info.treeID}, keyId:{info.keyId}, isNull:{info.isNull}, value:{info.value}");
             int treeID = info.treeID;
             uint keyId = info.keyId;
             bool isNull = info.isNull;
@@ -320,6 +324,8 @@ namespace ZombieTweak2.zNetworking
         }
         internal static void RequestToSetFloatOverideTree(ulong netSender, pStructs.pFloatOverideTreeInfo info)
         {
+            ZiMain.log.LogDebug("Recived request to update float override tree!");
+            ZiMain.log.LogDebug($"treeID:{info.treeID}, keyId:{info.keyId}, isNull:{info.isNull}, value:{info.value}");
             int treeID = info.treeID;
             uint keyId = info.keyId;
             bool isNull = info.isNull;

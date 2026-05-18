@@ -1,4 +1,5 @@
 ﻿using GTFO.API;
+using InControl;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -257,14 +258,15 @@ namespace ZombieTweak2
     {
         internal static Dictionary<int, OverrideTree<T>> Trees = new();
         private static int NextTreeID { get { return Trees.Keys.Count; } }
-        private int ID;
+        private int treeID;
         private int NextNodeID = 1;
+        private string DebugIdent = "DefaultIdent";
         public Dictionary<uint, Node> nodesByID { get; private set; } = new(); //For O(1) lookup by ID, used for network syncing
         public Dictionary<string, Node> nodes { get; private set; } = new(StringComparer.Ordinal); //For O(1) lookup, starting search in the middle of a tree
         public Node rootNode { get; private set; }
         public class Node
         {
-            public uint ID { get; private set; }
+            public uint nodeID { get; private set; }
             public string Key { get; private set; }
             public T? Value { get; set; }
             public Func<bool>? Condition { get; }
@@ -323,11 +325,18 @@ namespace ZombieTweak2
                     return false;
                 return EqualityComparer<T?>.Default.Equals(Parent.ValueAt(), Value);
             }
+            internal string GetNodeTreeStringForDebug()
+            {
+                if (Parent == null)
+                    return Key;
+                return Parent.GetNodeTreeStringForDebug() + "/" + Key;
+            }
         }
-        public OverrideTree(T rootValue, string rootKey = "Default")
+        public OverrideTree(T rootValue, string rootKey = "Default", string debugIdent = "DefaultIdent")
         {
-            ID = NextTreeID;
-            Trees[ID] = this;
+            DebugIdent = debugIdent;
+            treeID = NextTreeID;
+            Trees[treeID] = this;
             if (rootValue == null)
                 throw new ArgumentNullException(nameof(rootValue), "Initial value can not be null");
             rootNode = new Node(rootKey, 0, rootValue);
@@ -361,19 +370,25 @@ namespace ZombieTweak2
             var node = new Node(key, NextNodeID++, parent, value, condition);
             parent.Children.Add(node);
             nodes[key] = node;
-            nodesByID[node.ID] = node;
+            nodesByID[node.nodeID] = node;
             node.Tree = this;
             return node;
         }
-        public T? SetValue(uint ID, T? value, ulong netSender = 0)
-        { 
-            return SetValue(nodesByID[ID].Key, value, netSender);
+        public T? SetValue(uint nodeID, T? value, ulong netSender = 0)
+        {
+            if (!nodesByID.ContainsKey(nodeID))
+                throw new KeyNotFoundException(nameof(nodeID));
+            var node = nodesByID[nodeID];
+            ZiMain.log.LogDebug($"Setting value of node by ID '{nodeID}' ({node.GetNodeTreeStringForDebug()}) in tree {treeID} ({DebugIdent}) to '{value}' (netSender: {netSender})");
+            return SetValue(nodesByID[nodeID].Key, value, netSender);
         }
         public T? SetValue(string key, T? value, ulong netSender = 0)
         {
+            
             if (!nodes.ContainsKey(key))
                 throw new KeyNotFoundException(nameof(key));
             Node node = nodes[key];
+            ZiMain.log.LogDebug($"Setting value of node by key '({node.GetNodeTreeStringForDebug()})' in tree {treeID} ({DebugIdent}) to '{value}' (netSender: {netSender})");
             node.SetValue(value);
             if (netSender == 0) // We need to sync these values between clients.
             {
@@ -383,8 +398,8 @@ namespace ZombieTweak2
                     case TypeCode.Boolean:
                         {
                             pStructs.pBoolOverideTreeInfo info = new pStructs.pBoolOverideTreeInfo();
-                            info.treeID = ID;
-                            info.keyId = node.ID;
+                            info.treeID = treeID;
+                            info.keyId = node.nodeID;
                             if (value is null)
                             {
                                 info.value = false;
@@ -405,8 +420,8 @@ namespace ZombieTweak2
                     case TypeCode.Int32:
                         {
                             pStructs.pIntOverideTreeInfo info = new pStructs.pIntOverideTreeInfo();
-                            info.treeID = ID;
-                            info.keyId = node.ID;
+                            info.treeID = treeID;
+                            info.keyId = node.nodeID;
                             if (value is null)
                             {
                                 info.value = 0;
@@ -427,8 +442,8 @@ namespace ZombieTweak2
                     case TypeCode.Single:
                         {
                             pStructs.pFloatOverideTreeInfo info = new pStructs.pFloatOverideTreeInfo();
-                            info.treeID = ID;
-                            info.keyId = node.ID;
+                            info.treeID = treeID;
+                            info.keyId = node.nodeID;
                             if (value is null)
                             {
                                 info.value = 0f;
