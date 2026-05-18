@@ -11,9 +11,10 @@ namespace ZombieTweak2.Menus
         public static sMenu overidesMenu;
         public static sMenu.sMenuNode playersNode;
         public static sMenu.sMenuNode botsNode;
-        public static Dictionary<string, sMenu.sMenuNode> overideNodes = new();
+        public static Dictionary<string, sMenu.sMenuNode> overideNode;
         public static void Setup(sMenu menu)
         {
+            overideNode = new();
             reviveMenu = menu;
             reviveNode = menu.GetNode();
             reviveNode.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);

@@ -290,7 +290,7 @@ namespace SlideMenu
         public sMenu ResetRelativePosition(bool setPos = true)
         {
             RelativePosition = Vector3.zero;
-            if (setPos)
+            if (setPos && sMenuManager.mainCamera != null)
                 return setPosition(sMenuManager.mainCamera.transform.position - RelativePosition);
             return this;
         }

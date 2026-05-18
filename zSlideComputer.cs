@@ -73,6 +73,10 @@ namespace ZombieTweak2
                     this.defaultPriority = defaultPriority ?? 0f;
                 }
             }
+            public static void ClearPermissionDefinitions()
+            {
+                permissionDeffinitions.Clear();
+            }
             public static void CreatePermissionDeffinition(string key, bool defaultPerm = true, sMenu.sMenuNode node = null, List<Type> ActionTypesToCull = null, float? defaultPriority = null)
             {
                 PermissionDefinition permissionDef = new PermissionDefinition(key, defaultPerm, node, ActionTypesToCull, defaultPriority);

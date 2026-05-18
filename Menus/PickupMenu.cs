@@ -10,14 +10,18 @@ namespace ZombieTweak2.Menus
 {
     public static class PickupMenuClass
     {
-        public static Dictionary<uint, sMenu.sMenuNode> prioNodesByID = new Dictionary<uint, sMenu.sMenuNode>();
-        private static Dictionary<string, List<string>> catagories = new();
-        private static int catagoryIndex = 1;
+        public static Dictionary<uint, sMenu.sMenuNode> prioNodesByID;
+        private static Dictionary<string, List<string>> catagories;
+        private static int catagoryIndex;
         public static sMenu pickupMenu;
         public static sMenu.sMenuNode pickupNode;
-        public static OverrideTree<int?> pickupDistance = new(15, debugIdent: "pickupDistance");
+        public static OverrideTree<int?> pickupDistance;
         public static void Setup(sMenu menu)
         {
+            prioNodesByID = new Dictionary<uint, sMenu.sMenuNode>();
+            catagories = new();
+            catagoryIndex = 1;
+            pickupDistance = new(15, "pickupDistance");
             pickupMenu = menu;
             pickupMenu.radius = 125f;
             pickupNode = pickupMenu.GetNode();

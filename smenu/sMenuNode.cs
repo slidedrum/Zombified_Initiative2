@@ -355,7 +355,7 @@ namespace SlideMenu
                 OnPressed.Invoke();
                 if (closeOnPress)
                 {
-                    sMenuManager.CloseAllMenues();
+                    sMenuManager.CloseAllMenus();
                     return this;
                 }
                 return this;

@@ -9,12 +9,13 @@ namespace ZombieTweak2.Menus
 {
     public static class ShareMenuClass
     {
-        public static Dictionary<uint, sMenu.sMenuNode> packNodesByID = new Dictionary<uint, sMenu.sMenuNode>();
+        public static Dictionary<uint, sMenu.sMenuNode> packNodesByID;
         public static sMenu shareMenu;
         public static sMenu.sMenuNode shareNode;
 
         public static void Setup(sMenu menu)
         {
+            packNodesByID = new Dictionary<uint, sMenu.sMenuNode>();
             shareMenu = menu;
             shareNode = shareMenu.GetNode();
             var resourceDataBlocks = ItemSpawnManager.m_itemDataPerInventorySlot[(int)InventorySlot.ResourcePack];

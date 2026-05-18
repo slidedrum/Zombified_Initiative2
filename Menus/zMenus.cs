@@ -19,6 +19,10 @@ namespace ZombieTweak2.Menus
 
         public static void CreateMenus()
         {
+            sMenuManager.ClearAllMenus();
+            OverrideTree<bool?>.ResetTrees();
+            OverrideTree<float?>.ResetTrees();
+            OverrideTree<int?>.ResetTrees();
             AutomaticActionMenuClass.Setup(sMenuManager.createMenu("Automatic Actions", sMenuManager.mainMenu));
             if (ZiMain.extraActionMenus) 
             { 
@@ -67,13 +71,16 @@ namespace ZombieTweak2.Menus
     }
     public static partial class AutomaticActionMenuClass
     {
-        public static List<sMenu> autoActionMenus = new List<sMenu>();
+        public static List<sMenu> autoActionMenus;
         public static sMenu AutoActionMenu;
-        public static Dictionary<string, OverrideTree<float?>> ActionPriorities = new();
+        public static Dictionary<string, OverrideTree<float?>> ActionPriorities;
         internal static void Setup(sMenu _menu)
         {
+            ActionPriorities = new();
+            autoActionMenus = new List<sMenu>();
             AutoActionMenu = _menu;
             AutoActionMenu.radius = 130f;
+            autoActionMenus.Clear();
             //Vanilla actions
             var bioTrackerMenu = sMenuManager.createMenu("Use BioTracker", AutoActionMenu);
             autoActionMenus.Add(bioTrackerMenu);
@@ -98,6 +105,7 @@ namespace ZombieTweak2.Menus
             AutoActionMenu.centerNode.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
             AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnTapped, AutoActionMenu.parrentMenu.Open);
 
+            zSlideComputer.PermissionDefinitions.ClearPermissionDefinitions();
             zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("Revive", true, reviveMenu.GetNode(), typeof(PlayerBotActionRevive), 12);
             zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("Use BioTracker", true, bioTrackerMenu.GetNode(), typeof(PlayerBotActionUseEnemyScanner));
             zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("Attack", true, attackMenu.GetNode(), typeof(PlayerBotActionAttack));
@@ -109,7 +117,6 @@ namespace ZombieTweak2.Menus
             zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("Move", true, null, typeof(PlayerBotActionWalk));
 
             List<PlayerAIBot> playerAiBots = ZiMain.GetBotList();
-                
             foreach (sMenu menu in autoActionMenus)
             {
                 sMenu.sMenuNode node = menu.GetNode();
@@ -121,7 +128,11 @@ namespace ZombieTweak2.Menus
                 {
                     node.AddListener(sMenuManager.nodeEvent.OnHeldImmediateSelected, GenericResetPrioSettings, node);
                     AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediateSelected, GenericResetPrioSettings, node);
-                    ActionPriorities.Add(text, new OverrideTree<float?>(defaultPiority, debugIdent: text).AddNode(text, null).Tree);
+                    OverrideTree<float?> tree = new OverrideTree<float?>(defaultPiority, text);
+                    tree.AddNode(text, null);
+                    foreach(var childNode in tree.rootNode.Children)
+                        childNode.onChanged.Listen(new FlexibleMethodDefinition(GenericUpdateNodePrioDisplay, [node]));
+                    ActionPriorities.Add(text, tree);
                     node.AddListener(sMenuManager.nodeEvent.WhileSelected, GenericUpdatePriorityBasedOnScroll, node);
                     GenericUpdateNodePrioDisplay(node);
                 }
@@ -203,7 +214,7 @@ namespace ZombieTweak2.Menus
             string text = node.text;
             OverrideTree<float?> prio = ActionPriorities[text];
             prio.SetValue(text, Math.Clamp(Mathf.Round(((float)prio.ValueAt(text) + normalizedScroll) * 10f) / 10f,1f,15f));
-            GenericUpdateNodePrioDisplay(node);
+            //GenericUpdateNodePrioDisplay(node);
         }
         private static void GenericUpdateNodePrioDisplay(sMenu.sMenuNode node)
         {

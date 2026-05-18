@@ -24,10 +24,10 @@ namespace ZombieTweak2.Menus
                 .AddListener(sMenuManager.nodeEvent.OnUnpressedSelected, zDebug.setCheckVizTarget)
                 .AddListener(sMenuManager.nodeEvent.OnUnpressedSelected, zDebug.debugCheckViz)
                 .AddListener(sMenuManager.nodeEvent.OnHeldImmediate, zDebug.toggleVisCheck)
-                .AddListener(sMenuManager.nodeEvent.OnHeldImmediate, sMenuManager.CloseAllMenues)
-                .AddListener(sMenuManager.nodeEvent.OnTappedExclusive, sMenuManager.CloseAllMenues)
+                .AddListener(sMenuManager.nodeEvent.OnHeldImmediate, sMenuManager.CloseAllMenus)
+                .AddListener(sMenuManager.nodeEvent.OnTappedExclusive, sMenuManager.CloseAllMenus)
                 .AddListener(sMenuManager.nodeEvent.OnDoubleTapped, zDebug.setVisCheck, false)
-                .AddListener(sMenuManager.nodeEvent.OnDoubleTapped, sMenuManager.CloseAllMenues)
+                .AddListener(sMenuManager.nodeEvent.OnDoubleTapped, sMenuManager.CloseAllMenus)
             ;
             debugMenu.AddNode("Find unexplored", zDebug.MarkUnexploredArea);
             debugMenu.AddNode("SendBotToExplore", zDebug.SendClosestBotToExplore);

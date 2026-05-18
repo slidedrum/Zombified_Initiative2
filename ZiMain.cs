@@ -181,12 +181,12 @@ public class ZiMain : BasePlugin
             zUpdater.onUpdate.Listen(zActionSub.Update);
             zUpdater.onUpdate.Listen(zSearch.Update);
             zUpdater.onUpdate.Listen(zDebug.debugUpdate);
-            zUpdater.onUpdate.Listen(zVisitedManager.Update);
+            //zUpdater.onUpdate.Listen(zVisitedManager.Update);
             zUpdater.onLateUpdate.Listen(sMenuManager.LateUpdate);
         };
         LG_Factory.add_OnFactoryBuildDone((Action)zSlideComputer.Init);
-        LG_Factory.add_OnFactoryBuildDone((Action)sMenuManager.SetupCamera);
-        LG_Factory.add_OnFactoryBuildDone((Action)zMenus.CreateMenus);
+        //LG_Factory.add_OnFactoryBuildDone((Action)sMenuManager.SetupCamera);
+        //LG_Factory.add_OnFactoryBuildDone((Action)zMenus.CreateMenus);
 
     }
 

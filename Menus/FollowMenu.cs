@@ -13,17 +13,17 @@ namespace ZombieTweak2.Menus
     {
         private static sMenu followMenu;
         private static sMenu.sMenuNode followMenuNode;
-        private static Dictionary<DRAMA_State, sMenu.sMenuNode> stateNodes = new();
-        private static Dictionary<string, sMenu.sMenuNode> catagoryNodes = new();
+        private static Dictionary<DRAMA_State, sMenu.sMenuNode> stateNodes;
+        private static Dictionary<string, sMenu.sMenuNode> catagoryNodes;
         public static DRAMA_State previousState;
         public static Color currentStateColor;
         public static Color defaultColor;
-        public static OverrideTree<float?> prio = AutomaticActionMenuClass.ActionPriorities["Follow"];
-        public static OverrideTree<int?> followRadius = new(7, debugIdent: "followRadius");
-        public static OverrideTree<int?> maxDistance = new(10, debugIdent: "maxDistance");
-        public static OverrideTree<bool?> followEnabled = new(true, debugIdent: "followEnabled");
-        private static List<DRAMA_State> fightingStates = new();
-        private static List<DRAMA_State> ignoredStates = new();
+        public static OverrideTree<float?> prio;
+        public static OverrideTree<int?> followRadius;
+        public static OverrideTree<int?> maxDistance;
+        public static OverrideTree<bool?> followEnabled;
+        private static List<DRAMA_State> fightingStates;
+        private static List<DRAMA_State> ignoredStates;
 
         internal static void Setup(sMenu menu)
         {
@@ -33,7 +33,10 @@ namespace ZombieTweak2.Menus
             followMenuNode = followMenu.GetNode();
             previousState = DramaManager.CurrentStateEnum;
             FollowActionPatch.Setup();
-
+            fightingStates = new();
+            ignoredStates = new();
+            stateNodes = new();
+            catagoryNodes = new();
             fightingStates.Add(DRAMA_State.Combat);
             fightingStates.Add(DRAMA_State.Encounter);
             fightingStates.Add(DRAMA_State.IntentionalCombat);
@@ -44,7 +47,10 @@ namespace ZombieTweak2.Menus
             //prio = new(14);
             //followRadius = new(7, debugIdent: "followRadius");
             //maxDistance = new(10, debugIdent: "maxDistance");
-            //followEnabled = new(true, debugIdent: "followEnabled");
+            followEnabled = new(true, "followEnabled");
+            prio = AutomaticActionMenuClass.ActionPriorities["Follow"];
+            followRadius = new(7, "followRadius");
+            maxDistance = new(10, "maxDistance");
             followEnabled.AddNode("Main", true);
             //prio.AddNode("Follow", null);
             prio.AddNode("Fighting", null, "Follow", condition: () => { return fightingStates.Contains(DramaManager.CurrentStateEnum); });

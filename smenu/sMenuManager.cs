@@ -2,13 +2,14 @@
 using System.Linq;
 using UnityEngine;
 using ZombieTweak2;
+using ZombieTweak2.Menus;
 
 namespace SlideMenu
 {
     public static class sMenuManager
     {
         //This is the big custom menu manager.  Handles all menu creation and shit.  More work to do, but pretty good so far.
-        public static HashSet<sMenu> menues { get; private set; } = new();
+        public static HashSet<sMenu> menus { get; private set; } = new();
         public static GameObject menuParrent;
         private static bool playerInControll = false;
         private static Texture2D _defaultBackgroundImage;
@@ -90,7 +91,7 @@ namespace SlideMenu
             if (parrentMenu == null )
             {
                 newMenu.centerNode.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
-                newMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnUnpressedSelected, CloseAllMenues);
+                newMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnUnpressedSelected, CloseAllMenus);
             }
             else if (autoAddNode)
             {
@@ -102,8 +103,12 @@ namespace SlideMenu
         }
         public static sMenu registerMenu(sMenu menu)
         {
-            menues.Add(menu);
+            menus.Add(menu);
             return menu;
+        }
+        public static void ClearMenus()
+        {
+            menus.Clear();
         }
         public static void Update()
         {
@@ -113,8 +118,7 @@ namespace SlideMenu
             {
                 if (mainCamera == null)
                 {
-                    ClearAllMenus();
-                    sMenus.CreateMenus();
+                    zMenus.CreateMenus();
                 }
                 if (menuOpen)
                 {
@@ -152,10 +156,10 @@ namespace SlideMenu
                 }
             }
         }
-        public static void CloseAllMenues()
+        public static void CloseAllMenus()
         {
             pressedNode = null;
-            foreach (sMenu menu in menues)
+            foreach (sMenu menu in menus)
             {
                 menu.ResetRelativePosition();
                 menu.Close();
@@ -207,9 +211,9 @@ namespace SlideMenu
                     Vector3 cameraAngle = mainCamera.transform.forward;
                     float angleDelta = Vector3.Angle(cameraAngle, angleToTarget);
                     if (angleDelta > angleTollerance * menuSizeScaler) //close if we're looking too far away. 
-                        CloseAllMenues();
+                        CloseAllMenus();
                     else if (GetClosestObjectInLookDirection(mainCamera.transform, nodeList, nodeAngleTollerance * menuSizeScaler * 2) == null) //close if we're not looking near a node with a wider tolerance.
-                        CloseAllMenues();
+                        CloseAllMenus();
                 }
             }
         }
@@ -219,19 +223,20 @@ namespace SlideMenu
             cameraEcents.onPreRender.Listen(PreRender); // THis might cause double actions in some cases
             menuParrent = new GameObject("menus");
             mainMenu = new sMenu("Main");
-            mainMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnUnpressedSelected, CloseAllMenues);
+            mainMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnUnpressedSelected, CloseAllMenus);
             registerMenu(mainMenu);
         }
         public static void ClearAllMenus()
         {
-            menues.Clear();
+            CloseAllMenus();
+            menus.Clear();
             mainCamera = null;
             GameObject.Destroy(menuParrent);
             SetupCamera();
         }
         public static sMenu GetMenu(string menuName)
         {
-            foreach (var menu in menues)
+            foreach (var menu in menus)
             {
                 if (menu.centerNode.text.Contains(menuName))
                     return menu;
@@ -240,7 +245,7 @@ namespace SlideMenu
         }
         public static void SetMenusScale(float scale)
         {
-            foreach(var menu in menues)
+            foreach(var menu in menus)
             {
                 menu.Setsize(scale);
             }
