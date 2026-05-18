@@ -15,6 +15,7 @@ namespace ZombieTweak2.Menus
         private static int catagoryIndex = 1;
         public static sMenu pickupMenu;
         public static sMenu.sMenuNode pickupNode;
+        public static OverrideTree<int?> pickupDistance = new(15, debugIdent: "pickupDistance");
         public static void Setup(sMenu menu)
         {
             pickupMenu = menu;
@@ -83,7 +84,53 @@ namespace ZombieTweak2.Menus
             pickupMenu.SetCatagory("All");
             pickupMenu.AddListener(sMenuManager.menuEvent.OnOpened, pickupMenu.UpdateCatagoryNodes);
             pickupNode.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
+            pickupNode.ClearListeners(sMenuManager.nodeEvent.WhileSelected);
             pickupNode.AddListener(sMenuManager.nodeEvent.OnDoubleTapped, pickupMenu.Open);
+            pickupNode.AddListener(sMenuManager.nodeEvent.WhileSelected, UpdateNodeBasedOnScroll, pickupNode);
+        }
+        private static void UpdateNodeBasedOnScroll(sMenu.sMenuNode node)
+        {
+            float scroll = Input.GetAxis("Mouse ScrollWheel");
+            float normalizedScroll = (int)Mathf.Sign(scroll);
+            if (scroll == 0f)
+                return;
+            string text = node.text;
+            var pos = Camera.main.WorldToViewportPoint(node.gameObject.transform.position);
+            pos = new Vector2(pos.x - 0.5f, pos.y - 0.5f) * -1;
+            OverrideTree<float?> prio = AutomaticActionMenuClass.ActionPriorities[text];
+            if (pos.y > Math.Abs(pos.x)) // TOP
+            {
+                normalizedScroll = normalizedScroll * 0.1f;
+                float newValue = (float)prio.ValueAt(text) + normalizedScroll;
+                newValue = (float)Math.Round(newValue, 1);
+                prio.SetValue(text, Math.Clamp(newValue, 1, 15));
+            }
+            else
+            {
+                pickupDistance.SetValue(text, Math.Clamp((int)pickupDistance.ValueAt(text) + (int)normalizedScroll, 1, 60));
+            }
+            UpdateNodeSettingsDisplay(node);
+        }
+        private static void UpdateNodeSettingsDisplay(sMenu.sMenuNode node)
+        {
+            string text = node.text;
+            var prio = AutomaticActionMenuClass.ActionPriorities["Pickup"];
+            if (prio.nodes[text].IsDefaultValue() && pickupDistance.nodes[text].IsDefaultValue())
+            {
+                node.SetPrefix("");
+                node.SetSuffix("");
+            }
+            else
+            {
+                node.SetPrefix("* ");
+                node.SetSuffix(" *");
+            }
+            node.SetTitle($"Prio <color=#CC840066>[</color>{prio.ValueAt(text)}<color=#CC840066>]</color>");
+            node.SetSubtitle($"Range <color=#CC840066>[</color>{pickupDistance.ValueAt(text)}<color=#CC840066>]</color>");
+        }
+        private static void SetSearchDistance(int playerID, float distance)
+        {
+
         }
         internal static void Encounter(string friendlyName)
         {

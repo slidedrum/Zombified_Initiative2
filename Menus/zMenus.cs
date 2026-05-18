@@ -121,7 +121,7 @@ namespace ZombieTweak2.Menus
                 {
                     node.AddListener(sMenuManager.nodeEvent.OnHeldImmediateSelected, GenericResetPrioSettings, node);
                     AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediateSelected, GenericResetPrioSettings, node);
-                    ActionPriorities.Add(text, new OverrideTree<float?>(defaultPiority).AddNode(text, null).Tree);
+                    ActionPriorities.Add(text, new OverrideTree<float?>(defaultPiority, debugIdent: text).AddNode(text, null).Tree);
                     node.AddListener(sMenuManager.nodeEvent.WhileSelected, GenericUpdatePriorityBasedOnScroll, node);
                     GenericUpdateNodePrioDisplay(node);
                 }
@@ -152,15 +152,6 @@ namespace ZombieTweak2.Menus
             BioTrackerMenuClass.Setup(bioTrackerMenu);
             AttackMenuClass.Setup(attackMenu);
             ReviveMenuClass.Setup(reviveMenu);
-
-            //AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, PickupMenuClass.setAllowed, true);
-            //AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, ShareMenuClass.setAllowed, true);
-            //AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, FollowMenuClass.setAllowed, true);
-            //AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, UnlockMenuClass.setAllowed, true);
-            //AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, PingMenuClass.setAllowed, true);
-            //AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, BioTrackerMenuClass.setAllowed, true);
-            //AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, AttackMenuClass.setAllowed, true);
-            //AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, ReviveMenuClass.setAllowed, true);
 
             AutoActionMenu.AddCatagory("All");
             AutoActionMenu.AddCatagory("Favorites");

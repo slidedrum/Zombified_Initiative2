@@ -1,9 +1,14 @@
-﻿using System;
+﻿using GTFO.API;
+using InControl;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
+using ZombieTweak2.zNetworking;
+using Zombified_Initiative;
+#nullable enable
 namespace ZombieTweak2
 {
     public static class zHelpers
@@ -12,6 +17,21 @@ namespace ZombieTweak2
         {
             float multiplier = Mathf.Pow(10f, decimalPlaces);
             return Mathf.Round(value * multiplier) / multiplier;
+        }
+        public static uint HashString(string str)
+        {
+            unchecked
+            {
+                uint hash = 2166136261;
+
+                for (int i = 0; i < str.Length; i++)
+                {
+                    hash ^= str[i];
+                    hash *= 16777619;
+                }
+
+                return hash;
+            }
         }
     }
     public class FlexibleMethodDefinition
@@ -78,7 +98,7 @@ namespace ZombieTweak2
             Listen(method.method, method.args, method);
         }
 
-        public void Listen(Delegate method, object[] args, FlexibleMethodDefinition fMethod = null)
+        public void Listen(Delegate method, object[] args, FlexibleMethodDefinition? fMethod = null)
         {
             if (method == null) return;
 
@@ -90,7 +110,9 @@ namespace ZombieTweak2
                 if (i < args.Length && args[i] != Default.Value)
                     finalArgs[i] = args[i];
                 else if (parameters[i].IsOptional)
+#pragma warning disable CS8601 // Possible null reference assignment.
                     finalArgs[i] = parameters[i].DefaultValue;
+#pragma warning restore CS8601 // Possible null reference assignment.
                 else
                     throw new ArgumentException($"Missing required argument '{parameters[i].Name}'");
             }
@@ -141,7 +163,9 @@ namespace ZombieTweak2
         //TODO remake it not with AI.
 
         private readonly List<T> _list = new();
+#pragma warning disable CS8714 // The type cannot be used as type parameter in the generic type or method. Nullability of type argument doesn't match 'notnull' constraint.
         private readonly Dictionary<T, int> _dict = new();
+#pragma warning restore CS8714 // The type cannot be used as type parameter in the generic type or method. Nullability of type argument doesn't match 'notnull' constraint.
 
         public int Count => _list.Count;
 
@@ -229,27 +253,34 @@ namespace ZombieTweak2
         //but I don't understand it enough to get rid of it (yet).
         public static readonly object Value = new object();
     }
-#nullable enable
+
     public class OverrideTree<T>
     {
+        internal static Dictionary<int, OverrideTree<T>> Trees = new();
+        private static int NextTreeID { get { return Trees.Keys.Count; } }
+        private int treeID;
+        private int NextNodeID = 1;
+        private string DebugIdent = "DefaultIdent";
+        public Dictionary<uint, Node> nodesByID { get; private set; } = new(); //For O(1) lookup by ID, used for network syncing
         public Dictionary<string, Node> nodes { get; private set; } = new(StringComparer.Ordinal); //For O(1) lookup, starting search in the middle of a tree
         public Node rootNode { get; private set; }
         public class Node
         {
-            public string Key { get; }
+            public uint nodeID { get; private set; }
+            public string Key { get; private set; }
             public T? Value { get; set; }
             public Func<bool>? Condition { get; }
             public bool IsRoot => Parent == null;
             public Node? Parent { get; private set; }
             public OverrideTree<T> Tree { get; internal set; }
             public List<Node> Children { get; } = new();
-            internal Node(string key, T? value, Func<bool>? condition = null) //If you don't supply a parent, you MUST supply a value
+            internal Node(string key, int id, T? value, Func<bool>? condition = null) //If you don't supply a parent, you MUST supply a value
             {
                 Key = key;
                 Value = value;
                 Condition = condition;
             }
-            internal Node(string key, Node parent, T? value = default, Func<bool>? condition = null) //If you supply a parent, you can opt to not supply a value
+            internal Node(string key, int id, Node parent, T? value = default, Func<bool>? condition = null) //If you supply a parent, you can opt to not supply a value
             {
                 Key = key;
                 Value = value;
@@ -290,15 +321,35 @@ namespace ZombieTweak2
             {
                 if (HasValue() == false)
                     return true;
+                if (Parent == null)
+                    return false;
                 return EqualityComparer<T?>.Default.Equals(Parent.ValueAt(), Value);
             }
+            internal string GetNodeTreeStringForDebug()
+            {
+                if (Parent == null)
+                    return Key;
+                return Parent.GetNodeTreeStringForDebug() + "/" + Key;
+            }
         }
-        public OverrideTree(T rootValue, string rootKey = "Default")
+        public OverrideTree(T rootValue, string rootKey = "Default", string debugIdent = "DefaultIdent")
         {
+            DebugIdent = debugIdent;
+            treeID = NextTreeID;
+            Trees[treeID] = this;
             if (rootValue == null)
                 throw new ArgumentNullException(nameof(rootValue), "Initial value can not be null");
-            rootNode = new Node(rootKey, rootValue);
+            rootNode = new Node(rootKey, 0, rootValue);
             nodes[rootKey] = rootNode;
+            nodesByID[0] = rootNode;
+        }
+        public static OverrideTree<T> GetTreeFromID(int ID)
+        {
+            return Trees[ID];
+        }
+        public Node GetNodeFromId(uint id)
+        {
+            return nodesByID[id];
         }
         public Node AddNode(string key, T? value, string parent, Func<bool>? condition = null)
         {
@@ -316,17 +367,108 @@ namespace ZombieTweak2
             if (!nodes.Values.Contains(parent))
                 throw new InvalidOperationException($"Parent '{parent.Key}' not found.");
 
-            var node = new Node(key, parent, value, condition);
+            var node = new Node(key, NextNodeID++, parent, value, condition);
             parent.Children.Add(node);
             nodes[key] = node;
+            nodesByID[node.nodeID] = node;
             node.Tree = this;
             return node;
         }
-        public T? SetValue(string key, T? value)
+        public T? SetValue(uint nodeID, T? value, ulong netSender = 0)
         {
+            if (!nodesByID.ContainsKey(nodeID))
+                throw new KeyNotFoundException(nameof(nodeID));
+            var node = nodesByID[nodeID];
+            ZiMain.log.LogDebug($"Setting value of node by ID '{nodeID}' ({node.GetNodeTreeStringForDebug()}) in tree {treeID} ({DebugIdent}) to '{value}' (netSender: {netSender})");
+            return SetValue(nodesByID[nodeID].Key, value, netSender);
+        }
+        public T? SetValue(string key, T? value, ulong netSender = 0)
+        {
+            
             if (!nodes.ContainsKey(key))
                 throw new KeyNotFoundException(nameof(key));
-            nodes[key].SetValue(value);
+            Node node = nodes[key];
+            ZiMain.log.LogDebug($"Setting value of node by key '({node.GetNodeTreeStringForDebug()})' in tree {treeID} ({DebugIdent}) to '{value}' (netSender: {netSender})");
+            node.SetValue(value);
+            if (netSender == 0) // We need to sync these values between clients.
+            {
+                Type type = Nullable.GetUnderlyingType(typeof(T)) ?? typeof(T);
+                switch (Type.GetTypeCode(type))
+                {
+                    case TypeCode.Boolean:
+                        {
+                            pStructs.pBoolOverideTreeInfo info = new pStructs.pBoolOverideTreeInfo();
+                            info.treeID = treeID;
+                            info.keyId = node.nodeID;
+                            if (value is null)
+                            {
+                                info.value = false;
+                                info.isNull = true;
+                            }
+                            else if (value is bool v)
+                            {
+                                info.value = v;
+                                info.isNull = false;
+                            }
+                            else
+                            {
+                                throw new InvalidCastException($"Expected bool value for key '{key}', but got {value.GetType().Name}.");
+                            }
+                            NetworkAPI.InvokeEvent<pStructs.pBoolOverideTreeInfo>("RequestToSetBoolOverideTree", info);
+                            break;
+                        }
+                    case TypeCode.Int32:
+                        {
+                            pStructs.pIntOverideTreeInfo info = new pStructs.pIntOverideTreeInfo();
+                            info.treeID = treeID;
+                            info.keyId = node.nodeID;
+                            if (value is null)
+                            {
+                                info.value = 0;
+                                info.isNull = true;
+                            }
+                            else if (value is int v)
+                            {
+                                info.value = v;
+                                info.isNull = false;
+                            }
+                            else
+                            {
+                                throw new InvalidCastException($"Expected int value for key '{key}', but got {value.GetType().Name}.");
+                            }
+                            NetworkAPI.InvokeEvent<pStructs.pIntOverideTreeInfo>("RequestToSetIntOverideTree", info);
+                            break;
+                        }
+                    case TypeCode.Single:
+                        {
+                            pStructs.pFloatOverideTreeInfo info = new pStructs.pFloatOverideTreeInfo();
+                            info.treeID = treeID;
+                            info.keyId = node.nodeID;
+                            if (value is null)
+                            {
+                                info.value = 0f;
+                                info.isNull = true;
+                            }
+                            else if (value is float v)
+                            {
+                                info.value = v;
+                                info.isNull = false;
+                            }
+                            else
+                            {
+                                throw new InvalidCastException($"Expected float value for key '{key}', but got {value.GetType().Name}.");
+                            }
+                            NetworkAPI.InvokeEvent<pStructs.pFloatOverideTreeInfo>("RequestToSetFloatOverideTree", info);
+                            break;
+                        }
+                    default:
+                        {
+                            ZiMain.log.LogWarning($"set unusual type ({value?.GetType().Name ?? "null"}) in override tree.");
+                            break;
+                        }
+                        
+                }
+            }
             return ValueAt(key);
         }
         public T? GetValue()

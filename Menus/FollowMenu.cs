@@ -19,9 +19,9 @@ namespace ZombieTweak2.Menus
         public static Color currentStateColor;
         public static Color defaultColor;
         public static OverrideTree<float?> prio = AutomaticActionMenuClass.ActionPriorities["Follow"];
-        public static OverrideTree<int?> followRadius = new(7);
-        public static OverrideTree<int?> maxDistance = new(10);
-        public static OverrideTree<bool?> followEnabled = new(true);
+        public static OverrideTree<int?> followRadius = new(7, debugIdent: "followRadius");
+        public static OverrideTree<int?> maxDistance = new(10, debugIdent: "maxDistance");
+        public static OverrideTree<bool?> followEnabled = new(true, debugIdent: "followEnabled");
         private static List<DRAMA_State> fightingStates = new();
         private static List<DRAMA_State> ignoredStates = new();
 
@@ -42,9 +42,9 @@ namespace ZombieTweak2.Menus
             ignoredStates.Add(DRAMA_State.ElevatorIdle);
 
             //prio = new(14);
-            followRadius = new(7);
-            maxDistance = new(10);
-            followEnabled = new(true);
+            //followRadius = new(7, debugIdent: "followRadius");
+            //maxDistance = new(10, debugIdent: "maxDistance");
+            //followEnabled = new(true, debugIdent: "followEnabled");
             followEnabled.AddNode("Main", true);
             //prio.AddNode("Follow", null);
             prio.AddNode("Fighting", null, "Follow", condition: () => { return fightingStates.Contains(DramaManager.CurrentStateEnum); });
@@ -113,6 +113,7 @@ namespace ZombieTweak2.Menus
             followMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, ResetAllLocalSettings);
             followMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnTapped, followMenu.parrentMenu.Open);
             followMenuNode.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
+            followMenuNode.ClearListeners(sMenuManager.nodeEvent.WhileSelected);
             followMenuNode.AddListener(sMenuManager.nodeEvent.WhileSelected, UpdateNodeBasedOnScroll, followMenuNode);
             followMenuNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediateSelected, ResetSettings, followMenuNode);
             followMenuNode.AddListener(sMenuManager.nodeEvent.OnDoubleTapped, followMenu.Open);

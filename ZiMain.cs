@@ -165,6 +165,9 @@ public class ZiMain : BasePlugin
         NetworkAPI.RegisterEvent<pPickupItemInfo>           ("RequestToPickupItem",             zNetworking.ReciveRequestToPickupItem);
         NetworkAPI.RegisterEvent<pShareResourceInfo>        ("RequestToShareResourcePack",      zNetworking.ReciveRequestToShareResource);
         NetworkAPI.RegisterEvent<pAttackEnemyInfo>          ("RequestToKillEnemy",              zNetworking.ReciveRequestToKillEnemy);
+        NetworkAPI.RegisterEvent<pBoolOverideTreeInfo>      ("RequestToSetBoolOverideTree",     zNetworking.RequestToSetBoolOverideTree);
+        NetworkAPI.RegisterEvent<pIntOverideTreeInfo>       ("RequestToSetIntOverideTree",      zNetworking.RequestToSetIntOverideTree);
+        NetworkAPI.RegisterEvent<pFloatOverideTreeInfo>     ("RequestToSetFloatOverideTree",    zNetworking.RequestToSetFloatOverideTree);
 
         //EventAPI.OnExpeditionStarted += ZombieController.Initialize;
         log = Log;

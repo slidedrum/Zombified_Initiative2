@@ -34,6 +34,7 @@ namespace SlideMenu
         {
             return new FlexibleMethodDefinition(d);
         }
+        #nullable enable
         public object? Invoke()
         {
             return Invoke(args);
@@ -59,6 +60,7 @@ namespace SlideMenu
                 throw new TargetInvocationException($"Error invoking method '{method.Method.Name}'.", e);
             }
         }
+        #nullable disable
     }
     public class FlexibleEvent
     {
