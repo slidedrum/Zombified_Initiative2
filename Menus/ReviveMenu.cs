@@ -20,9 +20,9 @@ namespace ZombieTweak2.Menus
             reviveNode.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
             reviveNode.AddListener(sMenuManager.nodeEvent.OnDoubleTapped, reviveMenu.Open);
             playersNode = reviveMenu.AddNode("Players");
-            playersNode.AddListener(sMenuManager.nodeEvent.OnPressed, AutomaticActionMenuClass.GenericToggleAllowed, "RevivePlayers", null, playersNode);
+            playersNode.AddListener(sMenuManager.nodeEvent.OnPressed, AutomaticActionMenuClass.GenericToggleAllowed, "RevivePlayers");
             botsNode = reviveMenu.AddNode("Bots");
-            botsNode.AddListener(sMenuManager.nodeEvent.OnPressed, AutomaticActionMenuClass.GenericToggleAllowed, "ReviveBots", null, botsNode);
+            botsNode.AddListener(sMenuManager.nodeEvent.OnPressed, AutomaticActionMenuClass.GenericToggleAllowed, "ReviveBots");
             zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("RevivePlayers", true, playersNode, typeof(PlayerBotActionRevive));
             zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("ReviveBots", true, botsNode, typeof(PlayerBotActionRevive));
             //overidesMenu = new sMenu("overrides", reviveMenu);

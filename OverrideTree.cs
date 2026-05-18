@@ -125,14 +125,18 @@ namespace ZombieTweak2
         public Node AddNode(string key, T? value, string parent, Func<bool>? condition = null, FlexibleMethodDefinition onChanged = null)
         {
             if (!nodes.ContainsKey(parent))
-                throw new KeyNotFoundException(nameof(parent));
+                throw new KeyNotFoundException($"Could not find parrent named {parent} when adding node {key}");
             var parrentNode = nodes[parent];
             return AddNode(key, value, parrentNode, condition, onChanged);
         }
         public Node AddNode(string key, T? value, Node? parent = null, Func<bool>? condition = null, FlexibleMethodDefinition onChanged = null)
         {
             if (nodes.ContainsKey(key))
-                throw new InvalidOperationException($"Key '{key}' already in use.");
+                if (parent == null)
+                    throw new InvalidOperationException($"Key '{key}' already in use.");
+                else
+                    throw new InvalidOperationException($"Key '{key}' already in use. Consider combineing with the parrent key for '{parent.Key}/{key}'");
+                
             if (parent == null)
                 parent = rootNode;
             if (!nodes.Values.Contains(parent))

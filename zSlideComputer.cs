@@ -562,6 +562,12 @@ namespace ZombieTweak2
         //        SetPickupPermission(bot, !majority);
         //    }
         //}
+        public static void RemoveActionsOfType(Type actionType)
+        { 
+            var allBots = ZiMain.GetBotList();
+            foreach(var bot in allBots)
+                RemoveActionsOfType(bot.Agent, actionType);
+        }
         public static void RemoveActionsOfType(PlayerAgent agent, Type actionType)
         {
             //todo add more variants of this method with different arguments

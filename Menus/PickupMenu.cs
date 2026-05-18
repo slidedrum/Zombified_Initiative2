@@ -101,13 +101,13 @@ namespace ZombieTweak2.Menus
             string text = node.text;
             var pos = Camera.main.WorldToViewportPoint(node.gameObject.transform.position);
             pos = new Vector2(pos.x - 0.5f, pos.y - 0.5f) * -1;
-            OverrideTree<float?> prio = AutomaticActionMenuClass.ActionPriorities[text];
+            //OverrideTree<float?> prio = AutomaticActionMenuClass.ActionPriorities[text];
             if (pos.y > Math.Abs(pos.x)) // TOP
             {
                 normalizedScroll = normalizedScroll * 0.1f;
-                float newValue = (float)prio.ValueAt(text) + normalizedScroll;
+                float newValue = (float)AutomaticActionMenuClass.ActionPriorities.ValueAt(text) + normalizedScroll;
                 newValue = (float)Math.Round(newValue, 1);
-                prio.SetValue(text, Math.Clamp(newValue, 1, 15));
+                AutomaticActionMenuClass.ActionPriorities.SetValue(text, Math.Clamp(newValue, 1, 15));
             }
             else
             {
@@ -118,8 +118,8 @@ namespace ZombieTweak2.Menus
         private static void UpdateNodeSettingsDisplay(sMenu.sMenuNode node)
         {
             string text = node.text;
-            var prio = AutomaticActionMenuClass.ActionPriorities["Pickup"];
-            if (prio.nodes[text].IsDefaultValue() && pickupDistance.nodes[text].IsDefaultValue())
+            //var prio = AutomaticActionMenuClass.ActionPriorities["Pickup"];
+            if (AutomaticActionMenuClass.ActionPriorities.nodes[text].IsDefaultValue() && pickupDistance.nodes[text].IsDefaultValue())
             {
                 node.SetPrefix("");
                 node.SetSuffix("");
@@ -129,7 +129,7 @@ namespace ZombieTweak2.Menus
                 node.SetPrefix("* ");
                 node.SetSuffix(" *");
             }
-            node.SetTitle($"Prio <color=#CC840066>[</color>{prio.ValueAt(text)}<color=#CC840066>]</color>");
+            node.SetTitle($"Prio <color=#CC840066>[</color>{AutomaticActionMenuClass.ActionPriorities.ValueAt(text)}<color=#CC840066>]</color>");
             node.SetSubtitle($"Range <color=#CC840066>[</color>{pickupDistance.ValueAt(text)}<color=#CC840066>]</color>");
         }
         private static void SetSearchDistance(int playerID, float distance)
