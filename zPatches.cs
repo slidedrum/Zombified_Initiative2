@@ -959,7 +959,9 @@ public class ZombifiedPatches
     [HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.UpdateActionCollectItem))]
     [HarmonyPrefix]
     public static bool UpdateActionCollectItemReCreation(RootPlayerBotAction __instance, ref PlayerBotActionBase.Descriptor bestAction)
-    { // TODO cut this out completely.
+    { 
+        // TODO cut this out completely.
+        // TODO check why there are some unused vars in here, is this actually accurate to the real game?
         // all this does is change it so it checks against agent position not "epicenter" position.
         // Local temporaries that match responsibilities seen in the decompiled code
         PlayerBotActionCollectItem.Descriptor collect = __instance.m_collectItemAction;

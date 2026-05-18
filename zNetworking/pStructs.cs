@@ -125,6 +125,7 @@ namespace ZombieTweak2.zNetworking
             public pPlayerAgent aiBot;
             public pPlayerAgent commander;
         }
+
         internal struct pPickupItemInfo
         {
             public pItemData item;
@@ -142,6 +143,27 @@ namespace ZombieTweak2.zNetworking
             public float prio;
             public float radius;
             public float maxRadius;
+        }
+        internal struct pBoolOverideTreeInfo
+        {
+            public int treeID;
+            public uint keyId;
+            public bool value;
+            public bool isNull;
+        }
+        internal struct pIntOverideTreeInfo
+        {
+            public int treeID;
+            public uint keyId;
+            public int value;
+            public bool isNull;
+        }
+        internal struct pFloatOverideTreeInfo
+        {
+            public int treeID;
+            public uint keyId;
+            public float value;
+            public bool isNull;
         }
     }
 }

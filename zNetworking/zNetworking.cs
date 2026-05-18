@@ -1,14 +1,14 @@
 ﻿using Enemies;
 using LevelGeneration;
 using Player;
+using SlideMenu;
 using SNetwork;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using SlideMenu;
-using Zombified_Initiative;
 using ZombieTweak2.Menus;
+using Zombified_Initiative;
 
 namespace ZombieTweak2.zNetworking
 {
@@ -291,6 +291,45 @@ namespace ZombieTweak2.zNetworking
             if (!SNet.IsMaster)
                 return;
             
+        }
+        internal static void RequestToSetBoolOverideTree(ulong netSender, pStructs.pBoolOverideTreeInfo info)
+        {
+            int treeID = info.treeID;
+            uint keyId = info.keyId;
+            bool isNull = info.isNull;
+            bool? value;
+            if (isNull)
+                value = null;
+            else
+                value = info.value;
+            OverrideTree<bool?> tree = OverrideTree<bool?>.GetTreeFromID(info.treeID);
+            tree.SetValue(keyId, value, netSender);
+        }
+        internal static void RequestToSetIntOverideTree(ulong netSender, pStructs.pIntOverideTreeInfo info)
+        {
+            int treeID = info.treeID;
+            uint keyId = info.keyId;
+            bool isNull = info.isNull;
+            int? value;
+            if (isNull)
+                value = null;
+            else
+                value = info.value;
+            OverrideTree<int?> tree = OverrideTree<int?>.GetTreeFromID(info.treeID);
+            tree.SetValue(keyId, value, netSender);
+        }
+        internal static void RequestToSetFloatOverideTree(ulong netSender, pStructs.pFloatOverideTreeInfo info)
+        {
+            int treeID = info.treeID;
+            uint keyId = info.keyId;
+            bool isNull = info.isNull;
+            float? value;
+            if (isNull)
+                value = null;
+            else
+                value = info.value;
+            OverrideTree<float?> tree = OverrideTree<float?>.GetTreeFromID(info.treeID);
+            tree.SetValue(keyId, value, netSender);
         }
     }
 }

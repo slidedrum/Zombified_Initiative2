@@ -113,6 +113,7 @@ namespace ZombieTweak2.Menus
             followMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, ResetAllLocalSettings);
             followMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnTapped, followMenu.parrentMenu.Open);
             followMenuNode.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
+            followMenuNode.ClearListeners(sMenuManager.nodeEvent.WhileSelected);
             followMenuNode.AddListener(sMenuManager.nodeEvent.WhileSelected, UpdateNodeBasedOnScroll, followMenuNode);
             followMenuNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediateSelected, ResetSettings, followMenuNode);
             followMenuNode.AddListener(sMenuManager.nodeEvent.OnDoubleTapped, followMenu.Open);

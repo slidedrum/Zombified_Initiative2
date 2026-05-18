@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ZombieTweak2;
-using static RootMotion.FinalIK.IKSolverVR;
 
 namespace Zombified_Initiative
 {

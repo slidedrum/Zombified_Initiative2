@@ -253,7 +253,7 @@ namespace ZombieTweak2
             }
             public static Color GetAverageColor(RenderTexture renderTexture, Color ignoreColor, float tolerance = 0.01f)
             {
-                return Color.red;
+                //return Color.red;
                 if (renderTexture == null) return Color.clear;
 
                 // Create a temporary Texture2D destination read the RenderTexture
