@@ -47,7 +47,7 @@ One of the major features of this mod is letting you change the priority of diff
  - Optionally replace the Q menu entirely with my menu with all of it's features.
  
 ## Known issues:
- - If a player or bot leaves/joins mid game, things may break.
+ - Chaning attack means mid combat can cause some jank.  TODO look into what's actually goin on.
 
 ## Features I'd like to add:
  - Option to dynamically ignore specific lockers, or lockers in a specific room, or prioritize/deprioritize lockers near a point.
