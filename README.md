@@ -1,16 +1,19 @@
 ### Preface:
 This started as continuation of [Zombified Initiative](https://thunderstore.io/c/gtfo/p/hirnukuono/Zombified_Initiative/) by [hirnukuono](https://thunderstore.io/c/gtfo/p/hirnukuono/) however at this point there is very little code from that mod left.
 
-### Press X to open and naviate the menu.
+### Press X to open and navigate the menu.
 ### Press V to use smart select.
 
 # Intro:
 Have you ever been frustrated that a bot just used all of your disinfect as soon as you get out of the fog, even though you're going to have to go right back?!  That's the catalyst for me making this mod.  The goal of this mod is to give you the ability to have more control over the bots in GTFO, but not to give them any direct buffs or new abilities.  I want to allow you to tell them exactly what you do, and don't want them to be able to do.  
 
 # How to use:
-Press X to open the menu, and then press X again on "automatic actions" to choose what the bots are allowed to do.  Single tap on an action to toggle if it's allowed.  Double tap an action to change more settings. tap the center node to go back to the previous menu. press and hold to reset to default settings. Advanced menues have things like resource share thresholds, or what bots are and aren't allowed to pick up.  Some menus allow you to use the scroll wheel to change aditional settings.  Things like the priority of the action, or the min/max follow distance.  You can also use the scroll wheel on the center menu node to change the catagory of the current menu, to show/hide some icons.
+Press X to open the menu, and then press X again on "automatic actions" to choose what the bots are allowed to do.  Single tap on an action to toggle if it's allowed.  Double tap an action to change more settings. tap the center node to go back to the previous menu. press and hold to reset to default settings. Advanced menus have things like resource share thresholds, or what bots are and aren't allowed to pick up.  Some menus allow you to use the scroll wheel to change additional settings.  Things like the priority of the action, or the min/max follow distance.  You can also use the scroll wheel on the center menu node to change the category of the current menu, to show/hide some icons.
 
 There is also smart select!  Press V while looking at a bot to select that bot.  Then you can press and hold V while looking at an item and they will try to go pick it up!  You can also press and hold while looking at another player/bot to tell the bot to share their resource pack with them!  Look down to tell them to share it with you.  I'd like to expand this feature for things like "Move there" "drop your item here" "Revive that person" and even "kill that sleeper" With a chance for them to fail and wake up the room.  Currently smart select is pretty limited, but hopefully I will add more to it soon.
+
+## Important note about changing priorities
+One of the major features of this mod is letting you change the priority of different actions and things the bots can do.  This can be very useful, but it can also cause some unexpected and unintuitive behavior.  I generally recommend making minimal changes to these settings.  If you're having problems with the bots not doing something, try setting all priorities back to their default values.
 
 ## Current features: 
  - Directly tell a bot to pick up a specific item with smart select.
@@ -34,14 +37,14 @@ There is also smart select!  Press V while looking at a bot to select that bot. 
    - Favorite settings
    - binding specific toggles to a hotkey
  - Show what the bot is currently doing above their head.
- - Allow you to have per bot permissions, so dauda is allowed to use ammo but hacket is not for example.
+ - Allow you to have per bot permissions, so Dauda is allowed to use ammo but Hacket is not for example.
  - Expand smart select
    - Tell a bot to revive a player
    - tell a bot to place/pickup their turret
    - tell a bot to stand in a specific place
      - with options to come back if attacked
      - with options to change how far they are allowed to wander if attacked
- - Optionaly replace the Q menu entirely with my menu with all of it's features.
+ - Optionally replace the Q menu entirely with my menu with all of it's features.
  
 ## Known issues:
  - If a player or bot leaves/joins mid game, things may break.
@@ -57,3 +60,5 @@ https://www.youtube.com/watch?v=X5RWMQyUgTY
 https://www.youtube.com/watch?v=lrDWroqC-R0
 
 There is A LOT of unused code and extra stuff in this mod.  I got a little bit too ambitious with some features. I may or may not return to some of them later.
+
+
