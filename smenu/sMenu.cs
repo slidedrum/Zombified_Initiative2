@@ -170,7 +170,7 @@ namespace SlideMenu
                 else
                     DisableNode(node);
             }
-            
+            catagoryIndex = catagories.Keys.ToList().IndexOf(catagory);
             UpdatePannelPositions();
             OnCatagoryChanged.Invoke();
         }
