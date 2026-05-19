@@ -8,6 +8,7 @@ using SNetwork;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ZombieTweak2.Menus;
 using ZombieTweak2.zNetworking;
 using Zombified_Initiative;
 using static ZombieTweak2.zNetworking.pStructs;
@@ -23,10 +24,9 @@ namespace ZombieTweak2
         public static Il2CppSystem.Collections.Generic.Dictionary<uint, bool> enabledItemPrios = new ();
         public static Il2CppSystem.Collections.Generic.Dictionary<uint, bool> enabledResourceShares = new ();
         public static Il2CppSystem.Collections.Generic.Dictionary<uint, float> OriginalItemPrios = new();
-        //public static Dictionary<string, PermssionDefinition> permisionDeffinitions = new();
-        //public static Dictionary<int, bool> RevivePlayersPerms = new (); //bot.Agent.Owner.PlayerSlotIndex()
-        //public static Dictionary<int, bool> ReviveBotsPerms = new (); //bot.Agent.Owner.PlayerSlotIndex()
-        //public static Dictionary<int, bool> MovePerms = new (); //bot.Agent.Owner.PlayerSlotIndex()
+        public static OverrideTree<float?> ActionPriorities;
+        public static OverrideTree<bool?> ActionPermissions;
+        public static Dictionary<string, sMenu.sMenuNode> actionNameToMenuNodes;
         public static class PermissionDefinitions
         {
             private static Dictionary<string, PermissionDefinition> permissionDeffinitions = new();
@@ -55,89 +55,57 @@ namespace ZombieTweak2
             }
             private class PermissionDefinition
             {
-                public Dictionary<int, bool> perms;
+                //Might be able to remove the PermissionDefinition entirely?
+                //Even if not, probably want to rename it, as it doesn't really describe what it is anymore.
+                //public Dictionary<int, bool?> perms;
                 public sMenu.sMenuNode node;
                 public List<Type> actionTypesToCull;
-                public float defaultPriority;
+                //public float defaultPriority;
                 public string key;
-                internal PermissionDefinition(string key, bool defaultPerm = true, sMenu.sMenuNode node = null, List<Type> ActionTypesToCull = null, float? defaultPriority = null)
+                internal PermissionDefinition(string key, sMenu.sMenuNode node = null, List<Type> ActionTypesToCull = null)
                 {
                     this.key = key;
-                    this.perms = new Dictionary<int, bool>();
-                    for (int i = 1; i < 4; i++)
-                        perms[i] = defaultPerm;
+                    //this.perms = new Dictionary<int, bool?>();
+                    //for (int i = 1; i < 4; i++)
+                    //    perms[i] = defaultPerm;
                     this.node = node;
                     this.actionTypesToCull = ActionTypesToCull;
                     if (this.actionTypesToCull == null)
                         actionTypesToCull = new List<Type>();
-                    this.defaultPriority = defaultPriority ?? 0f;
+                    //this.defaultPriority = defaultPriority ?? 0f;
                 }
             }
             public static void ClearPermissionDefinitions()
             {
                 permissionDeffinitions.Clear();
             }
-            public static void CreatePermissionDeffinition(string key, bool defaultPerm = true, sMenu.sMenuNode node = null, List<Type> ActionTypesToCull = null, float? defaultPriority = null)
-            {
-                PermissionDefinition permissionDef = new PermissionDefinition(key, defaultPerm, node, ActionTypesToCull, defaultPriority);
-                permissionDeffinitions.Add(key, permissionDef);
-            }
-            public static void CreatePermissionDeffinition(string key, bool defaultPerm = true, sMenu.sMenuNode node = null, Type ActionTypeToCull = null, float? defaultPriority = null)
+            public static void CreatePermissionDeffinition(string key, bool? defaultPerm = true, sMenu.sMenuNode node = null, sMenu menu = null, Type ActionTypeToCull = null, float? defaultPriority = null, string parrentKey = null)
             {
                 List<Type> actionTypesToCull = new();
                 if (ActionTypeToCull != null)
                     actionTypesToCull.Add(ActionTypeToCull);
-                PermissionDefinition permissionDef = new PermissionDefinition(key, defaultPerm, node, actionTypesToCull, defaultPriority);
-                permissionDeffinitions.Add(key, permissionDef);
+                CreatePermissionDeffinition(key, defaultPerm, node, menu, actionTypesToCull, defaultPriority, parrentKey);
             }
-            public static void SetAllowed(string key, bool allowed, int playerID = -1)
+            public static void CreatePermissionDeffinition(string key, bool? defaultPerm = true, sMenu.sMenuNode node = null, sMenu menu = null, List<Type> ActionTypesToCull = null, float? defaultPriority = null, string parrentKey = null)
             {
-                if (!KeyExists(key))
+                //PermissionDefinition permissionDef = new PermissionDefinition(key, node, ActionTypesToCull);
+                //permissionDeffinitions.Add(key, permissionDef);
+                //Might be able to remove the PermissionDefinition entirely?
+                if (defaultPriority != null)
                 {
-                    ZiMain.log.LogWarning($"Unknown actionKey '{key}' when setting action perms, allowed:{allowed}.");
-                    return;
+                    zSlideComputer.ActionPriorities.AddNode("Default" + key, defaultPriority, defaultValue: defaultPriority);
+                    zSlideComputer.ActionPriorities.AddNode(key, defaultPriority, "Default" + key, defaultValue: defaultPriority).onChanged.Listen(AutomaticActionMenuClass.GenericUpdateNodePrioDisplay, [node]);
                 }
-                if (playerID == -1)
-                    for (int i = 1; i < 4; i++)
-                        _SetAllowed(key, allowed, i);
-                else
+                var permissionsNode = ActionPermissions.AddNode(key, defaultPerm, parrentKey, defaultValue: defaultPerm);
+                permissionsNode.onChanged.Listen((Action<List<Type>>)zSlideComputer.RemoveActionsOfType, args: [ActionTypesToCull]);
+                if (node != null)
                 {
-                    _SetAllowed(key, allowed, playerID);
+                    actionNameToMenuNodes[key] = node;
+                    permissionsNode.onChanged.Listen(AutomaticActionMenuClass.GenericUpdateNodeAllowedDisplay, args: [node, key]);
                 }
-            }
-            private static void  _SetAllowed(string key, bool allowed, int playerID)
-            {
-                permissionDeffinitions[key].perms[playerID] = allowed;
-            }
-            public static bool GetAllowed(string key, int playerID = 1)
-            {
-                if (permissionDeffinitions.ContainsKey(key))
-                {
-                    if (permissionDeffinitions[key].perms.ContainsKey(playerID))
-                        return permissionDeffinitions[key].perms[playerID];
-                    else
-                    {
-                        ZiMain.log.LogWarning($"Unknown bot asked for {key} perms id:{playerID}.");
-                        return true;
-                    }
-                }
-                else
-                {
-                    ZiMain.log.LogWarning($"Unknown actionKey '{key}' when getting action perms for id:{playerID}.");
-                    return false;
-                }
-            }
-            public static sMenu.sMenuNode GetNode(string key)
-            {
-                return permissionDeffinitions.ContainsKey(key) ? permissionDeffinitions[key].node : null;
-            }
-            public static List<Type> GetActionTypesToCull(string key)
-            {
-                return permissionDeffinitions.ContainsKey(key) ? permissionDeffinitions[key].actionTypesToCull : null;
-            }
-            public static float GetDefaultPriority(string key)
-            {
-                return permissionDeffinitions.ContainsKey(key) ? permissionDeffinitions[key].defaultPriority : 0f;
+                if (menu != null)
+                    permissionsNode.onChanged.Listen(AutomaticActionMenuClass.GenericUpdateNodeAllowedDisplay, args: [menu.centerNode, key]);
+
             }
             public static bool KeyExists(string key)
             {
@@ -432,13 +400,73 @@ namespace ZombieTweak2
         }
 
         //TODO - refactor this bullshit
-
+        //public static void OldSetActionPermission(string actionKey, bool allowed, int playerID = -1, ulong netSender = 0)
+        //{
+        //    if (!zSlideComputer.PermissionDefinitions.KeyExists(actionKey))
+        //    {
+        //        ZiMain.log.LogWarning($"Unknown actionKey '{actionKey}' when setting action perms for id:{playerID}, allowed:{allowed}.");
+        //        return;
+        //    }
+        //    if (netSender == 0)
+        //    {
+        //        pStructs.pGenericPermission info = new pStructs.pGenericPermission();
+        //        info.playerID = playerID;
+        //        info.allowed = allowed;
+        //        int id = zSlideComputer.PermissionDefinitions.KeyToId(actionKey);
+        //        if (id == -1)
+        //        {
+        //            ZiMain.log.LogWarning($"Unknown actionKey '{actionKey}' when setting action perms for id:{playerID}, allowed:{allowed}.");
+        //            return;
+        //        }
+        //        info.actionID = id;
+        //        NetworkAPI.InvokeEvent<pStructs.pGenericPermission>($"SetActionPermission", info);
+        //    }
+        //    ZiMain.log.LogMessage($"Setting {actionKey} perm for id {playerID} to {allowed}");
+        //    zSlideComputer.PermissionDefinitions.SetAllowed(actionKey, allowed, playerID);
+        //    if (playerID != -1)
+        //    {
+        //        PlayerManager.TryGetPlayerAgent(ref playerID, out var agent);
+        //        if (agent == null)
+        //            return;
+        //        foreach (Type type in zSlideComputer.PermissionDefinitions.GetActionTypesToCull(actionKey))
+        //            RemoveActionsOfType(agent, type);
+        //        return;
+        //    }
+        //    var bots = ZiMain.GetBotList();
+        //    foreach (PlayerAIBot bot in bots)
+        //    {
+        //        playerID = bot.Agent.Owner.PlayerSlotIndex();
+        //        PlayerManager.TryGetPlayerAgent(ref playerID, out var agent);
+        //        if (agent == null)
+        //            continue;
+        //        foreach (Type type in zSlideComputer.PermissionDefinitions.GetActionTypesToCull(actionKey))
+        //            RemoveActionsOfType(agent, type);
+        //    }
+        //}
+        internal static void GenericToggleAllowed(string actionKey, int botID = -1, bool allowDissabled = false)
+        {
+            bool allowed = !(bool)zSlideComputer.ActionPermissions.ValueAt(actionKey);
+            GenericSetAllowed(actionKey, allowed, botID, allowDissabled: allowDissabled);
+            //Not taking menu or node as an arg here anymore.  Instead listen for onChanged event for the actionPermissions override tree.
+        }
+        internal static void GenericSetAllowed(string actionKey, bool allowed, int playerID = -1, bool allowDissabled = false)
+        {
+            if (!zSlideComputer.actionNameToMenuNodes[actionKey].gameObject.activeInHierarchy && !allowDissabled)
+                return;
+            if (playerID == -1)
+            {
+                zSlideComputer.ActionPermissions.SetValue(actionKey, allowed);
+                return;
+            }
+            zSlideComputer.ActionPermissions.SetValue($"{actionKey}Bot{playerID}", allowed);
+            return;
+        }
 
         public static void ToggleResourceSharePermission(uint itemID)
         {
             if (!enabledResourceShares.ContainsKey(itemID))
                 return;
-            SetResourceSharePermission(itemID,!GetResourceSharePermission(itemID));
+            SetResourceSharePermission(itemID, !GetResourceSharePermission(itemID));
         }
         public static bool GetResourceSharePermission(uint itemID)
         {
@@ -449,7 +477,7 @@ namespace ZombieTweak2
             }
             return enabledResourceShares[itemID];
         }
-        public static void SetResourceSharePermission(uint itemID, bool allowed,ulong netSender = 0)
+        public static void SetResourceSharePermission(uint itemID, bool allowed, ulong netSender = 0)
         {
             if (!enabledResourceShares.ContainsKey(itemID))
                 return;
@@ -562,6 +590,11 @@ namespace ZombieTweak2
         //        SetPickupPermission(bot, !majority);
         //    }
         //}
+        public static void RemoveActionsOfType(List<Type> actionTypes)
+        {
+            foreach (var actionType in actionTypes)
+                RemoveActionsOfType(actionType);
+        }
         public static void RemoveActionsOfType(Type actionType)
         { 
             var allBots = ZiMain.GetBotList();
@@ -670,61 +703,19 @@ namespace ZombieTweak2
         //    return false;
         //}
 
-        public static bool GetActionPermission(string actionKey, int playerID = 1)
-        {
-            if (zSlideComputer.PermissionDefinitions.KeyExists(actionKey))
-            {
-                return zSlideComputer.PermissionDefinitions.GetAllowed(actionKey, playerID);
-            }
-            else
-            {
-                ZiMain.log.LogWarning($"Unknown actionKey '{actionKey}' when getting action perms for id:{playerID}.");
-                return false;
-            }
-        }
-        public static void SetActionPermission(string actionKey, bool allowed, int playerID = -1, ulong netSender = 0)
-        {
-            if (!zSlideComputer.PermissionDefinitions.KeyExists(actionKey))
-            {
-                ZiMain.log.LogWarning($"Unknown actionKey '{actionKey}' when setting action perms for id:{playerID}, allowed:{allowed}.");
-                return;
-            }
-            if (netSender == 0)
-            {
-                pStructs.pGenericPermission info = new pStructs.pGenericPermission();
-                info.playerID = playerID;
-                info.allowed = allowed;
-                int id = zSlideComputer.PermissionDefinitions.KeyToId(actionKey);
-                if (id == -1)
-                {
-                    ZiMain.log.LogWarning($"Unknown actionKey '{actionKey}' when setting action perms for id:{playerID}, allowed:{allowed}.");
-                    return;
-                }
-                info.actionID = id;
-                NetworkAPI.InvokeEvent<pStructs.pGenericPermission>($"SetActionPermission", info);
-            }
-            ZiMain.log.LogMessage($"Setting {actionKey} perm for id {playerID} to {allowed}");
-            zSlideComputer.PermissionDefinitions.SetAllowed(actionKey, allowed, playerID);  
-            if (playerID != -1)
-            {
-                PlayerManager.TryGetPlayerAgent(ref playerID, out var agent);
-                if (agent == null)
-                    return;
-                foreach (Type type in zSlideComputer.PermissionDefinitions.GetActionTypesToCull(actionKey))
-                    RemoveActionsOfType(agent, type);
-                return;
-            }
-            var bots = ZiMain.GetBotList();
-            foreach (PlayerAIBot bot in bots)
-            {
-                playerID = bot.Agent.Owner.PlayerSlotIndex();
-                PlayerManager.TryGetPlayerAgent(ref playerID, out var agent);
-                if (agent == null)
-                    continue;
-                foreach (Type type in zSlideComputer.PermissionDefinitions.GetActionTypesToCull(actionKey))
-                    RemoveActionsOfType(agent, type);
-            }
-        }
+        //public static bool GetActionPermission(string actionKey, int playerID = 1)
+        //{
+        //    if (zSlideComputer.PermissionDefinitions.KeyExists(actionKey))
+        //    {
+        //        return zSlideComputer.PermissionDefinitions.GetAllowed(actionKey, playerID);
+        //    }
+        //    else
+        //    {
+        //        ZiMain.log.LogWarning($"Unknown actionKey '{actionKey}' when getting action perms for id:{playerID}.");
+        //        return false;
+        //    }
+        //}
+        
         //public static bool GetUnlockPermission(int id)
         //{
         //    if (perms["Unlock"].ContainsKey(id))

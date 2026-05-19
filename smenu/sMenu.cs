@@ -241,7 +241,7 @@ namespace SlideMenu
         }
         public void Open()
         {
-            //FocusStateManager.ChangeState(eFocusState.FPS_CommunicationDialog);
+
             timeOpenedAt = Time.time;
             frameOpenedAt = Time.frameCount;
             if (parrentMenu == null)

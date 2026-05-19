@@ -46,9 +46,19 @@ namespace ZombieTweak2.CustomActions.Patches
             originalBestAction = bestAction;
         }
         [HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.UpdateActionAttack))]
+        [HarmonyPrefix]
+        [HarmonyPriority(Priority.Last)] //Needed for betterbots compat
+        public static bool UpdateActionAttack(RootPlayerBotAction __instance, ref PlayerBotActionBase.Descriptor bestAction)
+        { //This is used as an early out if they are not allowed to attack at all.
+            if (!(bool)zSlideComputer.ActionPermissions.ValueAt("Attack"))
+                return false;
+            return true;
+        }
+        [HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.UpdateActionAttack))]
         [HarmonyPostfix]
+        [HarmonyPriority(Priority.Last)] //Needed for betterbots compat?
         public static void PostUpdateActionAttack(RootPlayerBotAction __instance, ref PlayerBotActionBase.Descriptor bestAction)
-        {
+        { //this is used to restrict the means of the bots, so they can only use the selected means.
             if (bestAction == null)
                 return;
             if (bestAction.TryCast<PlayerBotActionAttack.Descriptor>() == null)
@@ -63,5 +73,6 @@ namespace ZombieTweak2.CustomActions.Patches
             __instance.m_attackAction.Means = newMeans;
             zSlideComputer.RemoveActionsOfType(__instance.m_agent, typeof(PlayerBotActionAttack));
         }
+
     }
 }

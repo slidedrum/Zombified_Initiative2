@@ -78,7 +78,7 @@ namespace SlideMenu
         private static float nodeAngleTollerance = 10f;
         internal static float pannelBuffer = 1f;
         
-
+        private static bool menuWasOpenOnLastFrame = false;
         private static bool menuOpen { get { return currentMenu != null; } }
         //static sMenuManager()
         //{
@@ -122,7 +122,14 @@ namespace SlideMenu
                 }
                 if (menuOpen)
                 {
+                    menuWasOpenOnLastFrame = true;
                     currentMenu.Update();
+                }
+                else
+                {
+                    if (menuWasOpenOnLastFrame && FocusStateManager.CurrentState == eFocusState.FPS_CommunicationDialog)
+                        FocusStateManager.ChangeState(FocusStateManager.PreviousState);
+                    menuWasOpenOnLastFrame = false;
                 }
                 if (Input.GetKey(keybinding))
                 {
@@ -130,6 +137,7 @@ namespace SlideMenu
                     {
                         if (!menuOpen) //is the menu closed?
                         {
+                            FocusStateManager.ChangeState(eFocusState.FPS_CommunicationDialog);
                             mainMenu.Open();
                         } //open main menu
                         else if (selectedNode != null) //Are we hovering over a button?

@@ -7,9 +7,14 @@ using System.Text;
 using System.Threading.Tasks;
 using ZombieTweak2.zNetworking;
 using Zombified_Initiative;
+using static Il2CppSystem.Linq.Expressions.Interpreter.CastInstruction.CastInstructionNoT;
 
 namespace ZombieTweak2
 {
+
+    //TODO NEXT figure out where the default prio value of "5" is coming from and fix it
+
+
     public class OverrideTree<T>
     {
         internal static Dictionary<uint, OverrideTree<T>> Trees = new();
@@ -21,8 +26,18 @@ namespace ZombieTweak2
         public class Node
         {
             public uint nodeID { get; private set; }
-            public string Key { get; private set; }
+            public string nodeIdentity { get; private set; }
             public T? Value { get; set; }
+            private T? _DefaultValue { get; }
+            public T? DefaultValue { get 
+                {  
+                    if (_DefaultValue != null)
+                        return _DefaultValue;
+                    if (Parent != null)
+                        return Parent.DefaultValue;
+                    return default(T);
+                } }
+            public T? InitalValue { get;}
             public FlexibleEvent onChanged = new();
             public FlexibleEvent onThisNodeChanged = new();
             public Func<bool>? Condition { get; }
@@ -30,12 +45,14 @@ namespace ZombieTweak2
             public Node? Parent { get; private set; }
             public OverrideTree<T> Tree { get; internal set; }
             public List<Node> Children { get; } = new();
-            internal Node(string key, Node parent = null, T? value = default, Func<bool>? condition = null) //If you supply a parent, you can opt to not supply a value
+            internal Node(string key, Node parent = null, T? value = default, Func<bool>? condition = null, T? defaultValue = default) //If you supply a parent, you can opt to not supply a value
             {
-                Key = key;
+                nodeIdentity = key;
                 Value = value;
                 Condition = condition;
                 Parent = parent;
+                InitalValue = value;
+                _DefaultValue = defaultValue;
                 nodeID = zHelpers.HashString(GetNodeTreeString());
             }
             public T? GetValue() //Traverse down the tree to get deepest value
@@ -94,8 +111,8 @@ namespace ZombieTweak2
             internal string GetNodeTreeString()
             {
                 if (Parent == null)
-                    return Key;
-                return Parent.GetNodeTreeString() + "/" + Key;
+                    return nodeIdentity;
+                return Parent.GetNodeTreeString() + "/" + nodeIdentity;
             }
         }
         public static void ResetTrees()
@@ -109,7 +126,7 @@ namespace ZombieTweak2
             Trees[treeID] = this;
             if (rootValue == null)
                 throw new ArgumentNullException(nameof(rootValue), "Initial value can not be null");
-            rootNode = new Node(rootKey, value: rootValue);
+            rootNode = new Node(rootKey, value: rootValue, defaultValue: rootValue);
             nodes[rootKey] = rootNode;
             nodesByID[0] = rootNode;
             if (OnChanged != null)
@@ -119,31 +136,41 @@ namespace ZombieTweak2
         {
             return Trees[ID];
         }
+        public Node GetNodeFromIdent(string ident)
+        {
+            if (!nodes.ContainsKey(ident))
+                throw new KeyNotFoundException(nameof(ident));
+            return nodes[ident];
+        }
         public Node GetNodeFromId(uint id)
         {
             return nodesByID[id];
         }
-        public Node AddNode(string key, T? value, string parent, Func<bool>? condition = null, FlexibleMethodDefinition onChanged = null)
+        public Node AddNode(string key, T? value, string? parent, Func<bool>? condition = null, FlexibleMethodDefinition onChanged = null, T? defaultValue = default)
         {
-            if (!nodes.ContainsKey(parent))
-                throw new KeyNotFoundException($"Could not find parrent named {parent} when adding node {key}");
-            var parrentNode = nodes[parent];
-            return AddNode(key, value, parrentNode, condition, onChanged);
+            Node parrentNode = null;
+            if (parent != null)
+            {
+                if (!nodes.ContainsKey(parent))
+                    throw new KeyNotFoundException($"Could not find parrent named {parent} when adding node {key}");
+                parrentNode = nodes[parent];
+            }
+            return AddNode(key, value, parrentNode, condition, onChanged, defaultValue);
         }
-        public Node AddNode(string key, T? value, Node? parent = null, Func<bool>? condition = null, FlexibleMethodDefinition onChanged = null)
+        public Node AddNode(string key, T? value, Node? parent = null, Func<bool>? condition = null, FlexibleMethodDefinition onChanged = null, T? defaultValue = default)
         {
             if (nodes.ContainsKey(key))
                 if (parent == null)
                     throw new InvalidOperationException($"Key '{key}' already in use.");
                 else
-                    throw new InvalidOperationException($"Key '{key}' already in use. Consider combineing with the parrent key for '{parent.Key}/{key}'");
+                    throw new InvalidOperationException($"Key '{key}' already in use. Consider combineing with the parrent key for '{parent.nodeIdentity}/{key}'");
                 
             if (parent == null)
                 parent = rootNode;
             if (!nodes.Values.Contains(parent))
-                throw new InvalidOperationException($"Parent '{parent.Key}' not found.");
+                throw new InvalidOperationException($"Parent '{parent.nodeIdentity}' not found.");
 
-            var node = new Node(key, parent, value, condition);
+            var node = new Node(key, parent, value, condition, defaultValue);
             parent.Children.Add(node);
             nodes[key] = node;
             nodesByID[node.nodeID] = node;
@@ -162,7 +189,17 @@ namespace ZombieTweak2
             //throw new KeyNotFoundException(nameof(nodeID));
             var node = nodesByID[nodeID];
             ZiMain.log.LogDebug($"Setting value of node by ID '{nodeID}' ({node.GetNodeTreeString()}) in tree {treeID} ({identifier}) to '{value}' (netSender: {netSender})");
-            return SetValue(nodesByID[nodeID].Key, value, netSender);
+            return SetValue(nodesByID[nodeID].nodeIdentity, value, netSender);
+        }
+        public T? ResetToDefault(string key, ulong netSender = 0)
+        {
+            if (!nodes.ContainsKey(key))
+            {
+                ZiMain.log.LogWarning($"Tried to reset unknown key '{key}' in '{treeID} ({identifier}) to default via netSender {netSender} ");
+                return default(T);
+            }
+            Node node = nodes[key];
+            return SetValue(key, node.DefaultValue, netSender);
         }
         public T? SetValue(string key, T? value, ulong netSender = 0)
         {

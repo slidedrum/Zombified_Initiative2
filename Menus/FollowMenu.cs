@@ -47,9 +47,9 @@ namespace ZombieTweak2.Menus
             ignoredStates.Add(DRAMA_State.ElevatorGoingDown);
             ignoredStates.Add(DRAMA_State.ElevatorIdle);
 
-            AutomaticActionMenuClass.ActionPriorities.AddNode("Fighting", null, "Follow", condition: () => { return fightingStates.Contains(DramaManager.CurrentStateEnum); });
-            AutomaticActionMenuClass.ActionPriorities.AddNode("Stealth", null, "Follow", condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Sneaking; });
-            AutomaticActionMenuClass.ActionPriorities.AddNode("Explore", null, "Follow", condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Exploration; });
+            zSlideComputer.ActionPriorities.AddNode("Fighting", null, "Follow", condition: () => { return fightingStates.Contains(DramaManager.CurrentStateEnum); });
+            zSlideComputer.ActionPriorities.AddNode("Stealth", null, "Follow", condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Sneaking; });
+            zSlideComputer.ActionPriorities.AddNode("Explore", null, "Follow", condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Exploration; });
 
             followRadius.AddNode("Follow", null);
             followRadius.AddNode("Fighting", null, "Follow", condition: () => { return fightingStates.Contains(DramaManager.CurrentStateEnum); });
@@ -105,11 +105,11 @@ namespace ZombieTweak2.Menus
                 maxDistance.AddNode(state.ToString(), null, parentNode, () => { return DramaManager.CurrentStateEnum == state; });
                 followRadius.nodes[state.ToString()].onChanged.Listen(UpdateNodeSettingsDisplay, args: [stateNode]);
                 maxDistance.nodes[state.ToString()].onChanged.Listen(UpdateNodeSettingsDisplay, args: [stateNode]);
-                
+
                 //TODO these lines are horendious omg.
-                AutomaticActionMenuClass.ActionPriorities.AddNode(state.ToString(), null, parentNode, () => { return DramaManager.CurrentStateEnum == state; }).onChanged.Listen(AutomaticActionMenuClass.GenericUpdateNodePrioDisplay, args: [stateNode]);
-                AutomaticActionMenuClass.ActionPermissions.AddNode(state.ToString(), null, parentNode).onChanged.Listen(AutomaticActionMenuClass.GenericUpdateNodeAllowedDisplay, args: [stateNode]);
-                AutomaticActionMenuClass.actionNameToMenuNodes[state.ToString()] = stateNode;
+                zSlideComputer.ActionPriorities.AddNode(state.ToString(), null, parentNode, () => { return DramaManager.CurrentStateEnum == state; }).onChanged.Listen(AutomaticActionMenuClass.GenericUpdateNodePrioDisplay, args: [stateNode]);
+                zSlideComputer.ActionPermissions.AddNode(state.ToString(), null, parentNode).onChanged.Listen(AutomaticActionMenuClass.GenericUpdateNodeAllowedDisplay, args: [stateNode, state.ToString()]);
+                zSlideComputer.actionNameToMenuNodes[state.ToString()] = stateNode;
                 
                 stateNodes[state] = stateNode;
                 UpdateNodeSettingsDisplay(stateNode);
@@ -117,7 +117,7 @@ namespace ZombieTweak2.Menus
                 stateNode.subtitlePart.SetScale(0.5f);
                 stateNode.AddListener(sMenuManager.nodeEvent.WhileSelected, UpdateNodeBasedOnScroll, stateNode);
                 stateNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, ResetSettings, stateNode);    
-                stateNode.AddListener(sMenuManager.nodeEvent.OnTapped, AutomaticActionMenuClass.GenericToggleAllowed, stateNode.text);
+                stateNode.AddListener(sMenuManager.nodeEvent.OnTapped, zSlideComputer.GenericToggleAllowed, stateNode.text);
                 followMenu.AddNodeToCatagory("Advanced", stateNode);
             }
 
@@ -204,7 +204,7 @@ namespace ZombieTweak2.Menus
         
         private static void UpdateToggleStateColors()
         {
-            if ((bool)AutomaticActionMenuClass.ActionPermissions.ValueAt("Follow"))
+            if ((bool)zSlideComputer.ActionPermissions.ValueAt("Follow"))
             {
                 followMenuNode.SetColor(sMenuManager.defaultColor);
                 followMenu.centerNode.SetColor(sMenuManager.defaultColor);
@@ -218,23 +218,23 @@ namespace ZombieTweak2.Menus
         private static sMenu.sMenuNode AddCatagoryNode(string catagory)
         {
             var catagoryNode = followMenu.AddNode(catagory);
-            AutomaticActionMenuClass.ActionPriorities.nodes[catagory].onChanged.Listen(AutomaticActionMenuClass.GenericUpdateNodePrioDisplay, args: [catagoryNode]);
+            zSlideComputer.ActionPriorities.nodes[catagory].onChanged.Listen(AutomaticActionMenuClass.GenericUpdateNodePrioDisplay, args: [catagoryNode]);
             followRadius.nodes[catagory].onChanged.Listen(UpdateNodeSettingsDisplay, args: [catagoryNode]);
             maxDistance.nodes[catagory].onChanged.Listen(UpdateNodeSettingsDisplay, args: [catagoryNode]);
             catagoryNode.titlePart.SetScale(0.5f);
             catagoryNode.subtitlePart.SetScale(0.5f);
             catagoryNode.AddListener(sMenuManager.nodeEvent.WhileSelected, UpdateNodeBasedOnScroll, catagoryNode);
             catagoryNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, ResetSettings, catagoryNode);
-            catagoryNode.AddListener(sMenuManager.nodeEvent.OnTapped, AutomaticActionMenuClass.GenericToggleAllowed, catagory);
-            AutomaticActionMenuClass.actionNameToMenuNodes[catagory] = catagoryNode;
-            AutomaticActionMenuClass.ActionPermissions.AddNode(catagory, null, "Follow").onChanged.Listen(AutomaticActionMenuClass.GenericUpdateNodeAllowedDisplay, args: [catagoryNode]);
+            catagoryNode.AddListener(sMenuManager.nodeEvent.OnTapped, zSlideComputer.GenericToggleAllowed, catagory);
+            zSlideComputer.actionNameToMenuNodes[catagory] = catagoryNode;
+            zSlideComputer.ActionPermissions.AddNode(catagory, null, "Follow").onChanged.Listen((Action<sMenu.sMenuNode, string>)AutomaticActionMenuClass.GenericUpdateNodeAllowedDisplay, args: [catagoryNode, catagory]);
             return catagoryNode;
         }
         internal static void ResetSettings(sMenu.sMenuNode node)
         {
             string text = node.text;
-            AutomaticActionMenuClass.ActionPermissions.SetValue(text, null);
-            AutomaticActionMenuClass.ActionPriorities.SetValue(text, null);
+            zSlideComputer.ActionPermissions.SetValue(text, null);
+            zSlideComputer.ActionPriorities.SetValue(text, null);
             followRadius.SetValue(text, null);
             maxDistance.SetValue(text, null);
             UpdateNodeSettingsDisplay(node);
@@ -298,9 +298,9 @@ namespace ZombieTweak2.Menus
             if (pos.y > Math.Abs(pos.x)) // TOP
             {
                 normalizedScroll = normalizedScroll * 0.1f;
-                float newValue = (float)AutomaticActionMenuClass.ActionPriorities.ValueAt(text) + normalizedScroll;
+                float newValue = (float)zSlideComputer.ActionPriorities.ValueAt(text) + normalizedScroll;
                 newValue = (float)Math.Round(newValue, 1);
-                AutomaticActionMenuClass.ActionPriorities.SetValue(text, Math.Clamp(newValue, 1, 15));
+                zSlideComputer.ActionPriorities.SetValue(text, Math.Clamp(newValue, 1, 15));
             }
             else if (pos.x > 0) // RIGHT
             {
@@ -322,7 +322,7 @@ namespace ZombieTweak2.Menus
         private static void UpdateNodeSettingsDisplay(sMenu.sMenuNode node)
         {
             string text = node.text;
-            if (AutomaticActionMenuClass.ActionPriorities.nodes[text].IsDefaultValue() && followRadius.nodes[text].IsDefaultValue() && maxDistance.nodes[text].IsDefaultValue())
+            if (zSlideComputer.ActionPriorities.nodes[text].IsDefaultValue() && followRadius.nodes[text].IsDefaultValue() && maxDistance.nodes[text].IsDefaultValue())
             {
                 node.SetPrefix("");
                 node.SetSuffix("");
@@ -332,7 +332,7 @@ namespace ZombieTweak2.Menus
                 node.SetPrefix("* ");
                 node.SetSuffix(" *");
             }
-            node.SetTitle($"Prio <color=#CC840066>[</color>{AutomaticActionMenuClass.ActionPriorities.ValueAt(text)}<color=#CC840066>]</color>");
+            node.SetTitle($"Prio <color=#CC840066>[</color>{zSlideComputer.ActionPriorities.ValueAt(text)}<color=#CC840066>]</color>");
             node.SetSubtitle($"Range <color=#CC840066>[</color>{followRadius.ValueAt(text)}/{maxDistance.ValueAt(text)}<color=#CC840066>]</color>");
         }
     }

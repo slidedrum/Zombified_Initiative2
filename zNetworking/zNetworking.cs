@@ -145,7 +145,7 @@ namespace ZombieTweak2.zNetworking
             //    ZiMain.log.LogError($"Unknown id {playerID} recived!");
             //    return;
             //}
-            zSlideComputer.SetActionPermission(key, allowed, playerID, sender);
+            zSlideComputer.ActionPermissions.SetValue(key, allowed, sender);
             //zMenus.UpdateIndicatorForNode(zMenus.permissionMenu.GetNode("Pickups"), zSlideComputer.PickUpPerms);
             if (allowed)
             {

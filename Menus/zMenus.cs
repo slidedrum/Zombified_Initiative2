@@ -1,4 +1,5 @@
-﻿using Player;
+﻿using InControl;
+using Player;
 using SlideMenu;
 using System;
 using System.Collections.Generic;
@@ -24,6 +25,9 @@ namespace ZombieTweak2.Menus
             OverrideTree<float?>.ResetTrees();
             OverrideTree<int?>.ResetTrees();
             AutomaticActionMenuClass.Setup(sMenuManager.createMenu("Automatic Actions", sMenuManager.mainMenu));
+            sMenuManager.mainMenu.AddPannel(sMenu.sMenuPannel.Side.top, "<size=150><color=#CC840066>Slide's Bot Control Mod</color></size>");
+            sMenuManager.mainMenu.AddPannel(sMenu.sMenuPannel.Side.top, "<color=#CC840066>[ </color><color=#26262c>V0.9.6</color><color=#CC840066> ]</color>");
+            sMenuManager.mainMenu.radius = 100f;
             if (ZiMain.extraActionMenus) 
             { 
                 ManualActionMenuClass.Setup(sMenuManager.createMenu("Manual Actions", sMenuManager.mainMenu));
@@ -73,18 +77,16 @@ namespace ZombieTweak2.Menus
     {
         public static List<sMenu> autoActionMenus;
         public static sMenu AutoActionMenu;
-        public static OverrideTree<float?> ActionPriorities; //TODO turn this into a single override tree not a dict
-        public static OverrideTree<bool?> ActionPermissions;
-        public static Dictionary<string, sMenu.sMenuNode> actionNameToMenuNodes;
+
         internal static void Setup(sMenu _menu)
         {
-            ActionPriorities = new(5f, "ActionPriorities");
-            ActionPermissions = new(true, "ActionPerms");
+            zSlideComputer.ActionPriorities = new(-1f, "ActionPriorities");
+            zSlideComputer.ActionPermissions = new(true, "ActionPerms");
             autoActionMenus = new List<sMenu>();
             AutoActionMenu = _menu;
             AutoActionMenu.radius = 130f;
             autoActionMenus.Clear();
-            actionNameToMenuNodes = new();
+            zSlideComputer.actionNameToMenuNodes = new();
 
             var bioTrackerMenu = sMenuManager.createMenu("Use BioTracker", AutoActionMenu);
             autoActionMenus.Add(bioTrackerMenu);
@@ -104,35 +106,30 @@ namespace ZombieTweak2.Menus
             autoActionMenus.Add(unlockMenu);
 
             zSlideComputer.PermissionDefinitions.ClearPermissionDefinitions();
-            zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("Revive", true, reviveMenu.GetNode(), typeof(PlayerBotActionRevive), 12);
-            zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("Use BioTracker", true, bioTrackerMenu.GetNode(), typeof(PlayerBotActionUseEnemyScanner));
-            zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("Attack", true, attackMenu.GetNode(), typeof(PlayerBotActionAttack));
-            zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("Share", true, shareMenu.GetNode(), typeof(PlayerBotActionShareResourcePack), 10);
-            zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("Ping", true, pingMenu.GetNode(), typeof(PlayerBotActionHighlight), 4.3f);
-            zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("Follow", true, followMenu.GetNode(), typeof(PlayerBotActionFollow), 14f);
-            zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("Pickup", true, pickupMenu.GetNode(), typeof(PlayerBotActionFollow), 4.2f);
-            zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("Unlock", true, unlockMenu.GetNode(), typeof(PlayerBotActionUnlock), 4.1f);
-            zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("Move", true, null, typeof(PlayerBotActionWalk));
+            zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("Revive", true, menu: reviveMenu, node: reviveMenu.GetNode(), ActionTypeToCull: typeof(PlayerBotActionRevive), defaultPriority: 12); 
+            zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("Use BioTracker", true, menu: bioTrackerMenu, node: bioTrackerMenu.GetNode(), ActionTypeToCull: typeof(PlayerBotActionUseEnemyScanner));
+            zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("Attack", true, menu: attackMenu, node: attackMenu.GetNode(), ActionTypeToCull: typeof(PlayerBotActionAttack));
+            zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("Share", true, menu: shareMenu, node: shareMenu.GetNode(), ActionTypeToCull: typeof(PlayerBotActionShareResourcePack), defaultPriority: 10);
+            zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("Ping", true, menu: pingMenu, node: pingMenu.GetNode(), ActionTypeToCull: typeof(PlayerBotActionHighlight), defaultPriority: 4.3f);
+            zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("Follow", true, menu: followMenu, node: followMenu.GetNode(), ActionTypeToCull: typeof(PlayerBotActionFollow), defaultPriority: 14f);
+            zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("Pickup", true, menu: pickupMenu, node: pickupMenu.GetNode(), ActionTypeToCull: typeof(PlayerBotActionCollectItem), defaultPriority: 4.2f);
+            zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("Unlock", true, menu: unlockMenu, node: unlockMenu.GetNode(), ActionTypeToCull: typeof(PlayerBotActionUnlock), defaultPriority: 4.1f);
+            zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("Move", true, null, ActionTypeToCull: typeof(PlayerBotActionWalk));
 
             foreach (sMenu menu in autoActionMenus)
             {
                 sMenu.sMenuNode node = menu.GetNode();
                 string actionName = node.text;
-                actionNameToMenuNodes[actionName] = node;
-                var permissionsNode = ActionPermissions.AddNode(actionName, true); //add the base overide node for this action
-                permissionsNode.onChanged.Listen(GenericUpdateNodeAllowedDisplay, args: [node]);
-                permissionsNode.onChanged.Listen(GenericUpdateNodeAllowedDisplay, args: [menu.centerNode]);
-                float defaultPiority = zSlideComputer.PermissionDefinitions.GetDefaultPriority(actionName);
-                if (defaultPiority > 0f)
+                //float defaultPriority = zSlideComputer.PermissionDefinitions.GetDefaultPriority(actionName);
+                if (zSlideComputer.ActionPriorities.nodes.Keys.Contains(actionName))
                 {
-                    ActionPriorities.AddNode("Default"+actionName, defaultPiority);
-                    ActionPriorities.AddNode(actionName, defaultPiority, "Default" + actionName).onChanged.Listen(GenericUpdateNodePrioDisplay,[node]);
+                    float defaultPriority = (float)zSlideComputer.ActionPriorities.GetNodeFromIdent(actionName).DefaultValue;
                     node.AddListener(sMenuManager.nodeEvent.OnHeldImmediateSelected, GenericResetSettings, node);
                     node.AddListener(sMenuManager.nodeEvent.WhileSelected, GenericUpdatePriorityBasedOnScroll, node);
                     GenericUpdateNodePrioDisplay(node);
                 }
                 node.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
-                node.AddListener(sMenuManager.nodeEvent.OnTapped, GenericToggleAllowed, actionName);
+                node.AddListener(sMenuManager.nodeEvent.OnTapped, zSlideComputer.GenericToggleAllowed, actionName);
                 node.AddListener(sMenuManager.nodeEvent.OnDoubleTapped, menu.Open);
                 AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediateSelected, GenericResetSettings, node);
             }
@@ -174,28 +171,19 @@ namespace ZombieTweak2.Menus
 
             AutoActionMenu.SetCatagory("Favorites");
         }
-        internal static void GenericToggleAllowed(string actionKey, int botID = -1, bool allowDissabled = false)
+
+        //internal static void GenericUpdateNodeAllowedDisplay(sMenu.sMenuNode node)
+        //{
+        //    string text = node.text;
+        //    bool allowed = (bool)zSlideComputer.ActionPermissions.ValueAt(text);
+        //    if (allowed)
+        //        node.SetColor(sMenuManager.defaultColor);
+        //    else
+        //        node.SetColor(new Color(0.25f, 0f, 0f));
+        //}
+        internal static void GenericUpdateNodeAllowedDisplay(sMenu.sMenuNode node, string key)
         {
-            bool allowed = !(bool)ActionPermissions.ValueAt(actionKey);
-            GenericSetAllowed(actionKey, allowed, botID, allowDissabled: allowDissabled);
-            //Not taking menu or node as an arg here anymore.  Instead listen for onChanged event for the actionPermissions override tree.
-        }
-        internal static void GenericSetAllowed(string actionKey, bool allowed, int playerID = -1, bool allowDissabled = false)
-        {
-            if (!actionNameToMenuNodes[actionKey].gameObject.activeInHierarchy && !allowDissabled)
-                return;
-            if (playerID == -1)
-            {
-                ActionPermissions.SetValue(actionKey, allowed);
-                return;
-            }
-            ActionPermissions.SetValue($"{actionKey}Bot{playerID}", allowed);
-            return;
-        }
-        internal static void GenericUpdateNodeAllowedDisplay(sMenu.sMenuNode node)
-        {
-            string text = node.text;
-            bool allowed = (bool)ActionPermissions.ValueAt(text);
+            bool allowed = (bool)zSlideComputer.ActionPermissions.ValueAt(key);
             if (allowed)
                 node.SetColor(sMenuManager.defaultColor);
             else
@@ -209,14 +197,14 @@ namespace ZombieTweak2.Menus
             float normalizedScroll = (int)Mathf.Sign(scroll) * 0.1f;
             string text = node.text;
             //OverrideTree<float?> prio = ActionPriorities[text];
-            ActionPriorities.SetValue(text, Math.Clamp(Mathf.Round(((float)ActionPriorities.ValueAt(text) + normalizedScroll) * 10f) / 10f,1f,15f));
+            zSlideComputer.ActionPriorities.SetValue(text, Math.Clamp(Mathf.Round(((float)zSlideComputer.ActionPriorities.ValueAt(text) + normalizedScroll) * 10f) / 10f,1f,15f));
             //GenericUpdateNodePrioDisplay(node);
         }
         public static void GenericUpdateNodePrioDisplay(sMenu.sMenuNode node)
         {
             string text = node.text;
             //OverrideTree<float?> prio = ActionPriorities[text];
-            if (ActionPriorities.nodes[text].IsDefaultValue())
+            if (zSlideComputer.ActionPriorities.nodes[text].IsDefaultValue())
             {
                 node.SetPrefix("");
                 node.SetSuffix("");
@@ -226,16 +214,20 @@ namespace ZombieTweak2.Menus
                 node.SetPrefix("* ");
                 node.SetSuffix(" *");
             }
-            node.SetTitle($"Prio <color=#CC840066>[</color>{ActionPriorities.ValueAt(text)}<color=#CC840066>]</color>");
+            node.SetTitle($"Prio <color=#CC840066>[</color>{zSlideComputer.ActionPriorities.ValueAt(text)}<color=#CC840066>]</color>");
         }
-        private static void GenericResetSettings(sMenu.sMenuNode node, bool allowDissabled = false)
+        public static void GenericResetSettings(sMenu.sMenuNode node, bool allowDissabled = false, string? key = null)
         {
             if (!node.gameObject.activeInHierarchy && !allowDissabled)
                 return;
-            string nodeName = node.text;
-            if (ActionPermissions.SetValue(nodeName, null) != null)
-                GenericUpdateNodeAllowedDisplay(node);
-            if (ActionPriorities.SetValue(nodeName, null) != null)
+            string _key;
+            if (key != null)
+                _key = key;
+            else
+                _key = node.text;
+            if (zSlideComputer.ActionPermissions.ResetToDefault(_key) != null)
+                GenericUpdateNodeAllowedDisplay(node, _key);
+            if (zSlideComputer.ActionPriorities.ResetToDefault(_key) != null)
                 GenericUpdateNodePrioDisplay(node);
             
         }

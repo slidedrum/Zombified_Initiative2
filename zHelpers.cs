@@ -88,20 +88,21 @@ namespace ZombieTweak2
     {
         private readonly OrderedSet<Action> listeners = new();
 
-        public void Listen(Action method)
+        public FlexibleEvent Listen(Action method)
         {
-            if (method == null) return;
+            if (method == null) return this;
             listeners.Add(method);
+            return this;
         }
 
-        public void Listen(FlexibleMethodDefinition method)
+        public FlexibleEvent Listen(FlexibleMethodDefinition method)
         {
-            Listen(method.method, method.args, method);
+            return Listen(method.method, method.args, method);
         }
 
-        public void Listen(Delegate method, object[] args, FlexibleMethodDefinition? fMethod = null)
+        public FlexibleEvent Listen(Delegate method, object[] args, FlexibleMethodDefinition? fMethod = null)
         {
-            if (method == null) return;
+            if (method == null) return this;
 
             var parameters = method.Method.GetParameters();
             object[] finalArgs = new object[parameters.Length];
@@ -131,6 +132,7 @@ namespace ZombieTweak2
             }
 
             listeners.Add(Wrapper);
+            return this;
         }
 
         public void Unlisten(Action method)

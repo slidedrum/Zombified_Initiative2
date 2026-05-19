@@ -1,10 +1,12 @@
 ﻿using GameData;
+using Player;
 using SlideMenu;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Zombified_Initiative;
+using static Il2CppSystem.Linq.Expressions.Interpreter.NullableMethodCallInstruction;
 
 namespace ZombieTweak2.Menus
 {
@@ -18,6 +20,11 @@ namespace ZombieTweak2.Menus
         public static OverrideTree<int?> pickupDistance;
         public static void Setup(sMenu menu)
         {
+
+
+            //TODO something seems to be breaking pickup permisions. They will always pick up items.
+
+
             prioNodesByID = new Dictionary<uint, sMenu.sMenuNode>();
             catagories = new();
             catagoryIndex = 1;
@@ -25,6 +32,7 @@ namespace ZombieTweak2.Menus
             pickupMenu = menu;
             pickupMenu.radius = 125f;
             pickupNode = pickupMenu.GetNode();
+            pickupDistance.AddNode("Pickup", null).onChanged.Listen(SetSearchDistance, [pickupDistance.ValueAt("Pickup")]).Listen(UpdateNodeSettingsDisplay, [pickupNode]);
 
             sMenu.sMenuNode glowstickNode = null;
             foreach (var item in zSlideComputer.itemPrios)
@@ -87,13 +95,17 @@ namespace ZombieTweak2.Menus
             pickupMenu.AddNodeToCatagory("Throwables", "C-Foam Grenade");
             pickupMenu.SetCatagory("All");
             pickupMenu.AddListener(sMenuManager.menuEvent.OnOpened, pickupMenu.UpdateCatagoryNodes);
+
             pickupNode.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
             pickupNode.ClearListeners(sMenuManager.nodeEvent.WhileSelected);
             pickupNode.AddListener(sMenuManager.nodeEvent.OnDoubleTapped, pickupMenu.Open);
             pickupNode.AddListener(sMenuManager.nodeEvent.WhileSelected, UpdateNodeBasedOnScroll, pickupNode);
+            pickupNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediateSelected, ResetSettings, pickupNode);
+            pickupMenu.parrentMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediateSelected, ResetSettings, pickupNode);
 
             pickupMenu.AddPannel(sMenu.sMenuPannel.Side.top, "Controls what bots will pickup.");
             pickupMenu.AddPannel(sMenu.sMenuPannel.Side.bottom, "Scroll to change the priority of different items.");
+            UpdateNodeSettingsDisplay(pickupNode);
         }
         private static void UpdateNodeBasedOnScroll(sMenu.sMenuNode node)
         {
@@ -108,13 +120,14 @@ namespace ZombieTweak2.Menus
             if (pos.y > Math.Abs(pos.x)) // TOP
             {
                 normalizedScroll = normalizedScroll * 0.1f;
-                float newValue = (float)AutomaticActionMenuClass.ActionPriorities.ValueAt(text) + normalizedScroll;
+                float newValue = (float)zSlideComputer.ActionPriorities.ValueAt(text) + normalizedScroll;
                 newValue = (float)Math.Round(newValue, 1);
-                AutomaticActionMenuClass.ActionPriorities.SetValue(text, Math.Clamp(newValue, 1, 15));
+                zSlideComputer.ActionPriorities.SetValue(text, Math.Clamp(newValue, 1, 15));
             }
             else
             {
-                pickupDistance.SetValue(text, Math.Clamp((int)pickupDistance.ValueAt(text) + (int)normalizedScroll, 1, 60));
+                var newValue = Math.Clamp((int)pickupDistance.ValueAt(text) + (int)normalizedScroll, 1, 60);
+                pickupDistance.SetValue(text, newValue);
             }
             UpdateNodeSettingsDisplay(node);
         }
@@ -122,7 +135,7 @@ namespace ZombieTweak2.Menus
         {
             string text = node.text;
             //var prio = AutomaticActionMenuClass.ActionPriorities["Pickup"];
-            if (AutomaticActionMenuClass.ActionPriorities.nodes[text].IsDefaultValue() && pickupDistance.nodes[text].IsDefaultValue())
+            if (zSlideComputer.ActionPriorities.nodes[text].IsDefaultValue() && pickupDistance.nodes[text].IsDefaultValue())
             {
                 node.SetPrefix("");
                 node.SetSuffix("");
@@ -132,12 +145,12 @@ namespace ZombieTweak2.Menus
                 node.SetPrefix("* ");
                 node.SetSuffix(" *");
             }
-            node.SetTitle($"Prio <color=#CC840066>[</color>{AutomaticActionMenuClass.ActionPriorities.ValueAt(text)}<color=#CC840066>]</color>");
+            node.SetTitle($"Prio <color=#CC840066>[</color>{zSlideComputer.ActionPriorities.ValueAt(text)}<color=#CC840066>]</color>");
             node.SetSubtitle($"Range <color=#CC840066>[</color>{pickupDistance.ValueAt(text)}<color=#CC840066>]</color>");
         }
-        private static void SetSearchDistance(int playerID, float distance)
+        private static void SetSearchDistance(float distance)
         {
-
+            RootPlayerBotAction.s_collectItemSearchDistance = distance;
         }
         internal static void Encounter(string friendlyName)
         {
@@ -155,10 +168,15 @@ namespace ZombieTweak2.Menus
                 pickupMenu.UpdateCatagoryNodes();
             }
         }
+        private static void ResetSettings(sMenu.sMenuNode node)
+        {
+            pickupDistance.SetValue("Pickup", null);
+        }
         private static void ResetNodeSettings(uint itemID, sMenu.sMenuNode node)
         {
             if (!node.gameObject.activeInHierarchy)
                 return;
+            pickupDistance.SetValue(node.text, null);
             zSlideComputer.ResetItemPrio(itemID);
             zSlideComputer.SetItemPrioDisabled(itemID, true);
             updateNodePriorityDisplay(node, itemID);
