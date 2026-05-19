@@ -1,4 +1,5 @@
 ﻿using BetterBots.Components;
+using GameData;
 using HarmonyLib;
 using Player;
 using System;
@@ -11,6 +12,15 @@ namespace ZombieTweak2.Patches
     [HarmonyPatch]
     internal class ShareActionPatch
     {
+        public static void SetUp()
+        {
+            foreach (ItemDataBlock block in ItemSpawnManager.m_itemDataPerInventorySlot[(int)InventorySlot.ResourcePack])
+            {
+                uint itemID = ItemDataBlock.s_blockIDByName[block.name];
+                zSlideComputer.resourceThresholds[itemID] = 100;
+                zSlideComputer.enabledResourceShares[itemID] = true;
+            }
+        }
         [HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.UpdateActionShareResoursePack))]
         [HarmonyPrefix]
         public static bool UpdateActionShareResoursePack(RootPlayerBotAction __instance, ref PlayerBotActionBase.Descriptor bestAction)

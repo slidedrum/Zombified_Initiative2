@@ -72,34 +72,34 @@ namespace ZombieTweak2.zNetworking
             }
             return botSelection;
         }
-        internal static void ReciveSetItemPrioDisable(ulong sender, pStructs.pItemPrioDisable info)
-        {
-            ZiMain.log.LogInfo($"Recived set item prio disabled from network!");
-            uint id = info.id;
-            bool allowed = info.allowed;
-            ZiMain.log.LogInfo($"id:{id}, allowed:{allowed}");
-            if (!PickupMenuClass.prioNodesByID.ContainsKey(id))
-            {
-                ZiMain.log.LogError("Unknown id recived!");
-                return;
-            }
-            zSlideComputer.SetItemPrioDisabled(id, allowed, sender);
-            PickupMenuClass.updateNodePriorityDisplay(PickupMenuClass.prioNodesByID[id], id);
-        }
-        internal static void ReciveSetItemPrio(ulong sender, pStructs.pItemPrio info)
-        {
-            ZiMain.log.LogInfo($"Recived set item prio value from network!");
-            uint id = info.id;
-            float prio = info.prio;
-            ZiMain.log.LogInfo($"id:{id}, prio:{prio}");
-            if (!PickupMenuClass.prioNodesByID.ContainsKey(id))
-            {
-                ZiMain.log.LogError("Unknown id recived!");
-                return;
-            }
-            zSlideComputer.SetBotItemPriority(id, prio, sender);
-            PickupMenuClass.updateNodePriorityDisplay(PickupMenuClass.prioNodesByID[id], id);
-        }
+        //internal static void ReciveSetItemPrioDisable(ulong sender, pStructs.pItemPrioDisable info)
+        //{
+        //    ZiMain.log.LogInfo($"Recived set item prio disabled from network!");
+        //    uint id = info.id;
+        //    bool allowed = info.allowed;
+        //    ZiMain.log.LogInfo($"id:{id}, allowed:{allowed}");
+        //    if (!PickupMenuClass.prioNodesByID.ContainsKey(id))
+        //    {
+        //        ZiMain.log.LogError("Unknown id recived!");
+        //        return;
+        //    }
+        //    zSlideComputer.SetItemPrioDisabled(id, allowed, sender);
+        //    PickupMenuClass.updateNodePriorityDisplay(id, PickupMenuClass.prioNodesByID[id]);
+        //}
+        //internal static void ReciveSetItemPrio(ulong sender, pStructs.pItemPrio info)
+        //{
+        //    ZiMain.log.LogInfo($"Recived set item prio value from network!");
+        //    uint id = info.id;
+        //    float prio = info.prio;
+        //    ZiMain.log.LogInfo($"id:{id}, prio:{prio}");
+        //    if (!PickupMenuClass.prioNodesByID.ContainsKey(id))
+        //    {
+        //        ZiMain.log.LogError("Unknown id recived!");
+        //        return;
+        //    }
+        //    zSlideComputer.SetBotItemPriority(id, prio, sender);
+        //    PickupMenuClass.updateNodePriorityDisplay(id, PickupMenuClass.prioNodesByID[id]);
+        //}
         internal static void reciveSetResourceThreshold(ulong sender, pStructs.pResourceThreshold info)
         {
             ZiMain.log.LogInfo($"Recived set resource threshold value from network!");

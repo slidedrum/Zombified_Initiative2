@@ -28,10 +28,11 @@ namespace ZombieTweak2
             public uint nodeID { get; private set; }
             public string nodeIdentity { get; private set; }
             public T? Value { get; set; }
+            private bool hasDefaultValue { get; }
             private T? _DefaultValue { get; }
             public T? DefaultValue { get 
                 {  
-                    if (_DefaultValue != null)
+                    if (hasDefaultValue)
                         return _DefaultValue;
                     if (Parent != null)
                         return Parent.DefaultValue;
@@ -45,8 +46,11 @@ namespace ZombieTweak2
             public Node? Parent { get; private set; }
             public OverrideTree<T> Tree { get; internal set; }
             public List<Node> Children { get; } = new();
-            internal Node(string key, Node parent = null, T? value = default, Func<bool>? condition = null, T? defaultValue = default) //If you supply a parent, you can opt to not supply a value
+            internal Node(string key, Node parent = null, T? value = default, Func<bool>? condition = null, T? defaultValue = default, bool hasDefaultValue = false) //If you supply a parent, you can opt to not supply a value
             {
+                if (defaultValue != null)
+                    hasDefaultValue = true;
+                this.hasDefaultValue = hasDefaultValue;
                 nodeIdentity = key;
                 Value = value;
                 Condition = condition;
@@ -54,6 +58,7 @@ namespace ZombieTweak2
                 InitalValue = value;
                 _DefaultValue = defaultValue;
                 nodeID = zHelpers.HashString(GetNodeTreeString());
+                this.hasDefaultValue = hasDefaultValue;
             }
             public T? GetValue() //Traverse down the tree to get deepest value
             {
@@ -104,9 +109,10 @@ namespace ZombieTweak2
             {
                 if (HasValue() == false)
                     return true;
-                if (Parent == null)
-                    return false;
-                return EqualityComparer<T?>.Default.Equals(Parent.ValueAt(), Value);
+                //if (Parent == null)
+                //    return false;
+                //return EqualityComparer<T?>.Default.Equals(Parent.ValueAt(), Value);
+                return EqualityComparer<T?>.Default.Equals(DefaultValue, Value);
             }
             internal string GetNodeTreeString()
             {
@@ -146,8 +152,10 @@ namespace ZombieTweak2
         {
             return nodesByID[id];
         }
-        public Node AddNode(string key, T? value, string? parent, Func<bool>? condition = null, FlexibleMethodDefinition onChanged = null, T? defaultValue = default)
+        public Node AddNode(string key, T? value, string? parent = null, Func<bool>? condition = null, FlexibleMethodDefinition onChanged = null, T? defaultValue = default, bool hasDefaultValue = false)
         {
+            if (defaultValue != null)
+                hasDefaultValue = true;
             Node parrentNode = null;
             if (parent != null)
             {
@@ -155,10 +163,13 @@ namespace ZombieTweak2
                     throw new KeyNotFoundException($"Could not find parrent named {parent} when adding node {key}");
                 parrentNode = nodes[parent];
             }
-            return AddNode(key, value, parrentNode, condition, onChanged, defaultValue);
+
+            return AddNode(key, value, parrentNode, condition, onChanged, defaultValue,  hasDefaultValue);
         }
-        public Node AddNode(string key, T? value, Node? parent = null, Func<bool>? condition = null, FlexibleMethodDefinition onChanged = null, T? defaultValue = default)
+        public Node AddNode(string key, T? value, Node? parent = null, Func<bool>? condition = null, FlexibleMethodDefinition onChanged = null, T? defaultValue = default, bool hasDefaultValue = false)
         {
+            if (defaultValue != null)
+                hasDefaultValue = true;
             if (nodes.ContainsKey(key))
                 if (parent == null)
                     throw new InvalidOperationException($"Key '{key}' already in use.");
@@ -170,7 +181,7 @@ namespace ZombieTweak2
             if (!nodes.Values.Contains(parent))
                 throw new InvalidOperationException($"Parent '{parent.nodeIdentity}' not found.");
 
-            var node = new Node(key, parent, value, condition, defaultValue);
+            var node = new Node(key, parent, value, condition, defaultValue, hasDefaultValue);
             parent.Children.Add(node);
             nodes[key] = node;
             nodesByID[node.nodeID] = node;
@@ -298,10 +309,17 @@ namespace ZombieTweak2
         {
             return rootNode.GetValue();
         }
-        public T? ValueAt(string key)
+        public bool HasKey(string key)
+        {
+            return nodes.ContainsKey(key);
+        }
+        public T? ValueAt(string key, bool shouldThrow = true)
         {
             if (!nodes.ContainsKey(key))
-                throw new KeyNotFoundException(nameof(key));
+                if (shouldThrow)
+                    throw new KeyNotFoundException(nameof(key));
+                else
+                    return default;
             return nodes[key].ValueAt();
         }
     }

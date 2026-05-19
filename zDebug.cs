@@ -328,20 +328,20 @@ namespace ZombieTweak2
             }
             return false;
         }
-        private static void TestReciveSetItemPrioDisableNetwork(ulong sender, uint id, bool allowed)
-        {
-            pStructs.pItemPrioDisable info = new pStructs.pItemPrioDisable();
-            info.allowed = allowed;
-            info.id = id;
-            zNetworking.zNetworking.ReciveSetItemPrioDisable(sender, info);
-        }
-        private static void TestReciveSetItemPrioNetwork(ulong sender, uint id, float prio)
-        {
-            pStructs.pItemPrio info = new pStructs.pItemPrio();
-            info.prio = prio;
-            info.id = id;
-            zNetworking.zNetworking.ReciveSetItemPrio(sender, info);
-        }
+        //private static void TestReciveSetItemPrioDisableNetwork(ulong sender, uint id, bool allowed)
+        //{
+        //    pStructs.pItemPrioDisable info = new pStructs.pItemPrioDisable();
+        //    info.allowed = allowed;
+        //    info.id = id;
+        //    zNetworking.zNetworking.ReciveSetItemPrioDisable(sender, info);
+        //}
+        //private static void TestReciveSetItemPrioNetwork(ulong sender, uint id, float prio)
+        //{
+        //    pStructs.pItemPrio info = new pStructs.pItemPrio();
+        //    info.prio = prio;
+        //    info.id = id;
+        //    zNetworking.zNetworking.ReciveSetItemPrio(sender, info);
+        //}
         private static void TestReciveSetResourceThresholdNetwork(ulong sender, uint id, int threshold)
         {
             pStructs.pResourceThreshold info = new pStructs.pResourceThreshold();

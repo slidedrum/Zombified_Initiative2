@@ -1,6 +1,7 @@
 ﻿using AIGraph;
 using GameData;
 using HarmonyLib;
+using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using LevelGeneration;
 using Player;
 using System;
@@ -8,12 +9,270 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Zombified_Initiative;
+using static ZombieTweak2.zNetworking.pStructs;
 
 namespace ZombieTweak2.Patches
 {
     [HarmonyPatch]
     internal class PickupActionPatch
     {
+        public static Il2CppReferenceArray<ItemDataBlock> rawConsumableItems
+        {
+            get
+            {
+                return ItemSpawnManager.m_itemDataPerInventorySlot?[(int)InventorySlot.Consumable];
+            }
+        }
+        public static Il2CppReferenceArray<ItemDataBlock> consumableItems
+        {
+            get
+            {
+                var source = rawConsumableItems;
+
+                if (ReferenceEquals(source, _rawConsumableItems))
+                    return _consumableItems;
+
+                _rawConsumableItems = source;
+
+                _consumableItems = new Il2CppReferenceArray<ItemDataBlock>(
+                    source
+                        .Where(item =>
+                            item != null &&
+                            !unusedItems.Contains(item.name))
+                        .ToArray());
+
+                return _consumableItems;
+            }
+        }
+        private static Il2CppReferenceArray<ItemDataBlock> _rawConsumableItems;
+        private static Il2CppReferenceArray<ItemDataBlock> _consumableItems;
+        public static List<string> consumableItemPublicNames
+        {
+            get
+            {
+                var items = consumableItems;
+
+                if (ReferenceEquals(items, _consumableItems) &&
+                    _consumableItemPublicNames != null)
+                    return _consumableItemPublicNames;
+
+                _consumableItemPublicNames = items
+                    .Select(item => item.publicName)
+                    .ToList();
+
+                return _consumableItemPublicNames;
+            }
+        }
+        private static List<string> _consumableItemPublicNames;
+        public static List<string> consumableItemNames
+        {
+            get
+            {
+                var items = consumableItems;
+
+                if (ReferenceEquals(items, _consumableItems) &&
+                    _consumableItemNames != null)
+                    return _consumableItemNames;
+
+                _consumableItemNames = items
+                    .Select(item => item.name)
+                    .ToList();
+
+                return _consumableItemNames;
+            }
+        }
+        private static List<string> _consumableItemNames;
+
+        public static Il2CppReferenceArray<ItemDataBlock> rawResourcePackItems
+        {
+            get
+            {
+                return ItemSpawnManager.m_itemDataPerInventorySlot?[(int)InventorySlot.ResourcePack];
+            }
+        }
+        public static Il2CppReferenceArray<ItemDataBlock> resourcePackItems
+        {
+            get
+            {
+                var source = rawResourcePackItems;
+
+                if (ReferenceEquals(source, _rawResourcePackItems))
+                    return _resourcePackItems;
+
+                _rawResourcePackItems = source;
+
+                _resourcePackItems = new Il2CppReferenceArray<ItemDataBlock>(
+                    source
+                        .Where(item =>
+                            item != null &&
+                            !unusedItems.Contains(item.name))
+                        .ToArray());
+
+                return _resourcePackItems;
+            }
+        }
+        private static Il2CppReferenceArray<ItemDataBlock> _rawResourcePackItems;
+        private static Il2CppReferenceArray<ItemDataBlock> _resourcePackItems;
+        public static List<string> resourcePackItemPublicNames
+        {
+            get
+            {
+                var items = resourcePackItems;
+
+                if (ReferenceEquals(items, _resourcePackItems) &&
+                    _resourcePackItemPublicNames != null)
+                    return _resourcePackItemPublicNames;
+
+                _resourcePackItemPublicNames = items
+                    .Select(item => item.publicName)
+                    .ToList();
+
+                return _resourcePackItemPublicNames;
+            }
+        }
+        private static List<string> _resourcePackItemPublicNames;
+        public static List<string> resourcePackItemNames
+        {
+            get
+            {
+                var items = resourcePackItems;
+
+                if (ReferenceEquals(items, _resourcePackItems) &&
+                    _resourcePackItemNames != null)
+                    return _resourcePackItemNames;
+
+                _resourcePackItemNames = items
+                    .Select(item => item.name)
+                    .ToList();
+
+                return _resourcePackItemNames;
+            }
+        }
+        private static List<string> _resourcePackItemNames;
+        private static List<ItemDataBlock> _fullItemList;
+        private static Il2CppReferenceArray<ItemDataBlock> _lastConsumables;
+        private static Il2CppReferenceArray<ItemDataBlock> _lastResourcePacks;
+        public static List<ItemDataBlock> fullItemList
+        {
+            get
+            {
+                var consumables = consumableItems;
+                var resourcePacks = resourcePackItems;
+
+                bool changed =
+                    !ReferenceEquals(consumables, _lastConsumables) ||
+                    !ReferenceEquals(resourcePacks, _lastResourcePacks);
+
+                if (!changed && _fullItemList != null)
+                    return _fullItemList;
+
+                _lastConsumables = consumables;
+                _lastResourcePacks = resourcePacks;
+
+                _fullItemList = consumables
+                    .Concat(resourcePacks)
+                    .ToList();
+
+                return _fullItemList;
+            }
+        }
+        private static List<string> _fullItemNameList;
+        public static List<string> fullItemNameList
+        {
+            get
+            {
+                var items = fullItemList;
+
+                if (_fullItemNameList != null)
+                    return _fullItemNameList;
+
+                _fullItemNameList = items
+                    .Select(x => x.name)
+                    .ToList();
+
+                return _fullItemNameList;
+            }
+        }
+        private static List<string> _fullItemPublicNameList;
+        public static List<string> fullItemPublicNameList
+        {
+            get
+            {
+                var items = fullItemList;
+
+                if (_fullItemPublicNameList != null)
+                    return _fullItemPublicNameList;
+
+                _fullItemPublicNameList = items
+                    .Select(x => x.publicName)
+                    .ToList();
+
+                return _fullItemPublicNameList;
+            }
+        }
+
+        private static bool hasSetup = false;
+        public static List<string> fullGlowStickNames = new() { "CONSUMABLE_GlowStick", "CONSUMABLE_GlowStick_Christmas", "CONSUMABLE_GlowStick_Halloween", "CONSUMABLE_GlowStick_Yellow" };
+        public static List<string> shortGlowStickNames = new() { "Glow Stick", "Red Glow Stick", "Glow Stick Orange", "Glow Stick Yellow" };
+        public static List<string> unusedItems = new() { "CONSUMABLE_Flare", "CONSUMABLE_Grenade", "CONSUMABLE_Portable_Barrier" , "CONSUMABLE_ShapedMine_Explosive" };
+        public static List<uint> GlowStickIds { get; private set; }
+
+        internal static void SetUp()
+        {
+            GlowStickIds = new List<uint>();
+            foreach (var glowstickName in fullGlowStickNames)
+            {
+                var glowstickID = ItemDataBlock.GetBlockID(glowstickName);
+                GlowStickIds.Add(glowstickID);
+                zSlideComputer.ActionPriorities.AddNode(glowstickName, 10, "Pickup", defaultValue: 10);
+                zSlideComputer.ActionPermissions.AddNode(glowstickName, null, "Pickup", defaultValue: null, hasDefaultValue: true);
+            }
+            
+            foreach (ItemDataBlock block in fullItemList)
+            {
+                string name = block.name;
+                if (fullGlowStickNames.Contains(name))
+                    continue;
+                uint id = block.persistentID;
+                float priority = 0f;
+                if (RootPlayerBotAction.s_itemBasePrios.ContainsKey(id))
+                    priority = RootPlayerBotAction.s_itemBasePrios[id];
+                zSlideComputer.ActionPriorities.AddNode(name, priority, "Pickup", defaultValue: priority).onChanged.Listen(SetInternalPriority, args: [name]);
+                zSlideComputer.ActionPermissions.AddNode(name, null, "Pickup", defaultValue: null, hasDefaultValue: true).onChanged.Listen(SetInternalPriority, args: [name]);
+            }
+
+            //foreach (var kvp in RootPlayerBotAction.s_itemBasePrios)
+            //{
+            //    uint id = kvp.Key;
+            //    float priority = kvp.Value;
+            //    string name = ItemDataBlock.GetBlockName(id);
+            //    if (fullGlowStickNames.Contains(name))
+            //        continue;
+            //    zSlideComputer.ActionPriorities.AddNode(name, priority, "Pickup", defaultValue: priority).onChanged.Listen(SetInternalPriority, args: [name]);
+            //    zSlideComputer.ActionPermissions.AddNode(name, null, "Pickup", defaultValue: null).onChanged.Listen(SetInternalPriority, args: [name]);
+            //}
+        }
+        private static void SetAllInternalPriorities()
+        { //This might not be needed, as we might be replacing all logic that uses itemBasePrios
+            foreach (var kvp in RootPlayerBotAction.s_itemBasePrios)
+            {
+                uint id = kvp.Key;
+                string name = ItemDataBlock.GetBlockName(id);
+                SetInternalPriority(name);
+            }
+        }
+        private static void SetInternalPriority(string name)
+        {
+            bool allowed = (bool)zSlideComputer.ActionPermissions.ValueAt(name);
+            uint id = ItemDataBlock.GetBlockID(name);
+            if (!allowed)
+            {
+                RootPlayerBotAction.s_itemBasePrios[id] = 0f;
+                return;
+            }
+            float newValue = (float)zSlideComputer.ActionPriorities.ValueAt(name);
+            RootPlayerBotAction.s_itemBasePrios[id] = newValue;
+        }
         [HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.GetItemPrio))]
         [HarmonyPrefix]
         public static bool GetItemPrio(RootPlayerBotAction __instance, InventorySlot itemSlot, uint itemID, ref float __result)
@@ -26,8 +285,13 @@ namespace ZombieTweak2.Patches
             __result = 0f;
             if (!(bool)zSlideComputer.ActionPermissions.ValueAt("Pickup"))
                 return false;
-            if (!zSlideComputer.enabledItemPrios.ContainsKey(itemID) || !zSlideComputer.enabledItemPrios[itemID])
+            if ((float)zSlideComputer.ActionPriorities.ValueAt("Pickup") == 0f)
                 return false;
+            string itemName = ItemDataBlock.GetBlockName(itemID);
+            if (zSlideComputer.ActionPermissions.HasKey(itemName) && !(bool)zSlideComputer.ActionPermissions.ValueAt(itemName)) // if there is a specific setting for this item, and it's false, don't pick it up at all (prio 0)
+                return false;
+            //if (!zSlideComputer.enabledItemPrios.ContainsKey(itemID) || !zSlideComputer.enabledItemPrios[itemID])
+            //    return false;
             ItemDataBlock itemDataBlock;
             if (ItemDataBlock.s_blockByID.ContainsKey(itemID))
             {
@@ -38,13 +302,9 @@ namespace ZombieTweak2.Patches
                 ZiMain.log.LogError($"Tried to get priority for unknow id: {itemID}");
                 return false;
             }
-            if (!RootPlayerBotAction.s_itemBasePrios.ContainsKey(itemID))
-            {
-                ZiMain.log.LogWarning($"Tried to get priority for unmapped item: ({itemID}){itemDataBlock.name} in {itemSlot}");
-                return false;
-            }
             __result = 0f;
-            float basePriority = RootPlayerBotAction.s_itemBasePrios[itemID];
+            float basePriority = (float)zSlideComputer.ActionPriorities.ValueAt(itemName);
+            //float basePriority = RootPlayerBotAction.s_itemBasePrios[itemID];
 
             List<PlayerAgent> playerAgentsList = PlayerManager.PlayerAgentsInLevel.ToArray().ToList();
 
@@ -121,8 +381,8 @@ namespace ZombieTweak2.Patches
         }
         [HarmonyPatch(typeof(PlayerBotActionCollectItem), nameof(PlayerBotActionCollectItem.OnTravelActionEvent))]
         [HarmonyPrefix]
-        public static bool PlayerBotActionCollectItemPatch(PlayerBotActionCollectItem __instance, PlayerBotActionBase.Descriptor descBase)
-        {
+        public static bool OnTravelActionEventPatch(PlayerBotActionCollectItem __instance, PlayerBotActionBase.Descriptor descBase)
+        { //This is supposed to fix bots not always being able to pick up items, but I don't really remember how it works.
             if (descBase != __instance.m_travelAction)
             {
                 __instance.PrintError("Rogue action.");
@@ -150,7 +410,7 @@ namespace ZombieTweak2.Patches
         [HarmonyPrefix]
         public static bool UpdateActionCollectItemReCreation(RootPlayerBotAction __instance, ref PlayerBotActionBase.Descriptor bestAction)
         {
-            // TODO cut this out completely.
+            // TODO cut this out completely?
             // TODO check why there are some unused vars in here, is this actually accurate to the real game?
             // all this does is change it so it checks against agent position not "epicenter" position.
             // Local temporaries that match responsibilities seen in the decompiled code
@@ -159,7 +419,7 @@ namespace ZombieTweak2.Patches
             if (!allowed)
                 return false;
 
-            PlayerBotActionCollectItem.Descriptor collect = __instance.m_collectItemAction;
+            PlayerBotActionCollectItem.Descriptor collectItemActionDescriptor = __instance.m_collectItemAction;
             Item chosenItem = null;
             float bestItemPrio = 0.0f;
             AIG_CourseNode activityNode = null;
@@ -167,29 +427,24 @@ namespace ZombieTweak2.Patches
             BackpackItem foundBackpackItem = null;
 
             // If there is an active collect action and it's NOT terminated -> do nothing
-            if (collect != null)
+            if (collectItemActionDescriptor != null)
             {
-                if (!collect.IsTerminated())
+                if (!collectItemActionDescriptor.IsTerminated())
                     return false;
-            }
-
-            // If prio settings exist and collect action exists, set the collect action's priority
-            if (RootPlayerBotAction.m_prioSettings != null && collect != null)
-            {
-                collect.Prio = RootPlayerBotAction.m_prioSettings.CollectItem;
+                collectItemActionDescriptor.Prio = (float)zSlideComputer.ActionPriorities.ValueAt("Pickup");
             }
 
             // If we already have a best action and the collect action is present:
             // if the collect action's priority is less-or-equal to the current best, don't consider it.
             if (bestAction != null)
             {
-                if (collect == null)
+                if (collectItemActionDescriptor == null)
                 {
                     // decompiled flow jumped to end in this case; just return (no change to bestAction)
                     return false;
                 }
 
-                if (collect.Prio <= bestAction.Prio)
+                if (collectItemActionDescriptor.Prio <= bestAction.Prio)
                     return false;
             }
 
@@ -201,7 +456,7 @@ namespace ZombieTweak2.Patches
             }
 
             // If the bot exists and the action is forbidden for that bot -> don't proceed
-            if (__instance.m_bot != null && __instance.m_bot.IsActionForbidden(collect))
+            if (__instance.m_bot != null && __instance.m_bot.IsActionForbidden(collectItemActionDescriptor))
                 return false;
 
             // Get the activity epicenter and a course node (area) where we should search
@@ -209,15 +464,15 @@ namespace ZombieTweak2.Patches
                 return false;
             activityEpicenter = __instance.m_bot.transform.position; //TODO patch GetActivityEpicenter
             activityNode = __instance.m_bot.Agent.CourseNode; // This is what's different
-                                                              // Prepare temporary reservations (object + position) using static temp objects on RootPlayerBotAction
+            // Prepare temporary reservations (object + position) using static temp objects on RootPlayerBotAction
             if (__instance.m_agent != null && RootPlayerBotAction.s_tempObjReservation != null)
             {
                 RootPlayerBotAction.s_tempObjReservation.CharacterID = __instance.m_agent.CharacterID;
             }
 
-            if (collect != null && RootPlayerBotAction.s_tempObjReservation != null)
+            if (collectItemActionDescriptor != null && RootPlayerBotAction.s_tempObjReservation != null)
             {
-                RootPlayerBotAction.s_tempObjReservation.Prio = collect.Prio;
+                RootPlayerBotAction.s_tempObjReservation.Prio = collectItemActionDescriptor.Prio;
             }
 
             if (__instance.m_agent != null && RootPlayerBotAction.s_tempPosReservation != null)
@@ -225,9 +480,9 @@ namespace ZombieTweak2.Patches
                 RootPlayerBotAction.s_tempPosReservation.CharacterID = __instance.m_agent.CharacterID;
             }
 
-            if (collect != null && RootPlayerBotAction.s_tempPosReservation != null)
+            if (collectItemActionDescriptor != null && RootPlayerBotAction.s_tempPosReservation != null)
             {
-                RootPlayerBotAction.s_tempPosReservation.Prio = collect.Prio;
+                RootPlayerBotAction.s_tempPosReservation.Prio = collectItemActionDescriptor.Prio;
             }
 
             // We'll search storage containers that are attached to the discovered course node
@@ -284,16 +539,16 @@ namespace ZombieTweak2.Patches
                         continue;
 
                     // set the collect action's target container tentatively
-                    if (collect == null)
+                    if (collectItemActionDescriptor == null)
                         continue;
 
-                    collect.TargetContainer = container;
+                    collectItemActionDescriptor.TargetContainer = container;
 
                     // If bot.TestFailureRetry returns false, skip container
                     if (__instance.m_bot == null)
                         continue;
 
-                    if (!__instance.m_bot.TestFailureRetry(collect))
+                    if (!__instance.m_bot.TestFailureRetry(collectItemActionDescriptor))
                         continue;
 
                     // get container transform position
@@ -344,7 +599,7 @@ namespace ZombieTweak2.Patches
                     if (__instance.m_bot == null)
                         continue;
 
-                    float prioRef = collect.Prio;
+                    float prioRef = collectItemActionDescriptor.Prio;
                     if (__instance.m_bot.ApplyRestrictionsToRootPosition(ref rootPos, ref prioRef))
                     {
                         // ApplyRestrictionsToRootPosition returning true in our naming means "rejected" in the decompiled control flow
@@ -446,18 +701,18 @@ namespace ZombieTweak2.Patches
                     if (chosenItem != null)
                     {
                         // assign the target item and container to the collect descriptor
-                        collect.TargetItem = chosenItem;
-                        collect.TargetContainer = chosenContainer;
+                        collectItemActionDescriptor.TargetItem = chosenItem;
+                        collectItemActionDescriptor.TargetContainer = chosenContainer;
 
                         // store candidateRootPos into collect.TargetPosition (match decompiled axis mapping)
-                        collect.TargetPosition = candidateRootPos;
+                        collectItemActionDescriptor.TargetPosition = candidateRootPos;
                         //collect.TargetPosition.fields.y = candidateRootPos.y;
                         //collect.TargetPosition.fields.z = candidateRootPos.z;
 
-                        collect.Haste = 0.5f;
+                        collectItemActionDescriptor.Haste = 0.5f;
 
                         // set the bestAction reference to the collect action we built
-                        bestAction = collect;
+                        bestAction = collectItemActionDescriptor;
                         return false;
                     }
                     // else: continue to next container

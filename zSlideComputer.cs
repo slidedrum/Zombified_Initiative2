@@ -19,13 +19,14 @@ namespace ZombieTweak2
     {
         //This class is for handling things like stopping bots from do unwanted actions
 
-        public static Il2CppSystem.Collections.Generic.Dictionary<uint, float> itemPrios = new();
+        //public static Il2CppSystem.Collections.Generic.Dictionary<uint, float> itemPrios = new();
         public static Il2CppSystem.Collections.Generic.Dictionary<uint, int> resourceThresholds = new();
-        public static Il2CppSystem.Collections.Generic.Dictionary<uint, bool> enabledItemPrios = new ();
+        //public static Il2CppSystem.Collections.Generic.Dictionary<uint, bool> enabledItemPrios = new ();
         public static Il2CppSystem.Collections.Generic.Dictionary<uint, bool> enabledResourceShares = new ();
         public static Il2CppSystem.Collections.Generic.Dictionary<uint, float> OriginalItemPrios = new();
         public static OverrideTree<float?> ActionPriorities;
         public static OverrideTree<bool?> ActionPermissions;
+        public static OverrideTree<int?> ItemPickupPriorities;
         public static Dictionary<string, sMenu.sMenuNode> actionNameToMenuNodes;
         public static class PermissionDefinitions
         {
@@ -93,7 +94,7 @@ namespace ZombieTweak2
                 //Might be able to remove the PermissionDefinition entirely?
                 if (defaultPriority != null)
                 {
-                    zSlideComputer.ActionPriorities.AddNode("Default" + key, defaultPriority, defaultValue: defaultPriority);
+                    zSlideComputer.ActionPriorities.AddNode("Default" + key, defaultPriority, (string?)null, defaultValue: defaultPriority);
                     zSlideComputer.ActionPriorities.AddNode(key, defaultPriority, "Default" + key, defaultValue: defaultPriority).onChanged.Listen(AutomaticActionMenuClass.GenericUpdateNodePrioDisplay, [node]);
                 }
                 var permissionsNode = ActionPermissions.AddNode(key, defaultPerm, parrentKey, defaultValue: defaultPerm);
@@ -132,151 +133,71 @@ namespace ZombieTweak2
         }
 
         
-        public static Il2CppReferenceArray<ItemDataBlock> consumableItems 
-        { 
-            get 
-            {
-                return ItemSpawnManager.m_itemDataPerInventorySlot?[(int)InventorySlot.Consumable];
-            } 
-        }
-        private static Il2CppReferenceArray<ItemDataBlock> _consumableItems;
-        public static List<string> consumableItemPublicNames 
-        { 
-            get 
-            {
-                if (consumableItems.Equals(_consumableItems))
-                    return _consumableItemPublicNames;
-                _consumableItems = consumableItems;
-                _consumableItemPublicNames = consumableItems.Select(item => item.publicName).ToList();
-                return _consumableItemPublicNames; 
-            } 
-        }
-        private static List<string> _consumableItemPublicNames;
-        public static List<string> consumableItemNames 
-        {
-            get 
-            {
-                if (consumableItems.Equals(_consumableItems))
-                    return _consumableItemNames;
-                _consumableItems = consumableItems;
-                _consumableItemNames = consumableItems.Select(item => item.name).ToList();
-                return _consumableItemNames;
-            } 
-        }
-        private static List<string> _consumableItemNames;
 
-
-        public static List<string> fullGlowStickNames { get; private set; }
-        public static List<uint> GlowStickIds { get; private set; }
-        public static List<string> shortGlowStickNames { get; private set; }
         
 
         public static void Init()
         {
-            if (OriginalItemPrios.count == 0)
-                FirstTimeSetup();
-            itemPrios.Clear();
-            foreach (var kvp in OriginalItemPrios)
-            {
-                itemPrios[kvp.Key] = kvp.Value;
-                enabledItemPrios[kvp.Key] = true;
-                if (!PlayerAIBot.s_recognisedItemTypes.Contains(kvp.Key))
-                    PlayerAIBot.s_recognisedItemTypes.Add(kvp.Key);
-            }
-            RootPlayerBotAction.s_itemBasePrios = itemPrios;
 
-
-            List<PlayerAIBot> playerAiBots = ZiMain.GetBotList();
-            foreach (PlayerAIBot bot in playerAiBots)
-            {
-                //PickUpPerms[bot.Agent.Owner.PlayerSlotIndex()] = true;
-                //SharePerms[bot.Agent.Owner.PlayerSlotIndex()] = true;
-                //MovePerms[bot.Agent.Owner.PlayerSlotIndex()] = true;
-                //UnlockPerms[bot.Agent.Owner.PlayerSlotIndex()] = true;
-                //PingPerms[bot.Agent.Owner.PlayerSlotIndex()] = true;
-                //BioTrackerPerms[bot.Agent.Owner.PlayerSlotIndex()] = true;
-                //AttackPerms[bot.Agent.Owner.PlayerSlotIndex()] = true;
-                //RevivePerms[bot.Agent.Owner.PlayerSlotIndex()] = true;
-                //RevivePlayersPerms[bot.Agent.Owner.PlayerSlotIndex()] = true;
-                //ReviveBotsPerms[bot.Agent.Owner.PlayerSlotIndex()] = true;
-            }
-            foreach (ItemDataBlock block in ItemSpawnManager.m_itemDataPerInventorySlot[(int)InventorySlot.ResourcePack])
-            {
-                uint itemID = ItemDataBlock.s_blockIDByName[block.name];
-                resourceThresholds[itemID] = 100;
-                enabledResourceShares[itemID] = true;
-            }
         }
         public static void FirstTimeSetup()
         {
-            fullGlowStickNames = new List<string> { "CONSUMABLE_GlowStick", "CONSUMABLE_GlowStick_Christmas", "CONSUMABLE_GlowStick_Halloween", "CONSUMABLE_GlowStick_Yellow" };
-            shortGlowStickNames = new List<string> { "Glow Stick", "Red Glow Stick", "Glow Stick Orange", "Glow Stick Yellow" };
-            GlowStickIds = new List<uint>();
-            foreach (var glowstickName in fullGlowStickNames)
-            {
-                var glowstickID = ItemDataBlock.GetBlockID(glowstickName);
-                GlowStickIds.Add(glowstickID);
-                OriginalItemPrios[glowstickID] = 10;
-            }
-            foreach (var kvp in RootPlayerBotAction.s_itemBasePrios)
-            {
-                OriginalItemPrios[kvp.Key] = kvp.Value;
-            }
-        }
-        public static float GetItemPrio(uint itemID)
-        {
-            foreach (var kv in enabledItemPrios)
-            {
-                if (kv.Key == itemID)
-                {
-                    if (!kv.Value) return 0f;
 
-                    foreach (var kv2 in itemPrios)
-                    {
-                        if (kv2.Key == itemID)
-                            return kv2.Value;
-                    }
-                    return 0f;
-                }
-            }
-            return 0f;
         }
-        public static void ResetAllItemPrio()
-        {
-            ZiMain.log.LogMessage("Ressting all item priorties to default");
-            foreach (var kvp in OriginalItemPrios)
-            {
-                SetBotItemPriority(kvp.Key, kvp.Value);
-            }
-        }
-        public static void ResetItemPrio(uint itemID)
-        {
-            if (!itemPrios.ContainsKey(itemID))
-                return;
-            itemPrios[itemID] = OriginalItemPrios[itemID];
-        }
-        public static void ToggleItemPrioDisabled(uint itemID)
-        {
-            if (!enabledItemPrios.ContainsKey(itemID))
-                return;
-            SetItemPrioDisabled(itemID, !enabledItemPrios[itemID]);
-        }
-        public static void SetItemPrioDisabled(uint itemID, bool allowed, ulong netSender = 0)
-        {
-            if (!enabledItemPrios.ContainsKey(itemID))
-            {
-                ZiMain.log.LogWarning($"Attemted to set item pick up allow for unknown id: {itemID} - {allowed}");
-                return;
-            }
-            if (netSender == 0)
-            {
-                pStructs.pItemPrioDisable info = new pStructs.pItemPrioDisable();
-                info.id = itemID;
-                info.allowed = allowed;
-                NetworkAPI.InvokeEvent<pStructs.pItemPrioDisable>("SetItemPrioDisable", info);
-            }
-            enabledItemPrios[itemID] = allowed;
-        }
+        //public static float GetItemPrio(uint itemID)
+        //{
+        //    foreach (var kv in enabledItemPrios)
+        //    {
+        //        if (kv.Key == itemID)
+        //        {
+        //            if (!kv.Value) return 0f;
+
+        //            foreach (var kv2 in itemPrios)
+        //            {
+        //                if (kv2.Key == itemID)
+        //                    return kv2.Value;
+        //            }
+        //            return 0f;
+        //        }
+        //    }
+        //    return 0f;
+        //}
+        //public static void ResetAllItemPrio()
+        //{
+        //    ZiMain.log.LogMessage("Ressting all item priorties to default");
+        //    foreach (var kvp in OriginalItemPrios)
+        //    {
+        //        SetBotItemPriority(kvp.Key, kvp.Value);
+        //    }
+        //}
+        //public static void ResetItemPrio(uint itemID)
+        //{
+        //    if (!itemPrios.ContainsKey(itemID))
+        //        return;
+        //    itemPrios[itemID] = OriginalItemPrios[itemID];
+        //}
+        //public static void ToggleItemPrioDisabled(uint itemID)
+        //{
+        //    if (!enabledItemPrios.ContainsKey(itemID))
+        //        return;
+        //    SetItemPrioDisabled(itemID, !enabledItemPrios[itemID]);
+        //}
+        //public static void SetItemPrioDisabled(uint itemID, bool allowed, ulong netSender = 0)
+        //{
+        //    if (!enabledItemPrios.ContainsKey(itemID))
+        //    {
+        //        ZiMain.log.LogWarning($"Attemted to set item pick up allow for unknown id: {itemID} - {allowed}");
+        //        return;
+        //    }
+        //    if (netSender == 0)
+        //    {
+        //        pStructs.pItemPrioDisable info = new pStructs.pItemPrioDisable();
+        //        info.id = itemID;
+        //        info.allowed = allowed;
+        //        NetworkAPI.InvokeEvent<pStructs.pItemPrioDisable>("SetItemPrioDisable", info);
+        //    }
+        //    enabledItemPrios[itemID] = allowed;
+        //}
         public static void Update()
         {
             
@@ -295,24 +216,24 @@ namespace ZombieTweak2
             }
             return botItems;
         }
-        public static string ConvertItemPublicName(string name)
-        {
-            if (consumableItemNames.Contains(name))
-            {
-                return name;
-            }
-            if (consumableItemPublicNames.Contains(name))
-            {
-                return consumableItemNames[consumableItemPublicNames.IndexOf(name)];
-            }
-            //ZiMain.log.LogWarning($"Name '{glowstickName}' doesn't apear to be a consumable.");
-            //ZiMain.log.LogWarning($"consumableItemNames:");
-            //ZiMain.log.LogWarning(string.Join("\n",consumableItemNames));
-            //ZiMain.log.LogWarning($"consumableItemPublicNames:");
-            //ZiMain.log.LogWarning(string.Join("\n", consumableItemPublicNames));
-            return name;
+        //public static string ConvertItemPublicName(string name)
+        //{
+        //    if (consumableItemNames.Contains(name))
+        //    {
+        //        return name;
+        //    }
+        //    if (consumableItemPublicNames.Contains(name))
+        //    {
+        //        return consumableItemNames[consumableItemPublicNames.IndexOf(name)];
+        //    }
+        //    //ZiMain.log.LogWarning($"Name '{glowstickName}' doesn't apear to be a consumable.");
+        //    //ZiMain.log.LogWarning($"consumableItemNames:");
+        //    //ZiMain.log.LogWarning(string.Join("\n",consumableItemNames));
+        //    //ZiMain.log.LogWarning($"consumableItemPublicNames:");
+        //    //ZiMain.log.LogWarning(string.Join("\n", consumableItemPublicNames));
+        //    return name;
   
-        }
+        //}
         public static void SetResourceThreshold(uint itemID, int threshold, ulong netSender = 0)
         {
             if (!resourceThresholds.ContainsKey(itemID))
@@ -338,66 +259,66 @@ namespace ZombieTweak2
             }
             return resourceThresholds[itemID];
         }
-        private static bool SetBotItemPriority(string itemName, float priority)
-        {
-            itemName = ConvertItemPublicName(itemName);
-            if (fullGlowStickNames.Contains(itemName))
-            { 
-                //Why are there 4 glowsticks?!
-                //And why does the red one have the color first?!
+        //private static bool SetBotItemPriority(string itemName, float priority)
+        //{
+        //    itemName = ConvertItemPublicName(itemName);
+        //    if (fullGlowStickNames.Contains(itemName))
+        //    { 
+        //        //Why are there 4 glowsticks?!
+        //        //And why does the red one have the color first?!
 
-                foreach (string glowStick in fullGlowStickNames)
-                {
-                    bool uhOh = I_SetBotItemPriority(glowStick, priority);
-                    if (!uhOh)
-                    {
-                        ZiMain.log.LogError($"Something went VERY wrong. {glowStick} not found!");
-                        return false;
-                    }
-                }
-                return true;
-            }
-            return I_SetBotItemPriority(itemName,priority);
-        }
-        public static bool SetBotItemPriority(uint id, float priority, ulong netSender = 0) //flowthrough main
-        {
-            if (netSender == 0)
-            {
-                pItemPrio info = new pItemPrio();
-                info.id = id;
-                info.prio = priority;
-                NetworkAPI.InvokeEvent<pStructs.pItemPrio>("SetItemPrio",info);
-            }
-            I_SetBotItemPriority(id, priority);
-            return false;
-        }
-        private static bool I_SetBotItemPriority(string itemName, float priority)
-        {
-            if (ItemDataBlock.s_blockIDByName.ContainsKey(itemName))
-            {
-                uint id = ItemDataBlock.GetBlockID(itemName);
-                return I_SetBotItemPriority(id, priority);
-            }
-            return false;
-        }
-        private static bool I_SetBotItemPriority(uint itemID, float priority)
-        {
-            if (ItemDataBlock.s_blockByID.ContainsKey(itemID))
-            {
-                itemPrios[itemID] = priority;
-                if (!PlayerAIBot.s_recognisedItemTypes.Contains(itemID))
-                    PlayerAIBot.s_recognisedItemTypes.Add(itemID);
-                if (GlowStickIds.Contains(itemID))
-                {
-                    foreach (var glowstickID in GlowStickIds)
-                    {
-                        itemPrios[glowstickID] = priority;
-                    }
-                }
-                return true;
-            }
-            return false;
-        }
+        //        foreach (string glowStick in fullGlowStickNames)
+        //        {
+        //            bool uhOh = I_SetBotItemPriority(glowStick, priority);
+        //            if (!uhOh)
+        //            {
+        //                ZiMain.log.LogError($"Something went VERY wrong. {glowStick} not found!");
+        //                return false;
+        //            }
+        //        }
+        //        return true;
+        //    }
+        //    return I_SetBotItemPriority(itemName,priority);
+        //}
+        //public static bool SetBotItemPriority(uint id, float priority, ulong netSender = 0) //flowthrough main
+        //{
+        //    if (netSender == 0)
+        //    {
+        //        pItemPrio info = new pItemPrio();
+        //        info.id = id;
+        //        info.prio = priority;
+        //        NetworkAPI.InvokeEvent<pStructs.pItemPrio>("SetItemPrio",info);
+        //    }
+        //    I_SetBotItemPriority(id, priority);
+        //    return false;
+        //}
+        //private static bool I_SetBotItemPriority(string itemName, float priority)
+        //{
+        //    if (ItemDataBlock.s_blockIDByName.ContainsKey(itemName))
+        //    {
+        //        uint id = ItemDataBlock.GetBlockID(itemName);
+        //        return I_SetBotItemPriority(id, priority);
+        //    }
+        //    return false;
+        //}
+        //private static bool I_SetBotItemPriority(uint itemID, float priority)
+        //{
+        //    if (ItemDataBlock.s_blockByID.ContainsKey(itemID))
+        //    {
+        //        itemPrios[itemID] = priority;
+        //        if (!PlayerAIBot.s_recognisedItemTypes.Contains(itemID))
+        //            PlayerAIBot.s_recognisedItemTypes.Add(itemID);
+        //        if (GlowStickIds.Contains(itemID))
+        //        {
+        //            foreach (var glowstickID in GlowStickIds)
+        //            {
+        //                itemPrios[glowstickID] = priority;
+        //            }
+        //        }
+        //        return true;
+        //    }
+        //    return false;
+        //}
 
         //TODO - refactor this bullshit
         //public static void OldSetActionPermission(string actionKey, bool allowed, int playerID = -1, ulong netSender = 0)

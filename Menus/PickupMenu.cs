@@ -5,60 +5,71 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using ZombieTweak2.Patches;
 using Zombified_Initiative;
+using static SlideMenu.sMenu;
 
 namespace ZombieTweak2.Menus
 {
     public static class PickupMenuClass
     {
-        public static Dictionary<uint, sMenu.sMenuNode> prioNodesByID;
+        //public static Dictionary<uint, sMenu.sMenuNode> prioNodesByID;
         public static sMenu pickupMenu;
         public static sMenu.sMenuNode pickupNode;
         public static OverrideTree<int?> pickupDistance;
         public static void Setup(sMenu menu)
         {
-            prioNodesByID = new Dictionary<uint, sMenu.sMenuNode>();
+            PickupActionPatch.SetUp();
+            //prioNodesByID = new Dictionary<uint, sMenu.sMenuNode>();
             pickupDistance = new(15, "pickupDistance");
             pickupMenu = menu;
             pickupMenu.radius = 125f;
             pickupNode = pickupMenu.GetNode();
-            pickupDistance.AddNode("Pickup", null).onChanged.Listen(SetSearchDistance, [pickupDistance.ValueAt("Pickup")]).Listen(UpdateNodeSettingsDisplay, [pickupNode]);
+            pickupDistance.AddNode("Pickup", null, "Default").onChanged.Listen(SetSearchDistance, [pickupDistance.ValueAt("Pickup")]).Listen(UpdateNodeSettingsDisplay, [pickupNode]);
 
             sMenu.sMenuNode glowstickNode = null;
-            foreach (var item in zSlideComputer.itemPrios)
+            foreach (string itemName in PickupActionPatch.fullItemNameList)
             {
-                uint itemID = item.Key;
-                ItemDataBlock block = ItemDataBlock.s_blockByID[itemID];
+                //uint itemID = itemName.Key;
+                ItemDataBlock block = ItemDataBlock.GetBlock(itemName);
                 string publicName = block.publicName;
                 sMenu.sMenuNode node = null;
-                bool isGlowstick = zSlideComputer.shortGlowStickNames.Contains(publicName);
+                uint id = block.persistentID;
+                bool isGlowstick = PickupActionPatch.fullGlowStickNames.Contains(itemName);
                 if (isGlowstick)
                 {
                     if (glowstickNode == null)
                     {
-                        glowstickNode = pickupMenu.AddNode(zSlideComputer.shortGlowStickNames.FirstOrDefault());
-                        prioNodesByID[itemID] = glowstickNode;
+                        string name = PickupActionPatch.shortGlowStickNames.FirstOrDefault();
+                        glowstickNode = pickupMenu.AddNode(name);
+                        zSlideComputer.actionNameToMenuNodes.Add(name, glowstickNode);
+                    }
+                    else
+                    {
+                        continue;
                     }
                     node = glowstickNode;
                 }
                 else
                 {
                     node = pickupMenu.AddNode(publicName);
-                    prioNodesByID[itemID] = node;
+                    if (!PlayerAIBot.s_recognisedItemTypes.Contains(id))
+                        PlayerAIBot.s_recognisedItemTypes.Add(id);
+                    zSlideComputer.actionNameToMenuNodes.Add(itemName, node);
                 }
                 //TODO uncomment then when moved over to overide system instead of selection system.
                 //var thisNode = menu.parrentMenu.GetNode(menu.centerNode.text);
                 //thisNode.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
                 //thisNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, menu.Open);
                 //thisNode.AddListener(sMenuManager.nodeEvent.OnTapped, TogglePerms);
-                node.AddListener(sMenuManager.nodeEvent.WhileSelected, ChangePrioBasedOnMouseWheel, itemID, node);
-                node.AddListener(sMenuManager.nodeEvent.OnTapped, zSlideComputer.ToggleItemPrioDisabled, itemID);
-                node.AddListener(sMenuManager.nodeEvent.OnTapped, updateNodePriorityDisplay, node, itemID);//TODO make these args order consistant.
-                node.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, ResetNodeSettings, itemID, node);
+                node.AddListener(sMenuManager.nodeEvent.WhileSelected, ChangePrioBasedOnMouseWheel, itemName, node);
+                node.AddListener(sMenuManager.nodeEvent.OnTapped, zSlideComputer.GenericToggleAllowed, itemName);
+                node.AddListener(sMenuManager.nodeEvent.OnTapped, updateNodePriorityDisplay, itemName, node);
+                node.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, ResetNodeSettings, itemName, node);
                 pickupMenu.centerNode.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
                 pickupMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnTapped, pickupMenu.parrentMenu.Open);
-                pickupMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, ResetNodeSettings, itemID, node);
-                pickupMenu.AddListener(sMenuManager.menuEvent.OnOpened, updateNodePriorityDisplay, node, itemID);
+                pickupMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, ResetNodeSettings, itemName, node);
+                pickupMenu.AddListener(sMenuManager.menuEvent.OnOpened, updateNodePriorityDisplay, itemName, node);
                 node.fullTextPart.SetScale(1f, 1f);
                 node.subtitlePart.SetScale(0.75f, 0.75f);
                 node.titlePart.SetScale(0.5f, 0.5f);
@@ -160,20 +171,22 @@ namespace ZombieTweak2.Menus
         }
         private static void ResetSettings(sMenu.sMenuNode node)
         {
-            pickupDistance.SetValue("Pickup", null);
+            pickupDistance.ResetToDefault("Pickup");
+            zSlideComputer.ActionPermissions.ResetToDefault("Pickup");
+            zSlideComputer.ActionPriorities.ResetToDefault("Pickup");
+            UpdateNodeSettingsDisplay(node);
         }
-        private static void ResetNodeSettings(uint itemID, sMenu.sMenuNode node)
+        private static void ResetNodeSettings(string itemName, sMenu.sMenuNode node)
         {
             if (!node.gameObject.activeInHierarchy)
                 return;
-            pickupDistance.SetValue(node.text, null);
-            zSlideComputer.ResetItemPrio(itemID);
-            zSlideComputer.SetItemPrioDisabled(itemID, true);
-            updateNodePriorityDisplay(node, itemID);
+            zSlideComputer.ActionPermissions.ResetToDefault(itemName);
+            zSlideComputer.ActionPriorities.ResetToDefault(itemName);
+            updateNodePriorityDisplay(itemName, node);
         }
-        public static void updateNodePriorityDisplay(sMenu.sMenuNode node, uint itemID)
+        public static void updateNodePriorityDisplay(string itemName, sMenu.sMenuNode node)
         {
-            if (zSlideComputer.itemPrios[itemID] == zSlideComputer.OriginalItemPrios[itemID])
+            if (zSlideComputer.ActionPriorities.GetNodeFromIdent(itemName).IsDefaultValue())
             {
                 node.SetPrefix("");
                 node.SetSuffix("");
@@ -183,9 +196,10 @@ namespace ZombieTweak2.Menus
                 node.SetPrefix("* ");
                 node.SetSuffix(" *");
             }
-            string hex = ColorUtility.ToHtmlStringRGB(GetPriorityColor(zSlideComputer.GetItemPrio(itemID)));
-            node.SetSubtitle($"<color=#CC840066>[ </color><color=#{hex}>{zSlideComputer.GetItemPrio(itemID)}</color><color=#CC840066> ]</color>");
-            if (zSlideComputer.enabledItemPrios[itemID])
+            float prioValue = (float)zSlideComputer.ActionPriorities.ValueAt(itemName);
+            string hex = ColorUtility.ToHtmlStringRGB(GetPriorityColor(prioValue));
+            node.SetSubtitle($"<color=#CC840066>[ </color><color=#{hex}>{prioValue}</color><color=#CC840066> ]</color>");
+            if ((bool)zSlideComputer.ActionPermissions.ValueAt(itemName))
                 node.SetColor(sMenuManager.defaultColor);
             else
                 node.SetColor(new Color(0.25f, 0f, 0f));
@@ -206,17 +220,17 @@ namespace ZombieTweak2.Menus
                 return Color.Lerp(yellow, green, (value - 25f) / 25f);
             return Color.Lerp(green, blue, (value - 50f) / 50f);
         }
-        public static void ChangePrioBasedOnMouseWheel(uint itemID, sMenu.sMenuNode node, int increment = 10)
+        public static void ChangePrioBasedOnMouseWheel(string itemName, sMenu.sMenuNode node, int increment = 10)
         {
-            if (node == null || !node.gameObject.activeInHierarchy || !zSlideComputer.enabledItemPrios[itemID])
+            if (node == null || !node.gameObject.activeInHierarchy)
                 return;
             float scroll = Input.GetAxis("Mouse ScrollWheel");
             int normalizedScroll = (int)Mathf.Sign(scroll);
             if (scroll == 0f)
                 return;
-            float currentPrio = zSlideComputer.GetItemPrio(itemID);
-            zSlideComputer.SetBotItemPriority(itemID, Mathf.Clamp(currentPrio + normalizedScroll * increment, 0, 100));
-            updateNodePriorityDisplay(node, itemID);
+            float currentPrio = (float)zSlideComputer.ActionPriorities.ValueAt(itemName);
+            zSlideComputer.ActionPriorities.SetValue(itemName, Mathf.Clamp(currentPrio + normalizedScroll * increment, 0, 100));
+            updateNodePriorityDisplay(itemName, node);
         }
     }
 }
