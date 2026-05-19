@@ -13,9 +13,10 @@ using UnityEngine;
 using ZombieTweak2;
 using ZombieTweak2.Menus;
 using ZombieTweak2.zRootBotPlayerAction;
+using Zombified_Initiative;
 using static Zombified_Initiative.ZiMain;
 
-namespace Zombified_Initiative;
+namespace ZombieTweak2.Patches;
 
 [HarmonyPatch]
 public class ZombifiedPatches
@@ -334,17 +335,17 @@ public class ZombifiedPatches
             List<string> lines = new List<string>(original.Split('\n'));
             foreach (string line in lines)
             {
-                if (line.Contains("Pickup:") && (line.Contains("True") != allowedPickup)) 
+                if (line.Contains("Pickup:") && line.Contains("True") != allowedPickup) 
                 {
                     dirty = true;
                     break;
                 }
-                if (line.Contains("Share:") && (line.Contains("True") != allowedShare)) 
+                if (line.Contains("Share:") && line.Contains("True") != allowedShare) 
                 {
                     dirty = true;
                     break;
                 }
-                if (line.Contains("Sentry:") && (line.Contains("True") == allowedMove))
+                if (line.Contains("Sentry:") && line.Contains("True") == allowedMove)
                 {
                     dirty = true;
                     break;
@@ -393,9 +394,9 @@ public class ZombifiedPatches
             }
 
             string instanceType = __instance != null ? __instance.GetIl2CppType().Name : "INSTANCE IS NULL";
-            string actionType = (desc != null && desc.ActionBase != null) ? desc.ActionBase.GetIl2CppType().Name : "desc.ActionBase is NULL";
+            string actionType = desc != null && desc.ActionBase != null ? desc.ActionBase.GetIl2CppType().Name : "desc.ActionBase is NULL";
             if (instanceType == "INSTANCE IS NULL" || instanceType == "PlayerBotActionCollectItem")
-                ZiMain.log.LogWarning($"Action collision! botName={botName}, instanceType={instanceType}, actionType={actionType}");
+                log.LogWarning($"Action collision! botName={botName}, instanceType={instanceType}, actionType={actionType}");
         }
     }
     public static Dictionary<int, float> lastTimeCheckedForWakeUp = new();
@@ -479,7 +480,7 @@ public class ZombifiedPatches
                 lastTimeCheckedForWakeUp[__instance.m_bot.GetInstanceID()] = Time.time;
                 if (rng.Next(0, wakeChancePerSecond) == 0)
                 {
-                    ZiMain.wakeUpRoom(__instance.m_bot, targetObject);
+                    wakeUpRoom(__instance.m_bot, targetObject);
                     __instance.DescBase.SetCompletionStatus(PlayerBotActionBase.Descriptor.StatusType.Failed);
                 }
             }
@@ -539,7 +540,7 @@ public class ZombifiedPatches
             aimTransform = __instance.FindVulnerableTarget(__instance.m_currentAttackOption.TargetAgent,
                                                 preservedTarget,
                                                 out vulnerableScore);
-            strike = (0.2f < vulnerableScore); // decomp used 0.2 < local_res20[0]
+            strike = 0.2f < vulnerableScore; // decomp used 0.2 < local_res20[0]
         }
 
         // 5) If we have no current attack option, abort (decomp branches to trap)
@@ -565,7 +566,7 @@ public class ZombifiedPatches
             // New fields present in IL2CPP decomp
             descriptor.Push = push;
             descriptor.Loop = !push;
-            descriptor.Travel = (stance == PlayerBotActionAttack.StanceEnum.Engage /* == 2 in decomp */);
+            descriptor.Travel = stance == PlayerBotActionAttack.StanceEnum.Engage /* == 2 in decomp */;
 
             // Values observed in the decomp
             descriptor.Haste = __instance.m_desc.Haste;
