@@ -6,28 +6,18 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Zombified_Initiative;
-using static Il2CppSystem.Linq.Expressions.Interpreter.NullableMethodCallInstruction;
 
 namespace ZombieTweak2.Menus
 {
     public static class PickupMenuClass
     {
         public static Dictionary<uint, sMenu.sMenuNode> prioNodesByID;
-        private static Dictionary<string, List<string>> catagories;
-        private static int catagoryIndex;
         public static sMenu pickupMenu;
         public static sMenu.sMenuNode pickupNode;
         public static OverrideTree<int?> pickupDistance;
         public static void Setup(sMenu menu)
         {
-
-
-            //TODO something seems to be breaking pickup permisions. They will always pick up items.
-
-
             prioNodesByID = new Dictionary<uint, sMenu.sMenuNode>();
-            catagories = new();
-            catagoryIndex = 1;
             pickupDistance = new(15, "pickupDistance");
             pickupMenu = menu;
             pickupMenu.radius = 125f;
