@@ -3,10 +3,13 @@ using Il2CppInterop.Runtime.Injection;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using Player;
 using UnityEngine;
+using ZombieTweak2.zRootBotPlayerAction;
+
+
 //using ZombieTweak2.zRootBotPlayerAction.CustomActions;
 using Zombified_Initiative;
 
-namespace ZombieTweak2.zRootBotPlayerAction.Patches
+namespace ZombieTweak2.Patches
 {
     [HarmonyPatch]
     internal class PlayerAiBotPatch

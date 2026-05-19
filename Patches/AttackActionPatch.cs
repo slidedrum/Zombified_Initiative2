@@ -4,7 +4,7 @@ using SlideMenu;
 using System.Collections.Generic;
 using ZombieTweak2.Menus;
 
-namespace ZombieTweak2.CustomActions.Patches
+namespace ZombieTweak2.Patches
 {
     [HarmonyPatch]
     public class AttackActionPatch

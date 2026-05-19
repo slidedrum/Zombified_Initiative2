@@ -4,7 +4,7 @@ using SlideMenu;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using ZombieTweak2.CustomActions.Patches;
+using ZombieTweak2.Patches;
 using ZombieTweak2.zRootBotPlayerAction;
 using Zombified_Initiative;
 

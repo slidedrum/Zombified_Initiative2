@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ZombieTweak2.Menus;
 
-namespace ZombieTweak2.CustomActions.Patches
+namespace ZombieTweak2.Patches
 {
     [HarmonyPatch]
     public class HighlightActionPatch

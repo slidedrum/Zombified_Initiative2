@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 using UnityEngine;
 using Zombified_Initiative;
 
-namespace ZombieTweak2.CustomActions.Patches
+namespace ZombieTweak2.Patches
 {
     [HarmonyPatch]
     internal class ShareActionPatch

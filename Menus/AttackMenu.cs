@@ -1,6 +1,6 @@
 ﻿using Player;
 using SlideMenu;
-using ZombieTweak2.CustomActions.Patches;
+using ZombieTweak2.Patches;
 
 namespace ZombieTweak2.Menus
 {

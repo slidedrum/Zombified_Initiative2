@@ -13,7 +13,7 @@ using UnityEngine;
 using ZombieTweak2.Menus;
 using Zombified_Initiative;
 
-namespace ZombieTweak2.CustomActions.Patches
+namespace ZombieTweak2.Patches
 {
     [HarmonyPatch]
     internal class PickupActionPatch
@@ -168,7 +168,7 @@ namespace ZombieTweak2.CustomActions.Patches
             float bestItemPrio = 0.0f;
             AIG_CourseNode activityNode = null;
             Vector3 activityEpicenter = Vector3.zero;
-            Player.BackpackItem foundBackpackItem = null;
+            BackpackItem foundBackpackItem = null;
 
             // If there is an active collect action and it's NOT terminated -> do nothing
             if (collect != null)
@@ -403,7 +403,7 @@ namespace ZombieTweak2.CustomActions.Patches
                         }
 
                         // compute the item priority for picking it up
-                        GameData.ItemDataBlock dataBlock = itemComponent.ItemDataBlock;
+                        ItemDataBlock dataBlock = itemComponent.ItemDataBlock;
                         if (dataBlock == null)
                         {
                             counter++;
@@ -422,7 +422,7 @@ namespace ZombieTweak2.CustomActions.Patches
                         // If item type exists and we have a backpack, compare against an existing backpack item slot
                         if (__instance.m_backpack != null)
                         {
-                            Player.BackpackItem existing;
+                            BackpackItem existing;
                             if (__instance.m_backpack.TryGetBackpackItem(dataBlock.inventorySlot, out existing))
                             {
                                 // If the existing backpack item has equal-or-better priority, skip this item
