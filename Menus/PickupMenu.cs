@@ -91,6 +91,9 @@ namespace ZombieTweak2.Menus
             pickupNode.ClearListeners(sMenuManager.nodeEvent.WhileSelected);
             pickupNode.AddListener(sMenuManager.nodeEvent.OnDoubleTapped, pickupMenu.Open);
             pickupNode.AddListener(sMenuManager.nodeEvent.WhileSelected, UpdateNodeBasedOnScroll, pickupNode);
+
+            pickupMenu.AddPannel(sMenu.sMenuPannel.Side.top, "Controls what bots will pickup.");
+            pickupMenu.AddPannel(sMenu.sMenuPannel.Side.bottom, "Scroll to change the priority of different items.");
         }
         private static void UpdateNodeBasedOnScroll(sMenu.sMenuNode node)
         {

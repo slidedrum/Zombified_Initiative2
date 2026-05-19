@@ -25,14 +25,10 @@ namespace ZombieTweak2.Menus
             botsNode.AddListener(sMenuManager.nodeEvent.OnPressed, AutomaticActionMenuClass.GenericToggleAllowed, "ReviveBots");
             zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("RevivePlayers", true, playersNode, typeof(PlayerBotActionRevive));
             zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("ReviveBots", true, botsNode, typeof(PlayerBotActionRevive));
-            //overidesMenu = new sMenu("overrides", reviveMenu);
-            //reviveMenu.AddNode(overidesMenu);
-            //var playerAgents = PlayerManager.PlayerAgentsInLevel;
-            //foreach (PlayerAgent agent in playerAgents)
-            //{
-            //    string name = agent.PlayerName;
-            //    overideNodes[name] = overidesMenu.AddNode(name, toggleOveridePerms, name);
-            //}
+
+            reviveMenu.AddPannel(sMenu.sMenuPannel.Side.top, "Controls who the bots are allowed to revive");
+            reviveMenu.AddPannel(sMenu.sMenuPannel.Side.top, "I plan to add a way to control revives of spesific plaers");
+            reviveMenu.AddPannel(sMenu.sMenuPannel.Side.top, "Maybe an option to only revive their leader?");
         }
     }
 }

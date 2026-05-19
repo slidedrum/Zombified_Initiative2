@@ -23,6 +23,8 @@ namespace ZombieTweak2.Menus
             bulletNode = attackMenu.AddNode("Guns", AttackActionPatch.ToggleMeansPerms, PlayerBotActionAttack.AttackMeansEnum.Bullet);
             //secondaryNode = attackMenu.AddNode("Secondary", AttackActionPatch.ToggleMeansPerms, PlayerBotActionAttack.AttackMeansEnum.Special);
 
+            attackMenu.AddPannel(sMenu.sMenuPannel.Side.top, "This controls if the bots are allowed to atack");
+            attackMenu.AddPannel(sMenu.sMenuPannel.Side.top, "And what they are allowed to attack with");
             attackMenu.AddPannel(sMenu.sMenuPannel.Side.bottom, "These settings are a bit janky atm.");
             attackMenu.AddPannel(sMenu.sMenuPannel.Side.bottom, "Especially when changed in the middle of combat.");
             attackMenu.AddPannel(sMenu.sMenuPannel.Side.bottom, "I'm pretty sure that's not the fault of the mod.");

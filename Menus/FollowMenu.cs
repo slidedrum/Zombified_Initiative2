@@ -76,6 +76,7 @@ namespace ZombieTweak2.Menus
             followMenu.AddNodeToCatagory("Basic", "Explore");
             followMenu.AddCatagory("Advanced");
 
+            followMenu.AddPannel(sMenu.sMenuPannel.Side.top, "Controlls when and how closely the bots follow their leader.");
             followMenu.AddPannel(sMenu.sMenuPannel.Side.bottom, "Top: Priority, how important is staing in range?");
             followMenu.AddPannel(sMenu.sMenuPannel.Side.bottom, "Bottom left: Range, how close should the bots be?");
             followMenu.AddPannel(sMenu.sMenuPannel.Side.bottom, "Bottom right: Max distance, When should bots sprint?");
@@ -109,7 +110,7 @@ namespace ZombieTweak2.Menus
                 
                 //TODO these lines are horendious omg.
                 AutomaticActionMenuClass.ActionPriorities.AddNode(state.ToString(), null, parentNode, () => { return DramaManager.CurrentStateEnum == state; }).onChanged.Listen(AutomaticActionMenuClass.GenericUpdateNodePrioDisplay, args: [stateNode]);
-                AutomaticActionMenuClass.actionPermissions.AddNode(state.ToString(), null, parentNode).onChanged.Listen(AutomaticActionMenuClass.GenericUpdateAllowedDisplay, args: [stateNode]);
+                AutomaticActionMenuClass.ActionPermissions.AddNode(state.ToString(), null, parentNode).onChanged.Listen(AutomaticActionMenuClass.GenericUpdateNodeAllowedDisplay, args: [stateNode]);
                 AutomaticActionMenuClass.actionNameToMenuNodes[state.ToString()] = stateNode;
                 stateNodes[state] = stateNode;
                 UpdateNodeSettingsDisplay(stateNode);
@@ -140,14 +141,14 @@ namespace ZombieTweak2.Menus
         }
         public static void setAllowed(bool allowed, bool allowDissabled = false)
         {
-            bool current = (bool)AutomaticActionMenuClass.actionPermissions.ValueAt("Follow");
+            bool current = (bool)AutomaticActionMenuClass.ActionPermissions.ValueAt("Follow");
 
             // Already in desired state
             if (current == allowed)
                 return;
             if (!followMenuNode.gameObject.activeInHierarchy && !allowDissabled)
                 return;
-            AutomaticActionMenuClass.actionPermissions.SetValue("Follow", allowed);
+            AutomaticActionMenuClass.ActionPermissions.SetValue("Follow", allowed);
 
             var allbots = ZiMain.GetBotList();
 
@@ -200,7 +201,7 @@ namespace ZombieTweak2.Menus
         
         private static void UpdateToggleStateColors()
         {
-            if ((bool)AutomaticActionMenuClass.actionPermissions.ValueAt("Follow"))
+            if ((bool)AutomaticActionMenuClass.ActionPermissions.ValueAt("Follow"))
             {
                 followMenuNode.SetColor(sMenuManager.defaultColor);
                 followMenu.centerNode.SetColor(sMenuManager.defaultColor);
@@ -223,13 +224,13 @@ namespace ZombieTweak2.Menus
             catagoryNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, ResetSettings, catagoryNode);
             catagoryNode.AddListener(sMenuManager.nodeEvent.OnTapped, AutomaticActionMenuClass.GenericToggleAllowed, catagory);
             AutomaticActionMenuClass.actionNameToMenuNodes[catagory] = catagoryNode;
-            AutomaticActionMenuClass.actionPermissions.AddNode(catagory, null, "Follow").onChanged.Listen(AutomaticActionMenuClass.GenericUpdateAllowedDisplay, args: [catagoryNode]);
+            AutomaticActionMenuClass.ActionPermissions.AddNode(catagory, null, "Follow").onChanged.Listen(AutomaticActionMenuClass.GenericUpdateNodeAllowedDisplay, args: [catagoryNode]);
             return catagoryNode;
         }
         internal static void ResetSettings(sMenu.sMenuNode node)
         {
             string text = node.text;
-            AutomaticActionMenuClass.actionPermissions.SetValue(text, null);
+            AutomaticActionMenuClass.ActionPermissions.SetValue(text, null);
             AutomaticActionMenuClass.ActionPriorities.SetValue(text, null);
             followRadius.SetValue(text, null);
             maxDistance.SetValue(text, null);

@@ -12,6 +12,9 @@ namespace ZombieTweak2.Menus
             unlockNode = unlockMenu.GetNode();
             unlockNode.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
             unlockNode.AddListener(sMenuManager.nodeEvent.OnDoubleTapped, unlockMenu.Open);
+            unlockMenu.AddPannel(sMenu.sMenuPannel.Side.top, "This controls if the bots are allowed to smash locks on doors/containers");
+            unlockMenu.AddPannel(sMenu.sMenuPannel.Side.bottom, "No settins here (yet?)");
+            unlockMenu.AddPannel(sMenu.sMenuPannel.Side.bottom, "I'm not ev en sure what settings you would want.");
         }
     }
 }

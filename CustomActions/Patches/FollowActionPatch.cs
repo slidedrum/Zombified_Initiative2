@@ -81,7 +81,7 @@ namespace ZombieTweak2.CustomActions.Patches
         public static bool UpdateActionFollowPlayerPrePatch(RootPlayerBotAction __instance, ref PlayerBotActionBase.Descriptor bestAction)
         {
             var dramaState = DramaManager.CurrentStateEnum;
-            bool Allowed = (bool)AutomaticActionMenuClass.actionPermissions.ValueAt(dramaState.ToString());
+            bool Allowed = (bool)AutomaticActionMenuClass.ActionPermissions.ValueAt(dramaState.ToString());
             if (Allowed)
                 return true;
             zSlideComputer.RemoveActionsOfType(typeof(PlayerBotActionFollow));

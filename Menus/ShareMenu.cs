@@ -48,6 +48,10 @@ namespace ZombieTweak2.Menus
             shareMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnTapped, shareMenu.parrentMenu.Open);
             shareNode.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
             shareNode.AddListener(sMenuManager.nodeEvent.OnDoubleTapped, shareMenu.Open);
+
+            shareMenu.AddPannel(sMenu.sMenuPannel.Side.top, "Controls what resources bots will automatically share");
+            shareMenu.AddPannel(sMenu.sMenuPannel.Side.top, "You can also change the threshold you must be below for them to share.");
+            shareMenu.AddPannel(sMenu.sMenuPannel.Side.bottom, "Scroll to change threshold.");
         }
         public static void updateNodeThresholdDisplay(sMenu.sMenuNode node, uint itemID)
         {

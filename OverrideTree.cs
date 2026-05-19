@@ -1,4 +1,5 @@
 ﻿using GTFO.API;
+using InControl;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -154,7 +155,11 @@ namespace ZombieTweak2
         public T? SetValue(uint nodeID, T? value, ulong netSender = 0)
         {
             if (!nodesByID.ContainsKey(nodeID))
-                throw new KeyNotFoundException(nameof(nodeID));
+            {
+                ZiMain.log.LogWarning($"Tried to set unknown nodeID '{nodeID}' in '{treeID} ({identifier}) to '{value}' via netSender {netSender} ");
+                return default(T);
+            }
+            //throw new KeyNotFoundException(nameof(nodeID));
             var node = nodesByID[nodeID];
             ZiMain.log.LogDebug($"Setting value of node by ID '{nodeID}' ({node.GetNodeTreeString()}) in tree {treeID} ({identifier}) to '{value}' (netSender: {netSender})");
             return SetValue(nodesByID[nodeID].Key, value, netSender);
@@ -162,7 +167,11 @@ namespace ZombieTweak2
         public T? SetValue(string key, T? value, ulong netSender = 0)
         {
             if (!nodes.ContainsKey(key))
-                throw new KeyNotFoundException(nameof(key));
+            {
+                ZiMain.log.LogWarning($"Tried to set unknown key '{key}' in '{treeID} ({identifier}) to '{value}' via netSender {netSender} ");
+                return default(T);
+            }
+            //throw new KeyNotFoundException(nameof(key));
             Node node = nodes[key];
             ZiMain.log.LogDebug($"Setting value of node by key '{node.GetNodeTreeString()}' ({node.nodeID}) in tree {treeID} ({identifier}) to '{value}' (netSender: {netSender})");
             node.SetValue(value);
