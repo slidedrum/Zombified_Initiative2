@@ -225,7 +225,7 @@ namespace ZombieTweak2
                 localPlayer = PlayerManager.GetLocalPlayerAgent(); //might want to delay this.
             if (localPlayer == null)
                 return;
-            if (localPlayer.Owner.refSessionMode != SNetwork.eReplicationMode.Playing)
+            if (localPlayer.Owner.refSessionMode != SNetwork.eReplicationMode.Playing) //owner was null once, might need a null check?
             {
                 setup = false;
                 return;

@@ -145,7 +145,7 @@ namespace ZombieTweak2.zNetworking
             //    ZiMain.log.LogError($"Unknown id {playerID} recived!");
             //    return;
             //}
-            zSlideComputer.SetActionPermission(key, allowed, playerID, sender);
+            zSlideComputer.ActionPermissions.SetValue(key, allowed, sender);
             //zMenus.UpdateIndicatorForNode(zMenus.permissionMenu.GetNode("Pickups"), zSlideComputer.PickUpPerms);
             if (allowed)
             {
@@ -296,7 +296,7 @@ namespace ZombieTweak2.zNetworking
         {
             ZiMain.log.LogDebug("Recived request to update bool override tree!");
             ZiMain.log.LogDebug($"treeID:{info.treeID}, keyId:{info.keyId}, isNull:{info.isNull}, value:{info.value}");
-            int treeID = info.treeID;
+            uint treeID = info.treeID;
             uint keyId = info.keyId;
             bool isNull = info.isNull;
             bool? value;
@@ -311,7 +311,7 @@ namespace ZombieTweak2.zNetworking
         {
             ZiMain.log.LogDebug("Recived request to update int override tree!");
             ZiMain.log.LogDebug($"treeID:{info.treeID}, keyId:{info.keyId}, isNull:{info.isNull}, value:{info.value}");
-            int treeID = info.treeID;
+            uint treeID = info.treeID;
             uint keyId = info.keyId;
             bool isNull = info.isNull;
             int? value;
@@ -326,7 +326,7 @@ namespace ZombieTweak2.zNetworking
         {
             ZiMain.log.LogDebug("Recived request to update float override tree!");
             ZiMain.log.LogDebug($"treeID:{info.treeID}, keyId:{info.keyId}, isNull:{info.isNull}, value:{info.value}");
-            int treeID = info.treeID;
+            uint treeID = info.treeID;
             uint keyId = info.keyId;
             bool isNull = info.isNull;
             float? value;

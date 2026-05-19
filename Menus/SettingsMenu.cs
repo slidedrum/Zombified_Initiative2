@@ -18,6 +18,7 @@ namespace ZombieTweak2.Menus
             scaleMenu.centerNode.AddListener(sMenuManager.nodeEvent.WhileSelected, UpdateScaleByScroll);
             scaleNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, ResetScale);
             UpdateScaleNodeSubtitle();
+            scaleMenu.AddPannel(sMenu.sMenuPannel.Side.top, "More settings coming 'soon'!");
         }
         private static void ResetScale()
         {

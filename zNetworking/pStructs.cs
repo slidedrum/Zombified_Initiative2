@@ -146,21 +146,21 @@ namespace ZombieTweak2.zNetworking
         }
         internal struct pBoolOverideTreeInfo
         {
-            public int treeID;
+            public uint treeID;
             public uint keyId;
             public bool value;
             public bool isNull;
         }
         internal struct pIntOverideTreeInfo
         {
-            public int treeID;
+            public uint treeID;
             public uint keyId;
             public int value;
             public bool isNull;
         }
         internal struct pFloatOverideTreeInfo
         {
-            public int treeID;
+            public uint treeID;
             public uint keyId;
             public float value;
             public bool isNull;

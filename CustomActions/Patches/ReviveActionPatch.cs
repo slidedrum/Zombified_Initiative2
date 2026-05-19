@@ -32,7 +32,7 @@ namespace ZombieTweak2.CustomActions.Patches
             {
                 return false;
             }
-            if (!zSlideComputer.GetActionPermission("Revive", __instance.m_agent.Owner.PlayerSlotIndex()))
+            if (!(bool)zSlideComputer.ActionPermissions.ValueAt("Revive"))
                 return false;
             RootPlayerBotAction.s_tempObjReservation.CharacterID = __instance.m_agent.CharacterID;
             for (int i = 0; i < PlayerManager.PlayerAgentsInLevel.Count; i++)
@@ -48,9 +48,9 @@ namespace ZombieTweak2.CustomActions.Patches
                         if (!__instance.m_bot.ApplyRestrictionsToRootPosition(ref position, ref prio) || (position - playerAgent.Position).sqrMagnitude <= 1f)
                         {
                             bool allowed = true;
-                            if (!zSlideComputer.GetActionPermission("ReviveBots", __instance.m_bot.Agent.PlayerSlotIndex) && playerAgent.Owner.IsBot)
+                            if (!(bool)zSlideComputer.ActionPermissions.ValueAt("ReviveBots") && playerAgent.Owner.IsBot)
                                 allowed = false;
-                            else if (!zSlideComputer.GetActionPermission("RevivePlayers", __instance.m_bot.Agent.PlayerSlotIndex) && !playerAgent.Owner.IsBot)
+                            else if (!(bool)zSlideComputer.ActionPermissions.ValueAt("RevivePlayers") && !playerAgent.Owner.IsBot)
                                 allowed = false;
                             //else if (!zSlideComputer.GetReviveOveridesPermission(__instance.m_bot.Agent.PlayerSlotIndex, __instance.m_reviveAction.Client.PlayerSlotIndex) ?? false)
                             //    allowed = false;

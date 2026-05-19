@@ -170,7 +170,7 @@ namespace SlideMenu
                 else
                     DisableNode(node);
             }
-            
+            catagoryIndex = catagories.Keys.ToList().IndexOf(catagory);
             UpdatePannelPositions();
             OnCatagoryChanged.Invoke();
         }
@@ -241,7 +241,7 @@ namespace SlideMenu
         }
         public void Open()
         {
-            //FocusStateManager.ChangeState(eFocusState.FPS_CommunicationDialog);
+
             timeOpenedAt = Time.time;
             frameOpenedAt = Time.frameCount;
             if (parrentMenu == null)
@@ -290,7 +290,7 @@ namespace SlideMenu
         public sMenu ResetRelativePosition(bool setPos = true)
         {
             RelativePosition = Vector3.zero;
-            if (setPos)
+            if (setPos && sMenuManager.mainCamera != null)
                 return setPosition(sMenuManager.mainCamera.transform.position - RelativePosition);
             return this;
         }

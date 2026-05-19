@@ -69,11 +69,23 @@ namespace ZombieTweak2.CustomActions.Patches
 
             //TODO set up parralell overideTrees for each bot
             //TODO if this gets called every frame, maybe cache the values untill something changes in overide tree
-            __instance.         m_followLeaderAction.Prio =         (float)AutomaticActionMenuClass.ActionPriorities["Follow"].GetValue();
+            __instance.         m_followLeaderAction.Prio =         (float)zSlideComputer.ActionPriorities.ValueAt(DramaManager.CurrentStateEnum.ToString());
             RootPlayerBotAction.m_prioSettings.FollowLeaderRadius = (float)FollowMenuClass.followRadius.GetValue();
             RootPlayerBotAction.s_followLeaderRadius =              (float)FollowMenuClass.followRadius.GetValue();
             RootPlayerBotAction.s_followLeaderMaxDistance =         (float)FollowMenuClass.maxDistance.GetValue();
             return true;
-        } 
+        }
+        [HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.UpdateActionFollowPlayer))]
+        [HarmonyPrefix]
+        [HarmonyPriority(Priority.Last)] //Needed for betterbots compat
+        public static bool UpdateActionFollowPlayerPrePatch(RootPlayerBotAction __instance, ref PlayerBotActionBase.Descriptor bestAction)
+        {
+            var dramaState = DramaManager.CurrentStateEnum;
+            bool Allowed = (bool)zSlideComputer.ActionPermissions.ValueAt(dramaState.ToString());
+            if (Allowed)
+                return true;
+            zSlideComputer.RemoveActionsOfType(typeof(PlayerBotActionFollow));
+            return false;
+        }
     }
 }
