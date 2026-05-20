@@ -19,7 +19,6 @@ namespace ZombieTweak2.Menus
         public static OverrideTree<int?> pickupDistance;
         public static void Setup(sMenu menu)
         {
-            PickupActionPatch.SetUp();
             //prioNodesByID = new Dictionary<uint, sMenu.sMenuNode>();
             pickupDistance = new(15, "pickupDistance");
             pickupMenu = menu;
@@ -28,6 +27,8 @@ namespace ZombieTweak2.Menus
             pickupDistance.AddNode("Pickup", null, "Default").onChanged.Listen(SetSearchDistance, [pickupDistance.ValueAt("Pickup")]).Listen(UpdateNodeSettingsDisplay, [pickupNode]);
 
             sMenu.sMenuNode glowstickNode = null;
+            string glowstickNameTouse = PickupActionPatch.shortGlowStickNames.FirstOrDefault();
+
             foreach (string itemName in PickupActionPatch.fullItemNameList)
             {
                 //uint itemID = itemName.Key;
@@ -40,22 +41,32 @@ namespace ZombieTweak2.Menus
                 {
                     if (glowstickNode == null)
                     {
-                        string name = PickupActionPatch.shortGlowStickNames.FirstOrDefault();
-                        glowstickNode = pickupMenu.AddNode(name);
-                        zSlideComputer.actionNameToMenuNodes.Add(name, glowstickNode);
+                        glowstickNode = pickupMenu.AddNode(glowstickNameTouse);
+                        zSlideComputer.ActionPriorities.AddNode("Pickup" + glowstickNameTouse, 10, "Pickup", defaultValue: 10f).onChanged.Listen(updateNodePriorityDisplay, args: [glowstickNameTouse, glowstickNode]);
+                        zSlideComputer.ActionPriorities.AddNode("Pickup" + itemName, null, "Pickup" + glowstickNameTouse, defaultValue: null, hasDefaultValue: true);
+                        zSlideComputer.ActionPermissions.AddNode("Pickup" + glowstickNameTouse, null, "Pickup", defaultValue: null, hasDefaultValue: true).onChanged.Listen(updateNodePriorityDisplay, args: [glowstickNameTouse, glowstickNode]);
+                        zSlideComputer.ActionPermissions.AddNode("Pickup" + itemName, null, "Pickup" + glowstickNameTouse, defaultValue: null, hasDefaultValue: true);
+                        zSlideComputer.actionNameToMenuNodes.Add(glowstickNameTouse, glowstickNode);
                     }
                     else
                     {
+                        zSlideComputer.ActionPriorities.AddNode("Pickup" + itemName, null, "Pickup" + glowstickNameTouse, defaultValue: null, hasDefaultValue: true);
+                        zSlideComputer.ActionPermissions.AddNode("Pickup" + itemName, null, "Pickup" + glowstickNameTouse, defaultValue: null, hasDefaultValue: true);
                         continue;
                     }
                     node = glowstickNode;
                 }
                 else
                 {
+                    float priority = 0f;
+                    if (RootPlayerBotAction.s_itemBasePrios.ContainsKey(id))
+                        priority = RootPlayerBotAction.s_itemBasePrios[id];
                     node = pickupMenu.AddNode(publicName);
+                    zSlideComputer.ActionPriorities.AddNode("Pickup" + itemName, priority, "Pickup", defaultValue: priority).onChanged.Listen(PickupMenuClass.updateNodePriorityDisplay, args: [itemName, node]);
+                    zSlideComputer.ActionPermissions.AddNode("Pickup" + itemName, null, "Pickup", defaultValue: null, hasDefaultValue: true).onChanged.Listen(PickupMenuClass.updateNodePriorityDisplay, args: [itemName, node]);
                     if (!PlayerAIBot.s_recognisedItemTypes.Contains(id))
                         PlayerAIBot.s_recognisedItemTypes.Add(id);
-                    zSlideComputer.actionNameToMenuNodes.Add(itemName, node);
+                    zSlideComputer.actionNameToMenuNodes.Add("Pickup"+itemName, node);
                 }
                 //TODO uncomment then when moved over to overide system instead of selection system.
                 //var thisNode = menu.parrentMenu.GetNode(menu.centerNode.text);
@@ -63,7 +74,7 @@ namespace ZombieTweak2.Menus
                 //thisNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, menu.Open);
                 //thisNode.AddListener(sMenuManager.nodeEvent.OnTapped, TogglePerms);
                 node.AddListener(sMenuManager.nodeEvent.WhileSelected, ChangePrioBasedOnMouseWheel, itemName, node);
-                node.AddListener(sMenuManager.nodeEvent.OnTapped, zSlideComputer.GenericToggleAllowed, itemName);
+                node.AddListener(sMenuManager.nodeEvent.OnTapped, zSlideComputer.GenericToggleAllowed, "Pickup"+itemName);
                 node.AddListener(sMenuManager.nodeEvent.OnTapped, updateNodePriorityDisplay, itemName, node);
                 node.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, ResetNodeSettings, itemName, node);
                 pickupMenu.centerNode.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
@@ -136,7 +147,7 @@ namespace ZombieTweak2.Menus
         {
             string text = node.text;
             //var prio = AutomaticActionMenuClass.ActionPriorities["Pickup"];
-            if (zSlideComputer.ActionPriorities.nodes[text].IsDefaultValue() && pickupDistance.nodes[text].IsDefaultValue())
+            if (zSlideComputer.ActionPriorities.IsDefaultValue(text) && pickupDistance.IsDefaultValue(text))
             {
                 node.SetPrefix("");
                 node.SetSuffix("");
@@ -180,13 +191,13 @@ namespace ZombieTweak2.Menus
         {
             if (!node.gameObject.activeInHierarchy)
                 return;
-            zSlideComputer.ActionPermissions.ResetToDefault(itemName);
-            zSlideComputer.ActionPriorities.ResetToDefault(itemName);
+            zSlideComputer.ActionPermissions.ResetToDefault("Pickup" + itemName);
+            zSlideComputer.ActionPriorities.ResetToDefault("Pickup" + itemName);
             updateNodePriorityDisplay(itemName, node);
         }
         public static void updateNodePriorityDisplay(string itemName, sMenu.sMenuNode node)
         {
-            if (zSlideComputer.ActionPriorities.GetNodeFromIdent(itemName).IsDefaultValue())
+            if (zSlideComputer.ActionPriorities.GetNodeFromIdent("Pickup" + itemName).IsDefaultValue())
             {
                 node.SetPrefix("");
                 node.SetSuffix("");
@@ -196,10 +207,10 @@ namespace ZombieTweak2.Menus
                 node.SetPrefix("* ");
                 node.SetSuffix(" *");
             }
-            float prioValue = (float)zSlideComputer.ActionPriorities.ValueAt(itemName);
+            float prioValue = (float)zSlideComputer.ActionPriorities.ValueAt("Pickup" + itemName);
             string hex = ColorUtility.ToHtmlStringRGB(GetPriorityColor(prioValue));
             node.SetSubtitle($"<color=#CC840066>[ </color><color=#{hex}>{prioValue}</color><color=#CC840066> ]</color>");
-            if ((bool)zSlideComputer.ActionPermissions.ValueAt(itemName))
+            if ((bool)zSlideComputer.ActionPermissions.ValueAt("Pickup" + itemName))
                 node.SetColor(sMenuManager.defaultColor);
             else
                 node.SetColor(new Color(0.25f, 0f, 0f));
@@ -228,8 +239,8 @@ namespace ZombieTweak2.Menus
             int normalizedScroll = (int)Mathf.Sign(scroll);
             if (scroll == 0f)
                 return;
-            float currentPrio = (float)zSlideComputer.ActionPriorities.ValueAt(itemName);
-            zSlideComputer.ActionPriorities.SetValue(itemName, Mathf.Clamp(currentPrio + normalizedScroll * increment, 0, 100));
+            float currentPrio = (float)zSlideComputer.ActionPriorities.ValueAt("Pickup" + itemName);
+            zSlideComputer.ActionPriorities.SetValue("Pickup" + itemName, Mathf.Clamp(currentPrio + normalizedScroll * increment, 0, 100));
             updateNodePriorityDisplay(itemName, node);
         }
     }

@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using ZombieTweak2.Menus;
 using Zombified_Initiative;
 using static ZombieTweak2.zNetworking.pStructs;
 
@@ -83,72 +84,6 @@ namespace ZombieTweak2.Patches
         }
         private static List<string> _consumableItemNames;
 
-        public static Il2CppReferenceArray<ItemDataBlock> rawResourcePackItems
-        {
-            get
-            {
-                return ItemSpawnManager.m_itemDataPerInventorySlot?[(int)InventorySlot.ResourcePack];
-            }
-        }
-        public static Il2CppReferenceArray<ItemDataBlock> resourcePackItems
-        {
-            get
-            {
-                var source = rawResourcePackItems;
-
-                if (ReferenceEquals(source, _rawResourcePackItems))
-                    return _resourcePackItems;
-
-                _rawResourcePackItems = source;
-
-                _resourcePackItems = new Il2CppReferenceArray<ItemDataBlock>(
-                    source
-                        .Where(item =>
-                            item != null &&
-                            !unusedItems.Contains(item.name))
-                        .ToArray());
-
-                return _resourcePackItems;
-            }
-        }
-        private static Il2CppReferenceArray<ItemDataBlock> _rawResourcePackItems;
-        private static Il2CppReferenceArray<ItemDataBlock> _resourcePackItems;
-        public static List<string> resourcePackItemPublicNames
-        {
-            get
-            {
-                var items = resourcePackItems;
-
-                if (ReferenceEquals(items, _resourcePackItems) &&
-                    _resourcePackItemPublicNames != null)
-                    return _resourcePackItemPublicNames;
-
-                _resourcePackItemPublicNames = items
-                    .Select(item => item.publicName)
-                    .ToList();
-
-                return _resourcePackItemPublicNames;
-            }
-        }
-        private static List<string> _resourcePackItemPublicNames;
-        public static List<string> resourcePackItemNames
-        {
-            get
-            {
-                var items = resourcePackItems;
-
-                if (ReferenceEquals(items, _resourcePackItems) &&
-                    _resourcePackItemNames != null)
-                    return _resourcePackItemNames;
-
-                _resourcePackItemNames = items
-                    .Select(item => item.name)
-                    .ToList();
-
-                return _resourcePackItemNames;
-            }
-        }
-        private static List<string> _resourcePackItemNames;
         private static List<ItemDataBlock> _fullItemList;
         private static Il2CppReferenceArray<ItemDataBlock> _lastConsumables;
         private static Il2CppReferenceArray<ItemDataBlock> _lastResourcePacks;
@@ -157,7 +92,7 @@ namespace ZombieTweak2.Patches
             get
             {
                 var consumables = consumableItems;
-                var resourcePacks = resourcePackItems;
+                var resourcePacks = ShareActionPatch.resourcePackItems;
 
                 bool changed =
                     !ReferenceEquals(consumables, _lastConsumables) ||
@@ -215,31 +150,11 @@ namespace ZombieTweak2.Patches
         public static List<string> fullGlowStickNames = new() { "CONSUMABLE_GlowStick", "CONSUMABLE_GlowStick_Christmas", "CONSUMABLE_GlowStick_Halloween", "CONSUMABLE_GlowStick_Yellow" };
         public static List<string> shortGlowStickNames = new() { "Glow Stick", "Red Glow Stick", "Glow Stick Orange", "Glow Stick Yellow" };
         public static List<string> unusedItems = new() { "CONSUMABLE_Flare", "CONSUMABLE_Grenade", "CONSUMABLE_Portable_Barrier" , "CONSUMABLE_ShapedMine_Explosive" };
-        public static List<uint> GlowStickIds { get; private set; }
+        //public static List<uint> GlowStickIds { get; internal set; }
 
         internal static void SetUp()
         {
-            GlowStickIds = new List<uint>();
-            foreach (var glowstickName in fullGlowStickNames)
-            {
-                var glowstickID = ItemDataBlock.GetBlockID(glowstickName);
-                GlowStickIds.Add(glowstickID);
-                zSlideComputer.ActionPriorities.AddNode(glowstickName, 10, "Pickup", defaultValue: 10);
-                zSlideComputer.ActionPermissions.AddNode(glowstickName, null, "Pickup", defaultValue: null, hasDefaultValue: true);
-            }
-            
-            foreach (ItemDataBlock block in fullItemList)
-            {
-                string name = block.name;
-                if (fullGlowStickNames.Contains(name))
-                    continue;
-                uint id = block.persistentID;
-                float priority = 0f;
-                if (RootPlayerBotAction.s_itemBasePrios.ContainsKey(id))
-                    priority = RootPlayerBotAction.s_itemBasePrios[id];
-                zSlideComputer.ActionPriorities.AddNode(name, priority, "Pickup", defaultValue: priority).onChanged.Listen(SetInternalPriority, args: [name]);
-                zSlideComputer.ActionPermissions.AddNode(name, null, "Pickup", defaultValue: null, hasDefaultValue: true).onChanged.Listen(SetInternalPriority, args: [name]);
-            }
+
 
             //foreach (var kvp in RootPlayerBotAction.s_itemBasePrios)
             //{
@@ -252,27 +167,6 @@ namespace ZombieTweak2.Patches
             //    zSlideComputer.ActionPermissions.AddNode(name, null, "Pickup", defaultValue: null).onChanged.Listen(SetInternalPriority, args: [name]);
             //}
         }
-        private static void SetAllInternalPriorities()
-        { //This might not be needed, as we might be replacing all logic that uses itemBasePrios
-            foreach (var kvp in RootPlayerBotAction.s_itemBasePrios)
-            {
-                uint id = kvp.Key;
-                string name = ItemDataBlock.GetBlockName(id);
-                SetInternalPriority(name);
-            }
-        }
-        private static void SetInternalPriority(string name)
-        {
-            bool allowed = (bool)zSlideComputer.ActionPermissions.ValueAt(name);
-            uint id = ItemDataBlock.GetBlockID(name);
-            if (!allowed)
-            {
-                RootPlayerBotAction.s_itemBasePrios[id] = 0f;
-                return;
-            }
-            float newValue = (float)zSlideComputer.ActionPriorities.ValueAt(name);
-            RootPlayerBotAction.s_itemBasePrios[id] = newValue;
-        }
         [HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.GetItemPrio))]
         [HarmonyPrefix]
         public static bool GetItemPrio(RootPlayerBotAction __instance, InventorySlot itemSlot, uint itemID, ref float __result)
@@ -283,12 +177,15 @@ namespace ZombieTweak2.Patches
 
             //var originalResult = __result;
             __result = 0f;
-            if (!(bool)zSlideComputer.ActionPermissions.ValueAt("Pickup"))
-                return false;
-            if ((float)zSlideComputer.ActionPriorities.ValueAt("Pickup") == 0f)
-                return false;
+            //if (!(bool)zSlideComputer.ActionPermissions.ValueAt("Pickup"))
+            //    return false;
+            //if ((float)zSlideComputer.ActionPriorities.ValueAt("Pickup") == 0f)
+            //    return false;
             string itemName = ItemDataBlock.GetBlockName(itemID);
-            if (zSlideComputer.ActionPermissions.HasKey(itemName) && !(bool)zSlideComputer.ActionPermissions.ValueAt(itemName)) // if there is a specific setting for this item, and it's false, don't pick it up at all (prio 0)
+            string actionKey = "Pickup" + itemName;
+            if (zSlideComputer.ActionPermissions.HasKey(actionKey) && !(bool)zSlideComputer.ActionPermissions.ValueAt(actionKey)) // if there is a specific setting for this item, and it's false, don't pick it up at all (prio 0)
+                return false;
+            if (zSlideComputer.ActionPriorities.HasKey(actionKey) && 0 == (int)zSlideComputer.ActionPriorities.ValueAt(actionKey)) // if there is a specific setting for this item, and it's false, don't pick it up at all (prio 0)
                 return false;
             //if (!zSlideComputer.enabledItemPrios.ContainsKey(itemID) || !zSlideComputer.enabledItemPrios[itemID])
             //    return false;
@@ -303,7 +200,7 @@ namespace ZombieTweak2.Patches
                 return false;
             }
             __result = 0f;
-            float basePriority = (float)zSlideComputer.ActionPriorities.ValueAt(itemName);
+            float basePriority = (float)zSlideComputer.ActionPriorities.ValueAt(actionKey);
             //float basePriority = RootPlayerBotAction.s_itemBasePrios[itemID];
 
             List<PlayerAgent> playerAgentsList = PlayerManager.PlayerAgentsInLevel.ToArray().ToList();
@@ -415,9 +312,9 @@ namespace ZombieTweak2.Patches
             // all this does is change it so it checks against agent position not "epicenter" position.
             // Local temporaries that match responsibilities seen in the decompiled code
 
-            bool allowed = (bool)zSlideComputer.ActionPermissions.ValueAt("Pickup");
-            if (!allowed)
-                return false;
+            //bool allowed = (bool)zSlideComputer.ActionPermissions.ValueAt("Pickup"); //This gets commented out because we may have an idividual item override.  that's handed under get item priority.
+            //if (!allowed)
+            //    return false;
 
             PlayerBotActionCollectItem.Descriptor collectItemActionDescriptor = __instance.m_collectItemAction;
             Item chosenItem = null;

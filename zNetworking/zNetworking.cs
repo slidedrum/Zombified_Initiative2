@@ -100,34 +100,34 @@ namespace ZombieTweak2.zNetworking
         //    zSlideComputer.SetBotItemPriority(id, prio, sender);
         //    PickupMenuClass.updateNodePriorityDisplay(id, PickupMenuClass.prioNodesByID[id]);
         //}
-        internal static void reciveSetResourceThreshold(ulong sender, pStructs.pResourceThreshold info)
-        {
-            ZiMain.log.LogInfo($"Recived set resource threshold value from network!");
-            uint id = info.id;
-            int threshold = info.threshold;
-            ZiMain.log.LogInfo($"id:{id}, threshold:{threshold}");
-            if (!ShareMenuClass.packNodesByID.ContainsKey(id))
-            {
-                ZiMain.log.LogError("Unknown id recived!");
-                return;
-            }
-            zSlideComputer.SetResourceThreshold(id, threshold, sender);
-            ShareMenuClass.updateNodeThresholdDisplay(ShareMenuClass.packNodesByID[id], id);
-        }
-        internal static void ReciveSetResourceThresholdDisable(ulong sender, pStructs.pResourceThresholdDisable info)
-        {
-            ZiMain.log.LogInfo($"Recived set resource disable value from network!");
-            uint id = info.id;
-            bool allowed = info.allowed;
-            ZiMain.log.LogInfo($"id:{id}, allowed:{allowed}");
-            if (!ShareMenuClass.packNodesByID.ContainsKey(id))
-            {
-                ZiMain.log.LogError("Unknown id recived!");
-                return;
-            }
-            zSlideComputer.SetResourceSharePermission(id, allowed, sender);
-            ShareMenuClass.updateNodeThresholdDisplay(ShareMenuClass.packNodesByID[id], id);
-        }
+        //internal static void reciveSetResourceThreshold(ulong sender, pStructs.pResourceThreshold info)
+        //{
+        //    ZiMain.log.LogInfo($"Recived set resource threshold value from network!");
+        //    uint id = info.id;
+        //    int threshold = info.threshold;
+        //    ZiMain.log.LogInfo($"id:{id}, threshold:{threshold}");
+        //    if (!ShareMenuClass.packNodesByItemName.ContainsKey(id))
+        //    {
+        //        ZiMain.log.LogError("Unknown id recived!");
+        //        return;
+        //    }
+        //    zSlideComputer.SetResourceThreshold(id, threshold, sender);
+        //    ShareMenuClass.updateNodeThresholdDisplay(ShareMenuClass.packNodesByItemName[id], id);
+        //}
+        //internal static void ReciveSetResourceThresholdDisable(ulong sender, pStructs.pResourceThresholdDisable info)
+        //{
+        //    ZiMain.log.LogInfo($"Recived set resource disable value from network!");
+        //    uint id = info.id;
+        //    bool allowed = info.allowed;
+        //    ZiMain.log.LogInfo($"id:{id}, allowed:{allowed}");
+        //    if (!ShareMenuClass.packNodesByItemName.ContainsKey(id))
+        //    {
+        //        ZiMain.log.LogError("Unknown id recived!");
+        //        return;
+        //    }
+        //    zSlideComputer.SetResourceSharePermission(id, allowed, sender);
+        //    ShareMenuClass.updateNodeThresholdDisplay(ShareMenuClass.packNodesByItemName[id], id);
+        //}
 
         internal static void ReciveSetActionPermission(ulong sender, pStructs.pGenericPermission info)
         {

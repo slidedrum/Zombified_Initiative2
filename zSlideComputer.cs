@@ -20,13 +20,13 @@ namespace ZombieTweak2
         //This class is for handling things like stopping bots from do unwanted actions
 
         //public static Il2CppSystem.Collections.Generic.Dictionary<uint, float> itemPrios = new();
-        public static Il2CppSystem.Collections.Generic.Dictionary<uint, int> resourceThresholds = new();
+        //public static Il2CppSystem.Collections.Generic.Dictionary<uint, int> resourceThresholds = new();
         //public static Il2CppSystem.Collections.Generic.Dictionary<uint, bool> enabledItemPrios = new ();
-        public static Il2CppSystem.Collections.Generic.Dictionary<uint, bool> enabledResourceShares = new ();
-        public static Il2CppSystem.Collections.Generic.Dictionary<uint, float> OriginalItemPrios = new();
+        //public static Il2CppSystem.Collections.Generic.Dictionary<uint, bool> enabledResourceShares = new ();
+        //public static Il2CppSystem.Collections.Generic.Dictionary<uint, float> OriginalItemPrios = new();
         public static OverrideTree<float?> ActionPriorities;
         public static OverrideTree<bool?> ActionPermissions;
-        public static OverrideTree<int?> ItemPickupPriorities;
+        //public static OverrideTree<int?> ItemPickupPriorities;
         public static Dictionary<string, sMenu.sMenuNode> actionNameToMenuNodes;
         public static class PermissionDefinitions
         {
@@ -234,31 +234,31 @@ namespace ZombieTweak2
         //    return name;
   
         //}
-        public static void SetResourceThreshold(uint itemID, int threshold, ulong netSender = 0)
-        {
-            if (!resourceThresholds.ContainsKey(itemID))
-            {
-                ZiMain.log.LogWarning($"Attemted to set resource threshold for unknown id: {itemID} - {threshold}");
-                return;
-            }
-            if (netSender == 0)
-            {
-                pStructs.pResourceThreshold info = new pStructs.pResourceThreshold();
-                info.id = itemID;
-                info.threshold = threshold;
-                NetworkAPI.InvokeEvent<pStructs.pResourceThreshold>("SetResourceThreshold", info);
-            }
-            resourceThresholds[itemID] = Math.Clamp(threshold, 0, 100);
-        }
-        public static int GetResourceThreshold(uint itemID)
-        {
-            if (!resourceThresholds.ContainsKey(itemID))
-            {
-                ZiMain.log.LogWarning($"Attemted to get resource threshold for unknown id: {itemID}");
-                return 0;
-            }
-            return resourceThresholds[itemID];
-        }
+        //public static void SetResourceThreshold(uint itemID, int threshold, ulong netSender = 0)
+        //{
+        //    if (!resourceThresholds.ContainsKey(itemID))
+        //    {
+        //        ZiMain.log.LogWarning($"Attemted to set resource threshold for unknown id: {itemID} - {threshold}");
+        //        return;
+        //    }
+        //    if (netSender == 0)
+        //    {
+        //        pStructs.pResourceThreshold info = new pStructs.pResourceThreshold();
+        //        info.id = itemID;
+        //        info.threshold = threshold;
+        //        NetworkAPI.InvokeEvent<pStructs.pResourceThreshold>("SetResourceThreshold", info);
+        //    }
+        //    resourceThresholds[itemID] = Math.Clamp(threshold, 0, 100);
+        //}
+        //public static int GetResourceThreshold(uint itemID)
+        //{
+        //    if (!resourceThresholds.ContainsKey(itemID))
+        //    {
+        //        ZiMain.log.LogWarning($"Attemted to get resource threshold for unknown id: {itemID}");
+        //        return 0;
+        //    }
+        //    return resourceThresholds[itemID];
+        //}
         //private static bool SetBotItemPriority(string itemName, float priority)
         //{
         //    itemName = ConvertItemPublicName(itemName);
@@ -364,53 +364,43 @@ namespace ZombieTweak2
         //            RemoveActionsOfType(agent, type);
         //    }
         //}
-        internal static void GenericToggleAllowed(string actionKey, int botID = -1, bool allowDissabled = false)
+        internal static void GenericToggleAllowed(string actionKey, bool allowDissabled = false)
         {
+
+            if (!allowDissabled && !zSlideComputer.actionNameToMenuNodes[actionKey].gameObject.activeInHierarchy)
+                return;
             bool allowed = !(bool)zSlideComputer.ActionPermissions.ValueAt(actionKey);
-            GenericSetAllowed(actionKey, allowed, botID, allowDissabled: allowDissabled);
-            //Not taking menu or node as an arg here anymore.  Instead listen for onChanged event for the actionPermissions override tree.
-        }
-        internal static void GenericSetAllowed(string actionKey, bool allowed, int playerID = -1, bool allowDissabled = false)
-        {
-            if (!zSlideComputer.actionNameToMenuNodes[actionKey].gameObject.activeInHierarchy && !allowDissabled)
-                return;
-            if (playerID == -1)
-            {
-                zSlideComputer.ActionPermissions.SetValue(actionKey, allowed);
-                return;
-            }
-            zSlideComputer.ActionPermissions.SetValue($"{actionKey}Bot{playerID}", allowed);
-            return;
+            zSlideComputer.ActionPermissions.SetValue(actionKey, allowed);
         }
 
-        public static void ToggleResourceSharePermission(uint itemID)
-        {
-            if (!enabledResourceShares.ContainsKey(itemID))
-                return;
-            SetResourceSharePermission(itemID, !GetResourceSharePermission(itemID));
-        }
-        public static bool GetResourceSharePermission(uint itemID)
-        {
-            if (!enabledResourceShares.ContainsKey(itemID))
-            {
-                ZiMain.log.LogWarning($"tried to get resoruce share perms for unkown item id:{itemID}.");
-                return false;
-            }
-            return enabledResourceShares[itemID];
-        }
-        public static void SetResourceSharePermission(uint itemID, bool allowed, ulong netSender = 0)
-        {
-            if (!enabledResourceShares.ContainsKey(itemID))
-                return;
-            if (netSender == 0)
-            {
-                pStructs.pResourceThresholdDisable info = new pStructs.pResourceThresholdDisable();
-                info.id = itemID;
-                info.allowed = allowed;
-                NetworkAPI.InvokeEvent<pStructs.pResourceThresholdDisable>("SetResourceThresholdDisable", info);
-            }
-            enabledResourceShares[itemID] = allowed;
-        }
+        //public static void ToggleResourceSharePermission(uint itemID)
+        //{
+        //    if (!enabledResourceShares.ContainsKey(itemID))
+        //        return;
+        //    SetResourceSharePermission(itemID, !GetResourceSharePermission(itemID));
+        //}
+        //public static bool GetResourceSharePermission(uint itemID)
+        //{
+        //    if (!enabledResourceShares.ContainsKey(itemID))
+        //    {
+        //        ZiMain.log.LogWarning($"tried to get resoruce share perms for unkown item id:{itemID}.");
+        //        return false;
+        //    }
+        //    return enabledResourceShares[itemID];
+        //}
+        //public static void SetResourceSharePermission(uint itemID, bool allowed, ulong netSender = 0)
+        //{
+        //    if (!enabledResourceShares.ContainsKey(itemID))
+        //        return;
+        //    if (netSender == 0)
+        //    {
+        //        pStructs.pResourceThresholdDisable info = new pStructs.pResourceThresholdDisable();
+        //        info.id = itemID;
+        //        info.allowed = allowed;
+        //        NetworkAPI.InvokeEvent<pStructs.pResourceThresholdDisable>("SetResourceThresholdDisable", info);
+        //    }
+        //    enabledResourceShares[itemID] = allowed;
+        //}
         //public static void ToggleSharePermission(Dictionary<int, bool> botSelection)
         //{
         //    var disabledCount = 0;

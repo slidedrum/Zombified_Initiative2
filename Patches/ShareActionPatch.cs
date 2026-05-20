@@ -1,8 +1,11 @@
 ﻿using BetterBots.Components;
 using GameData;
 using HarmonyLib;
+using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using Player;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 using Zombified_Initiative;
@@ -12,15 +15,71 @@ namespace ZombieTweak2.Patches
     [HarmonyPatch]
     internal class ShareActionPatch
     {
-        public static void SetUp()
+        public static Il2CppReferenceArray<ItemDataBlock> rawResourcePackItems
         {
-            foreach (ItemDataBlock block in ItemSpawnManager.m_itemDataPerInventorySlot[(int)InventorySlot.ResourcePack])
+            get
             {
-                uint itemID = ItemDataBlock.s_blockIDByName[block.name];
-                zSlideComputer.resourceThresholds[itemID] = 100;
-                zSlideComputer.enabledResourceShares[itemID] = true;
+                return ItemSpawnManager.m_itemDataPerInventorySlot?[(int)InventorySlot.ResourcePack];
             }
         }
+        public static Il2CppReferenceArray<ItemDataBlock> resourcePackItems
+        {
+            get
+            {
+                var source = rawResourcePackItems;
+
+                if (ReferenceEquals(source, _rawResourcePackItems))
+                    return _resourcePackItems;
+
+                _rawResourcePackItems = source;
+
+                _resourcePackItems = new Il2CppReferenceArray<ItemDataBlock>(
+                    source
+                        .Where(item =>
+                            item != null)
+                        .ToArray());
+
+                return _resourcePackItems;
+            }
+        }
+        private static Il2CppReferenceArray<ItemDataBlock> _rawResourcePackItems;
+        private static Il2CppReferenceArray<ItemDataBlock> _resourcePackItems;
+        public static List<string> resourcePackItemPublicNames
+        {
+            get
+            {
+                var items = resourcePackItems;
+
+                if (ReferenceEquals(items, _resourcePackItems) &&
+                    _resourcePackItemPublicNames != null)
+                    return _resourcePackItemPublicNames;
+
+                _resourcePackItemPublicNames = items
+                    .Select(item => item.publicName)
+                    .ToList();
+
+                return _resourcePackItemPublicNames;
+            }
+        }
+        private static List<string> _resourcePackItemPublicNames;
+        public static List<string> resourcePackItemNames
+        {
+            get
+            {
+                var items = resourcePackItems;
+
+                if (ReferenceEquals(items, _resourcePackItems) &&
+                    _resourcePackItemNames != null)
+                    return _resourcePackItemNames;
+
+                _resourcePackItemNames = items
+                    .Select(item => item.name)
+                    .ToList();
+
+                return _resourcePackItemNames;
+            }
+        }
+        private static List<string> _resourcePackItemNames;
         [HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.UpdateActionShareResoursePack))]
         [HarmonyPrefix]
         public static bool UpdateActionShareResoursePack(RootPlayerBotAction __instance, ref PlayerBotActionBase.Descriptor bestAction)
@@ -54,12 +113,16 @@ namespace ZombieTweak2.Patches
             }
             int agentID = __instance.m_agent.Owner.PlayerSlotIndex();
             var itemID = backpackItem.ItemID;
-            if (!(bool)zSlideComputer.ActionPermissions.ValueAt("Share"))
-            { 
-                //Do we have share perms?
-                return false;
-            }
-            if (!zSlideComputer.enabledResourceShares[itemID])
+            var itemName = backpackItem.Name;
+            var block = ItemDataBlock.GetBlock(itemID);
+            var itemInternalName = block.name;
+            var actionKey = "Share" + itemInternalName;
+            //if (!(bool)zSlideComputer.ActionPermissions.ValueAt("Share"))
+            //{ 
+            //    //Do we have share perms?
+            //    return false;
+            //}
+            if (!(bool)zSlideComputer.ActionPermissions.ValueAt(actionKey))
             {
                 //Is this item dissabled?
                 return false;
@@ -113,9 +176,9 @@ namespace ZombieTweak2.Patches
                         break;
                 }
                 float threshHold = 0.98f; //not needed fallback 
-                if (zSlideComputer.resourceThresholds.ContainsKey(itemID))
+                if (zSlideComputer.ActionPriorities.HasKey(actionKey))
                 {
-                    int baseThreshold = zSlideComputer.resourceThresholds[itemID];
+                    int baseThreshold = (int)zSlideComputer.ActionPriorities.ValueAt(actionKey);
                     foreach (var agent in PlayerManager.PlayerAgentsInLevel)
                     {
                         //Check if any other bots are giving the same visTarget the same resource

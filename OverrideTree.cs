@@ -313,14 +313,23 @@ namespace ZombieTweak2
         {
             return nodes.ContainsKey(key);
         }
-        public T? ValueAt(string key, bool shouldThrow = true)
+        public bool IsDefaultValue(string key)
+        {
+            Node node = NodeAt(key);
+            return node.IsDefaultValue();
+        }
+        private Node NodeAt(string key, bool shouldThrow = true)
         {
             if (!nodes.ContainsKey(key))
                 if (shouldThrow)
                     throw new KeyNotFoundException(nameof(key));
                 else
                     return default;
-            return nodes[key].ValueAt();
+            return nodes[key];
+        }
+        public T? ValueAt(string key, bool shouldThrow = true)
+        {
+            return NodeAt(key, shouldThrow).ValueAt();
         }
     }
 }

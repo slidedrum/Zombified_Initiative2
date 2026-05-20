@@ -147,10 +147,6 @@ namespace ZombieTweak2
             ZiMain.log.LogInfo("terminalItemLongNames:");
             ZiMain.log.LogInfo(string.Join("\n", terminalItemLongNames));
         }
-        private static void SetToolThreshold(uint id, int threshold)
-        {
-            zSlideComputer.resourceThresholds[id] = threshold;
-        }
         private static void printAllInventoryItems()
         {
             var allItemTypes = ItemSpawnManager.m_itemDataPerInventorySlot;
@@ -342,20 +338,20 @@ namespace ZombieTweak2
         //    info.id = id;
         //    zNetworking.zNetworking.ReciveSetItemPrio(sender, info);
         //}
-        private static void TestReciveSetResourceThresholdNetwork(ulong sender, uint id, int threshold)
-        {
-            pStructs.pResourceThreshold info = new pStructs.pResourceThreshold();
-            info.threshold = threshold;
-            info.id = id;
-            zNetworking.zNetworking.reciveSetResourceThreshold(sender, info);
-        }
-        private static void TestReciveSetResourceThresholdDisableNetwork(ulong sender, uint id, bool allowed)
-        {
-            pStructs.pResourceThresholdDisable info = new pStructs.pResourceThresholdDisable();
-            info.allowed = allowed;
-            info.id = id;
-            zNetworking.zNetworking.ReciveSetResourceThresholdDisable(sender, info);
-        }
+        //private static void TestReciveSetResourceThresholdNetwork(ulong sender, uint id, int threshold)
+        //{
+        //    pStructs.pResourceThreshold info = new pStructs.pResourceThreshold();
+        //    info.threshold = threshold;
+        //    info.id = id;
+        //    zNetworking.zNetworking.reciveSetResourceThreshold(sender, info);
+        //}
+        //private static void TestReciveSetResourceThresholdDisableNetwork(ulong sender, uint id, bool allowed)
+        //{
+        //    pStructs.pResourceThresholdDisable info = new pStructs.pResourceThresholdDisable();
+        //    info.allowed = allowed;
+        //    info.id = id;
+        //    zNetworking.zNetworking.ReciveSetResourceThresholdDisable(sender, info);
+        //}
         //private static void TestReciveSetPickupPermissionNetwork(ulong sender, int playerID, bool allowed)
         //{
         //    pStructs.pPickupPermission info = new pStructs.pPickupPermission();
