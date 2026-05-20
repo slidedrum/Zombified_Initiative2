@@ -27,7 +27,7 @@ namespace ZombieTweak2
         public static OverrideTree<float?> ActionPriorities;
         public static OverrideTree<bool?> ActionPermissions;
         //public static OverrideTree<int?> ItemPickupPriorities;
-        public static Dictionary<string, sMenu.sMenuNode> actionNameToMenuNodes;
+        //public static Dictionary<string, sMenu.sMenuNode> actionNameToMenuNodes;
         public static class PermissionDefinitions
         {
             private static Dictionary<string, PermissionDefinition> permissionDeffinitions = new();
@@ -101,7 +101,7 @@ namespace ZombieTweak2
                 permissionsNode.onChanged.Listen((Action<List<Type>>)zSlideComputer.RemoveActionsOfType, args: [ActionTypesToCull]);
                 if (node != null)
                 {
-                    actionNameToMenuNodes[key] = node;
+                    //actionNameToMenuNodes[key] = node;
                     permissionsNode.onChanged.Listen(AutomaticActionMenuClass.GenericUpdateNodeAllowedDisplay, args: [node, key]);
                 }
                 if (menu != null)
@@ -364,10 +364,14 @@ namespace ZombieTweak2
         //            RemoveActionsOfType(agent, type);
         //    }
         //}
-        internal static void GenericToggleAllowed(string actionKey, bool allowDissabled = false)
+        //internal static void GenericToggleAllowed(string actionKey, bool allowDissabled = false)
+        //{
+        //    sMenu.sMenuNode node = zSlideComputer.actionNameToMenuNodes[actionKey];
+        //    GenericToggleAllowed(actionKey, node, allowDissabled);
+        //}
+        internal static void GenericToggleAllowed(string actionKey, sMenu.sMenuNode node, bool allowDissabled = false)
         {
-
-            if (!allowDissabled && !zSlideComputer.actionNameToMenuNodes[actionKey].gameObject.activeInHierarchy)
+            if (!allowDissabled && !node.gameObject.activeInHierarchy)
                 return;
             bool allowed = !(bool)zSlideComputer.ActionPermissions.ValueAt(actionKey);
             zSlideComputer.ActionPermissions.SetValue(actionKey, allowed);

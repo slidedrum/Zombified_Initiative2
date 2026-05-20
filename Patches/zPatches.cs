@@ -276,16 +276,16 @@ public class ZombifiedPatches
     
 
 
-    [HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.UpdateActionCollectItem))]
-    [HarmonyPrefix]
-    [HarmonyPriority(Priority.Last)] //Needed for betterbots compat
-    public static bool UpdateActionCollectItem(RootPlayerBotAction __instance, ref PlayerBotActionBase.Descriptor bestAction)
-    {
-        bool allowed = (bool)zSlideComputer.ActionPermissions.ValueAt("Pickup");
-        if (!allowed)
-            return false;
-        return true;
-    }
+    //[HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.UpdateActionCollectItem))]
+    //[HarmonyPrefix]
+    //[HarmonyPriority(Priority.Last)] //Needed for betterbots compat
+    //public static bool UpdateActionCollectItem(RootPlayerBotAction __instance, ref PlayerBotActionBase.Descriptor bestAction)
+    //{
+    //    bool allowed = (bool)zSlideComputer.ActionPermissions.ValueAt("Pickup");
+    //    if (!allowed)
+    //        return false;
+    //    return true;
+    //}
     [HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.UpdateActionUnlock))]
     [HarmonyPrefix]
     [HarmonyPriority(Priority.Last)] //Needed for betterbots compat
@@ -295,15 +295,15 @@ public class ZombifiedPatches
             return false;
         return true;
     }
-    [HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.UpdateActionHighlight))]
-    [HarmonyPrefix]
-    [HarmonyPriority(Priority.Last)] //Needed for betterbots compat
-    public static bool UpdateActionPing(RootPlayerBotAction __instance, ref PlayerBotActionBase.Descriptor bestAction)
-    {
-        if (!(bool)zSlideComputer.ActionPermissions.ValueAt("Ping"))
-            return false;
-        return true;
-    }
+    //[HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.UpdateActionHighlight))]
+    //[HarmonyPrefix]
+    //[HarmonyPriority(Priority.Last)] //Needed for betterbots compat
+    //public static bool UpdateActionPing(RootPlayerBotAction __instance, ref PlayerBotActionBase.Descriptor bestAction)
+    //{
+    //    if (!(bool)zSlideComputer.ActionPermissions.ValueAt("Ping"))
+    //        return false;
+    //    return true;
+    //}
 
     [HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.UpdateActionTagEnemies))]
     [HarmonyPrefix]

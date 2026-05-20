@@ -46,7 +46,7 @@ namespace ZombieTweak2.Menus
                         zSlideComputer.ActionPriorities.AddNode("Pickup" + itemName, null, "Pickup" + glowstickNameTouse, defaultValue: null, hasDefaultValue: true);
                         zSlideComputer.ActionPermissions.AddNode("Pickup" + glowstickNameTouse, null, "Pickup", defaultValue: null, hasDefaultValue: true).onChanged.Listen(updateNodePriorityDisplay, args: [glowstickNameTouse, glowstickNode]);
                         zSlideComputer.ActionPermissions.AddNode("Pickup" + itemName, null, "Pickup" + glowstickNameTouse, defaultValue: null, hasDefaultValue: true);
-                        zSlideComputer.actionNameToMenuNodes.Add(glowstickNameTouse, glowstickNode);
+                        //zSlideComputer.actionNameToMenuNodes.Add(glowstickNameTouse, glowstickNode);
                     }
                     else
                     {
@@ -66,7 +66,7 @@ namespace ZombieTweak2.Menus
                     zSlideComputer.ActionPermissions.AddNode("Pickup" + itemName, null, "Pickup", defaultValue: null, hasDefaultValue: true).onChanged.Listen(PickupMenuClass.updateNodePriorityDisplay, args: [itemName, node]);
                     if (!PlayerAIBot.s_recognisedItemTypes.Contains(id))
                         PlayerAIBot.s_recognisedItemTypes.Add(id);
-                    zSlideComputer.actionNameToMenuNodes.Add("Pickup"+itemName, node);
+                    //zSlideComputer.actionNameToMenuNodes.Add("Pickup"+itemName, node);
                 }
                 //TODO uncomment then when moved over to overide system instead of selection system.
                 //var thisNode = menu.parrentMenu.GetNode(menu.centerNode.text);
@@ -74,7 +74,7 @@ namespace ZombieTweak2.Menus
                 //thisNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, menu.Open);
                 //thisNode.AddListener(sMenuManager.nodeEvent.OnTapped, TogglePerms);
                 node.AddListener(sMenuManager.nodeEvent.WhileSelected, ChangePrioBasedOnMouseWheel, itemName, node);
-                node.AddListener(sMenuManager.nodeEvent.OnTapped, zSlideComputer.GenericToggleAllowed, "Pickup"+itemName);
+                node.AddListener(sMenuManager.nodeEvent.OnTapped, zSlideComputer.GenericToggleAllowed, "Pickup"+itemName, node);
                 node.AddListener(sMenuManager.nodeEvent.OnTapped, updateNodePriorityDisplay, itemName, node);
                 node.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, ResetNodeSettings, itemName, node);
                 pickupMenu.centerNode.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);

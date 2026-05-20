@@ -1,10 +1,5 @@
-﻿using GameData;
-using Il2CppInterop.Runtime.InteropTypes.Arrays;
-using Player;
-using SlideMenu;
+﻿using SlideMenu;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using ZombieTweak2.Patches;
 
@@ -26,17 +21,17 @@ namespace ZombieTweak2.Menus
                 sMenu.sMenuNode node = shareMenu.AddNode(itemName);
                 zSlideComputer.ActionPermissions.AddNode("Share"+itemName, null, "Share", defaultValue: null, hasDefaultValue: true).onChanged.Listen(updateNodeThresholdDisplay, args: [node, itemName]);
                 zSlideComputer.ActionPriorities.AddNode("Share"+itemName, 100f, "Share", defaultValue: 100f).onChanged.Listen(updateNodeThresholdDisplay, args: [node, itemName]);
-                node.AddListener(sMenuManager.nodeEvent.OnTapped, zSlideComputer.GenericToggleAllowed, "Share"+itemName);
+                node.AddListener(sMenuManager.nodeEvent.OnTapped, zSlideComputer.GenericToggleAllowed, "Share"+itemName, node);
                 node.AddListener(sMenuManager.nodeEvent.OnTapped, updateNodeThresholdDisplay, node, itemName);
-                node.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, ResetSettings, itemName);
+                node.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, ResetSettings, itemName, node);
                 node.AddListener(sMenuManager.nodeEvent.WhileSelected, ChangeThresholdBasedOnMouseWheel, itemName, node, 5);
                 shareMenu.AddListener(sMenuManager.menuEvent.OnOpened, updateNodeThresholdDisplay, node, itemName);
                 shareMenu.centerNode.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
-                shareMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, ResetSettings, itemName);
+                shareMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, ResetSettings, itemName, node);
                 node.fullTextPart.SetScale(1f, 1f);
                 node.subtitlePart.SetScale(0.75f, 0.75f);
                 node.titlePart.SetScale(0.5f, 0.5f);
-                zSlideComputer.actionNameToMenuNodes.Add("Share" + itemName, node);
+                //zSlideComputer.actionNameToMenuNodes.Add("Share" + itemName, node);
                 //packNodesByItemName[itemName] = node;
             }
             shareMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnTapped, shareMenu.parrentMenu.Open);
@@ -47,11 +42,11 @@ namespace ZombieTweak2.Menus
             shareMenu.AddPannel(sMenu.sMenuPannel.Side.top, "You can also change the threshold you must be below for them to share.");
             shareMenu.AddPannel(sMenu.sMenuPannel.Side.bottom, "Scroll to change threshold.");
         }
-        public static void ResetSettings(string itemName)
+        public static void ResetSettings(string itemName, sMenu.sMenuNode node)
         {
             zSlideComputer.ActionPermissions.ResetToDefault("Share" + itemName);
             zSlideComputer.ActionPriorities.ResetToDefault("Share" + itemName);
-            sMenu.sMenuNode node = zSlideComputer.actionNameToMenuNodes["Share" + itemName];
+            //sMenu.sMenuNode node = zSlideComputer.actionNameToMenuNodes["Share" + itemName];
             updateNodeThresholdDisplay(node, itemName);
         }
         public static void updateNodeThresholdDisplay(sMenu.sMenuNode node, string itemName)

@@ -109,7 +109,7 @@ namespace ZombieTweak2.Menus
                 //TODO these lines are horendious omg.
                 zSlideComputer.ActionPriorities.AddNode(state.ToString(), null, parentNode, () => { return DramaManager.CurrentStateEnum == state; }).onChanged.Listen(AutomaticActionMenuClass.GenericUpdateNodePrioDisplay, args: [stateNode]);
                 zSlideComputer.ActionPermissions.AddNode(state.ToString(), null, parentNode).onChanged.Listen(AutomaticActionMenuClass.GenericUpdateNodeAllowedDisplay, args: [stateNode, state.ToString()]);
-                zSlideComputer.actionNameToMenuNodes[state.ToString()] = stateNode;
+                //zSlideComputer.actionNameToMenuNodes[state.ToString()] = stateNode;
                 
                 stateNodes[state] = stateNode;
                 UpdateNodeSettingsDisplay(stateNode);
@@ -117,7 +117,7 @@ namespace ZombieTweak2.Menus
                 stateNode.subtitlePart.SetScale(0.5f);
                 stateNode.AddListener(sMenuManager.nodeEvent.WhileSelected, UpdateNodeBasedOnScroll, stateNode);
                 stateNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, ResetSettings, stateNode);    
-                stateNode.AddListener(sMenuManager.nodeEvent.OnTapped, zSlideComputer.GenericToggleAllowed, stateNode.text);
+                stateNode.AddListener(sMenuManager.nodeEvent.OnTapped, zSlideComputer.GenericToggleAllowed, stateNode.text, stateNode);
                 followMenu.AddNodeToCatagory("Advanced", stateNode);
             }
 
@@ -225,8 +225,8 @@ namespace ZombieTweak2.Menus
             catagoryNode.subtitlePart.SetScale(0.5f);
             catagoryNode.AddListener(sMenuManager.nodeEvent.WhileSelected, UpdateNodeBasedOnScroll, catagoryNode);
             catagoryNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, ResetSettings, catagoryNode);
-            catagoryNode.AddListener(sMenuManager.nodeEvent.OnTapped, zSlideComputer.GenericToggleAllowed, catagory);
-            zSlideComputer.actionNameToMenuNodes[catagory] = catagoryNode;
+            catagoryNode.AddListener(sMenuManager.nodeEvent.OnTapped, zSlideComputer.GenericToggleAllowed, catagory, catagoryNode);
+            //zSlideComputer.actionNameToMenuNodes[catagory] = catagoryNode;
             zSlideComputer.ActionPermissions.AddNode(catagory, null, "Follow").onChanged.Listen((Action<sMenu.sMenuNode, string>)AutomaticActionMenuClass.GenericUpdateNodeAllowedDisplay, args: [catagoryNode, catagory]);
             return catagoryNode;
         }

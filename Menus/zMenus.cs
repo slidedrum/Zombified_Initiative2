@@ -86,7 +86,7 @@ namespace ZombieTweak2.Menus
             AutoActionMenu = _menu;
             AutoActionMenu.radius = 130f;
             autoActionMenus.Clear();
-            zSlideComputer.actionNameToMenuNodes = new();
+            //zSlideComputer.actionNameToMenuNodes = new();
 
             var bioTrackerMenu = sMenuManager.createMenu("Use BioTracker", AutoActionMenu);
             autoActionMenus.Add(bioTrackerMenu);
@@ -129,7 +129,7 @@ namespace ZombieTweak2.Menus
                     GenericUpdateNodePrioDisplay(node);
                 }
                 node.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
-                node.AddListener(sMenuManager.nodeEvent.OnTapped, zSlideComputer.GenericToggleAllowed, actionName);
+                node.AddListener(sMenuManager.nodeEvent.OnTapped, zSlideComputer.GenericToggleAllowed, actionName, node);
                 node.AddListener(sMenuManager.nodeEvent.OnDoubleTapped, menu.Open);
                 AutoActionMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediateSelected, GenericResetSettings, node);
             }
