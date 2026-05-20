@@ -1,5 +1,8 @@
 ﻿using Player;
 using SlideMenu;
+using System.Collections.Generic;
+using System.Net.Mail;
+using UnityEngine;
 using ZombieTweak2.Patches;
 
 namespace ZombieTweak2.Menus
@@ -12,16 +15,31 @@ namespace ZombieTweak2.Menus
         //public static sMenu.sMenuNode pushNode;
         public static sMenu.sMenuNode bulletNode;
         public static sMenu.sMenuNode secondaryNode;
+        public static List<PlayerBotActionAttack.AttackMeansEnum> meansBlackList = new()
+        {
+            PlayerBotActionAttack.AttackMeansEnum.NanoSwarmDebuff,
+            PlayerBotActionAttack.AttackMeansEnum.Push,
+            PlayerBotActionAttack.AttackMeansEnum.Special,
+        };
 
         public static void Setup(sMenu menu)
         {
             attackMenu = menu;
             attackNode = menu.GetNode();
-
-            meleeNode = attackMenu.AddNode("Melee", AttackActionPatch.ToggleMeansPerms, PlayerBotActionAttack.AttackMeansEnum.Melee);
-            //pushNode = attackMenu.AddNode("Push", AttackActionPatch.ToggleMeansPerms, PlayerBotActionAttack.AttackMeansEnum.Push);
-            bulletNode = attackMenu.AddNode("Guns", AttackActionPatch.ToggleMeansPerms, PlayerBotActionAttack.AttackMeansEnum.Bullet);
-            //secondaryNode = attackMenu.AddNode("Secondary", AttackActionPatch.ToggleMeansPerms, PlayerBotActionAttack.AttackMeansEnum.Special);
+            attackMenu.centerNode.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
+            attackMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnTapped, attackMenu.parrentMenu.Open);
+            foreach (var means in AttackActionPatch.meansList)
+            {
+                string actionKey = "attackMeans" + means.ToString();
+                OverrideTree<bool?>.Node overrideNode = zSlideComputer.ActionPermissions.AddNode(actionKey, null, "Attack", defaultValue: null, hasDefaultValue: true);
+                if (meansBlackList.Contains(means))
+                    continue;
+                sMenu.sMenuNode menuNode = attackMenu.AddNode(means.ToString());
+                overrideNode.onChanged.Listen(UpdateNodeDisplay, args: [actionKey, menuNode]);
+                menuNode.AddListener(sMenuManager.nodeEvent.OnTapped, zSlideComputer.GenericToggleAllowed, args: [actionKey, menuNode]);
+                menuNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediateSelected, zSlideComputer.ActionPermissions.ResetToDefault, args: [actionKey]);
+                attackMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediateSelected, zSlideComputer.ActionPermissions.ResetToDefault, args: [actionKey]);
+            }
 
             attackMenu.AddPannel(sMenu.sMenuPannel.Side.top, "This controls if the bots are allowed to atack");
             attackMenu.AddPannel(sMenu.sMenuPannel.Side.top, "And what they are allowed to attack with");
@@ -29,6 +47,13 @@ namespace ZombieTweak2.Menus
             attackMenu.AddPannel(sMenu.sMenuPannel.Side.bottom, "Especially when changed in the middle of combat.");
             attackMenu.AddPannel(sMenu.sMenuPannel.Side.bottom, "I'm pretty sure that's not the fault of the mod.");
             attackMenu.AddPannel(sMenu.sMenuPannel.Side.bottom, "I'd like to see if I can improve it anyway.");
+        }
+        public static void UpdateNodeDisplay(string key, sMenu.sMenuNode node)
+        {
+            if ((bool)zSlideComputer.ActionPermissions.ValueAt(key))
+                node.SetColor(sMenuManager.defaultColor);
+            else
+                node.SetColor(new Color(0.25f, 0f, 0f));
         }
     }
    

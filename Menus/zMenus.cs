@@ -25,7 +25,7 @@ namespace ZombieTweak2.Menus
             OverrideTree<float?>.ResetTrees();
             OverrideTree<int?>.ResetTrees();
             AutomaticActionMenuClass.Setup(sMenuManager.createMenu("Automatic Actions", sMenuManager.mainMenu));
-            sMenuManager.mainMenu.AddPannel(sMenu.sMenuPannel.Side.top, "<size=150><color=#CC840066>Slide's Bot Control Mod</color></size>");
+            sMenuManager.mainMenu.AddPannel(sMenu.sMenuPannel.Side.top, "<size=150><color=#CC840066>Slide's Bot Control</color></size>");
             sMenuManager.mainMenu.AddPannel(sMenu.sMenuPannel.Side.top, "<color=#CC840066>[ </color><color=#26262c>V0.9.6</color><color=#CC840066> ]</color>");
             sMenuManager.mainMenu.radius = 100f;
             if (ZiMain.extraActionMenus) 
