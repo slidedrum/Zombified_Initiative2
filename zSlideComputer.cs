@@ -102,10 +102,10 @@ namespace ZombieTweak2
                 if (node != null)
                 {
                     //actionNameToMenuNodes[key] = node;
-                    permissionsNode.onChanged.Listen(AutomaticActionMenuClass.GenericUpdateNodeAllowedDisplay, args: [node, key]);
+                    permissionsNode.onChanged.Listen(AutomaticActionMenuClass.GenericUpdateNodeAllowedDisplay, args: [key, node]);
                 }
                 if (menu != null)
-                    permissionsNode.onChanged.Listen(AutomaticActionMenuClass.GenericUpdateNodeAllowedDisplay, args: [menu.centerNode, key]);
+                    permissionsNode.onChanged.Listen(AutomaticActionMenuClass.GenericUpdateNodeAllowedDisplay, args: [key, menu.centerNode]);
 
             }
             public static bool KeyExists(string key)

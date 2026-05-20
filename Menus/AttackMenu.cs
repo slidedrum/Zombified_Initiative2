@@ -35,7 +35,7 @@ namespace ZombieTweak2.Menus
                 if (meansBlackList.Contains(means))
                     continue;
                 sMenu.sMenuNode menuNode = attackMenu.AddNode(means.ToString());
-                overrideNode.onChanged.Listen(UpdateNodeDisplay, args: [actionKey, menuNode]);
+                overrideNode.onChanged.Listen(AutomaticActionMenuClass.GenericUpdateNodeAllowedDisplay, args: [actionKey, menuNode]);
                 menuNode.AddListener(sMenuManager.nodeEvent.OnTapped, zSlideComputer.GenericToggleAllowed, args: [actionKey, menuNode]);
                 menuNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediateSelected, zSlideComputer.ActionPermissions.ResetToDefault, args: [actionKey]);
                 attackMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediateSelected, zSlideComputer.ActionPermissions.ResetToDefault, args: [actionKey]);
@@ -47,13 +47,6 @@ namespace ZombieTweak2.Menus
             attackMenu.AddPannel(sMenu.sMenuPannel.Side.bottom, "Especially when changed in the middle of combat.");
             attackMenu.AddPannel(sMenu.sMenuPannel.Side.bottom, "I'm pretty sure that's not the fault of the mod.");
             attackMenu.AddPannel(sMenu.sMenuPannel.Side.bottom, "I'd like to see if I can improve it anyway.");
-        }
-        public static void UpdateNodeDisplay(string key, sMenu.sMenuNode node)
-        {
-            if ((bool)zSlideComputer.ActionPermissions.ValueAt(key))
-                node.SetColor(sMenuManager.defaultColor);
-            else
-                node.SetColor(new Color(0.25f, 0f, 0f));
         }
     }
    
