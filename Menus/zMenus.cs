@@ -180,7 +180,7 @@ namespace ZombieTweak2.Menus
         //    else
         //        node.SetColor(new Color(0.25f, 0f, 0f));
         //}
-        internal static void GenericUpdateNodeAllowedDisplay(sMenu.sMenuNode node, string key)
+        internal static void GenericUpdateNodeAllowedDisplay(string key, sMenu.sMenuNode node)
         {
             bool allowed = (bool)zSlideComputer.ActionPermissions.ValueAt(key);
             if (allowed)
@@ -199,11 +199,83 @@ namespace ZombieTweak2.Menus
             zSlideComputer.ActionPriorities.SetValue(text, Math.Clamp(Mathf.Round(((float)zSlideComputer.ActionPriorities.ValueAt(text) + normalizedScroll) * 10f) / 10f,1f,15f));
             //GenericUpdateNodePrioDisplay(node);
         }
-        public static void GenericUpdateNodePrioDisplay(sMenu.sMenuNode node)
+
+        //TODO move all nodes to use this generic update method tree
+
+        public static void GenericUpdateNodeDefaultDisplay(sMenu.sMenuNode node, string key = null, IOverrideTree tree = null)
         {
-            string text = node.text;
-            //OverrideTree<float?> prio = ActionPriorities[text];
-            if (zSlideComputer.ActionPriorities.nodes[text].IsDefaultValue())
+            List<IOverrideTree> trees = new();
+            if (tree != null)
+                trees.Add(tree);
+            else
+            {
+                trees.Add(zSlideComputer.ActionPermissions);
+                trees.Add(zSlideComputer.ActionPriorities);
+            }
+            GenericUpdateNodeDefaultDisplay(node, trees, key);
+        }
+        public static void GenericUpdateNodeDefaultDisplay(sMenu.sMenuNode node,List<IOverrideTree> trees, string key = null)
+        {
+            if (key == null)
+                key = node.text;
+            List<(string key, IOverrideTree tree)> keyTrees = new();
+            foreach (IOverrideTree tree in trees)
+                keyTrees.Add((key, tree));
+            GenericUpdateNodeDefaultDisplay(node, keyTrees);
+        }
+        public static void GenericUpdateNodeDefaultDisplay(sMenu.sMenuNode node, List<string> keys, IOverrideTree tree = null)
+        {
+            List<(string key, IOverrideTree tree)> keyTrees = new();
+            if (tree == null)
+            {
+                List<(List<string> keys, IOverrideTree tree)> keysTrees = new();
+                keysTrees.Add((keys, zSlideComputer.ActionPermissions));
+                keysTrees.Add((keys, zSlideComputer.ActionPriorities));
+                GenericUpdateNodeDefaultDisplay(node, keysTrees);
+            }
+            else
+                foreach (string key in keys)
+                    keyTrees.Add((key, tree));
+            GenericUpdateNodeDefaultDisplay(node, keyTrees);
+        }
+        public static void GenericUpdateNodeDefaultDisplay(sMenu.sMenuNode node, List<(string key, IOverrideTree tree)> keyTrees)
+        {
+            List<(List<string> keys, IOverrideTree tree)> keysTrees = new();
+            foreach ((string key, IOverrideTree tree) pair in keyTrees)
+            {
+                var key = pair.key;
+                var tree = pair.tree;
+                List<string> keys = new() { key };
+                keysTrees.Add((keys, tree));
+            }
+            GenericUpdateNodeDefaultDisplay(node, keysTrees);
+        }
+        public static void GenericUpdateNodeDefaultDisplay(sMenu.sMenuNode node, List<(List<string> keys, IOverrideTree tree)> keysTrees = null)
+        {
+            if (keysTrees == null)
+            {
+                keysTrees = new();
+                List<string> keys = new() { node.text };
+                keysTrees.Add((keys, zSlideComputer.ActionPermissions));
+                keysTrees.Add((keys, zSlideComputer.ActionPriorities));
+            }
+            bool allDefault = true;
+            foreach(var keyTree in keysTrees)
+            {
+                List<string> keys = keyTree.keys;
+                IOverrideTree tree = keyTree.tree;
+                foreach (string key in keys)
+                {
+                    if (!tree.IsDefaultValue(key))
+                    {
+                        allDefault = false;
+                        break;
+                    }
+                }
+                if (!allDefault)
+                    break;
+            }
+            if (allDefault)
             {
                 node.SetPrefix("");
                 node.SetSuffix("");
@@ -213,7 +285,12 @@ namespace ZombieTweak2.Menus
                 node.SetPrefix("* ");
                 node.SetSuffix(" *");
             }
-            node.SetTitle($"Prio <color=#CC840066>[</color>{zSlideComputer.ActionPriorities.ValueAt(text)}<color=#CC840066>]</color>");
+        }
+        public static void GenericUpdateNodePrioDisplay(sMenu.sMenuNode node, string key = null)
+        {
+            if (key == null)
+                key = node.text;
+            node.SetTitle($"Prio <color=#CC840066>[</color>{zSlideComputer.ActionPriorities.ValueAt(key)}<color=#CC840066>]</color>");
         }
         public static void GenericResetSettings(sMenu.sMenuNode node, bool allowDissabled = false, string? key = null)
         {
@@ -225,7 +302,7 @@ namespace ZombieTweak2.Menus
             else
                 _key = node.text;
             if (zSlideComputer.ActionPermissions.ResetToDefault(_key) != null)
-                GenericUpdateNodeAllowedDisplay(node, _key);
+                GenericUpdateNodeAllowedDisplay(_key, node);
             if (zSlideComputer.ActionPriorities.ResetToDefault(_key) != null)
                 GenericUpdateNodePrioDisplay(node);
             

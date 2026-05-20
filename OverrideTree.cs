@@ -8,17 +8,31 @@ using Zombified_Initiative;
 namespace ZombieTweak2
 {
 
-    //TODO NEXT figure out where the default prio value of "5" is coming from and fix it
+    public interface IOverrideTree
+    {
+        public bool IsDefaultValue(string key);
+        public bool HasKey(string key);
+        public object? IGetValue(string key);
+        public object? IValueAt(string key);
+        public object? IGetDefaultValue(string key);
+        public uint treeID { get; }
+        public string identifier { get; }
 
-
-    public class OverrideTree<T>
+        public bool AllDefault(IEnumerable<string> keys);
+    }
+    public class OverrideTree<T> : IOverrideTree
     {
         internal static Dictionary<uint, OverrideTree<T>> Trees = new();
         private uint treeID;
         private string identifier = "DefaultIdent";
+        public Type type;
         public Dictionary<uint, Node> nodesByID { get; private set; } = new(); //For O(1) lookup by ID, used for network syncing
         public Dictionary<string, Node> nodes { get; private set; } = new(StringComparer.Ordinal); //For O(1) lookup, starting search in the middle of a tree
         public Node rootNode { get; private set; }
+
+        string IOverrideTree.identifier => identifier;
+        uint IOverrideTree.treeID => treeID;
+
         public class Node
         {
             public uint nodeID { get; private set; }
@@ -133,6 +147,7 @@ namespace ZombieTweak2
             nodesByID[0] = rootNode;
             if (OnChanged != null)
                 rootNode.onChanged.Listen(OnChanged);
+            type = typeof(T);
         }
         public static OverrideTree<T> GetTreeFromID(uint ID)
         {
@@ -305,6 +320,16 @@ namespace ZombieTweak2
         {
             return rootNode.GetValue();
         }
+        public T? GetValue(string key = null)
+        {
+            if (key == null)
+                 return rootNode.GetValue();
+            return NodeAt(key).GetValue();
+        }
+        public T? ValueAt(string key)
+        {
+            return NodeAt(key).ValueAt();
+        }
         public bool HasKey(string key)
         {
             return nodes.ContainsKey(key);
@@ -323,9 +348,30 @@ namespace ZombieTweak2
                     return default;
             return nodes[key];
         }
-        public T? ValueAt(string key, bool shouldThrow = true)
+        public bool AllDefault(IEnumerable<string> keys)
         {
-            return NodeAt(key, shouldThrow).ValueAt();
+            foreach (string key in keys)
+                if (!IsDefaultValue(key))
+                    return false;
+            return true;
+        }
+        public T GetDefaultValue(string key)
+        {
+            return NodeAt(key).DefaultValue;
+        }
+        public object IGetDefaultValue(string key)
+        {
+            return (object)GetDefaultValue(key);
+        }
+
+        public object IValueAt(string key)
+        {
+            return (object)ValueAt(key);
+        }
+
+        public object IGetValue(string key)
+        {
+            return (object)GetValue(key);
         }
     }
 }

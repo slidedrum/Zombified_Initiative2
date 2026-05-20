@@ -74,14 +74,14 @@ namespace ZombieTweak2
             {
                 permissionDeffinitions.Clear();
             }
-            public static void CreatePermissionDeffinition(string key, bool? defaultPerm = true, sMenu.sMenuNode node = null, sMenu menu = null, Type ActionTypeToCull = null, float? defaultPriority = null, string parrentKey = null)
+            public static void CreatePermissionDeffinition(string key, bool? defaultPerm = true, sMenu.sMenuNode node = null, sMenu menu = null, Type ActionTypeToCull = null, float? defaultPriority = null, string parrentKey = null, bool hasDefaultValue = false)
             {
                 List<Type> actionTypesToCull = new();
                 if (ActionTypeToCull != null)
                     actionTypesToCull.Add(ActionTypeToCull);
-                CreatePermissionDeffinition(key, defaultPerm, node, menu, actionTypesToCull, defaultPriority, parrentKey);
+                CreatePermissionDeffinition(key, defaultPerm, node, menu, actionTypesToCull, defaultPriority, parrentKey, hasDefaultValue);
             }
-            public static void CreatePermissionDeffinition(string key, bool? defaultPerm = true, sMenu.sMenuNode node = null, sMenu menu = null, List<Type> ActionTypesToCull = null, float? defaultPriority = null, string parrentKey = null)
+            public static void CreatePermissionDeffinition(string key, bool? defaultPerm = true, sMenu.sMenuNode node = null, sMenu menu = null, List<Type> ActionTypesToCull = null, float? defaultPriority = null, string parrentKey = null, bool hasDefaultValue = false)
             {
                 //PermissionDefinition permissionDef = new PermissionDefinition(key, node, ActionTypesToCull);
                 //permissionDeffinitions.Add(key, permissionDef);
@@ -91,15 +91,15 @@ namespace ZombieTweak2
                     zSlideComputer.ActionPriorities.AddNode("Default" + key, defaultPriority, (string?)null, defaultValue: defaultPriority);
                     zSlideComputer.ActionPriorities.AddNode(key, defaultPriority, "Default" + key, defaultValue: defaultPriority).onChanged.Listen(AutomaticActionMenuClass.GenericUpdateNodePrioDisplay, [node]);
                 }
-                var permissionsNode = ActionPermissions.AddNode(key, defaultPerm, parrentKey, defaultValue: defaultPerm);
+                var permissionsNode = ActionPermissions.AddNode(key, defaultPerm, parrentKey, defaultValue: defaultPerm, hasDefaultValue: hasDefaultValue);
                 permissionsNode.onChanged.Listen((Action<List<Type>>)zSlideComputer.RemoveActionsOfType, args: [ActionTypesToCull]);
                 if (node != null)
                 {
                     //actionNameToMenuNodes[key] = node;
-                    permissionsNode.onChanged.Listen(AutomaticActionMenuClass.GenericUpdateNodeAllowedDisplay, args: [node, key]);
+                    permissionsNode.onChanged.Listen(AutomaticActionMenuClass.GenericUpdateNodeAllowedDisplay, args: [key, node]);
                 }
                 if (menu != null)
-                    permissionsNode.onChanged.Listen(AutomaticActionMenuClass.GenericUpdateNodeAllowedDisplay, args: [menu.centerNode, key]);
+                    permissionsNode.onChanged.Listen(AutomaticActionMenuClass.GenericUpdateNodeAllowedDisplay, args: [key, menu.centerNode]);
 
             }
             public static bool KeyExists(string key)

@@ -155,7 +155,8 @@ namespace ZombieTweak2.Menus
                 node.SetPrefix("* ");
                 node.SetSuffix(" *");
             }
-            node.SetTitle($"Prio <color=#CC840066>[</color>{zSlideComputer.ActionPriorities.ValueAt(text)}<color=#CC840066>]</color>");
+            AutomaticActionMenuClass.GenericUpdateNodePrioDisplay(node);
+            //node.SetTitle($"Prio <color=#CC840066>[</color>{zSlideComputer.ActionPriorities.ValueAt(text)}<color=#CC840066>]</color>");
             node.SetSubtitle($"Range <color=#CC840066>[</color>{pickupDistance.ValueAt(text)}<color=#CC840066>]</color>");
         }
         private static void SetSearchDistance(float distance)
@@ -195,23 +196,26 @@ namespace ZombieTweak2.Menus
         }
         public static void updateNodePriorityDisplay(string itemName, sMenu.sMenuNode node)
         {
-            if (zSlideComputer.ActionPriorities.GetNodeFromIdent("Pickup" + itemName).IsDefaultValue())
-            {
-                node.SetPrefix("");
-                node.SetSuffix("");
-            }
-            else
-            {
-                node.SetPrefix("* ");
-                node.SetSuffix(" *");
-            }
-            float prioValue = (float)zSlideComputer.ActionPriorities.ValueAt("Pickup" + itemName);
+            string actionKey = "Pickup" + itemName;
+            AutomaticActionMenuClass.GenericUpdateNodeDefaultDisplay(node, actionKey);
+            //if (zSlideComputer.ActionPriorities.GetNodeFromIdent(actionKey).IsDefaultValue())
+            //{
+            //    node.SetPrefix("");
+            //    node.SetSuffix("");
+            //}
+            //else
+            //{
+            //    node.SetPrefix("* ");
+            //    node.SetSuffix(" *");
+            //}
+            float prioValue = (float)zSlideComputer.ActionPriorities.ValueAt(actionKey);
             string hex = ColorUtility.ToHtmlStringRGB(GetPriorityColor(prioValue));
             node.SetSubtitle($"<color=#CC840066>[ </color><color=#{hex}>{prioValue}</color><color=#CC840066> ]</color>");
-            if ((bool)zSlideComputer.ActionPermissions.ValueAt("Pickup" + itemName))
-                node.SetColor(sMenuManager.defaultColor);
-            else
-                node.SetColor(new Color(0.25f, 0f, 0f));
+            AutomaticActionMenuClass.GenericUpdateNodeAllowedDisplay(actionKey, node);
+            //if ((bool)zSlideComputer.ActionPermissions.ValueAt(actionKey))
+            //    node.SetColor(sMenuManager.defaultColor);
+            //else
+            //    node.SetColor(new Color(0.25f, 0f, 0f));
         }
         public static Color GetPriorityColor(float value)
         {

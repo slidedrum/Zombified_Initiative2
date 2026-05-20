@@ -51,24 +51,27 @@ namespace ZombieTweak2.Menus
         }
         public static void updateNodeThresholdDisplay(sMenu.sMenuNode node, string itemName)
         {
-            if (zSlideComputer.ActionPriorities.IsDefaultValue("Share" + itemName))
-            {
-                node.SetPrefix("");
-                node.SetSuffix("");
-            }
-            else
-            {
-                node.SetPrefix("* ");
-                node.SetSuffix(" *");
-            }
-            float threshold = (float)zSlideComputer.ActionPriorities.ValueAt("Share" + itemName);
+            string actionKey = "Share" + itemName;
+            AutomaticActionMenuClass.GenericUpdateNodeDefaultDisplay(node, actionKey);
+            //if (zSlideComputer.ActionPriorities.IsDefaultValue(actionKey))
+            //{
+            //    node.SetPrefix("");
+            //    node.SetSuffix("");
+            //}
+            //else
+            //{
+            //    node.SetPrefix("* ");
+            //    node.SetSuffix(" *");
+            //}
+            float threshold = (float)zSlideComputer.ActionPriorities.ValueAt(actionKey);
             string hex = ColorUtility.ToHtmlStringRGB(GetThresholdColor(threshold));
-            bool allowed = (bool)zSlideComputer.ActionPermissions.ValueAt("Share" + itemName);
+            //bool allowed = (bool)zSlideComputer.ActionPermissions.ValueAt(actionKey);
             node.SetSubtitle($"<color=#CC840066>[ </color><color=#{hex}>{threshold}</color><color=#CC840066> ]</color>");
-            if (allowed)
-                node.SetColor(sMenuManager.defaultColor);
-            else
-                node.SetColor(new Color(0.25f, 0f, 0f));
+            AutomaticActionMenuClass.GenericUpdateNodeAllowedDisplay(actionKey, node);
+            //if (allowed)
+            //    node.SetColor(sMenuManager.defaultColor);
+            //else
+            //    node.SetColor(new Color(0.25f, 0f, 0f));
         }
         public static Color GetThresholdColor(float value)
         {

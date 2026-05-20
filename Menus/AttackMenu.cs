@@ -49,10 +49,8 @@ namespace ZombieTweak2.Menus
         }
         public static void UpdateNodeDisplay(string key, sMenu.sMenuNode node)
         {
-            if ((bool)zSlideComputer.ActionPermissions.ValueAt(key))
-                node.SetColor(sMenuManager.defaultColor);
-            else
-                node.SetColor(new Color(0.25f, 0f, 0f));
+            AutomaticActionMenuClass.GenericUpdateNodeDefaultDisplay(node, key, zSlideComputer.ActionPermissions);
+            AutomaticActionMenuClass.GenericUpdateNodeAllowedDisplay(key, node);
         }
     }
    
