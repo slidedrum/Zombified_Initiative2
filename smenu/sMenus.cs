@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using UnityEngine;
-
-namespace SlideMenu
+﻿namespace SlideMenu
 {
     public static class sMenus
     {

@@ -8,9 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using ZombieTweak2.Menus;
 using Zombified_Initiative;
-using static ZombieTweak2.zNetworking.pStructs;
 
 namespace ZombieTweak2.Patches
 {

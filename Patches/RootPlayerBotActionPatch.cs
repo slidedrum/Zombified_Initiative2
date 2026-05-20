@@ -1,15 +1,9 @@
-﻿using AIGraph;
-using HarmonyLib;
-using Il2CppMono.Security.Interface;
+﻿using HarmonyLib;
 using Player;
-using System.Collections.Generic;
-using System.Diagnostics.Metrics;
-using UnityEngine;
 using ZombieTweak2.zRootBotPlayerAction;
 
 
 //using ZombieTweak2.zRootBotPlayerAction.CustomActions;
-using static Il2CppSystem.Globalization.CultureInfo;
 
 namespace ZombieTweak2.Patches
 {

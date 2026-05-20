@@ -1,5 +1,4 @@
-﻿using AK;
-using BepInEx;
+﻿using BepInEx;
 using BepInEx.Logging;
 using BepInEx.Unity.IL2CPP;
 using CellMenu;
@@ -9,6 +8,7 @@ using HarmonyLib;
 using Il2CppInterop.Runtime.Injection;
 using LevelGeneration;
 using Player;
+using SlideMenu;
 using SNetwork;
 using System;
 using System.Collections.Generic;
@@ -18,8 +18,6 @@ using ZombieTweak2;
 using ZombieTweak2.zNetworking;
 using ZombieTweak2.zRootBotPlayerAction;
 using static ZombieTweak2.zNetworking.pStructs;
-using SlideMenu;
-using ZombieTweak2.Menus;
 
 /*
  == TODO == Priority: Clean up the mess I made creating custom actions.

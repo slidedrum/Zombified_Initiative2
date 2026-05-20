@@ -1,12 +1,8 @@
-﻿using Il2CppSystem.Xml.Schema;
-using Player;
-using SlideMenu;
+﻿using SlideMenu;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
 using ZombieTweak2.Patches;
-using ZombieTweak2.zRootBotPlayerAction;
-using Zombified_Initiative;
 
 namespace ZombieTweak2.Menus
 {

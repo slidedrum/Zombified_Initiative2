@@ -1,17 +1,8 @@
-﻿using AIGraph;
-using BetterBots.Components;
-using GameData;
-using Gear;
+﻿using Gear;
 using HarmonyLib;
-using LevelGeneration;
 using Player;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
 using UnityEngine;
-using ZombieTweak2;
-using ZombieTweak2.Menus;
 using ZombieTweak2.zRootBotPlayerAction;
 using Zombified_Initiative;
 using static Zombified_Initiative.ZiMain;

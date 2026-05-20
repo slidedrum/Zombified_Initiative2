@@ -1,7 +1,6 @@
 ﻿using Player;
 using SlideMenu;
 using System.Collections.Generic;
-using System.Net.Mail;
 using UnityEngine;
 using ZombieTweak2.Patches;
 

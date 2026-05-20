@@ -1,17 +1,11 @@
-﻿using Dissonance.Networking.Client;
-using GameData;
-using GTFO.API;
-using Il2CppInterop.Runtime.InteropTypes.Arrays;
+﻿using GameData;
 using Player;
 using SlideMenu;
-using SNetwork;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using ZombieTweak2.Menus;
-using ZombieTweak2.zNetworking;
 using Zombified_Initiative;
-using static ZombieTweak2.zNetworking.pStructs;
 
 namespace ZombieTweak2
 {

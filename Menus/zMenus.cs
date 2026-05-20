@@ -1,5 +1,4 @@
-﻿using InControl;
-using Player;
+﻿using Player;
 using SlideMenu;
 using System;
 using System.Collections.Generic;

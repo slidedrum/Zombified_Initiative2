@@ -2,8 +2,6 @@
 using System.Collections;
 using UnityEngine;
 using Zombified_Initiative;
-using HarmonyLib;
-using Player;
 
 namespace ZombieTweak2
 {

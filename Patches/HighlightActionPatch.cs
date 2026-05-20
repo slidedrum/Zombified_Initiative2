@@ -1,12 +1,5 @@
 ﻿using HarmonyLib;
 using Player;
-using SlideMenu;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ZombieTweak2.Menus;
 
 namespace ZombieTweak2.Patches
 {

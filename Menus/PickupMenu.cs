@@ -2,12 +2,10 @@
 using Player;
 using SlideMenu;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using ZombieTweak2.Patches;
 using Zombified_Initiative;
-using static SlideMenu.sMenu;
 
 namespace ZombieTweak2.Menus
 {

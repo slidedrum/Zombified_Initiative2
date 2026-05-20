@@ -1,13 +1,9 @@
 ﻿using GTFO.API;
-using InControl;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ZombieTweak2.zNetworking;
 using Zombified_Initiative;
-using static Il2CppSystem.Linq.Expressions.Interpreter.CastInstruction.CastInstructionNoT;
 
 namespace ZombieTweak2
 {

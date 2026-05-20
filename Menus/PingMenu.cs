@@ -2,7 +2,6 @@
 using SlideMenu;
 using System;
 using UnityEngine;
-using ZombieTweak2.Patches;
 
 namespace ZombieTweak2.Menus
 {
