@@ -47,19 +47,19 @@ namespace ZombieTweak2.Menus
             ignoredStates.Add(DRAMA_State.ElevatorGoingDown);
             ignoredStates.Add(DRAMA_State.ElevatorIdle);
 
-            zSlideComputer.ActionPriorities.AddNode("Fighting", null, "Follow", condition: () => { return fightingStates.Contains(DramaManager.CurrentStateEnum); });
-            zSlideComputer.ActionPriorities.AddNode("Stealth", null, "Follow", condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Sneaking; });
-            zSlideComputer.ActionPriorities.AddNode("Explore", null, "Follow", condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Exploration; });
+            zSlideComputer.ActionPriorities.AddNode("Fighting", null, "Follow", defaultValue: null, hasDefaultValue: true, condition: () => { return fightingStates.Contains(DramaManager.CurrentStateEnum); });
+            zSlideComputer.ActionPriorities.AddNode("Stealth", null, "Follow", defaultValue: null, hasDefaultValue: true, condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Sneaking; });
+            zSlideComputer.ActionPriorities.AddNode("Explore", null, "Follow", defaultValue: null, hasDefaultValue: true, condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Exploration; });
 
             followRadius.AddNode("Follow", null, (string?)null);
-            followRadius.AddNode("Fighting", null, "Follow", condition: () => { return fightingStates.Contains(DramaManager.CurrentStateEnum); });
-            followRadius.AddNode("Stealth", null, "Follow", condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Sneaking; });
-            followRadius.AddNode("Explore", null, "Follow", condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Exploration; });
+            followRadius.AddNode("Fighting", null, "Follow", defaultValue: null, hasDefaultValue: true, condition: () => { return fightingStates.Contains(DramaManager.CurrentStateEnum); });
+            followRadius.AddNode("Stealth", null, "Follow", defaultValue: null, hasDefaultValue: true, condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Sneaking; });
+            followRadius.AddNode("Explore", null, "Follow", defaultValue: null, hasDefaultValue: true, condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Exploration; });
             
             maxDistance.AddNode("Follow", null, (string?)null);
-            maxDistance.AddNode("Fighting", null, "Follow", condition: () => { return fightingStates.Contains(DramaManager.CurrentStateEnum); });
-            maxDistance.AddNode("Stealth", null, "Follow", condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Sneaking; });
-            maxDistance.AddNode("Explore", null, "Follow", condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Exploration; });
+            maxDistance.AddNode("Fighting", null, "Follow", defaultValue: null, hasDefaultValue: true, condition: () => { return fightingStates.Contains(DramaManager.CurrentStateEnum); });
+            maxDistance.AddNode("Stealth", null, "Follow", defaultValue: null, hasDefaultValue: true, condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Sneaking; });
+            maxDistance.AddNode("Explore", null, "Follow", defaultValue: null, hasDefaultValue: true, condition: () => { return DramaManager.CurrentStateEnum == DRAMA_State.Exploration; });
 
             followRadius.nodes["Follow"].onChanged.Listen(UpdateNodeSettingsDisplay, args: [followMenuNode]);
             maxDistance.nodes["Follow"].onChanged.Listen(UpdateNodeSettingsDisplay, args: [followMenuNode]);
@@ -107,8 +107,8 @@ namespace ZombieTweak2.Menus
                 maxDistance.nodes[state.ToString()].onChanged.Listen(UpdateNodeSettingsDisplay, args: [stateNode]);
 
                 //TODO these lines are horendious omg.
-                zSlideComputer.ActionPriorities.AddNode(state.ToString(), null, parentNode, () => { return DramaManager.CurrentStateEnum == state; }).onChanged.Listen(AutomaticActionMenuClass.GenericUpdateNodePrioDisplay, args: [stateNode]);
-                zSlideComputer.ActionPermissions.AddNode(state.ToString(), null, parentNode).onChanged.Listen(AutomaticActionMenuClass.GenericUpdateNodeAllowedDisplay, args: [state.ToString(), stateNode]);
+                zSlideComputer.ActionPriorities.AddNode(state.ToString(), null, parentNode, () => { return DramaManager.CurrentStateEnum == state; }, defaultValue: null, hasDefaultValue: true).onChanged.Listen(UpdateNodeSettingsDisplay, args: [stateNode]);
+                zSlideComputer.ActionPermissions.AddNode(state.ToString(), null, parentNode, defaultValue: null, hasDefaultValue: true).onChanged.Listen(UpdateNodeSettingsDisplay, args: [stateNode, state.ToString()]);
                 //zSlideComputer.actionNameToMenuNodes[state.ToString()] = stateNode;
                 
                 stateNodes[state] = stateNode;
@@ -218,7 +218,7 @@ namespace ZombieTweak2.Menus
         private static sMenu.sMenuNode AddCatagoryNode(string catagory)
         {
             var catagoryNode = followMenu.AddNode(catagory);
-            zSlideComputer.ActionPriorities.nodes[catagory].onChanged.Listen(AutomaticActionMenuClass.GenericUpdateNodePrioDisplay, args: [catagoryNode]);
+            zSlideComputer.ActionPriorities.nodes[catagory].onChanged.Listen(UpdateNodeSettingsDisplay, args: [catagoryNode]);
             followRadius.nodes[catagory].onChanged.Listen(UpdateNodeSettingsDisplay, args: [catagoryNode]);
             maxDistance.nodes[catagory].onChanged.Listen(UpdateNodeSettingsDisplay, args: [catagoryNode]);
             catagoryNode.titlePart.SetScale(0.5f);
@@ -227,7 +227,7 @@ namespace ZombieTweak2.Menus
             catagoryNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, ResetSettings, catagoryNode);
             catagoryNode.AddListener(sMenuManager.nodeEvent.OnTapped, zSlideComputer.GenericToggleAllowed, catagory, catagoryNode);
             //zSlideComputer.actionNameToMenuNodes[catagory] = catagoryNode;
-            zSlideComputer.ActionPermissions.AddNode(catagory, null, "Follow").onChanged.Listen(AutomaticActionMenuClass.GenericUpdateNodeAllowedDisplay, args: [catagory, catagoryNode]);
+            zSlideComputer.ActionPermissions.AddNode(catagory, null, "Follow", defaultValue: null, hasDefaultValue: true).onChanged.Listen(UpdateNodeSettingsDisplay, args: [catagoryNode, catagory]);
             return catagoryNode;
         }
         internal static void ResetSettings(sMenu.sMenuNode node)
@@ -319,23 +319,21 @@ namespace ZombieTweak2.Menus
                 UpdateNodeSettingsDisplay(Node);
             }
         }
-        private static void UpdateNodeSettingsDisplay(sMenu.sMenuNode node)
+        private static void UpdateNodeSettingsDisplay(sMenu.sMenuNode node, string actionKey = null)
         {
-            
-            string text = node.text;
-            if (zSlideComputer.ActionPriorities.nodes[text].IsDefaultValue() && followRadius.nodes[text].IsDefaultValue() && maxDistance.nodes[text].IsDefaultValue())
-            {
-                node.SetPrefix("");
-                node.SetSuffix("");
-            }
-            else
-            {
-                node.SetPrefix("* ");
-                node.SetSuffix(" *");
-            }
+            if (actionKey == null)
+                actionKey = node.text;
+            List<IOverrideTree> overrideTrees = new() { 
+                zSlideComputer.ActionPriorities,
+                zSlideComputer.ActionPermissions,
+                followRadius,
+                maxDistance
+            };
+            AutomaticActionMenuClass.GenericUpdateNodeDefaultDisplay(node, overrideTrees, actionKey);
             AutomaticActionMenuClass.GenericUpdateNodePrioDisplay(node);
+            AutomaticActionMenuClass.GenericUpdateNodeAllowedDisplay(actionKey, node);
             //node.SetTitle($"Prio <color=#CC840066>[</color>{zSlideComputer.ActionPriorities.ValueAt(text)}<color=#CC840066>]</color>");
-            node.SetSubtitle($"Range <color=#CC840066>[</color>{followRadius.ValueAt(text)}/{maxDistance.ValueAt(text)}<color=#CC840066>]</color>");
+            node.SetSubtitle($"Range <color=#CC840066>[</color>{followRadius.ValueAt(actionKey)}/{maxDistance.ValueAt(actionKey)}<color=#CC840066>]</color>");
         }
     }
 }

@@ -11,10 +11,8 @@ namespace ZombieTweak2.Menus
         public static sMenu overidesMenu;
         public static sMenu.sMenuNode playersNode;
         public static sMenu.sMenuNode botsNode;
-        public static Dictionary<string, sMenu.sMenuNode> overideNode;
         public static void Setup(sMenu menu)
         {
-            overideNode = new();
             reviveMenu = menu;
             reviveNode = menu.GetNode();
             reviveNode.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
@@ -23,8 +21,10 @@ namespace ZombieTweak2.Menus
             playersNode.AddListener(sMenuManager.nodeEvent.OnPressed, zSlideComputer.GenericToggleAllowed, "RevivePlayers", playersNode);
             botsNode = reviveMenu.AddNode("Bots");
             botsNode.AddListener(sMenuManager.nodeEvent.OnPressed, zSlideComputer.GenericToggleAllowed, "ReviveBots", botsNode);
-            zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("RevivePlayers", null, playersNode, ActionTypeToCull: typeof(PlayerBotActionRevive), parrentKey: "Revive");
-            zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("ReviveBots", null, botsNode, ActionTypeToCull: typeof(PlayerBotActionRevive), parrentKey: "Revive");
+            zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("RevivePlayers", null, playersNode, ActionTypeToCull: typeof(PlayerBotActionRevive), parrentKey: "Revive", hasDefaultValue: true);
+            zSlideComputer.ActionPermissions.GetNodeFromIdent("RevivePlayers").onChanged.Listen(UpdateNodeDisplay, args: ["RevivePlayers", playersNode]);
+            zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("ReviveBots", null, botsNode, ActionTypeToCull: typeof(PlayerBotActionRevive), parrentKey: "Revive", hasDefaultValue: true);
+            zSlideComputer.ActionPermissions.GetNodeFromIdent("ReviveBots").onChanged.Listen(UpdateNodeDisplay, args: ["ReviveBots", botsNode]);
             menu.centerNode.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
             menu.centerNode.AddListener(sMenuManager.nodeEvent.OnTapped, menu.parrentMenu.Open);
             menu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediateSelected, AutomaticActionMenuClass.GenericResetSettings, args: [botsNode, false, "ReviveBots"]);
@@ -36,6 +36,11 @@ namespace ZombieTweak2.Menus
             reviveMenu.AddPannel(sMenu.sMenuPannel.Side.top, "Controls who the bots are allowed to revive");
             reviveMenu.AddPannel(sMenu.sMenuPannel.Side.top, "I plan to add a way to control revives of spesific plaers");
             reviveMenu.AddPannel(sMenu.sMenuPannel.Side.top, "Maybe an option to only revive their leader?");
+        }
+        public static void UpdateNodeDisplay(string key, sMenu.sMenuNode node)
+        {
+            AutomaticActionMenuClass.GenericUpdateNodeDefaultDisplay(node, key, zSlideComputer.ActionPermissions);
+            AutomaticActionMenuClass.GenericUpdateNodeAllowedDisplay(key, node);
         }
     }
 }
