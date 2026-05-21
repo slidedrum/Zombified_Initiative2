@@ -180,13 +180,31 @@ namespace ZombieTweak2.Menus
         //    else
         //        node.SetColor(new Color(0.25f, 0f, 0f));
         //}
-        internal static void GenericUpdateNodeAllowedDisplay(string key, sMenu.sMenuNode node)
+        internal static void GenericUpdateNodeAllowedDisplay(string actionKey, sMenu.sMenuNode node)
         {
-            bool allowed = (bool)zSlideComputer.ActionPermissions.ValueAt(key);
+            bool allowed = (bool)zSlideComputer.ActionPermissions.ValueAt(actionKey);
             if (allowed)
                 node.SetColor(sMenuManager.defaultColor);
             else
                 node.SetColor(new Color(0.25f, 0f, 0f));
+            ApplyTextEffects(node, actionKey);
+        }
+        public static void ApplyTextEffects(sMenu.sMenuNode node, string actionKey = null, List<IOverrideTree> extraTrees = null)
+        {
+            if (actionKey == null)
+                actionKey = node.text;
+            List<IOverrideTree> trees = new();
+            if (zSlideComputer.ActionPermissions.HasKey(actionKey))
+                trees.Add(zSlideComputer.ActionPermissions);
+            if (zSlideComputer.ActionPriorities.HasKey(actionKey))
+                trees.Add(zSlideComputer.ActionPriorities);
+            if (extraTrees != null)
+                foreach (var tree in extraTrees)
+                    trees.Add(tree);
+            bool star = AutomaticActionMenuClass.AnyTreeOverridesNullDefault(trees, actionKey);
+            bool italic = !AutomaticActionMenuClass.AllMatchingDefaultValue(trees, actionKey);
+            AutomaticActionMenuClass.ApplyTextEffectToNode(node, AutomaticActionMenuClass.textEffect.Star, star);
+            AutomaticActionMenuClass.ApplyTextEffectToNode(node, AutomaticActionMenuClass.textEffect.Italic, italic);
         }
         internal static void GenericUpdatePriorityBasedOnScroll(sMenu.sMenuNode node)
         {
@@ -194,96 +212,134 @@ namespace ZombieTweak2.Menus
             if (scroll == 0f)
                 return;
             float normalizedScroll = (int)Mathf.Sign(scroll) * 0.1f;
-            string text = node.text;
-            //OverrideTree<float?> prio = ActionPriorities[text];
-            zSlideComputer.ActionPriorities.SetValue(text, Math.Clamp(Mathf.Round(((float)zSlideComputer.ActionPriorities.ValueAt(text) + normalizedScroll) * 10f) / 10f,1f,15f));
+            string actionKey = node.text;
+            zSlideComputer.ActionPriorities.SetValue(actionKey, Math.Clamp(Mathf.Round(((float)zSlideComputer.ActionPriorities.ValueAt(actionKey) + normalizedScroll) * 10f) / 10f,1f,15f));
+            ApplyTextEffects(node);
             //GenericUpdateNodePrioDisplay(node);
         }
 
-        //TODO move all nodes to use this generic update method tree
-
-        public static void GenericUpdateNodeDefaultDisplay(sMenu.sMenuNode node, string key = null, IOverrideTree tree = null)
+        public enum textEffect
         {
-            List<IOverrideTree> trees = new();
-            if (tree != null)
-                trees.Add(tree);
+            Star,
+            Bold,
+            Italic,
+            Underline,
+        }
+        public static Dictionary<textEffect, (string prefix, string suffix)> textEffectDict = new()
+        {
+            { textEffect.Star, ("*", "*") },
+            { textEffect.Bold, ("<b>", "</b>") },
+            { textEffect.Italic, ("<i>", "</i>") },
+            { textEffect.Underline, ("<u>", "</u>") },
+        };
+        //public static void GenericUpdateNodeDefaultDisplay(sMenu.sMenuNode node, string key)
+        //{
+        //    List<IOverrideTree> trees = new List<IOverrideTree>();
+        //    trees.Add(zSlideComputer.ActionPermissions);
+        //    trees.Add(zSlideComputer.ActionPriorities);
+        //    //ApplyTextEffectBasedOnKeyTree(node, key, trees, textEffect.Bold);
+        //    //ApplyTextEffectBasedOnKeyTree(node, key, zSlideComputer.ActionPriorities, textEffect.Star);
+        //}
+        //public static void ApplyTextEffectBasedOnKeyTree(sMenu.sMenuNode node, string key, IOverrideTree tree, textEffect effect)
+        //{
+        //    List<IOverrideTree> trees = new();
+        //    trees.Add(tree);
+        //    ApplyTextEffectBasedOnKeyTree(node, key, trees, effect);
+        //}
+        //public static void ApplyTextEffectBasedOnKeyTree(sMenu.sMenuNode node, string key, List<IOverrideTree> trees, textEffect effect)
+        //{
+        //    List<(string key, IOverrideTree tree)> keyTrees = new();
+        //    foreach (IOverrideTree tree in trees)
+        //        keyTrees.Add((key, tree));
+        //    ApplyTextEffectBasedOnKeyTree(node, keyTrees, effect);
+        //}
+        //public static void ApplyTextEffectBasedOnKeyTree(sMenu.sMenuNode node, List<string> keys, IOverrideTree tree, textEffect effect)
+        //{
+        //    List<(string key, IOverrideTree tree)> keyTrees = new();
+        //    foreach (string key in keys)
+        //        keyTrees.Add((key, tree));
+        //    ApplyTextEffectBasedOnKeyTree(node, keyTrees, effect);
+        //}
+        //public static void ApplyTextEffectBasedOnKeyTree(sMenu.sMenuNode node, List<(string key, IOverrideTree tree)> keyTrees, textEffect effect)
+        //{
+        //    List<(List<string> keys, IOverrideTree tree)> keysTrees = new();
+        //    foreach ((string key, IOverrideTree tree) pair in keyTrees)
+        //    {
+        //        var key = pair.key;
+        //        var tree = pair.tree;
+        //        List<string> keys = new() { key };
+        //        keysTrees.Add((keys, tree));
+        //    }
+        //    ApplyTextEffectBasedOnKeyTree(node, keysTrees, effect);
+        //}
+        //public static void ApplyTextEffectBasedOnKeyTree(sMenu.sMenuNode node, List<(List<string> keys, IOverrideTree tree)> keysTrees, textEffect effect)
+        //{
+        //    bool allDefault = true;
+        //    foreach(var keyTree in keysTrees)
+        //    {
+        //        List<string> keys = keyTree.keys;
+        //        IOverrideTree tree = keyTree.tree;
+        //        foreach (string key in keys)
+        //        {
+        //            if (!tree.IsDefaultValue(key))
+        //            {
+        //                allDefault = false;
+        //                break;
+        //            }
+        //        }
+        //        if (!allDefault)
+        //            break;
+        //    }
+        //    ApplyTextEffectToNode(node, effect, !allDefault);
+        //}
+        public static bool AnyTreeOverridesNullDefault(List<IOverrideTree> trees, string key)
+        {
+            foreach (var tree in trees)
+            {
+                bool HasDefaultValue = tree.IHasDefault(key);
+                object DefaultValue = tree.IGetDefaultValue(key);
+                bool DefaultValueIsNull = DefaultValue == null;
+                bool HasValue = tree.IHasValue(key);
+                bool HasParrent = tree.IHasParrent(key);
+                if (HasValue && DefaultValueIsNull)
+                    return true;
+            }
+            return false;
+        }
+        public static bool AnyHasValue(List<IOverrideTree> trees, string key)
+        {
+            foreach (var tree in trees)
+                if (tree.IHasValue(key))
+                    return true;
+            return false;
+        }
+        public static bool AllMatchingDefaultValue(List<IOverrideTree> trees, string key)
+        {
+            foreach (var tree in trees)
+                if (!tree.IMatchingDefaultValue(key))
+                    return false;
+            return true;
+        }
+        public static bool AllDefaultValue(List<IOverrideTree> trees, string key)
+        {
+            foreach (var tree in trees)
+                if (!tree.IsDefaultValue(key))
+                    return false;
+            return true;
+        }
+        public static void ApplyTextEffectToNode(sMenu.sMenuNode node, textEffect effect, bool enabled = true)
+        {
+            if (enabled)
+            {
+                if (!node.prefix.Contains(textEffectDict[effect].prefix))
+                    node.SetPrefix(textEffectDict[effect].prefix + node.prefix);
+                if (!node.suffix.Contains(textEffectDict[effect].suffix))
+                    node.SetSuffix(node.suffix + textEffectDict[effect].suffix);
+            }
             else
             {
-                trees.Add(zSlideComputer.ActionPermissions);
-                trees.Add(zSlideComputer.ActionPriorities);
-            }
-            GenericUpdateNodeDefaultDisplay(node, trees, key);
-        }
-        public static void GenericUpdateNodeDefaultDisplay(sMenu.sMenuNode node,List<IOverrideTree> trees, string key = null)
-        {
-            if (key == null)
-                key = node.text;
-            List<(string key, IOverrideTree tree)> keyTrees = new();
-            foreach (IOverrideTree tree in trees)
-                keyTrees.Add((key, tree));
-            GenericUpdateNodeDefaultDisplay(node, keyTrees);
-        }
-        public static void GenericUpdateNodeDefaultDisplay(sMenu.sMenuNode node, List<string> keys, IOverrideTree tree = null)
-        {
-            List<(string key, IOverrideTree tree)> keyTrees = new();
-            if (tree == null)
-            {
-                List<(List<string> keys, IOverrideTree tree)> keysTrees = new();
-                keysTrees.Add((keys, zSlideComputer.ActionPermissions));
-                keysTrees.Add((keys, zSlideComputer.ActionPriorities));
-                GenericUpdateNodeDefaultDisplay(node, keysTrees);
-            }
-            else
-                foreach (string key in keys)
-                    keyTrees.Add((key, tree));
-            GenericUpdateNodeDefaultDisplay(node, keyTrees);
-        }
-        public static void GenericUpdateNodeDefaultDisplay(sMenu.sMenuNode node, List<(string key, IOverrideTree tree)> keyTrees)
-        {
-            List<(List<string> keys, IOverrideTree tree)> keysTrees = new();
-            foreach ((string key, IOverrideTree tree) pair in keyTrees)
-            {
-                var key = pair.key;
-                var tree = pair.tree;
-                List<string> keys = new() { key };
-                keysTrees.Add((keys, tree));
-            }
-            GenericUpdateNodeDefaultDisplay(node, keysTrees);
-        }
-        public static void GenericUpdateNodeDefaultDisplay(sMenu.sMenuNode node, List<(List<string> keys, IOverrideTree tree)> keysTrees = null)
-        {
-            if (keysTrees == null)
-            {
-                keysTrees = new();
-                List<string> keys = new() { node.text };
-                keysTrees.Add((keys, zSlideComputer.ActionPermissions));
-                keysTrees.Add((keys, zSlideComputer.ActionPriorities));
-            }
-            bool allDefault = true;
-            foreach(var keyTree in keysTrees)
-            {
-                List<string> keys = keyTree.keys;
-                IOverrideTree tree = keyTree.tree;
-                foreach (string key in keys)
-                {
-                    if (!tree.IsDefaultValue(key))
-                    {
-                        allDefault = false;
-                        break;
-                    }
-                }
-                if (!allDefault)
-                    break;
-            }
-            if (allDefault)
-            {
-                node.SetPrefix("");
-                node.SetSuffix("");
-            }
-            else
-            {
-                node.SetPrefix("* ");
-                node.SetSuffix(" *");
+                node.SetPrefix(node.prefix.Replace(textEffectDict[effect].prefix,""));
+                node.SetSuffix(node.suffix.Replace(textEffectDict[effect].suffix,""));
             }
         }
         public static void GenericUpdateNodePrioDisplay(sMenu.sMenuNode node, string key = null)
@@ -291,20 +347,24 @@ namespace ZombieTweak2.Menus
             if (key == null)
                 key = node.text;
             node.SetTitle($"Prio <color=#CC840066>[</color>{zSlideComputer.ActionPriorities.ValueAt(key)}<color=#CC840066>]</color>");
+            ApplyTextEffects(node, key);
         }
-        public static void GenericResetSettings(sMenu.sMenuNode node, bool allowDissabled = false, string? key = null)
+        public static void GenericResetSettings(sMenu.sMenuNode node, bool allowDissabled = false, string? actionKey = null)
         {
             if (!node.gameObject.activeInHierarchy && !allowDissabled)
                 return;
-            string _key;
-            if (key != null)
-                _key = key;
-            else
-                _key = node.text;
-            if (zSlideComputer.ActionPermissions.ResetToDefault(_key) != null)
-                GenericUpdateNodeAllowedDisplay(_key, node);
-            if (zSlideComputer.ActionPriorities.ResetToDefault(_key) != null)
+            if (actionKey == null)
+                actionKey = node.text;
+            //string _key;
+            //if (key != null)
+            //    _key = key;
+            //else
+            //    _key = node.text;
+            if (zSlideComputer.ActionPermissions.ResetToDefault(actionKey) != null)
+                GenericUpdateNodeAllowedDisplay(actionKey, node);
+            if (zSlideComputer.ActionPriorities.ResetToDefault(actionKey) != null)
                 GenericUpdateNodePrioDisplay(node);
+            //GenericApplyTextEffects(node, actionKey);
             
         }
     }

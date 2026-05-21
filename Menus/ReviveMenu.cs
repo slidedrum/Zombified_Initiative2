@@ -37,10 +37,18 @@ namespace ZombieTweak2.Menus
             reviveMenu.AddPannel(sMenu.sMenuPannel.Side.top, "I plan to add a way to control revives of spesific plaers");
             reviveMenu.AddPannel(sMenu.sMenuPannel.Side.top, "Maybe an option to only revive their leader?");
         }
-        public static void UpdateNodeDisplay(string key, sMenu.sMenuNode node)
+        public static void UpdateNodeDisplay(string actionKey, sMenu.sMenuNode node)
         {
-            AutomaticActionMenuClass.GenericUpdateNodeDefaultDisplay(node, key, zSlideComputer.ActionPermissions);
-            AutomaticActionMenuClass.GenericUpdateNodeAllowedDisplay(key, node);
+            //AutomaticActionMenuClass.ApplyTextEffectBasedOnKeyTree(node, key, zSlideComputer.ActionPermissions, AutomaticActionMenuClass.textEffect.Bold);
+            AutomaticActionMenuClass.GenericUpdateNodeAllowedDisplay(actionKey, node);
+            //List<IOverrideTree> trees = new()
+            //{
+            //    zSlideComputer.ActionPermissions,
+            //};
+            //bool italic = AutomaticActionMenuClass.AnyTreeOverridesNullDefault(trees, actionKey);
+            //bool star = !AutomaticActionMenuClass.AllMatchingDefaultValue(trees, actionKey);
+            //AutomaticActionMenuClass.ApplyTextEffectToNode(node, AutomaticActionMenuClass.textEffect.Star, star);
+            //AutomaticActionMenuClass.ApplyTextEffectToNode(node, AutomaticActionMenuClass.textEffect.Italic, italic);
         }
     }
 }

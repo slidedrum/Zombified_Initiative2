@@ -1,6 +1,7 @@
 ﻿using Player;
 using SlideMenu;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace ZombieTweak2.Menus
@@ -32,10 +33,18 @@ namespace ZombieTweak2.Menus
             pingMenu.AddPannel(sMenu.sMenuPannel.Side.top, "Controls what bots will point out and mark.");
             pingMenu.AddPannel(sMenu.sMenuPannel.Side.top, "I'd like to add the option for them to ping new things, like resource bags, or even scouts?");
         }
-        public static void UpdateNodeDisplay(string key, sMenu.sMenuNode node)
+        public static void UpdateNodeDisplay(string actionKey, sMenu.sMenuNode node)
         {
-            AutomaticActionMenuClass.GenericUpdateNodeDefaultDisplay(node, key, zSlideComputer.ActionPermissions);
-            AutomaticActionMenuClass.GenericUpdateNodeAllowedDisplay(key, node);
+            //AutomaticActionMenuClass.ApplyTextEffectBasedOnKeyTree(node, key, zSlideComputer.ActionPermissions, AutomaticActionMenuClass.textEffect.Bold);
+            AutomaticActionMenuClass.GenericUpdateNodeAllowedDisplay(actionKey, node);
+            //List<IOverrideTree> trees = new()
+            //{
+            //    zSlideComputer.ActionPermissions,
+            //};
+            //bool italic = AutomaticActionMenuClass.AnyTreeOverridesNullDefault(trees, actionKey);
+            //bool star = !AutomaticActionMenuClass.AllMatchingDefaultValue(trees, actionKey);
+            //AutomaticActionMenuClass.ApplyTextEffectToNode(node, AutomaticActionMenuClass.textEffect.Star, star);
+            //AutomaticActionMenuClass.ApplyTextEffectToNode(node, AutomaticActionMenuClass.textEffect.Italic, italic);
             //if ((bool)zSlideComputer.ActionPermissions.ValueAt(key))
             //    node.SetColor(sMenuManager.defaultColor);
             //else

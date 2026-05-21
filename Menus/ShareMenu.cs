@@ -1,5 +1,6 @@
 ﻿using SlideMenu;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using ZombieTweak2.Patches;
 
@@ -52,7 +53,7 @@ namespace ZombieTweak2.Menus
         public static void updateNodeThresholdDisplay(sMenu.sMenuNode node, string itemName)
         {
             string actionKey = "Share" + itemName;
-            AutomaticActionMenuClass.GenericUpdateNodeDefaultDisplay(node, actionKey);
+            //AutomaticActionMenuClass.GenericUpdateNodeDefaultDisplay(node, actionKey);
             //if (zSlideComputer.ActionPriorities.IsDefaultValue(actionKey))
             //{
             //    node.SetPrefix("");
@@ -63,6 +64,16 @@ namespace ZombieTweak2.Menus
             //    node.SetPrefix("* ");
             //    node.SetSuffix(" *");
             //}
+            //List<IOverrideTree> trees = new()
+            //{
+            //    zSlideComputer.ActionPermissions,
+            //    zSlideComputer.ActionPriorities,
+            //};
+            //bool italic = AutomaticActionMenuClass.AnyTreeOverridesNullDefault(trees, actionKey);
+            //bool star = !AutomaticActionMenuClass.AllMatchingDefaultValue(trees, actionKey);
+            //AutomaticActionMenuClass.ApplyTextEffectToNode(node, AutomaticActionMenuClass.textEffect.Star, star);
+            //AutomaticActionMenuClass.ApplyTextEffectToNode(node, AutomaticActionMenuClass.textEffect.Italic, italic);
+
             float threshold = (float)zSlideComputer.ActionPriorities.ValueAt(actionKey);
             string hex = ColorUtility.ToHtmlStringRGB(GetThresholdColor(threshold));
             //bool allowed = (bool)zSlideComputer.ActionPermissions.ValueAt(actionKey);
