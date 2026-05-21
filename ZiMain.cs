@@ -159,13 +159,13 @@ public class ZiMain : BasePlugin
         //NetworkAPI.RegisterEvent<pItemPrio>                 ("SetItemPrio",                     zNetworking.ReciveSetItemPrio);
         //NetworkAPI.RegisterEvent<pResourceThreshold>        ("SetResourceThreshold",            zNetworking.reciveSetResourceThreshold);
         //NetworkAPI.RegisterEvent<pResourceThresholdDisable> ("SetResourceThresholdDisable",     zNetworking.ReciveSetResourceThresholdDisable);
-        NetworkAPI.RegisterEvent<pGenericPermission>        ("SetActionPermission",             zNetworking.ReciveSetActionPermission);
+        //NetworkAPI.RegisterEvent<pGenericPermission>        ("SetActionPermission",             zNetworking.ReciveSetActionPermission);
         NetworkAPI.RegisterEvent<pPickupItemInfo>           ("RequestToPickupItem",             zNetworking.ReciveRequestToPickupItem);
         NetworkAPI.RegisterEvent<pShareResourceInfo>        ("RequestToShareResourcePack",      zNetworking.ReciveRequestToShareResource);
         NetworkAPI.RegisterEvent<pAttackEnemyInfo>          ("RequestToKillEnemy",              zNetworking.ReciveRequestToKillEnemy);
-        NetworkAPI.RegisterEvent<pBoolOverideTreeInfo>      ("RequestToSetBoolOverideTree",     zNetworking.RequestToSetBoolOverideTree);
-        NetworkAPI.RegisterEvent<pIntOverideTreeInfo>       ("RequestToSetIntOverideTree",      zNetworking.RequestToSetIntOverideTree);
-        NetworkAPI.RegisterEvent<pFloatOverideTreeInfo>     ("RequestToSetFloatOverideTree",    zNetworking.RequestToSetFloatOverideTree);
+        NetworkAPI.RegisterEvent<pBoolOverideTreeInfo>      ("SetBoolOverideTree",     zNetworking.ReciveSetBoolOverideTree);
+        NetworkAPI.RegisterEvent<pIntOverideTreeInfo>       ("SetIntOverideTree",      zNetworking.ReciveSetIntOverideTree);
+        NetworkAPI.RegisterEvent<pFloatOverideTreeInfo>     ("SetFloatOverideTree",    zNetworking.ReciveSetFloatOverideTree);
 
         //EventAPI.OnExpeditionStarted += ZombieController.Initialize;
         log = Log;

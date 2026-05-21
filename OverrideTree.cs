@@ -276,7 +276,7 @@ namespace ZombieTweak2
                             {
                                 throw new InvalidCastException($"Expected bool value for key '{key}', but got {value.GetType().Name}.");
                             }
-                            NetworkAPI.InvokeEvent<pStructs.pBoolOverideTreeInfo>("RequestToSetBoolOverideTree", info);
+                            NetworkAPI.InvokeEvent<pStructs.pBoolOverideTreeInfo>("SetBoolOverideTree", info);
                             break;
                         }
                     case TypeCode.Int32:
@@ -298,7 +298,7 @@ namespace ZombieTweak2
                             {
                                 throw new InvalidCastException($"Expected int value for key '{key}', but got {value.GetType().Name}.");
                             }
-                            NetworkAPI.InvokeEvent<pStructs.pIntOverideTreeInfo>("RequestToSetIntOverideTree", info);
+                            NetworkAPI.InvokeEvent<pStructs.pIntOverideTreeInfo>("SetIntOverideTree", info);
                             break;
                         }
                     case TypeCode.Single:
@@ -320,7 +320,7 @@ namespace ZombieTweak2
                             {
                                 throw new InvalidCastException($"Expected float value for key '{key}', but got {value.GetType().Name}.");
                             }
-                            NetworkAPI.InvokeEvent<pStructs.pFloatOverideTreeInfo>("RequestToSetFloatOverideTree", info);
+                            NetworkAPI.InvokeEvent<pStructs.pFloatOverideTreeInfo>("SetFloatOverideTree", info);
                             break;
                         }
                     default:
