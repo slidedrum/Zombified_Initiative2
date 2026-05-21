@@ -88,7 +88,18 @@ namespace ZombieTweak2.Menus
             //pickupMenu.centerNode.AddListener(sMenuManager.nodeEvent.WhileSelected, UpdateCatagoryByScroll);
             //ALL - ENCOUNTERED - RESOURCES - PLACEABLES - THROWABLES - FAVORITES
             pickupMenu.AddCatagory("All");
-            pickupMenu.AddCatagory("Encountered");
+
+            pickupMenu.AddNodeToCatagory("Default", "Ammo Pack");
+            pickupMenu.AddNodeToCatagory("Default", "MediPack");
+            pickupMenu.AddNodeToCatagory("Default", "Tool Refill Pack");
+            pickupMenu.AddNodeToCatagory("Default", "Disinfection Pack");
+            pickupMenu.AddNodeToCatagory("Default", "C-Foam Grenade");
+            pickupMenu.AddNodeToCatagory("Default", "Lock Melter");
+            pickupMenu.AddNodeToCatagory("Default", "C-Foam Tripmine");
+            pickupMenu.AddNodeToCatagory("Default", "Explosive Trip Mine");
+            pickupMenu.AddNodeToCatagory("Default", "Glow Stick");
+            pickupMenu.AddNodeToCatagory("Default", "Fog Repeller");
+            pickupMenu.AddNodeToCatagory("Default", "C-Foam Grenade");
             pickupMenu.AddNodeToCatagory("Favorites", "Ammo Pack");
             pickupMenu.AddNodeToCatagory("Favorites", "MediPack");
             pickupMenu.AddNodeToCatagory("Favorites", "Tool Refill Pack");
@@ -104,7 +115,8 @@ namespace ZombieTweak2.Menus
             pickupMenu.AddNodeToCatagory("Throwables", "Glow Stick");
             pickupMenu.AddNodeToCatagory("Throwables", "Fog Repeller");
             pickupMenu.AddNodeToCatagory("Throwables", "C-Foam Grenade");
-            pickupMenu.SetCatagory("All");
+            pickupMenu.AddCatagory("Encountered");
+            pickupMenu.SetCatagory("Default");
             pickupMenu.AddListener(sMenuManager.menuEvent.OnOpened, pickupMenu.UpdateCatagoryNodes);
 
             pickupNode.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);

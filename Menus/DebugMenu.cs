@@ -2,6 +2,8 @@
 using SlideMenu;
 using System;
 using UnityEngine;
+using ZombieTweak2.Patches;
+using Zombified_Initiative;
 
 namespace ZombieTweak2.Menus
 {
@@ -11,6 +13,7 @@ namespace ZombieTweak2.Menus
         public static sMenu debugNodeMenu;
         public static sMenu debugNodeSettingsMenu;
         public static sMenu debugCameraCullingMenu;
+        public static sMenu debugHooksEnabled;
 
         public static void Setup(sMenu menu)
         {
@@ -19,7 +22,9 @@ namespace ZombieTweak2.Menus
             debugNodeMenu = sMenuManager.createMenu("Nodes", debugMenu);
             debugNodeSettingsMenu = sMenuManager.createMenu("Settings", debugNodeMenu);
             debugCameraCullingMenu = sMenuManager.createMenu("Camera culling", debugMenu);
+            debugHooksEnabled = sMenuManager.createMenu("UseHooks", debugMenu);
             debugMenu.AddNode("Show title prompt", InGameTitle.DisplayDefault).AddListener(sMenuManager.nodeEvent.OnUnpressedSelected, debugMenu.Close); ;
+            
             debugMenu.AddNode("ChecVis")
                 .AddListener(sMenuManager.nodeEvent.OnUnpressedSelected, zDebug.setCheckVizTarget)
                 .AddListener(sMenuManager.nodeEvent.OnUnpressedSelected, zDebug.debugCheckViz)
@@ -38,6 +43,8 @@ namespace ZombieTweak2.Menus
             debugNodeMenu.AddNode("Toggle Connections", zDebug.ToggleConnections);
             debugNodeMenu.AddNode("Toggle Node Info", zDebug.ToggleNodeInfo);
             debugNodeSettingsMenu.radius = 130;
+            debugHooksEnabled.AddNode("Use get item priority", toggleUseItemPrio);
+            debugHooksEnabled.AddNode("Use updatePickupAction", toggleUsePickupAction);
             var gridSizeNode = debugNodeSettingsMenu.AddNode("Grid Size");
             gridSizeNode.AddListener(sMenuManager.nodeEvent.WhileSelected, DebugMenuClass.ChangeValueBasedOnMouseWheel, [DebugValueToChange.NodeGridSize, gridSizeNode, 0.1f]);
             gridSizeNode.SetSubtitle($"{zVisitedManager.NodeGridSize}");
@@ -63,6 +70,19 @@ namespace ZombieTweak2.Menus
             debugCameraCullingMenu.radius = 140;
             debugCameraCullingMenu.setNodeSize(0.5f);
         }
+
+        private static void toggleUsePickupAction()
+        {
+            PickupActionPatch.useUpdateActionCollectItem = !PickupActionPatch.useUpdateActionCollectItem;
+            ZiMain.log.LogInfo($"Toggled pickup action hook: {PickupActionPatch.useUpdateActionCollectItem}");
+        }
+
+        private static void toggleUseItemPrio()
+        {
+            PickupActionPatch.useGetItemPrio = !PickupActionPatch.useGetItemPrio;
+            ZiMain.log.LogInfo($"Toggled item prio hook: {PickupActionPatch.useGetItemPrio}");
+        }
+
         public enum DebugValueToChange
         {
             NodeGridSize,

@@ -25,7 +25,7 @@ namespace ZombieTweak2.Menus
             OverrideTree<int?>.ResetTrees();
             AutomaticActionMenuClass.Setup(sMenuManager.createMenu("Automatic Actions", sMenuManager.mainMenu));
             sMenuManager.mainMenu.AddPannel(sMenu.sMenuPannel.Side.top, "<size=150><color=#CC840066>Slide's Bot Control</color></size>");
-            sMenuManager.mainMenu.AddPannel(sMenu.sMenuPannel.Side.top, "<color=#CC840066>[ </color><color=#26262c>V0.9.6</color><color=#CC840066> ]</color>");
+            sMenuManager.mainMenu.AddPannel(sMenu.sMenuPannel.Side.top, "<color=#CC840066>[ </color><color=#26262c>V1.0.0</color><color=#CC840066> ]</color>");
             sMenuManager.mainMenu.radius = 100f;
             if (ZiMain.extraActionMenus) 
             { 
@@ -355,11 +355,6 @@ namespace ZombieTweak2.Menus
                 return;
             if (actionKey == null)
                 actionKey = node.text;
-            //string _key;
-            //if (key != null)
-            //    _key = key;
-            //else
-            //    _key = node.text;
             if (zSlideComputer.ActionPermissions.ResetToDefault(actionKey) != null)
                 GenericUpdateNodeAllowedDisplay(actionKey, node);
             if (zSlideComputer.ActionPriorities.ResetToDefault(actionKey) != null)

@@ -143,7 +143,8 @@ namespace ZombieTweak2.Patches
                 return _fullItemPublicNameList;
             }
         }
-
+        public static bool useGetItemPrio = true;
+        public static bool useUpdateActionCollectItem = true;
         private static bool hasSetup = false;
         public static List<string> fullGlowStickNames = new() { "CONSUMABLE_GlowStick", "CONSUMABLE_GlowStick_Christmas", "CONSUMABLE_GlowStick_Halloween", "CONSUMABLE_GlowStick_Yellow" };
         public static List<string> shortGlowStickNames = new() { "Glow Stick", "Red Glow Stick", "Glow Stick Orange", "Glow Stick Yellow" };
@@ -169,6 +170,8 @@ namespace ZombieTweak2.Patches
         [HarmonyPrefix]
         public static bool GetItemPrio(RootPlayerBotAction __instance, InventorySlot itemSlot, uint itemID, ref float __result)
         {
+            if (!useGetItemPrio)
+                return true;
             //This is a full re-implentation of the original method.  But without the hard coded values.
             //This approach allows me to support arbitrary item pickups not normally in the list, without breaking the logic.
             //Theoretically if there are a bunch of new items in the list, they could get into a "hot potato" loop.  but I'm calling that a "known shippable" for now.
@@ -305,7 +308,11 @@ namespace ZombieTweak2.Patches
         [HarmonyPrefix]
         public static bool UpdateActionCollectItemReCreation(RootPlayerBotAction __instance, ref PlayerBotActionBase.Descriptor bestAction)
         {
-            // TODO cut this out completely?
+            if (!useUpdateActionCollectItem)
+                return true;
+            //This causes some perf issues when enabled.
+            //When an item is not allowed to be picked up, we should not consider the priority to be 0.
+
             // TODO check why there are some unused vars in here, is this actually accurate to the real game?
             // all this does is change it so it checks against agent position not "epicenter" position.
             // Local temporaries that match responsibilities seen in the decompiled code
@@ -397,9 +404,11 @@ namespace ZombieTweak2.Patches
             {
                 List<LG_ResourceContainer_Storage> storageList = activityNode.MetaData.StorageContainers.ToArray().ToList();
                 // iterate through storage containers
-                for (containerIndex = 0; containerIndex < storageList.Count; containerIndex++)
+                foreach (var container in storageList)
                 {
-                    var container = storageList[containerIndex];
+                //for (containerIndex = 0; containerIndex < storageList.Count; containerIndex++)
+                //{
+                //    var container = storageList[containerIndex];
                     if (container == null)
                         continue;
 
@@ -447,7 +456,8 @@ namespace ZombieTweak2.Patches
                         continue;
 
                     // get container transform position
-                    Transform containerTransform = container.GetComponent<Transform>();
+                    Transform containerTransform = containerGO.transform;
+                    //Transform containerTransform = container.GetComponent<Transform>();
                     if (containerTransform == null)
                         continue;
 
@@ -473,7 +483,7 @@ namespace ZombieTweak2.Patches
 
                     // Snap to nav and get radius (SnapPositionToNav will write rootPos and radius)
                     Vector3 rootPos;
-                    float radius;
+                    float radius; //Unused var, used to change the reservation radius.  Why?  And what is it's value?  idk
                     if (!__instance.SnapPositionToNav(standCandidate, out rootPos))
                         continue;
 
@@ -511,59 +521,35 @@ namespace ZombieTweak2.Patches
                     // The original iterated over a coroutine list of easeLocalScaleRoutine entries (child gameobjects).
                     // We'll traverse game objects / child items: find components of type Item in container children.
                     // This mirrors the decompiled behavior of scanning children and calling GetComponentInParent<Item>().
-                    Component[] potentialItems = container.GetComponentsInChildren<Component>(true);
-                    if (potentialItems == null)
+                    //Component[] potentialItems = container.GetComponentsInChildren<Component>(true);
+                    Item[] potentialItems = container.GetComponentsInChildren<Item>(true);
+                    if (potentialItems.Length == 0)
                         continue;
 
                     // iterate potentialItems like the decompiled code scanned coroutines entries
-                    int counter = 0;
-                    foreach (var comp in potentialItems)
+                    foreach (Item item in potentialItems)
                     {
-                        // get actual UnityEngine.Object and check not null
-                        if (comp == null)
-                        {
-                            counter++;
-                            continue;
-                        }
-
                         // In the decomp they did a series of type checks / generic checks; here we attempt to find Item in parent
-                        Item itemComponent = comp.GetComponentInParent<Item>();
-                        if (itemComponent == null)
-                        {
-                            counter++;
+                        if (item == null)
                             continue;
-                        }
-
-                        if (itemComponent.ItemDataBlock == null)
-                        {
-                            counter++;
+                        if (item.ItemDataBlock == null)
                             continue;
-                        }
 
                         // Check whether the bot knows how to use this item (by gear CRC / id)
-                        uint gearCRC = itemComponent.pItemData.itemID_gearCRC;
+                        uint gearCRC = item.pItemData.itemID_gearCRC;
                         if (!PlayerAIBot.KnowsHowToUseItem(gearCRC))
-                        {
-                            counter++;
                             continue;
-                        }
 
                         // compute the item priority for picking it up
-                        ItemDataBlock dataBlock = itemComponent.ItemDataBlock;
+                        ItemDataBlock dataBlock = item.ItemDataBlock;
                         if (dataBlock == null)
-                        {
-                            counter++;
                             continue;
-                        }
 
-                        float itemPrio = __instance.GetItemPrio(dataBlock.inventorySlot, itemComponent.pItemData.itemID_gearCRC);
+                        float itemPrio = __instance.GetItemPrio(dataBlock.inventorySlot, item.pItemData.itemID_gearCRC);
 
                         // if this item's prio is not greater than the currently best, skip
                         if (itemPrio <= bestItemPrio)
-                        {
-                            counter++;
                             continue;
-                        }
 
                         // If item type exists and we have a backpack, compare against an existing backpack item slot
                         if (__instance.m_backpack != null)
@@ -575,21 +561,19 @@ namespace ZombieTweak2.Patches
                                 float existingPrio = __instance.GetItemPrio(dataBlock.inventorySlot, existing.ItemID);
                                 if (itemPrio <= existingPrio)
                                 {
-                                    counter++;
                                     continue;
                                 }
                             }
                         }
 
                         // Found a better item candidate — remember it
-                        chosenItem = itemComponent;
+                        chosenItem = item;
                         bestItemPrio = itemPrio;
                         chosenContainer = container;
                         // save final root pos/radius to assign to action if accepted
                         candidateRootPos = rootPos;
                         //candidateRadius = radius;
 
-                        counter++;
                     } // end foreach comp
 
                     // If we found a chosenItem in this container, assign to the collect action and finish
