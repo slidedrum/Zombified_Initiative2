@@ -319,19 +319,30 @@ namespace ZombieTweak2.Menus
                 UpdateNodeSettingsDisplay(Node);
             }
         }
+
         private static void UpdateNodeSettingsDisplay(sMenu.sMenuNode node, string actionKey = null)
         {
+
+            //List<IOverrideTree> defaultTrees = new()
+            //{
+            //    zSlideComputer.ActionPriorities,
+            //    followRadius,
+            //    maxDistance,
+            //};
             if (actionKey == null)
                 actionKey = node.text;
-            List<IOverrideTree> overrideTrees = new() { 
-                zSlideComputer.ActionPriorities,
-                zSlideComputer.ActionPermissions,
+            List<IOverrideTree> extraTrees = new()
+            {
                 followRadius,
-                maxDistance
+                maxDistance,
             };
-            AutomaticActionMenuClass.GenericUpdateNodeDefaultDisplay(node, overrideTrees, actionKey);
+            //bool italic = AutomaticActionMenuClass.AnyTreeOverridesNullDefault(trees, actionKey);
+            //bool star = !AutomaticActionMenuClass.AllMatchingDefaultValue(trees, actionKey);
+            //AutomaticActionMenuClass.ApplyTextEffectToNode(node, AutomaticActionMenuClass.textEffect.Star, star);
+            //AutomaticActionMenuClass.ApplyTextEffectToNode(node, AutomaticActionMenuClass.textEffect.Italic, italic);
             AutomaticActionMenuClass.GenericUpdateNodePrioDisplay(node);
             AutomaticActionMenuClass.GenericUpdateNodeAllowedDisplay(actionKey, node);
+            AutomaticActionMenuClass.ApplyTextEffects(node, actionKey, extraTrees);
             //node.SetTitle($"Prio <color=#CC840066>[</color>{zSlideComputer.ActionPriorities.ValueAt(text)}<color=#CC840066>]</color>");
             node.SetSubtitle($"Range <color=#CC840066>[</color>{followRadius.ValueAt(actionKey)}/{maxDistance.ValueAt(actionKey)}<color=#CC840066>]</color>");
         }

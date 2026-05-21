@@ -27,7 +27,7 @@ namespace ZombieTweak2.Menus
             pickupDistance.AddNode("Pickup", null, "Default").onChanged.Listen(SetSearchDistance, [pickupDistance.ValueAt("Pickup")]).Listen(UpdateNodeSettingsDisplay, [pickupNode]);
 
             sMenu.sMenuNode glowstickNode = null;
-            string glowstickNameTouse = PickupActionPatch.shortGlowStickNames.FirstOrDefault();
+            string glowstickNameToUse = PickupActionPatch.shortGlowStickNames.FirstOrDefault();
 
             foreach (string itemName in PickupActionPatch.fullItemNameList)
             {
@@ -41,17 +41,17 @@ namespace ZombieTweak2.Menus
                 {
                     if (glowstickNode == null)
                     {
-                        glowstickNode = pickupMenu.AddNode(glowstickNameTouse);
-                        zSlideComputer.ActionPriorities.AddNode("Pickup" + glowstickNameTouse, 10, "Pickup", defaultValue: 10f).onChanged.Listen(updateNodePriorityDisplay, args: [glowstickNameTouse, glowstickNode]);
-                        zSlideComputer.ActionPriorities.AddNode("Pickup" + itemName, null, "Pickup" + glowstickNameTouse, defaultValue: null, hasDefaultValue: true);
-                        zSlideComputer.ActionPermissions.AddNode("Pickup" + glowstickNameTouse, null, "Pickup", defaultValue: null, hasDefaultValue: true).onChanged.Listen(updateNodePriorityDisplay, args: [glowstickNameTouse, glowstickNode]);
-                        zSlideComputer.ActionPermissions.AddNode("Pickup" + itemName, null, "Pickup" + glowstickNameTouse, defaultValue: null, hasDefaultValue: true);
+                        glowstickNode = pickupMenu.AddNode(glowstickNameToUse);
+                        zSlideComputer.ActionPriorities.AddNode("Pickup" + glowstickNameToUse, 10, "Pickup", defaultValue: 10f).onChanged.Listen(updateNodePriorityDisplay, args: [glowstickNameToUse, glowstickNode]);
+                        zSlideComputer.ActionPriorities.AddNode("Pickup" + itemName, null, "Pickup" + glowstickNameToUse, defaultValue: null, hasDefaultValue: true);
+                        zSlideComputer.ActionPermissions.AddNode("Pickup" + glowstickNameToUse, null, "Pickup", defaultValue: null, hasDefaultValue: true).onChanged.Listen(updateNodePriorityDisplay, args: [glowstickNameToUse, glowstickNode]);
+                        zSlideComputer.ActionPermissions.AddNode("Pickup" + itemName, null, "Pickup" + glowstickNameToUse, defaultValue: null, hasDefaultValue: true);
                         //zSlideComputer.actionNameToMenuNodes.Add(glowstickNameTouse, glowstickNode);
                     }
                     else
                     {
-                        zSlideComputer.ActionPriorities.AddNode("Pickup" + itemName, null, "Pickup" + glowstickNameTouse, defaultValue: null, hasDefaultValue: true);
-                        zSlideComputer.ActionPermissions.AddNode("Pickup" + itemName, null, "Pickup" + glowstickNameTouse, defaultValue: null, hasDefaultValue: true);
+                        zSlideComputer.ActionPriorities.AddNode("Pickup" + itemName, null, "Pickup" + glowstickNameToUse, defaultValue: null, hasDefaultValue: true);
+                        zSlideComputer.ActionPermissions.AddNode("Pickup" + itemName, null, "Pickup" + glowstickNameToUse, defaultValue: null, hasDefaultValue: true);
                         continue;
                     }
                     node = glowstickNode;
@@ -145,21 +145,20 @@ namespace ZombieTweak2.Menus
         }
         private static void UpdateNodeSettingsDisplay(sMenu.sMenuNode node)
         {
-            string text = node.text;
+            string actionKey = node.text;
             //var prio = AutomaticActionMenuClass.ActionPriorities["Pickup"];
-            if (zSlideComputer.ActionPriorities.IsDefaultValue(text) && pickupDistance.IsDefaultValue(text))
+            List<IOverrideTree> extraTrees = new()
             {
-                node.SetPrefix("");
-                node.SetSuffix("");
-            }
-            else
-            {
-                node.SetPrefix("* ");
-                node.SetSuffix(" *");
-            }
+                pickupDistance,
+            };
+            //bool italic = AutomaticActionMenuClass.AnyTreeOverridesNullDefault(trees, actionKey);
+            //bool star = !AutomaticActionMenuClass.AllMatchingDefaultValue(trees, actionKey);
+            //AutomaticActionMenuClass.ApplyTextEffectToNode(node, AutomaticActionMenuClass.textEffect.Star, star);
+            //AutomaticActionMenuClass.ApplyTextEffectToNode(node, AutomaticActionMenuClass.textEffect.Italic, italic);
             AutomaticActionMenuClass.GenericUpdateNodePrioDisplay(node);
+            AutomaticActionMenuClass.ApplyTextEffects(node, actionKey, extraTrees);
             //node.SetTitle($"Prio <color=#CC840066>[</color>{zSlideComputer.ActionPriorities.ValueAt(text)}<color=#CC840066>]</color>");
-            node.SetSubtitle($"Range <color=#CC840066>[</color>{pickupDistance.ValueAt(text)}<color=#CC840066>]</color>");
+            node.SetSubtitle($"Range <color=#CC840066>[</color>{pickupDistance.ValueAt(actionKey)}<color=#CC840066>]</color>");
         }
         private static void SetSearchDistance(float distance)
         {
@@ -199,17 +198,18 @@ namespace ZombieTweak2.Menus
         public static void updateNodePriorityDisplay(string itemName, sMenu.sMenuNode node)
         {
             string actionKey = "Pickup" + itemName;
-            AutomaticActionMenuClass.GenericUpdateNodeDefaultDisplay(node, actionKey);
-            //if (zSlideComputer.ActionPriorities.GetNodeFromIdent(actionKey).IsDefaultValue())
-            //{
-            //    node.SetPrefix("");
-            //    node.SetSuffix("");
-            //}
-            //else
-            //{
-            //    node.SetPrefix("* ");
-            //    node.SetSuffix(" *");
-            //}
+            //AutomaticActionMenuClass.GenericUpdateNodeDefaultDisplay(node, actionKey);
+
+            List<IOverrideTree> trees = new()
+            {
+                zSlideComputer.ActionPermissions,
+                zSlideComputer.ActionPriorities,
+            };
+            bool italic = AutomaticActionMenuClass.AnyTreeOverridesNullDefault(trees, actionKey);
+            bool star = !AutomaticActionMenuClass.AllMatchingDefaultValue(trees, actionKey);
+            AutomaticActionMenuClass.ApplyTextEffectToNode(node, AutomaticActionMenuClass.textEffect.Star, star);
+            AutomaticActionMenuClass.ApplyTextEffectToNode(node, AutomaticActionMenuClass.textEffect.Italic, italic);
+
             float prioValue = (float)zSlideComputer.ActionPriorities.ValueAt(actionKey);
             string hex = ColorUtility.ToHtmlStringRGB(GetPriorityColor(prioValue));
             node.SetSubtitle($"<color=#CC840066>[ </color><color=#{hex}>{prioValue}</color><color=#CC840066> ]</color>");

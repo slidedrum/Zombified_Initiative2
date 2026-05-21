@@ -50,7 +50,16 @@ namespace ZombieTweak2.Menus
         }
         public static void UpdateNodeDisplay(string key, sMenu.sMenuNode node)
         {
-            AutomaticActionMenuClass.GenericUpdateNodeDefaultDisplay(node, key, zSlideComputer.ActionPermissions);
+            //AutomaticActionMenuClass.ApplyTextEffectBasedOnKeyTree(node, key, zSlideComputer.ActionPermissions, AutomaticActionMenuClass.textEffect.Bold);
+            //AutomaticActionMenuClass.ApplyTextEffects(node, key);
+            //List<IOverrideTree> trees = new()
+            //{
+            //    zSlideComputer.ActionPermissions,
+            //};
+            //bool italic = AutomaticActionMenuClass.AnyTreeOverridesNullDefault(trees, key);
+            //bool star = !AutomaticActionMenuClass.AllMatchingDefaultValue(trees, key);
+            //AutomaticActionMenuClass.ApplyTextEffectToNode(node, AutomaticActionMenuClass.textEffect.Star, star);
+            //AutomaticActionMenuClass.ApplyTextEffectToNode(node, AutomaticActionMenuClass.textEffect.Italic, italic);
             AutomaticActionMenuClass.GenericUpdateNodeAllowedDisplay(key, node);
         }
     }

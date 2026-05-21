@@ -15,7 +15,11 @@ namespace ZombieTweak2
     public interface IOverrideTree
     {
         public bool IsDefaultValue(string key);
-        public bool HasKey(string key);
+        public bool IHasDefault(string key);
+        public bool IMatchingDefaultValue(string key);
+        public bool IHasKey(string key);
+        public bool IHasValue(string key);
+        public bool IHasParrent(string key);
         public object? IGetValue(string key);
         public object? IValueAt(string key);
         public object? IGetDefaultValue(string key);
@@ -64,7 +68,6 @@ namespace ZombieTweak2
             {
                 if (defaultValue != null)
                     hasDefaultValue = true;
-                this.hasDefaultValue = hasDefaultValue;
                 nodeIdentity = key;
                 Value = value;
                 Condition = condition;
@@ -119,13 +122,28 @@ namespace ZombieTweak2
             {
                 return Value != null;
             }
+            public bool HasParrent()
+            {
+                return Parent != null;
+            }
+            public bool HasDefault()
+            {
+                return hasDefaultValue;
+            }
+            public bool MatchingDefaultValue()
+            {
+                if (!HasValue())
+                    return true;
+                if (hasDefaultValue && DefaultValue != null)
+                    return EqualityComparer<T?>.Default.Equals(DefaultValue, Value);
+                if (Parent == null)
+                    return IsDefaultValue();
+                return EqualityComparer<T?>.Default.Equals(Parent.ValueAt(), Value);
+            }
             public bool IsDefaultValue()
             {
                 if (HasValue() == false)
                     return true;
-                //if (Parent == null)
-                //    return false;
-                //return EqualityComparer<T?>.Default.Equals(Parent.ValueAt(), Value);
                 return EqualityComparer<T?>.Default.Equals(DefaultValue, Value);
             }
             internal string GetNodeTreeString()
@@ -334,14 +352,39 @@ namespace ZombieTweak2
         {
             return NodeAt(key).ValueAt();
         }
+        public bool HasParrent(string key)
+        {
+            Node node = NodeAt(key);
+            return node.HasParrent();
+        }
+        public bool HasParrentAndValue(string key)
+        {
+            return HasParrent(key) && HasValue(key);
+        }
         public bool HasKey(string key)
         {
             return nodes.ContainsKey(key);
+        }
+        public bool HasValue(string key)
+        {
+            if (HasKey(key))
+                return GetNodeFromIdent(key).HasValue();
+            return false;
+        }
+        public bool MatchingDefaultValue(string key)
+        {
+            Node node = NodeAt(key);
+            return node.MatchingDefaultValue();
         }
         public bool IsDefaultValue(string key)
         {
             Node node = NodeAt(key);
             return node.IsDefaultValue();
+        }
+        public bool HasDefault(string key)
+        {
+            Node node = NodeAt(key);
+            return node.HasDefault();
         }
         private Node NodeAt(string key, bool shouldThrow = true)
         {
@@ -376,6 +419,31 @@ namespace ZombieTweak2
         public object IGetValue(string key)
         {
             return (object)GetValue(key);
+        }
+
+        public bool IHasValue(string key)
+        {
+            return HasValue(key);
+        }
+
+        public bool IHasKey(string key)
+        {
+            return HasKey(key);
+        }
+
+        public bool IMatchingDefaultValue(string key)
+        {
+            return MatchingDefaultValue(key);
+        }
+
+        public bool IHasParrent(string key)
+        {
+            return HasParrent(key);
+        }
+
+        public bool IHasDefault(string key)
+        {
+            return HasDefault(key);
         }
     }
 }
