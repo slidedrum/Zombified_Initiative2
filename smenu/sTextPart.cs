@@ -1,4 +1,5 @@
-﻿using TMPro;
+﻿using System;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -6,133 +7,147 @@ namespace SlideMenu
 {
     public partial class sMenu
     {
-            public class TextPart
+        public class TextPart
+        {
+            //This is my text handler.  It's not pretty, but it's mine.
+            [Flags]
+            public enum TextPartType 
             {
-                //This is my text handler.  It's not pretty, but it's mine.
-                private string _text;
-                public string text 
+                none = 0,
+                Main = 1 << 0,
+                Title = 1 << 1,
+                Subtitle = 1 << 2,
+                Description = 1 << 3,
+                Pannel = 1 << 4,
+                Default = 1 << 5,
+                All = Main | Title | Subtitle | Description | Pannel | Default
+            }
+            public TextPartType type;
+            private string _text;
+            public string text 
+            { 
+                get => _text; 
+                set 
                 { 
-                    get => _text; 
-                    set 
-                    { 
-                        _text = value;
-                        textMesh.text = value;
-                    } 
-                }
-                private Color _textColor;
-                public Color textColor
+                    _text = value;
+                    textMesh.text = value;
+                } 
+            }
+            private Color _textColor;
+            public Color textColor
+            {
+                get => _textColor;
+                set
                 {
-                    get => _textColor;
-                    set
-                    {
-                        var oldValue = _textColor;
-                        _textColor = value;
-                        if (oldValue != value)
-                            I_SetColor(_textColor);
-                    }
-                }
-                private Color _colorOffset;
-                public Color ColorOffset
-                {
-                    get => _colorOffset;
-                    set
-                    {
-                        var oldValue = _colorOffset;
-                        _colorOffset = value;
-                        if (oldValue != value)
-                            I_SetColor(_textColor); // combine base + offset
-                    }
-                }
-                public GameObject gameObject { get; private set; }
-                private TextMeshPro textMesh;
-                public RectTransform rect { get; private set; }
-                public TextPart(GameObject parent, string arg_Text, Color color)
-                {
-                    gameObject = new();
-                    gameObject.transform.position = Vector3.zero;
-                    gameObject.transform.rotation = Quaternion.identity;
-                    gameObject.transform.localScale = Vector3.one;
-                    gameObject.layer = 0;
-                    gameObject.tag = "Untagged";
-                    gameObject.SetActive(true);
-                    gameObject.transform.SetParent(parent.transform, false);
-                    gameObject.name = $"TextPart {arg_Text}";
-
-                    rect = gameObject.AddComponent<RectTransform>();
-                    rect.anchoredPosition = Vector2.zero; // center inside node
-                    rect.localScale = Vector3.one;
-                    rect.sizeDelta = new Vector2(300, 0);
-
-                    textMesh = gameObject.AddComponent<TextMeshPro>();
-                    textMesh.enableAutoSizing = false;
-                    textMesh.fontSize = sMenuManager.defaultFontSize;
-                    textMesh.alignment = TextAlignmentOptions.Center;
-                    textMesh.color = color;
-                    text = arg_Text;
-
-                    ContentSizeFitter fitter = gameObject.AddComponent<ContentSizeFitter>();
-                    fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-                    fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-                }
-                //TODO
-                //set font
-                //set alignment
-                //set font size
-                public TextPart SetText(string newText)
-                {
-                    text = newText;
-                    return this;
-                }
-                public TextPart SetPosition(Vector2 pos)
-                {
-                    SetPosition(pos.x, pos.y);
-                    return this;
-                }
-                public TextPart SetPosition(float x, float y)
-                {
-                    rect.anchoredPosition = new Vector2(x, y);
-                    return this;
-                }
-                public TextPart SetScale(float scale)
-                {
-                    SetScale(scale, scale, 1);
-                    return this;
-                }
-                public TextPart SetScale(Vector2 scale)
-                {
-                    SetScale(scale.x, scale.y, 1);
-                    return this;
-                }
-                public TextPart SetScale(Vector3 scale)
-                {
-                    SetScale(scale.x, scale.y, scale.z);
-                    return this;
-                }
-                public TextPart SetScale(float x, float y)
-                {
-                    SetScale(x, y, 1);
-                    return this;
-                }
-                public TextPart SetScale(float x, float y, float z)
-                {
-                    rect.localScale = new Vector3(x, y, z);
-                    return this;
-                }
-                private TextPart I_SetColor(Color color)
-                {
-                    textMesh.color = textColor + ColorOffset;
-                    return this;
-                }
-                public TextPart SetColor(Color color)
-                {
-                    textColor = color;
-                    textMesh.color = textColor + ColorOffset;
-                    return this;
-                }
-                public Color GetColor()
-                {
-                    return textColor;
+                    var oldValue = _textColor;
+                    _textColor = value;
+                    if (oldValue != value)
+                        I_SetColor(_textColor);
                 }
             }
+            private Color _colorOffset;
+            public Color ColorOffset
+            {
+                get => _colorOffset;
+                set
+                {
+                    var oldValue = _colorOffset;
+                    _colorOffset = value;
+                    if (oldValue != value)
+                        I_SetColor(_textColor); // combine base + offset
+                }
+            }
+            public GameObject gameObject { get; private set; }
+            private TextMeshPro textMesh;
+            public RectTransform rect { get; private set; }
+            public TextPart(GameObject parent, string arg_Text, Color color, TextPartType type)
+            {
+                this.type = type;
+                gameObject = new();
+                gameObject.transform.position = Vector3.zero;
+                gameObject.transform.rotation = Quaternion.identity;
+                gameObject.transform.localScale = Vector3.one;
+                gameObject.layer = 0;
+                gameObject.tag = "Untagged";
+                gameObject.SetActive(true);
+                gameObject.transform.SetParent(parent.transform, false);
+                gameObject.name = $"TextPart {arg_Text}";
+
+                rect = gameObject.AddComponent<RectTransform>();
+                rect.anchoredPosition = Vector2.zero; // center inside node
+                rect.localScale = Vector3.one;
+                rect.sizeDelta = new Vector2(300, 0);
+
+                textMesh = gameObject.AddComponent<TextMeshPro>();
+                textMesh.enableAutoSizing = false;
+                textMesh.fontSize = sMenuManager.defaultFontSize;
+                textMesh.alignment = TextAlignmentOptions.Center;
+                textMesh.color = color;
+                text = arg_Text;
+
+                ContentSizeFitter fitter = gameObject.AddComponent<ContentSizeFitter>();
+                fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+                fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+            }
+            //TODO
+            //set font
+            //set alignment
+            //set font size
+            public TextPart SetText(string newText)
+            {
+                text = newText;
+                return this;
+            }
+            public TextPart SetPosition(Vector2 pos)
+            {
+                SetPosition(pos.x, pos.y);
+                return this;
+            }
+            public TextPart SetPosition(float x, float y)
+            {
+                rect.anchoredPosition = new Vector2(x, y);
+                return this;
+            }
+            public TextPart SetScale(float scale)
+            {
+                SetScale(scale, scale, 1);
+                return this;
+            }
+            public TextPart SetScale(Vector2 scale)
+            {
+                SetScale(scale.x, scale.y, 1);
+                return this;
+            }
+            public TextPart SetScale(Vector3 scale)
+            {
+                SetScale(scale.x, scale.y, scale.z);
+                return this;
+            }
+            public TextPart SetScale(float x, float y)
+            {
+                SetScale(x, y, 1);
+                return this;
+            }
+            public TextPart SetScale(float x, float y, float z)
+            {
+                rect.localScale = new Vector3(x, y, z);
+                return this;
+            }
+            private TextPart I_SetColor(Color color)
+            {
+                textMesh.color = textColor + ColorOffset;
+                return this;
+            }
+            public TextPart SetColor(Color color)
+            {
+                textColor = color;
+                textMesh.color = textColor + ColorOffset;
+                return this;
+            }
+            public Color GetColor()
+            {
+                return textColor;
+            }
+        }
     }
 }

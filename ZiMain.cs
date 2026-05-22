@@ -351,7 +351,8 @@ public class ZiMain : BasePlugin
     }
     public static void sendChatMessage(string message,PlayerAgent sender = null, PlayerAgent receiver = null)
     {
-        PlayerChatManager.WantToSentTextMessage(sender != null ? sender : PlayerManager.GetLocalPlayerAgent(), message, receiver);
+        if ((bool)zSlideComputer.ActionPermissions.ValueAt("TalkInChat"))
+            PlayerChatManager.WantToSentTextMessage(sender != null ? sender : PlayerManager.GetLocalPlayerAgent(), message, receiver);
     }
     public static List<PlayerAIBot> GetBotList()
     {

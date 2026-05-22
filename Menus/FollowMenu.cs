@@ -198,19 +198,6 @@ namespace ZombieTweak2.Menus
         //    UpdateToggleStateColors();
         //}
         
-        private static void UpdateToggleStateColors()
-        {
-            if ((bool)zSlideComputer.ActionPermissions.ValueAt("Follow"))
-            {
-                followMenuNode.SetColor(sMenuManager.defaultColor);
-                followMenu.centerNode.SetColor(sMenuManager.defaultColor);
-            }
-            else
-            {
-                followMenuNode.SetColor(new Color(0.25f, 0f, 0f));
-                followMenu.centerNode.SetColor(new Color(0.25f, 0f, 0f));
-            }
-        }
         private static sMenu.sMenuNode AddCatagoryNode(string catagory)
         {
             var catagoryNode = followMenu.AddNode(catagory);

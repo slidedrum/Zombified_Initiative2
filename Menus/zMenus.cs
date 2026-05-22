@@ -180,13 +180,17 @@ namespace ZombieTweak2.Menus
         //    else
         //        node.SetColor(new Color(0.25f, 0f, 0f));
         //}
-        internal static void GenericUpdateNodeAllowedDisplay(string actionKey, sMenu.sMenuNode node)
+        internal static void GenericUpdateNodeAllowedDisplay(string actionKey, sMenu.sMenuNode node, Color? onColor = null, Color? offColor = null)
         {
+            if (onColor == null)
+                onColor = sMenuManager.defaultEnabledColor;
+            if (offColor == null)
+                offColor = sMenuManager.defaultDisabledColor;
             bool allowed = (bool)zSlideComputer.ActionPermissions.ValueAt(actionKey);
             if (allowed)
-                node.SetColor(sMenuManager.defaultColor);
+                node.SetColor((Color)onColor);
             else
-                node.SetColor(new Color(0.25f, 0f, 0f));
+                node.SetColor((Color)offColor);
             ApplyTextEffects(node, actionKey);
         }
         public static void ApplyTextEffects(sMenu.sMenuNode node, string actionKey = null, List<IOverrideTree> extraTrees = null)

@@ -1,24 +1,50 @@
 ﻿using SlideMenu;
 using System;
 using UnityEngine;
+using static Il2CppSystem.Threading.SemaphoreSlim;
 
 namespace ZombieTweak2.Menus
 {
     public static class SettingsMenuClass
     {
         public static float menuSizeStep = 0.1f;
-        public static sMenu scaleMenu;
+        public static sMenu SettingsMenu;
         public static sMenu.sMenuNode scaleNode;
+        public static sMenu.sMenuNode talkNode;
+        public static Color onColor = new Color(0, 0.2f, 0);
 
         public static void Setup(sMenu menu)
         {
-            scaleMenu = menu;
-            scaleNode = scaleMenu.AddNode("Scale");
+            SettingsMenu = menu;
+            scaleNode = SettingsMenu.AddNode("Scale");
+            talkNode = SettingsMenu.AddNode("Bots talk in chat");
+            zSlideComputer.ActionPermissions.AddNode("TalkInChat", true, (string) null, defaultValue: true).onChanged.Listen(AutomaticActionMenuClass.GenericUpdateNodeAllowedDisplay, args: ["TalkInChat", talkNode, onColor]);
+            talkNode.AddListener(sMenuManager.nodeEvent.OnTapped, toggleTalk);
+            talkNode.SetColor(onColor);
             scaleNode.AddListener(sMenuManager.nodeEvent.WhileSelected, UpdateScaleByScroll);
-            scaleMenu.centerNode.AddListener(sMenuManager.nodeEvent.WhileSelected, UpdateScaleByScroll);
+            talkNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediateSelected, ResetTalkInChat);
+            SettingsMenu.centerNode.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
+            SettingsMenu.centerNode.AddListener(sMenuManager.nodeEvent.WhileSelected, UpdateScaleByScroll);
+            SettingsMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnTapped, SettingsMenu.parrentMenu.Open);
+            SettingsMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediateSelected, ResetAllSettings);
+
             scaleNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, ResetScale);
             UpdateScaleNodeSubtitle();
-            scaleMenu.AddPannel(sMenu.sMenuPannel.Side.top, "More settings coming 'soon'!");
+            SettingsMenu.AddPannel(sMenu.sMenuPannel.Side.top, "More settings coming 'soon'!");
+        }
+        private static void toggleTalk()
+        {
+            bool allowed = !(bool)zSlideComputer.ActionPermissions.ValueAt("TalkInChat");
+            zSlideComputer.ActionPermissions.SetValue("TalkInChat", allowed);
+        }
+        private static void ResetAllSettings()
+        {
+            ResetTalkInChat();
+            ResetScale();
+        }
+        private static void ResetTalkInChat()
+        {
+            zSlideComputer.ActionPermissions.ResetToDefault("TalkInChat");
         }
         private static void ResetScale()
         {

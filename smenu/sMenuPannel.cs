@@ -92,7 +92,7 @@ namespace SlideMenu
             }
             public TextPart addLine(string lineText, string key = "Default")
             {
-                TextPart newLine = new TextPart(gameObject, lineText, parrentMenu.textColor);
+                TextPart newLine = new TextPart(gameObject, lineText, parrentMenu.textColor, TextPart.TextPartType.Pannel);
                 newLine.gameObject.transform.SetParent(gameObject.transform, false);
                 if (!lines.ContainsKey(key))
                     lines[key] = new();

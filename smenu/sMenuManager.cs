@@ -32,6 +32,8 @@ namespace SlideMenu
         private static sMenu.sMenuNode selectedNode;
         public static Camera mainCamera;
         public static Color defaultColor { get; private set; } = new Color(0.2f, 0.2f, 0.2f, 1f);
+        public static Color defaultEnabledColor { get; private set; } = new Color(0.2f, 0.2f, 0.2f, 1f);
+        public static Color defaultDisabledColor { get; private set; } = new Color(0.25f, 0f, 0f);
         public static float defaultFontSize { get; private set; } = 100f;
         public static float defaultRadius { get; private set; } = 100f;
 

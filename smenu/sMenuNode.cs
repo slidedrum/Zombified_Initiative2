@@ -5,6 +5,7 @@ using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
 using ZombieTweak2;
+using static SlideMenu.sMenu.TextPart;
 
 namespace SlideMenu
 {
@@ -211,10 +212,10 @@ namespace SlideMenu
                 fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
                 fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-                (titlePart = new TextPart(TextPartGameObject, $"{title}", new Color(0.2f, 0.2f, 0.2f, 1f)).SetScale(0.75f, 0.75f)).gameObject.name = "Title";
-                (fullTextPart = new TextPart(TextPartGameObject, $"{text}", parrentMenu.textColor)).gameObject.name = "Text";
-                (subtitlePart = new TextPart(TextPartGameObject, $"{title}", new Color(0.1f, 0.1f, 0.1f, 1f)).SetScale(0.75f, 0.75f)).gameObject.name = "Subtitle";
-                (descriptionPart = new TextPart(TextPartGameObject, description, parrentMenu.textColor)).gameObject.name = "Description";
+                (titlePart = new TextPart(TextPartGameObject, $"{title}", new Color(0.2f, 0.2f, 0.2f, 1f), TextPart.TextPartType.Title).SetScale(0.75f, 0.75f)).gameObject.name = "Title";
+                (fullTextPart = new TextPart(TextPartGameObject, $"{text}", parrentMenu.textColor, TextPart.TextPartType.Main)).gameObject.name = "Text";
+                (subtitlePart = new TextPart(TextPartGameObject, $"{title}", new Color(0.1f, 0.1f, 0.1f, 1f), TextPart.TextPartType.Subtitle).SetScale(0.75f, 0.75f)).gameObject.name = "Subtitle";
+                (descriptionPart = new TextPart(TextPartGameObject, description, parrentMenu.textColor, TextPart.TextPartType.Description)).gameObject.name = "Description";
 
                 text = arg_Name;
 
@@ -521,13 +522,13 @@ namespace SlideMenu
                 }
                 return this;
             }
-            public List<TextPart> GetTextParts()
+            public List<TextPart> GetTextParts(TextPartType types = TextPartType.All)
             {
                 return this.GetType()
                            .GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
                            .Where(f => f.FieldType == typeof(TextPart))
                            .Select(f => f.GetValue(this) as TextPart)
-                           .Where(tp => tp != null)
+                           .Where(tp => tp != null && (types & tp.type) != 0)
                            .ToList();
             }
             private void UpdateTitle()
