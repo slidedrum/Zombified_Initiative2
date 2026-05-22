@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 //using ZombieTweak2.zRootBotPlayerAction.CustomActions;
-using Zombified_Initiative;
+using BotControl;
 
 namespace ZombieTweak2.Menus
 {
@@ -13,9 +13,6 @@ namespace ZombieTweak2.Menus
     {
         //This is the class that actually creates the menue instances
         public static List<sMenu> botMenus;
-        private static string endcolor = "</color>";
-        private static string enabledColor = "<color=#FFA50066>";
-        private static string disabledColor = "<color=#CCCCCC33>";
 
         public static void CreateMenus()
         {
@@ -25,7 +22,7 @@ namespace ZombieTweak2.Menus
             OverrideTree<int?>.ResetTrees();
             AutomaticActionMenuClass.Setup(sMenuManager.createMenu("Automatic Actions", sMenuManager.mainMenu));
             sMenuManager.mainMenu.AddPannel(sMenu.sMenuPannel.Side.top, "<size=150><color=#CC840066>Slide's Bot Control</color></size>");
-            sMenuManager.mainMenu.AddPannel(sMenu.sMenuPannel.Side.top, "<color=#CC840066>[ </color><color=#26262c>V1.0.0</color><color=#CC840066> ]</color>");
+            sMenuManager.mainMenu.AddPannel(sMenu.sMenuPannel.Side.top, $"<color=#CC840066>[ </color><color=#26262c>V{ZiMain.version}</color><color=#CC840066> ]</color>");
             sMenuManager.mainMenu.radius = 100f;
             if (ZiMain.extraActionMenus) 
             { 

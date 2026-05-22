@@ -6,7 +6,7 @@ using System.Linq;
 using UnityEngine;
 using ZombieTweak2;
 
-namespace Zombified_Initiative
+namespace BotControl
 {
     public class Selection
     {

@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ZombieTweak2.Menus;
-using Zombified_Initiative;
+using BotControl;
 
 namespace ZombieTweak2
 {

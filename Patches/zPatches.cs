@@ -4,8 +4,8 @@ using Player;
 using System.Collections.Generic;
 using UnityEngine;
 using ZombieTweak2.zRootBotPlayerAction;
-using Zombified_Initiative;
-using static Zombified_Initiative.ZiMain;
+using BotControl;
+using static BotControl.ZiMain;
 
 namespace ZombieTweak2.Patches;
 

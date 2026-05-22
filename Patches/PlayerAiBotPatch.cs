@@ -6,7 +6,7 @@ using ZombieTweak2.zRootBotPlayerAction;
 
 
 //using ZombieTweak2.zRootBotPlayerAction.CustomActions;
-using Zombified_Initiative;
+using BotControl;
 
 namespace ZombieTweak2.Patches
 {

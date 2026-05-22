@@ -11,7 +11,7 @@ using System.Linq;
 using UnityEngine;
 using ZombieTweak2.Menus;
 using ZombieTweak2.zNetworking;
-using Zombified_Initiative;
+using BotControl;
 using static ZombieTweak2.zNetworking.pStructs;
 
 namespace ZombieTweak2
@@ -418,7 +418,7 @@ namespace ZombieTweak2
         {
             if (playerAgent == null)
                 playerAgent = PlayerManager.GetLocalPlayerAgent();
-            var Unexplored = Zombified_Initiative.VisitNode.getUnexploredLocation(playerAgent.Position);
+            var Unexplored = BotControl.VisitNode.getUnexploredLocation(playerAgent.Position);
             if (Unexplored == playerAgent.Position || Unexplored == Vector3.zero)
                 return;
             CreatePing(Unexplored);

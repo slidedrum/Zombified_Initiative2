@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ZombieTweak2;
 
-namespace Zombified_Initiative
+namespace BotControl
 {
     public static class zActionSub
     {

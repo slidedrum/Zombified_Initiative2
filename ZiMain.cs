@@ -12,6 +12,7 @@ using SlideMenu;
 using SNetwork;
 using System;
 using System.Collections.Generic;
+using System.Reflection.Metadata;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using ZombieTweak2;
@@ -122,13 +123,14 @@ sounds are in namespace AK public class EVENTS
 */
 
 
-namespace Zombified_Initiative;
+namespace BotControl;
 
 [BepInDependency("dev.gtfomodding.gtfo-api")]
-[BepInPlugin("com.hirnukuono.zombified_initiative", "Zombified Initiative", "0.9.6")]
+[BepInPlugin("com.SlideDrum.Slides-Bot-Control", "Slides Bot Control", ZiMain.version)]
 [BepInDependency("com.east.bb", BepInDependency.DependencyFlags.SoftDependency)]
 public class ZiMain : BasePlugin
 { //this class should contain all methods to call actions, any helpers to faciliate that, and inital setup,
+    public const string version = "1.0.1";
     public static ManualLogSource log;
     internal static bool newRootBotPlayerAction = true;
     public static Dictionary<string, PlayerAIBot> BotTable = new();

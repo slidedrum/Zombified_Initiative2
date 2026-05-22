@@ -13,7 +13,7 @@ using ZombieTweak2;
 using ZombieTweak2.Menus;
 using static BoundingBox;
 
-namespace Zombified_Initiative
+namespace BotControl
 {
     public static class zSearch
     {

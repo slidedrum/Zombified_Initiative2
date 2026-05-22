@@ -1,7 +1,7 @@
 ﻿using BepInEx.Unity.IL2CPP.Utils;
 using System.Collections;
 using UnityEngine;
-using Zombified_Initiative;
+using BotControl;
 
 namespace ZombieTweak2
 {

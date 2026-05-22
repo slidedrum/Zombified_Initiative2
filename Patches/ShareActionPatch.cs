@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using UnityEngine;
-using Zombified_Initiative;
+using BotControl;
 
 namespace ZombieTweak2.Patches
 {

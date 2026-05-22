@@ -3,7 +3,7 @@ using SlideMenu;
 using System;
 using UnityEngine;
 using ZombieTweak2.Patches;
-using Zombified_Initiative;
+using BotControl;
 
 namespace ZombieTweak2.Menus
 {
