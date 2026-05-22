@@ -53,6 +53,10 @@ One of the major features of this mod is letting you change the priority of diff
  - Option to dynamically ignore specific lockers, or lockers in a specific room, or prioritize/deprioritize lockers near a point.
  - Custom bot actions like "explore" or "find ammo" or even "use terminal to ping for items"
 
+Here's an unscripted preview video:
+
+https://www.youtube.com/watch?v=IsuM1OC3DAQ
+
 Here's two (old) videos of the mod in action.  
 
 https://www.youtube.com/watch?v=X5RWMQyUgTY
