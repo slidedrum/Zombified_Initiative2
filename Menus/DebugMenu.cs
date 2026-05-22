@@ -2,10 +2,10 @@
 using SlideMenu;
 using System;
 using UnityEngine;
-using ZombieTweak2.Patches;
+using BotControl.Patches;
 using BotControl;
 
-namespace ZombieTweak2.Menus
+namespace BotControl.Menus
 {
     public static class DebugMenuClass
     {

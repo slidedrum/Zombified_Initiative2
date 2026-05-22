@@ -1,11 +1,11 @@
 ﻿using HarmonyLib;
 using Player;
-using ZombieTweak2.zRootBotPlayerAction;
+using BotControl.zRootBotPlayerAction;
 
 
 //using ZombieTweak2.zRootBotPlayerAction.CustomActions;
 
-namespace ZombieTweak2.Patches
+namespace BotControl.Patches
 {
     [HarmonyPatch]
     public static class RootPlayerBotActionPatch

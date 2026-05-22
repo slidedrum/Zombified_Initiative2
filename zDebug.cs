@@ -9,12 +9,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using ZombieTweak2.Menus;
-using ZombieTweak2.zNetworking;
+using BotControl.Menus;
+using BotControl.Networking;
 using BotControl;
-using static ZombieTweak2.zNetworking.pStructs;
+using static BotControl.Networking.pStructs;
 
-namespace ZombieTweak2
+namespace BotControl
 {
     public static class zDebug
     {
@@ -192,7 +192,7 @@ namespace ZombieTweak2
         private static pStructs.pBotSelections testSend = new pStructs.pBotSelections();
         private static void setuppBotSelectionsForTest()
         {
-            testSend.data = zNetworking.zNetworking.EncodeBotSelectionForNetwork(SelectionMenuClass.botSelection);
+            testSend.data = Networking.zNetworking.EncodeBotSelectionForNetwork(SelectionMenuClass.botSelection);
         }
         private static void TestReciveSetGenericAction(string actionKey, int playerID, bool allowed)
         {
@@ -369,7 +369,7 @@ namespace ZombieTweak2
             info.item = pStructs.Get_pStructFromRefrence(item);
             info.playerAgent = pStructs.Get_pStructFromRefrence(bot);
             info.commander = pStructs.Get_pStructFromRefrence(PlayerManager.GetLocalPlayerAgent());
-            zNetworking.zNetworking.ReciveRequestToPickupItem(sender, info);
+            Networking.zNetworking.ReciveRequestToPickupItem(sender, info);
         }
         private static void TestReciveRequestToShareResourcePackNetwork(ulong netSender, PlayerAgent sender, PlayerAgent receiver)
         {
@@ -377,7 +377,7 @@ namespace ZombieTweak2
             info.sender = pStructs.Get_pStructFromRefrence(sender);
             info.receiver = pStructs.Get_pStructFromRefrence(receiver);
             info.commander = pStructs.Get_pStructFromRefrence(PlayerManager.GetLocalPlayerAgent());
-            zNetworking.zNetworking.ReciveRequestToShareResource(netSender, info);
+            Networking.zNetworking.ReciveRequestToShareResource(netSender, info);
         }
         private static void TestReciveRequestSendBotToKillEnemyNetwork(ulong netSender, PlayerAgent aiBot, EnemyAgent enemy)
         {
@@ -385,7 +385,7 @@ namespace ZombieTweak2
             info.aiBot = pStructs.Get_pStructFromRefrence(aiBot);
             info.enemy = pStructs.Get_pStructFromRefrence(enemy);
             info.commander = pStructs.Get_pStructFromRefrence(PlayerManager.GetLocalPlayerAgent());
-            zNetworking.zNetworking.ReciveRequestToKillEnemy(netSender, info);
+            Networking.zNetworking.ReciveRequestToKillEnemy(netSender, info);
         }
         internal static void setCheckVizTarget()
         {
@@ -418,7 +418,7 @@ namespace ZombieTweak2
         {
             if (playerAgent == null)
                 playerAgent = PlayerManager.GetLocalPlayerAgent();
-            var Unexplored = BotControl.VisitNode.getUnexploredLocation(playerAgent.Position);
+            var Unexplored = BotControl.VisitSearchNode.getUnexploredLocation(playerAgent.Position);
             if (Unexplored == playerAgent.Position || Unexplored == Vector3.zero)
                 return;
             CreatePing(Unexplored);

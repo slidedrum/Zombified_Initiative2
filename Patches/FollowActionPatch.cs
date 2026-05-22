@@ -1,8 +1,8 @@
 ﻿using HarmonyLib;
 using Player;
-using ZombieTweak2.Menus;
+using BotControl.Menus;
 
-namespace ZombieTweak2.Patches
+namespace BotControl.Patches
 {
     [HarmonyPatch]
     public class FollowActionPatch

@@ -10,7 +10,7 @@ using System.Runtime.CompilerServices;
 using UnityEngine;
 using BotControl;
 
-namespace ZombieTweak2.Patches
+namespace BotControl.Patches
 {
     [HarmonyPatch]
     internal class ShareActionPatch

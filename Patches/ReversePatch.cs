@@ -4,7 +4,7 @@ using System;
 using UnityEngine;
 using static Player.PlayerBotActionBase;
 
-namespace ZombieTweak2.Patches
+namespace BotControl.Patches
 {
     [HarmonyPatch]
     internal class CustomDescBase

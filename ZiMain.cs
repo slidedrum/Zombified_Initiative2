@@ -1,6 +1,8 @@
 ﻿using BepInEx;
 using BepInEx.Logging;
 using BepInEx.Unity.IL2CPP;
+using BotControl.Networking;
+using BotControl.zRootBotPlayerAction;
 using CellMenu;
 using Enemies;
 using GTFO.API;
@@ -12,13 +14,9 @@ using SlideMenu;
 using SNetwork;
 using System;
 using System.Collections.Generic;
-using System.Reflection.Metadata;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using ZombieTweak2;
-using ZombieTweak2.zNetworking;
-using ZombieTweak2.zRootBotPlayerAction;
-using static ZombieTweak2.zNetworking.pStructs;
+using static BotControl.Networking.pStructs;
 
 /*
  == TODO == Priority: Clean up the mess I made creating custom actions.
@@ -162,12 +160,12 @@ public class ZiMain : BasePlugin
         //NetworkAPI.RegisterEvent<pResourceThreshold>        ("SetResourceThreshold",            zNetworking.reciveSetResourceThreshold);
         //NetworkAPI.RegisterEvent<pResourceThresholdDisable> ("SetResourceThresholdDisable",     zNetworking.ReciveSetResourceThresholdDisable);
         //NetworkAPI.RegisterEvent<pGenericPermission>        ("SetActionPermission",             zNetworking.ReciveSetActionPermission);
-        NetworkAPI.RegisterEvent<pPickupItemInfo>           ("RequestToPickupItem",             zNetworking.ReciveRequestToPickupItem);
-        NetworkAPI.RegisterEvent<pShareResourceInfo>        ("RequestToShareResourcePack",      zNetworking.ReciveRequestToShareResource);
-        NetworkAPI.RegisterEvent<pAttackEnemyInfo>          ("RequestToKillEnemy",              zNetworking.ReciveRequestToKillEnemy);
-        NetworkAPI.RegisterEvent<pBoolOverideTreeInfo>      ("SetBoolOverideTree",     zNetworking.ReciveSetBoolOverideTree);
-        NetworkAPI.RegisterEvent<pIntOverideTreeInfo>       ("SetIntOverideTree",      zNetworking.ReciveSetIntOverideTree);
-        NetworkAPI.RegisterEvent<pFloatOverideTreeInfo>     ("SetFloatOverideTree",    zNetworking.ReciveSetFloatOverideTree);
+        NetworkAPI.RegisterEvent<pPickupItemInfo>           ("RequestToPickupItem",               zNetworking.ReciveRequestToPickupItem);
+        NetworkAPI.RegisterEvent<pShareResourceInfo>        ("RequestToShareResourcePack",        zNetworking.ReciveRequestToShareResource);
+        NetworkAPI.RegisterEvent<pAttackEnemyInfo>          ("RequestToKillEnemy",                zNetworking.ReciveRequestToKillEnemy);
+        NetworkAPI.RegisterEvent<pBoolOverideTreeInfo>      ("SetBoolOverideTree",                zNetworking.ReciveSetBoolOverideTree);
+        NetworkAPI.RegisterEvent<pIntOverideTreeInfo>       ("SetIntOverideTree",                 zNetworking.ReciveSetIntOverideTree);
+        NetworkAPI.RegisterEvent<pFloatOverideTreeInfo>     ("SetFloatOverideTree",               zNetworking.ReciveSetFloatOverideTree);
 
         //EventAPI.OnExpeditionStarted += ZombieController.Initialize;
         log = Log;
@@ -511,7 +509,7 @@ public class ZiMain : BasePlugin
             Haste = haste,
         };
         PlayerVoiceManager.WantToSay(commander.CharacterID, AK.EVENTS.PLAY_CL_GRABTHEITEM);
-        ZombieTweak2.FlexibleMethodDefinition barkback = new ZombieTweak2.FlexibleMethodDefinition(PlayerVoiceManager.WantToSay, [aiBot.Agent.CharacterID, AK.EVENTS.PLAY_CL_WILLDO]);
+        BotControl.FlexibleMethodDefinition barkback = new BotControl.FlexibleMethodDefinition(PlayerVoiceManager.WantToSay, [aiBot.Agent.CharacterID, AK.EVENTS.PLAY_CL_WILLDO]);
         zUpdater.InvokeStatic(barkback, 1f);
         sendChatMessage($"Picking up {item.PublicName}",aiBot.Agent,commander);
         zActions.manualActions.Add(desc);
@@ -602,7 +600,7 @@ public class ZiMain : BasePlugin
             }
         }
         var descriptor = SendBotToKillEnemy(aiBot, closestEnemy, commander);
-        ZombieTweak2.FlexibleMethodDefinition callback = new(SendBotToClearCurrentRoom,[aiBot,commander, netsender]);
+        BotControl.FlexibleMethodDefinition callback = new(SendBotToClearCurrentRoom,[aiBot,commander, netsender]);
         zActionSub.addOnTerminated(descriptor, callback);
     }
 } // plugin

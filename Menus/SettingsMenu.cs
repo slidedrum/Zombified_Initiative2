@@ -3,7 +3,7 @@ using System;
 using UnityEngine;
 using static Il2CppSystem.Threading.SemaphoreSlim;
 
-namespace ZombieTweak2.Menus
+namespace BotControl.Menus
 {
     public static class SettingsMenuClass
     {

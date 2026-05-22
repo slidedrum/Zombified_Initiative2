@@ -9,7 +9,7 @@ using UnityEngine;
 using UnityEngine.AI;
 using BotControl;
 
-namespace ZombieTweak2
+namespace BotControl
 {
     public static class zVisitedManager // TODO make the nodemap a dict with dimensions as keys.
     {

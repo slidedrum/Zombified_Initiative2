@@ -2,7 +2,7 @@
 using Player;
 using System.Collections.Generic;
 
-namespace ZombieTweak2.Patches
+namespace BotControl.Patches
 {
     [HarmonyPatch]
     internal static class ReviveActionPatch

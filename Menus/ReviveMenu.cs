@@ -2,7 +2,7 @@
 using SlideMenu;
 using System.Collections.Generic;
 
-namespace ZombieTweak2.Menus
+namespace BotControl.Menus
 {
     public static class ReviveMenuClass
     {

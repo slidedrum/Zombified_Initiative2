@@ -4,7 +4,7 @@ using Player;
 using SNetwork;
 using UnityEngine;
 
-namespace ZombieTweak2.zNetworking
+namespace BotControl.Networking
 
 {
     public class pStructs

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 #nullable enable
-namespace ZombieTweak2
+namespace BotControl
 {
     public static class zHelpers
     {

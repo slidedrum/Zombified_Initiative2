@@ -2,9 +2,9 @@
 using SlideMenu;
 using System.Collections.Generic;
 using UnityEngine;
-using ZombieTweak2.Patches;
+using BotControl.Patches;
 
-namespace ZombieTweak2.Menus
+namespace BotControl.Menus
 {
     public static class AttackMenuClass
     {

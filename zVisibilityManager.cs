@@ -6,7 +6,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace ZombieTweak2
+namespace BotControl
 {
     public static class zVisibilityManager
     {

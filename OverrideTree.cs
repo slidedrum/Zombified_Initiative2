@@ -2,10 +2,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ZombieTweak2.zNetworking;
+using BotControl.Networking;
 using BotControl;
 
-namespace ZombieTweak2
+namespace BotControl
 {
 
     public interface IOverrideTree

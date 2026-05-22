@@ -9,8 +9,8 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.AI;
-using ZombieTweak2;
-using ZombieTweak2.Menus;
+using BotControl;
+using BotControl.Menus;
 using static BoundingBox;
 
 namespace BotControl
@@ -680,12 +680,12 @@ namespace BotControl
         public Dictionary<int,float> lastCheckedVis = new();
     }
     
-    public class VisitNode
+    public class VisitSearchNode
     {
         public static float VisitNodeDistance = 2f;
         private static float FuzzyVisitNodeDistance = (VisitNodeDistance * 1.4f);
-        public static HashSet<VisitNode> AllNodes = new ();
-        public static Dictionary<Vector2Int, HashSet<VisitNode>> nodeGrid = new();
+        public static HashSet<VisitSearchNode> AllNodes = new ();
+        public static Dictionary<Vector2Int, HashSet<VisitSearchNode>> nodeGrid = new();
         public static HashSet<GameObject> debugCubes = new();
         public Vector3 UnexploredLocation = Vector3.zero;
         public GameObject debugCube;
@@ -693,13 +693,13 @@ namespace BotControl
         public Vector3 position;
         public bool explored = false;
         public int propigated = 0;
-        public HashSet<VisitNode> conntectedNodes = new ();
+        public HashSet<VisitSearchNode> conntectedNodes = new ();
         public NavMeshHit hit = new();
         private Vector2Int cell;
         public static int propigationAmmount = 30;
         public static Vector3 getUnexploredLocation(Vector3 position)
         {
-            VisitNode startingNode = GetNearestNode(position);
+            VisitSearchNode startingNode = GetNearestNode(position);
             if (startingNode == null)
                 return position;
 
@@ -707,16 +707,16 @@ namespace BotControl
         }
         public Vector3 getUnexploredLocation()
         {
-            HashSet<VisitNode> visited = new HashSet<VisitNode>();
+            HashSet<VisitSearchNode> visited = new HashSet<VisitSearchNode>();
             return getUnexploredLocation(ref visited);
         }
-        public Vector3 getUnexploredLocation(ref HashSet<VisitNode> visited)
+        public Vector3 getUnexploredLocation(ref HashSet<VisitSearchNode> visited)
         {
             if (UnexploredLocation != Vector3.zero)
                 return UnexploredLocation;
 
             if (visited == null)
-                visited = new HashSet<VisitNode>();
+                visited = new HashSet<VisitSearchNode>();
             visited.Add(this);
             if (visited.Count > 100) // arbitrary large number
             {
@@ -726,7 +726,7 @@ namespace BotControl
 
 
             // Shuffle connected nodes
-            List<VisitNode> shuffledNodes = new(conntectedNodes);
+            List<VisitSearchNode> shuffledNodes = new(conntectedNodes);
             for (int i = shuffledNodes.Count - 1; i > 0; i--)
             {
                 int j = UnityEngine.Random.Range(0, i + 1);
@@ -736,7 +736,7 @@ namespace BotControl
             }
 
 
-            foreach (VisitNode node in shuffledNodes)
+            foreach (VisitSearchNode node in shuffledNodes)
             {
                 if (visited.Contains(node) || node == this)
                     continue;
@@ -760,7 +760,7 @@ namespace BotControl
                 var NearbyNodes = GetNearByNodes(agent.Position, VisitNodeDistance);
                 if (NearbyNodes.Count == 0)
                 {
-                    new VisitNode(agent.Position, propigationAmmount);
+                    new VisitSearchNode(agent.Position, propigationAmmount);
                 }
                 NearbyNodes = GetNearByNodes(agent.Position, VisitNodeDistance * 10);
                 foreach (var node in NearbyNodes)
@@ -774,9 +774,9 @@ namespace BotControl
                 }
             }
         }
-        public static HashSet<VisitNode> GetNearByNodes(Vector3 position, float searchRadius = -1)
+        public static HashSet<VisitSearchNode> GetNearByNodes(Vector3 position, float searchRadius = -1)
         {
-            var ret = new HashSet<VisitNode>();
+            var ret = new HashSet<VisitSearchNode>();
 
             // central cell for the query position
             var cell = new Vector2Int(
@@ -791,7 +791,7 @@ namespace BotControl
             if (cellRadius < 1) cellRadius = 1; // at least check neighbors
 
             // collect candidates from the necessary grid cells
-            var nearbyCandidates = new HashSet<VisitNode>();
+            var nearbyCandidates = new HashSet<VisitSearchNode>();
             for (int dx = -cellRadius; dx <= cellRadius; dx++)
             {
                 for (int dy = -cellRadius; dy <= cellRadius; dy++)
@@ -812,14 +812,14 @@ namespace BotControl
 
             return ret;
         }
-        public HashSet<VisitNode> GetNearByNodes()
+        public HashSet<VisitSearchNode> GetNearByNodes()
         {
             return GetNearByNodes(position);
         }
-        public static VisitNode GetNearestNode(Vector3 position)
+        public static VisitSearchNode GetNearestNode(Vector3 position)
         {
-            HashSet<VisitNode> nearbyNodes = GetNearByNodes(position);
-            VisitNode nearestNode = null;
+            HashSet<VisitSearchNode> nearbyNodes = GetNearByNodes(position);
+            VisitSearchNode nearestNode = null;
             float nearestDistance = float.MaxValue;
 
             foreach (var node in nearbyNodes)
@@ -837,7 +837,7 @@ namespace BotControl
 
             return nearestNode;
         }
-        public VisitNode(Vector3 Position, int proigate = 0)
+        public VisitSearchNode(Vector3 Position, int proigate = 0)
         {
             
             hit = new NavMeshHit();
@@ -853,7 +853,7 @@ namespace BotControl
             // ensure cell exists and add this node
             if (!nodeGrid.TryGetValue(cell, out var set))
             {
-                set = new HashSet<VisitNode>();
+                set = new HashSet<VisitSearchNode>();
                 nodeGrid[cell] = set;
             }
             set.Add(this);
@@ -950,7 +950,7 @@ namespace BotControl
 
             UpdateDebugCube(); // Make sure color and text are correct
         }
-        public void addSampleDebugCube(Vector3 pos, HashSet<VisitNode> nearbyNodes, Color color)
+        public void addSampleDebugCube(Vector3 pos, HashSet<VisitSearchNode> nearbyNodes, Color color)
         {
             // Create a small cube for the sample
             GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -1005,13 +1005,13 @@ namespace BotControl
             // (optional) keep track of sample cube if you need to destroy it later:
             SampleDebugCubes.Add(cube);
         }
-        public void propigate(int depth, HashSet<VisitNode> visited = null)
+        public void propigate(int depth, HashSet<VisitSearchNode> visited = null)
         {
             if (depth <= 0)
                 return;
 
             if (visited == null)
-                visited = new HashSet<VisitNode>();
+                visited = new HashSet<VisitSearchNode>();
 
             // Skip nodes we've already processed this cycle
             if (visited.Contains(this))
@@ -1027,7 +1027,7 @@ namespace BotControl
             CheckSamplesNearby(depth - 1);
 
             // Propagate to connected nodes
-            HashSet<VisitNode> nearbynodes = GetNearByNodes();
+            HashSet<VisitSearchNode> nearbynodes = GetNearByNodes();
             foreach (var node in nearbynodes)
             {
                 node.propigate(depth - 1, visited);
@@ -1127,7 +1127,7 @@ namespace BotControl
                     UnexploredLocation = liftedHitPos;
                     if (nearbyNodes.Count == 0 && propigate > 0)
                     {
-                        new VisitNode(liftedHitPos, propigate - 1);
+                        new VisitSearchNode(liftedHitPos, propigate - 1);
                     }
                 }
             }

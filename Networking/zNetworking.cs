@@ -7,10 +7,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using ZombieTweak2.Menus;
-using BotControl;
+using BotControl.Menus;
 
-namespace ZombieTweak2.zNetworking
+namespace BotControl.Networking
 {
     public class zNetworking
     { //This class will handle all incoming and outgoing network requests.

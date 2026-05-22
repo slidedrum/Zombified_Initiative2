@@ -5,10 +5,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using ZombieTweak2.Patches;
+using BotControl.Patches;
 using BotControl;
 
-namespace ZombieTweak2.Menus
+namespace BotControl.Menus
 {
     public static class PickupMenuClass
     {

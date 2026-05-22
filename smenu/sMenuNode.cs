@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
-using ZombieTweak2;
+using BotControl;
 using static SlideMenu.sMenu.TextPart;
 
 namespace SlideMenu
@@ -384,7 +384,7 @@ namespace SlideMenu
                         }
                         else
                         {
-                            zUpdater.InvokeStatic(new ZombieTweak2.FlexibleMethodDefinition(InvokeTappedExclusive), doubleTapThreshold - (Time.deltaTime / 2));
+                            zUpdater.InvokeStatic(new BotControl.FlexibleMethodDefinition(InvokeTappedExclusive), doubleTapThreshold - (Time.deltaTime / 2));
                         }
                         lastTapTime = Time.time;
                     }

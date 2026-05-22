@@ -10,7 +10,7 @@ using System.Linq;
 using UnityEngine;
 using BotControl;
 
-namespace ZombieTweak2.Patches
+namespace BotControl.Patches
 {
     [HarmonyPatch]
     internal class PickupActionPatch

@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using ZombieTweak2;
-using ZombieTweak2.Menus;
+using BotControl;
+using BotControl.Menus;
 
 namespace SlideMenu
 {

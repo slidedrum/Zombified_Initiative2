@@ -3,11 +3,11 @@ using HarmonyLib;
 using Player;
 using System.Collections.Generic;
 using UnityEngine;
-using ZombieTweak2.zRootBotPlayerAction;
+using BotControl.zRootBotPlayerAction;
 using BotControl;
 using static BotControl.ZiMain;
 
-namespace ZombieTweak2.Patches;
+namespace BotControl.Patches;
 
 [HarmonyPatch]
 public class ZombifiedPatches

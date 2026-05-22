@@ -1,7 +1,7 @@
 ﻿using Player;
 using System.Collections.Generic;
 
-namespace ZombieTweak2.zRootBotPlayerAction
+namespace BotControl.zRootBotPlayerAction
 {
     public class dataStore
     {

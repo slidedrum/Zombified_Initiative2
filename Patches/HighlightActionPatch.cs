@@ -1,7 +1,7 @@
 ﻿using HarmonyLib;
 using Player;
 
-namespace ZombieTweak2.Patches
+namespace BotControl.Patches
 {
     [HarmonyPatch]
     public class HighlightActionPatch

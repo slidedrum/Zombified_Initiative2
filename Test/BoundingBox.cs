@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using ZombieTweak2;
+using BotControl;
 
 [System.Flags]
 public enum CornerTag

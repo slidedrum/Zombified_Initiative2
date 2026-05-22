@@ -3,7 +3,7 @@ using System.Collections;
 using UnityEngine;
 using BotControl;
 
-namespace ZombieTweak2
+namespace BotControl
 {
     public class zUpdater : MonoBehaviour
     {   

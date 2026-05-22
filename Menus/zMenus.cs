@@ -7,7 +7,7 @@ using UnityEngine;
 //using ZombieTweak2.zRootBotPlayerAction.CustomActions;
 using BotControl;
 
-namespace ZombieTweak2.Menus
+namespace BotControl.Menus
 {
     public static class zMenus
     {
