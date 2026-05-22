@@ -155,7 +155,7 @@ namespace ZombieTweak2.Menus
             AutoActionMenu.AddNodeToCatagory("Favorites", "Pickup");
             AutoActionMenu.AddNodeToCatagory("Favorites", "Share");
             AutoActionMenu.AddNodeToCatagory("Favorites", "Explore");
-            AutoActionMenu.AddNodeToCatagory("Favorites", "Follow");
+            AutoActionMenu.AddNodeToCatagory("Favorites", "Attack");
             AutoActionMenu.AddCatagory("Resources");
             AutoActionMenu.AddNodeToCatagory("Resources", "Pickup");
             AutoActionMenu.AddNodeToCatagory("Resources", "Share");
