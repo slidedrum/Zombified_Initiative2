@@ -21,7 +21,10 @@ namespace BotControl.Menus
             {
                 sMenu.sMenuNode node = shareMenu.AddNode(itemName);
                 zSlideComputer.ActionPermissions.AddNode("Share"+itemName, null, "Share", defaultValue: null, hasDefaultValue: true).onChanged.Listen(updateNodeThresholdDisplay, args: [node, itemName]);
-                zSlideComputer.ActionPriorities.AddNode("Share"+itemName, 100f, "Share", defaultValue: 100f).onChanged.Listen(updateNodeThresholdDisplay, args: [node, itemName]);
+                if (itemName == "DisinfectionPack")
+                    zSlideComputer.ActionPriorities.AddNode("Share" + itemName, 20f, "Share", defaultValue: 20f).onChanged.Listen(updateNodeThresholdDisplay, args: [node, itemName]);
+                else
+                    zSlideComputer.ActionPriorities.AddNode("Share" + itemName, 100f, "Share", defaultValue: 100f).onChanged.Listen(updateNodeThresholdDisplay, args: [node, itemName]);
                 node.AddListener(sMenuManager.nodeEvent.OnTapped, zSlideComputer.GenericToggleAllowed, "Share"+itemName, node);
                 node.AddListener(sMenuManager.nodeEvent.OnTapped, updateNodeThresholdDisplay, node, itemName);
                 node.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, ResetSettings, itemName, node);
@@ -75,7 +78,10 @@ namespace BotControl.Menus
             //AutomaticActionMenuClass.ApplyTextEffectToNode(node, AutomaticActionMenuClass.textEffect.Italic, italic);
 
             float threshold = (float)zSlideComputer.ActionPriorities.ValueAt(actionKey);
+
             string hex = ColorUtility.ToHtmlStringRGB(GetThresholdColor(threshold));
+            if (itemName == "DisinfectionPack")
+                hex = ColorUtility.ToHtmlStringRGB(GetThresholdColor(100 - threshold));
             //bool allowed = (bool)zSlideComputer.ActionPermissions.ValueAt(actionKey);
             node.SetSubtitle($"<color=#CC840066>[ </color><color=#{hex}>{threshold}</color><color=#CC840066> ]</color>");
             AutomaticActionMenuClass.GenericUpdateNodeAllowedDisplay(actionKey, node);
