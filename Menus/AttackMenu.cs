@@ -34,7 +34,7 @@ namespace ZombieTweak2.Menus
                 if (meansBlackList.Contains(means))
                     continue;
                 sMenu.sMenuNode menuNode = attackMenu.AddNode(means.ToString());
-                overrideNode.onChanged.Listen(UpdateNodeDisplay, args: [actionKey, menuNode]);
+                overrideNode.onChanged.Listen(AutomaticActionMenuClass.GenericUpdateNodeAllowedDisplay, args: [actionKey, menuNode]);
                 menuNode.AddListener(sMenuManager.nodeEvent.OnTapped, zSlideComputer.GenericToggleAllowed, args: [actionKey, menuNode]);
                 menuNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediateSelected, zSlideComputer.ActionPermissions.ResetToDefault, args: [actionKey]);
                 attackMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediateSelected, zSlideComputer.ActionPermissions.ResetToDefault, args: [actionKey]);
@@ -46,20 +46,6 @@ namespace ZombieTweak2.Menus
             attackMenu.AddPannel(sMenu.sMenuPannel.Side.bottom, "Especially when changed in the middle of combat.");
             attackMenu.AddPannel(sMenu.sMenuPannel.Side.bottom, "I'm pretty sure that's not the fault of the mod.");
             attackMenu.AddPannel(sMenu.sMenuPannel.Side.bottom, "I'd like to see if I can improve it anyway.");
-        }
-        public static void UpdateNodeDisplay(string key, sMenu.sMenuNode node)
-        {
-            //AutomaticActionMenuClass.ApplyTextEffectBasedOnKeyTree(node, key, zSlideComputer.ActionPermissions, AutomaticActionMenuClass.textEffect.Bold);
-            //AutomaticActionMenuClass.ApplyTextEffects(node, key);
-            //List<IOverrideTree> trees = new()
-            //{
-            //    zSlideComputer.ActionPermissions,
-            //};
-            //bool italic = AutomaticActionMenuClass.AnyTreeOverridesNullDefault(trees, key);
-            //bool star = !AutomaticActionMenuClass.AllMatchingDefaultValue(trees, key);
-            //AutomaticActionMenuClass.ApplyTextEffectToNode(node, AutomaticActionMenuClass.textEffect.Star, star);
-            //AutomaticActionMenuClass.ApplyTextEffectToNode(node, AutomaticActionMenuClass.textEffect.Italic, italic);
-            AutomaticActionMenuClass.GenericUpdateNodeAllowedDisplay(key, node);
         }
     }
    

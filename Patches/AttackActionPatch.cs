@@ -61,6 +61,13 @@ namespace ZombieTweak2.Patches
                 return;
             if (bestAction.TryCast<PlayerBotActionAttack.Descriptor>() == null)
                 return;
+            bool allowedToMele = (bool)zSlideComputer.ActionPermissions.ValueAt("attackMeansMelee");
+            bool allowedToShoot = (bool)zSlideComputer.ActionPermissions.ValueAt("attackMeansBullet");
+            if (allowedToMele == false && allowedToShoot == false)
+            {
+                bestAction = originalBestAction;
+                return;
+            }
             var newMeans = PlayerBotActionAttack.AttackMeansEnum.None;
             foreach (var means in meansList)
             {

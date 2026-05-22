@@ -18,9 +18,9 @@ namespace ZombieTweak2.Menus
             reviveNode.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
             reviveNode.AddListener(sMenuManager.nodeEvent.OnDoubleTapped, reviveMenu.Open);
             playersNode = reviveMenu.AddNode("Players");
-            playersNode.AddListener(sMenuManager.nodeEvent.OnPressed, zSlideComputer.GenericToggleAllowed, "RevivePlayers", playersNode);
+            playersNode.AddListener(sMenuManager.nodeEvent.OnTapped, zSlideComputer.GenericToggleAllowed, "RevivePlayers", playersNode);
             botsNode = reviveMenu.AddNode("Bots");
-            botsNode.AddListener(sMenuManager.nodeEvent.OnPressed, zSlideComputer.GenericToggleAllowed, "ReviveBots", botsNode);
+            botsNode.AddListener(sMenuManager.nodeEvent.OnTapped, zSlideComputer.GenericToggleAllowed, "ReviveBots", botsNode);
             zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("RevivePlayers", null, playersNode, ActionTypeToCull: typeof(PlayerBotActionRevive), parrentKey: "Revive", hasDefaultValue: true);
             zSlideComputer.ActionPermissions.GetNodeFromIdent("RevivePlayers").onChanged.Listen(UpdateNodeDisplay, args: ["RevivePlayers", playersNode]);
             zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("ReviveBots", null, botsNode, ActionTypeToCull: typeof(PlayerBotActionRevive), parrentKey: "Revive", hasDefaultValue: true);
