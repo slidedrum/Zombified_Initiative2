@@ -20,25 +20,15 @@ namespace SlideMenu
             this.method = method;
             this.args = args;
         }
-        public FlexibleMethodDefinition(Action method)
-        {
-            this.method = method;
-            this.args = Array.Empty<object>();
-        }
-        public FlexibleMethodDefinition(Func<sMenu> method)
-        {
-            this.method = method;
-            this.args = Array.Empty<object>();
-        }
         public static implicit operator FlexibleMethodDefinition(Delegate d)
         {
             return new FlexibleMethodDefinition(d);
         }
-        #nullable enable
         public object? Invoke()
         {
             return Invoke(args);
         }
+
         public object? Invoke(params object[] suppliedArgs)
         {
             if (method == null)
@@ -60,23 +50,26 @@ namespace SlideMenu
                 throw new TargetInvocationException($"Error invoking method '{method.Method.Name}'.", e);
             }
         }
-        #nullable disable
     }
     public class FlexibleEvent
     {
         private readonly OrderedSet<Action> listeners = new();
-        public void Listen(Action method)
+
+        public FlexibleEvent Listen(Action method)
         {
-            if (method == null) return;
+            if (method == null) return this;
             listeners.Add(method);
+            return this;
         }
-        public void Listen(FlexibleMethodDefinition method)
+
+        public FlexibleEvent Listen(FlexibleMethodDefinition method)
         {
-            Listen(method.method, method.args, method);
+            return Listen(method.method, method.args, method);
         }
-        public void Listen(Delegate method, object[] args, FlexibleMethodDefinition fMethod = null)
+
+        public FlexibleEvent Listen(Delegate method, object[] args, FlexibleMethodDefinition? fMethod = null)
         {
-            if (method == null) return;
+            if (method == null) return this;
 
             var parameters = method.Method.GetParameters();
             object[] finalArgs = new object[parameters.Length];
@@ -86,7 +79,9 @@ namespace SlideMenu
                 if (i < args.Length && args[i] != Default.Value)
                     finalArgs[i] = args[i];
                 else if (parameters[i].IsOptional)
+#pragma warning disable CS8601 // Possible null reference assignment.
                     finalArgs[i] = parameters[i].DefaultValue;
+#pragma warning restore CS8601 // Possible null reference assignment.
                 else
                     throw new ArgumentException($"Missing required argument '{parameters[i].Name}'");
             }
@@ -102,22 +97,28 @@ namespace SlideMenu
                         fMethod.args[i] = finalArgs[i];
                 }
             }
+
             listeners.Add(Wrapper);
+            return this;
         }
+
         public void Unlisten(Action method)
         {
             listeners.Remove(method);
         }
+
         public void Unlisten(FlexibleMethodDefinition method)
         {
             // Note: This only works if the same wrapper instance is stored.
             // You may need to track the wrapper separately to remove it correctly.
             listeners.Remove((Action)method.method);
         }
+
         public void ClearListeners()
         {
             listeners.Clear();
         }
+
         public void Invoke()
         {
             foreach (var listener in listeners)

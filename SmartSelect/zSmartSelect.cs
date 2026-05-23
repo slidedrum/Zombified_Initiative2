@@ -7,10 +7,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using static SlideMenu.sMenu;
-using static UnityStandardAssets.CinematicEffects.FXAA;
 
-namespace BotControl
+namespace ZombieTweak2.SmartSelect
 {
     public class Selection
     {
@@ -84,40 +82,10 @@ namespace BotControl
             OnDoubleTapAndHold,
             WhileDoubleTapAndHold,
         }
-        private static Dictionary<interactEvent, FlexibleEvent> _eventMap;
-        public static Dictionary<interactEvent, FlexibleEvent> eventMap
-        {
-            get
-            {
-                if (_eventMap == null)
-                {
-                    _eventMap = new();
 
-                    foreach (interactEvent evt in Enum.GetValues<interactEvent>())
-                    {
-                        _eventMap[evt] = new FlexibleEvent();
-                    }
-                }
-
-                return _eventMap;
-            }
-        }
         internal static void Update()
         {
-            bool ready = (FocusStateManager.CurrentState == eFocusState.FPS || FocusStateManager.CurrentState == eFocusState.Dead);
-            if (!ready) return;
-            if (Input.GetKeyDown(key))
-            {
-                onKeyDown();
-            }
-            if (Input.GetKeyUp(key))
-            {
-                onKeyUp();
-            }
-            if (Input.GetKey(key))
-            {
-                onKey();
-            }
+
         }
         public static void onKeyDown()
         {

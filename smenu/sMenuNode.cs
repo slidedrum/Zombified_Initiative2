@@ -5,7 +5,7 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
-using static BotControl.zSmartSelect;
+using static ZombieTweak2.SmartSelect.zSmartSelect;
 using static SlideMenu.sMenu.TextPart;
 
 namespace SlideMenu
@@ -377,7 +377,7 @@ namespace SlideMenu
                             eventMap[sMenuManager.nodeEvent.OnDoubleTapped].Invoke();
                         else
                         {
-                            zUpdater.InvokeStatic(new BotControl.FlexibleMethodDefinition(InvokeTappedExclusive), doubleTapThreshold - (Time.deltaTime / 2));
+                            zUpdater.InvokeStatic(new FlexibleMethodDefinition(InvokeTappedExclusive), doubleTapThreshold - (Time.deltaTime / 2));
                         }
                         lastTapTime = Time.time;
                     }

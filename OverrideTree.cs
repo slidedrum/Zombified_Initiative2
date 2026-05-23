@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using BotControl.Networking;
 using BotControl;
+using SlideMenu;
 
 namespace BotControl
 {
