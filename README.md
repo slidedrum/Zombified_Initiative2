@@ -71,5 +71,5 @@ V1.0.2
  - Fixed disinfect pickup threshold being inverted.
  - Bots no longer use auto disinfect pacs in fog.  
  - Added a (WIP) option to stop bots from dropping their items in the pickup submenu
- V1.0.1
+V1.0.1
  - Updated readme
