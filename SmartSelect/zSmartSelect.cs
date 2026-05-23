@@ -1,14 +1,11 @@
-﻿using BotControl;
-using Enemies;
+﻿using Enemies;
 using LevelGeneration;
 using Player;
-using SlideMenu;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace ZombieTweak2.SmartSelect
+namespace BotControl.SmartSelect
 {
     public class Selection
     {
@@ -54,7 +51,6 @@ namespace ZombieTweak2.SmartSelect
         public static Selection selection = new();
         const float holdThreshold = 0.1f;
         private const float vertHeadOffset = 1.75f;
-
         public struct lookingObject
         {
             public objectType type;
@@ -68,24 +64,22 @@ namespace ZombieTweak2.SmartSelect
             Item,
             Other,
         }
-        public enum interactEvent
-        {
-            OnPressed,
-            WhilePressed,
-            OnUnpressed,
-            OnTapped,
-            OnTappedExclusive,
-            OnDoubleTapped,
-            OnHeld,
-            WhileHeld,
-            OnHeldImmediate,
-            OnDoubleTapAndHold,
-            WhileDoubleTapAndHold,
-        }
-
         internal static void Update()
         {
-
+            bool ready = FocusStateManager.CurrentState == eFocusState.FPS || FocusStateManager.CurrentState == eFocusState.Dead;
+            if (!ready) return;
+            if (Input.GetKeyDown(key))
+            {
+                onKeyDown();
+            }
+            if (Input.GetKeyUp(key))
+            {
+                onKeyUp();
+            }
+            if (Input.GetKey(key))
+            {
+                onKey();
+            }
         }
         public static void onKeyDown()
         {
@@ -258,10 +252,6 @@ namespace ZombieTweak2.SmartSelect
                 ZiMain.sendChatMessage("I'm ready", agent, localPlayer);
                 selection.setBot(lookingAt.gobject);
             }
-        }
-        public static void onKeyDoubleTap()
-        {
-
         }
     }
 }

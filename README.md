@@ -64,3 +64,13 @@ https://www.youtube.com/watch?v=X5RWMQyUgTY
 https://www.youtube.com/watch?v=lrDWroqC-R0
 
 There is A LOT of unused code and extra stuff in this mod.  I got a little bit too ambitious with some features. I may or may not return to some of them later.
+
+
+### Changelog
+V1.0.2
+ - Fixed disinfect pickup threshold being inverted.
+ - Bots no longer use auto disinfect pacs in fog.  
+ - Added a (WIP) option to stop bots from dropping their items in the pickup submenu
+
+V1.0.1
+ - Updated readme

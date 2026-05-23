@@ -16,7 +16,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using ZombieTweak2.SmartSelect;
+using BotControl.SmartSelect;
 using static BotControl.Networking.pStructs;
 
 /*
@@ -129,7 +129,7 @@ namespace BotControl;
 [BepInDependency("com.east.bb", BepInDependency.DependencyFlags.SoftDependency)]
 public class ZiMain : BasePlugin
 { //this class should contain all methods to call actions, any helpers to faciliate that, and inital setup,
-    public const string version = "1.0.1";
+    public const string version = "1.0.2";
     public static ManualLogSource log;
     internal static bool newRootBotPlayerAction = true;
     public static Dictionary<string, PlayerAIBot> BotTable = new();
@@ -176,7 +176,7 @@ public class ZiMain : BasePlugin
         {
             zUpdater.CreateInstance();
             zUpdater.onUpdate.Listen(sMenuManager.Update);
-            zUpdater.onUpdate.Listen(ssInputHandler.Update);
+            zUpdater.onUpdate.Listen(zSmartSelect.Update);
             zUpdater.onUpdate.Listen(zActionSub.Update);
             zUpdater.onUpdate.Listen(zSearch.Update);
             zUpdater.onUpdate.Listen(zDebug.debugUpdate);
@@ -510,7 +510,7 @@ public class ZiMain : BasePlugin
             Haste = haste,
         };
         PlayerVoiceManager.WantToSay(commander.CharacterID, AK.EVENTS.PLAY_CL_GRABTHEITEM);
-        FlexibleMethodDefinition barkback = new FlexibleMethodDefinition(PlayerVoiceManager.WantToSay, [aiBot.Agent.CharacterID, AK.EVENTS.PLAY_CL_WILLDO]);
+        BotControl.FlexibleMethodDefinition barkback = new BotControl.FlexibleMethodDefinition(PlayerVoiceManager.WantToSay, [aiBot.Agent.CharacterID, AK.EVENTS.PLAY_CL_WILLDO]);
         zUpdater.InvokeStatic(barkback, 1f);
         sendChatMessage($"Picking up {item.PublicName}",aiBot.Agent,commander);
         zActions.manualActions.Add(desc);
@@ -601,7 +601,7 @@ public class ZiMain : BasePlugin
             }
         }
         var descriptor = SendBotToKillEnemy(aiBot, closestEnemy, commander);
-        FlexibleMethodDefinition callback = new(SendBotToClearCurrentRoom,[aiBot,commander, netsender]);
+        BotControl.FlexibleMethodDefinition callback = new(SendBotToClearCurrentRoom,[aiBot,commander, netsender]);
         zActionSub.addOnTerminated(descriptor, callback);
     }
 } // plugin
