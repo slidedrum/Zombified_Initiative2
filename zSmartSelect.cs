@@ -1,10 +1,14 @@
-﻿using Enemies;
+﻿using BotControl;
+using Enemies;
 using LevelGeneration;
 using Player;
+using SlideMenu;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using BotControl;
+using static SlideMenu.sMenu;
+using static UnityStandardAssets.CinematicEffects.FXAA;
 
 namespace BotControl
 {
@@ -52,6 +56,7 @@ namespace BotControl
         public static Selection selection = new();
         const float holdThreshold = 0.1f;
         private const float vertHeadOffset = 1.75f;
+
         public struct lookingObject
         {
             public objectType type;
@@ -64,6 +69,38 @@ namespace BotControl
             EnemyAgent,
             Item,
             Other,
+        }
+        public enum interactEvent
+        {
+            OnPressed,
+            WhilePressed,
+            OnUnpressed,
+            OnTapped,
+            OnTappedExclusive,
+            OnDoubleTapped,
+            OnHeld,
+            WhileHeld,
+            OnHeldImmediate,
+            OnDoubleTapAndHold,
+            WhileDoubleTapAndHold,
+        }
+        private static Dictionary<interactEvent, FlexibleEvent> _eventMap;
+        public static Dictionary<interactEvent, FlexibleEvent> eventMap
+        {
+            get
+            {
+                if (_eventMap == null)
+                {
+                    _eventMap = new();
+
+                    foreach (interactEvent evt in Enum.GetValues<interactEvent>())
+                    {
+                        _eventMap[evt] = new FlexibleEvent();
+                    }
+                }
+
+                return _eventMap;
+            }
         }
         internal static void Update()
         {
@@ -253,6 +290,10 @@ namespace BotControl
                 ZiMain.sendChatMessage("I'm ready", agent, localPlayer);
                 selection.setBot(lookingAt.gobject);
             }
+        }
+        public static void onKeyDoubleTap()
+        {
+
         }
     }
 }
