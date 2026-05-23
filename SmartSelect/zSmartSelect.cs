@@ -6,7 +6,7 @@ using System.Linq;
 using UnityEngine;
 using BotControl;
 
-namespace BotControl
+namespace ZombieTweak2.SmartSelect
 {
     public class Selection
     {
@@ -67,7 +67,7 @@ namespace BotControl
         }
         internal static void Update()
         {
-            bool ready = (FocusStateManager.CurrentState == eFocusState.FPS || FocusStateManager.CurrentState == eFocusState.Dead);
+            bool ready = FocusStateManager.CurrentState == eFocusState.FPS || FocusStateManager.CurrentState == eFocusState.Dead;
             if (!ready) return;
             if (Input.GetKeyDown(key))
             {
