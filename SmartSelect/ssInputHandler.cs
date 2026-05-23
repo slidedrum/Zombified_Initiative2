@@ -28,21 +28,21 @@ namespace ZombieTweak2.SmartSelect
         }
         public static void Update()
         {
-            bool ready = FocusStateManager.CurrentState == eFocusState.FPS || FocusStateManager.CurrentState == eFocusState.Dead;
-            bool keyDown = Input.GetKeyDown(key);
-            if (!ready) return;
-            if (Input.GetKeyDown(key))
-            {
-                onKeyDown();
-            }
-            if (Input.GetKeyUp(key))
-            {
-                onKeyUp();
-            }
-            if (Input.GetKey(key))
-            {
-                onKey();
-            }
+            //bool ready = FocusStateManager.CurrentState == eFocusState.FPS || FocusStateManager.CurrentState == eFocusState.Dead;
+            //bool keyDown = Input.GetKeyDown(key);
+            //if (!ready) return;
+            //if (Input.GetKeyDown(key))
+            //{
+            //    onKeyDown();
+            //}
+            //if (Input.GetKeyUp(key))
+            //{
+            //    onKeyUp();
+            //}
+            //if (Input.GetKey(key))
+            //{
+            //    onKey();
+            //}
         }
     }
 }
