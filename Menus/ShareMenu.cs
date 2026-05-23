@@ -24,7 +24,7 @@ namespace BotControl.Menus
                 if (itemName == "DisinfectionPack")
                     zSlideComputer.ActionPriorities.AddNode("Share" + itemName, 20f, "Share", defaultValue: 20f).onChanged.Listen(updateNodeThresholdDisplay, args: [node, itemName]);
                 else
-                    zSlideComputer.ActionPriorities.AddNode("Share" + itemName, 100f, "Share", defaultValue: 100f).onChanged.Listen(updateNodeThresholdDisplay, args: [node, itemName]);
+                    zSlideComputer.ActionPriorities.AddNode("Share" + itemName, 80f, "Share", defaultValue: 80f).onChanged.Listen(updateNodeThresholdDisplay, args: [node, itemName]);
                 node.AddListener(sMenuManager.nodeEvent.OnTapped, zSlideComputer.GenericToggleAllowed, "Share"+itemName, node);
                 node.AddListener(sMenuManager.nodeEvent.OnTapped, updateNodeThresholdDisplay, node, itemName);
                 node.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, ResetSettings, itemName, node);
