@@ -16,6 +16,8 @@ namespace BotControl.Menus
         public static sMenu pickupMenu;
         public static sMenu.sMenuNode pickupNode;
         public static OverrideTree<int?> pickupDistance;
+        public static Color dropEnabledColor = new Color(0.0f, 0.2f, 0.0f, 1f);
+        public static string glowstickNameToUse = PickupActionPatch.shortGlowStickNames.FirstOrDefault();
         public static void Setup(sMenu menu)
         {
             //prioNodesByID = new Dictionary<uint, sMenu.sMenuNode>();
@@ -26,34 +28,33 @@ namespace BotControl.Menus
             pickupDistance.AddNode("Pickup", null, "Default").onChanged.Listen(SetSearchDistance, [pickupDistance.ValueAt("Pickup")]).Listen(UpdateNodeSettingsDisplay, [pickupNode]);
 
             sMenu.sMenuNode glowstickNode = null;
-            string glowstickNameToUse = PickupActionPatch.shortGlowStickNames.FirstOrDefault();
+            
+            string glowstickActionKey = "Pickup" + glowstickNameToUse;
 
             foreach (string itemName in PickupActionPatch.fullItemNameList)
             {
-                //uint itemID = itemName.Key;
                 ItemDataBlock block = ItemDataBlock.GetBlock(itemName);
                 string publicName = block.publicName;
+                string actionKey = "Pickup" + itemName;
                 sMenu.sMenuNode node = null;
                 uint id = block.persistentID;
                 bool isGlowstick = PickupActionPatch.fullGlowStickNames.Contains(itemName);
                 if (isGlowstick)
                 {
-                    if (glowstickNode == null)
+                    bool glowstickNodeExists = glowstickNode != null;
+                    if (!glowstickNodeExists)
                     {
                         glowstickNode = pickupMenu.AddNode(glowstickNameToUse);
-                        zSlideComputer.ActionPriorities.AddNode("Pickup" + glowstickNameToUse, 10, "Pickup", defaultValue: 10f).onChanged.Listen(updateNodePriorityDisplay, args: [glowstickNameToUse, glowstickNode]);
-                        zSlideComputer.ActionPriorities.AddNode("Pickup" + itemName, null, "Pickup" + glowstickNameToUse, defaultValue: null, hasDefaultValue: true);
-                        zSlideComputer.ActionPermissions.AddNode("Pickup" + glowstickNameToUse, null, "Pickup", defaultValue: null, hasDefaultValue: true).onChanged.Listen(updateNodePriorityDisplay, args: [glowstickNameToUse, glowstickNode]);
-                        zSlideComputer.ActionPermissions.AddNode("Pickup" + itemName, null, "Pickup" + glowstickNameToUse, defaultValue: null, hasDefaultValue: true);
-                        //zSlideComputer.actionNameToMenuNodes.Add(glowstickNameTouse, glowstickNode);
+                        zSlideComputer.ActionPriorities.AddNode(glowstickActionKey, 10, "Pickup", defaultValue: 10f).onChanged.Listen(updateNodeDisplay, args: [glowstickNameToUse, glowstickNode]);
+                        zSlideComputer.ActionPermissions.AddNode(glowstickActionKey, null, "Pickup", defaultValue: null, hasDefaultValue: true).onChanged.Listen(updateNodeDisplay, args: [glowstickNameToUse, glowstickNode]);
+                        zSlideComputer.ActionPermissions.AddNode("Drop" + glowstickNameToUse, true, "Drop", defaultValue: true, hasDefaultValue: true).onChanged.Listen(updateNodeDisplay, args: [glowstickNameToUse, glowstickNode]); ;
                     }
-                    else
-                    {
-                        zSlideComputer.ActionPriorities.AddNode("Pickup" + itemName, null, "Pickup" + glowstickNameToUse, defaultValue: null, hasDefaultValue: true);
-                        zSlideComputer.ActionPermissions.AddNode("Pickup" + itemName, null, "Pickup" + glowstickNameToUse, defaultValue: null, hasDefaultValue: true);
-                        continue;
-                    }
+                    zSlideComputer.ActionPermissions.AddNode(actionKey, null, glowstickActionKey, defaultValue: null, hasDefaultValue: true);
+                    zSlideComputer.ActionPriorities.AddNode(actionKey, null, glowstickActionKey, defaultValue: null, hasDefaultValue: true);
+                    zSlideComputer.ActionPermissions.AddNode("Drop" + itemName, true, "Drop" + glowstickNameToUse, defaultValue: true, hasDefaultValue: true);
                     node = glowstickNode;
+                    if (glowstickNodeExists)
+                        continue;
                 }
                 else
                 {
@@ -61,25 +62,24 @@ namespace BotControl.Menus
                     if (RootPlayerBotAction.s_itemBasePrios.ContainsKey(id))
                         priority = RootPlayerBotAction.s_itemBasePrios[id];
                     node = pickupMenu.AddNode(publicName);
-                    zSlideComputer.ActionPriorities.AddNode("Pickup" + itemName, priority, "Pickup", defaultValue: priority).onChanged.Listen(PickupMenuClass.updateNodePriorityDisplay, args: [itemName, node]);
-                    zSlideComputer.ActionPermissions.AddNode("Pickup" + itemName, null, "Pickup", defaultValue: null, hasDefaultValue: true).onChanged.Listen(PickupMenuClass.updateNodePriorityDisplay, args: [itemName, node]);
+                    zSlideComputer.ActionPriorities.AddNode(actionKey, priority, "Pickup", defaultValue: priority).onChanged.Listen(PickupMenuClass.updateNodeDisplay, args: [itemName, node]);
+                    zSlideComputer.ActionPermissions.AddNode(actionKey, null, "Pickup", defaultValue: null, hasDefaultValue: true).onChanged.Listen(PickupMenuClass.updateNodeDisplay, args: [itemName, node]);
+                    zSlideComputer.ActionPermissions.AddNode("Drop" + itemName, true, "Drop", defaultValue: true, hasDefaultValue: true).onChanged.Listen(PickupMenuClass.updateNodeDisplay, args: [itemName, node]);
                     if (!PlayerAIBot.s_recognisedItemTypes.Contains(id))
                         PlayerAIBot.s_recognisedItemTypes.Add(id);
-                    //zSlideComputer.actionNameToMenuNodes.Add("Pickup"+itemName, node);
                 }
-                //TODO uncomment then when moved over to overide system instead of selection system.
-                //var thisNode = menu.parrentMenu.GetNode(menu.centerNode.text);
-                //thisNode.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
-                //thisNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, menu.Open);
-                //thisNode.AddListener(sMenuManager.nodeEvent.OnTapped, TogglePerms);
-                node.AddListener(sMenuManager.nodeEvent.WhileSelected, ChangePrioBasedOnMouseWheel, itemName, node);
-                node.AddListener(sMenuManager.nodeEvent.OnTapped, zSlideComputer.GenericToggleAllowed, "Pickup"+itemName, node);
-                node.AddListener(sMenuManager.nodeEvent.OnTapped, updateNodePriorityDisplay, itemName, node);
+                string ColoredDropText = AutomaticActionMenuClass.ApplyTextEffect("Drop", AutomaticActionMenuClass.textEffect.Color, true, dropEnabledColor);
+                if (isGlowstick)
+                    actionKey = glowstickActionKey;
+                node.SetTitle($"<color=#CC840066>[ </color>{ColoredDropText}<color=#CC840066> ]</color>");
+                node.AddListener(sMenuManager.nodeEvent.WhileSelected, UpdateAdvancedNodeBasedOnScroll, itemName, node);
+                node.AddListener(sMenuManager.nodeEvent.OnTapped, zSlideComputer.GenericToggleAllowed, actionKey, node);
+                //node.AddListener(sMenuManager.nodeEvent.OnTapped, updateNodeDisplay, itemName, node);
                 node.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, ResetNodeSettings, itemName, node);
                 pickupMenu.centerNode.ClearListeners(sMenuManager.nodeEvent.OnUnpressedSelected);
                 pickupMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnTapped, pickupMenu.parrentMenu.Open);
                 pickupMenu.centerNode.AddListener(sMenuManager.nodeEvent.OnHeldImmediate, ResetNodeSettings, itemName, node);
-                pickupMenu.AddListener(sMenuManager.menuEvent.OnOpened, updateNodePriorityDisplay, itemName, node);
+                //pickupMenu.AddListener(sMenuManager.menuEvent.OnOpened, updateNodeDisplay, itemName, node);
                 node.fullTextPart.SetScale(1f, 1f);
                 node.subtitlePart.SetScale(0.75f, 0.75f);
                 node.titlePart.SetScale(0.5f, 0.5f);
@@ -130,6 +130,32 @@ namespace BotControl.Menus
             pickupMenu.AddPannel(sMenu.sMenuPannel.Side.bottom, "Scroll to change the priority of different items.");
             UpdateNodeSettingsDisplay(pickupNode);
         }
+        private static void UpdateAdvancedNodeBasedOnScroll(string itemName, sMenu.sMenuNode node, int increment = 10)
+        {
+            bool isGlowStick = PickupActionPatch.fullGlowStickNames.Contains(itemName);
+            if (isGlowStick)
+                itemName = glowstickNameToUse;
+            if (node == null || !node.gameObject.activeInHierarchy)
+                return;
+            float scroll = Input.GetAxis("Mouse ScrollWheel");
+            if (scroll == 0f)
+                return;
+            int normalizedScroll = (int)Mathf.Sign(scroll);
+            var pos = Camera.main.WorldToViewportPoint(node.gameObject.transform.position);
+            pos = new Vector2(pos.x - 0.5f, pos.y - 0.5f) * -1;
+            if (pos.y > Math.Abs(pos.x)) // TOP
+            {
+                string actionKey = "Drop" + itemName;
+                bool allowed = !(bool)zSlideComputer.ActionPermissions.ValueAt(actionKey);
+                zSlideComputer.ActionPermissions.SetValue(actionKey, allowed);
+            }
+            else
+            {
+                float currentPrio = (float)zSlideComputer.ActionPriorities.ValueAt("Pickup" + itemName);
+                zSlideComputer.ActionPriorities.SetValue("Pickup" + itemName, Mathf.Clamp(currentPrio + normalizedScroll * increment, 0, 100));
+            }
+            //updateNodeDisplay(itemName, node);
+        }
         private static void UpdateNodeBasedOnScroll(sMenu.sMenuNode node)
         {
             float scroll = Input.GetAxis("Mouse ScrollWheel");
@@ -152,23 +178,17 @@ namespace BotControl.Menus
                 var newValue = Math.Clamp((int)pickupDistance.ValueAt(text) + (int)normalizedScroll, 1, 60);
                 pickupDistance.SetValue(text, newValue);
             }
-            UpdateNodeSettingsDisplay(node);
+            //UpdateNodeSettingsDisplay(node);
         }
         private static void UpdateNodeSettingsDisplay(sMenu.sMenuNode node)
         {
             string actionKey = node.text;
-            //var prio = AutomaticActionMenuClass.ActionPriorities["Pickup"];
             List<IOverrideTree> extraTrees = new()
             {
                 pickupDistance,
             };
-            //bool italic = AutomaticActionMenuClass.AnyTreeOverridesNullDefault(trees, actionKey);
-            //bool star = !AutomaticActionMenuClass.AllMatchingDefaultValue(trees, actionKey);
-            //AutomaticActionMenuClass.ApplyTextEffectToNode(node, AutomaticActionMenuClass.textEffect.Star, star);
-            //AutomaticActionMenuClass.ApplyTextEffectToNode(node, AutomaticActionMenuClass.textEffect.Italic, italic);
             AutomaticActionMenuClass.GenericUpdateNodePrioDisplay(node);
-            AutomaticActionMenuClass.ApplyTextEffects(node, actionKey, extraTrees);
-            //node.SetTitle($"Prio <color=#CC840066>[</color>{zSlideComputer.ActionPriorities.ValueAt(text)}<color=#CC840066>]</color>");
+            AutomaticActionMenuClass.ApplyTextEffectsToNode(node, actionKey, extraTrees);
             node.SetSubtitle($"Range <color=#CC840066>[</color>{pickupDistance.ValueAt(actionKey)}<color=#CC840066>]</color>");
         }
         private static void SetSearchDistance(float distance)
@@ -196,39 +216,51 @@ namespace BotControl.Menus
             pickupDistance.ResetToDefault("Pickup");
             zSlideComputer.ActionPermissions.ResetToDefault("Pickup");
             zSlideComputer.ActionPriorities.ResetToDefault("Pickup");
-            UpdateNodeSettingsDisplay(node);
+            //UpdateNodeSettingsDisplay(node);
         }
         private static void ResetNodeSettings(string itemName, sMenu.sMenuNode node)
         {
             if (!node.gameObject.activeInHierarchy)
                 return;
+            bool isGlowStick = PickupActionPatch.fullGlowStickNames.Contains(itemName);
+            if (isGlowStick)
+                itemName = glowstickNameToUse;
             zSlideComputer.ActionPermissions.ResetToDefault("Pickup" + itemName);
+            zSlideComputer.ActionPermissions.ResetToDefault("Drop" + itemName);
             zSlideComputer.ActionPriorities.ResetToDefault("Pickup" + itemName);
-            updateNodePriorityDisplay(itemName, node);
+            //updateNodeDisplay(itemName, node);
         }
-        public static void updateNodePriorityDisplay(string itemName, sMenu.sMenuNode node)
+        public static void updateNodeDisplay(string itemName, sMenu.sMenuNode node)
         {
-            string actionKey = "Pickup" + itemName;
-            //AutomaticActionMenuClass.GenericUpdateNodeDefaultDisplay(node, actionKey);
-
-            List<IOverrideTree> trees = new()
+            string pickupKey = "Pickup" + itemName;
+            string dropKey = "Drop" + itemName;
+            AutomaticActionMenuClass.GenericUpdateNodeAllowedDisplay(pickupKey, node);
+            List<IOverrideTree> pickupTrees = new()
             {
                 zSlideComputer.ActionPermissions,
                 zSlideComputer.ActionPriorities,
             };
-            bool italic = AutomaticActionMenuClass.AnyTreeOverridesNullDefault(trees, actionKey);
-            bool star = !AutomaticActionMenuClass.AllMatchingDefaultValue(trees, actionKey);
+            List<IOverrideTree> dropTree = new()
+            {
+                zSlideComputer.ActionPermissions,
+            };
+            bool star = AutomaticActionMenuClass.AnyTreeOverridesNullDefault(pickupTrees, pickupKey) || AutomaticActionMenuClass.AnyTreeOverridesNullDefault(dropTree, dropKey);
+            bool italic = !AutomaticActionMenuClass.AllMatchingDefaultValue(pickupTrees, pickupKey) || !AutomaticActionMenuClass.AllMatchingDefaultValue(dropTree, dropKey);
             AutomaticActionMenuClass.ApplyTextEffectToNode(node, AutomaticActionMenuClass.textEffect.Star, star);
             AutomaticActionMenuClass.ApplyTextEffectToNode(node, AutomaticActionMenuClass.textEffect.Italic, italic);
 
-            float prioValue = (float)zSlideComputer.ActionPriorities.ValueAt(actionKey);
+            float prioValue = (float)zSlideComputer.ActionPriorities.ValueAt(pickupKey);
             string hex = ColorUtility.ToHtmlStringRGB(GetPriorityColor(prioValue));
             node.SetSubtitle($"<color=#CC840066>[ </color><color=#{hex}>{prioValue}</color><color=#CC840066> ]</color>");
-            AutomaticActionMenuClass.GenericUpdateNodeAllowedDisplay(actionKey, node);
-            //if ((bool)zSlideComputer.ActionPermissions.ValueAt(actionKey))
-            //    node.SetColor(sMenuManager.defaultColor);
-            //else
-            //    node.SetColor(new Color(0.25f, 0f, 0f));
+
+
+            Color color;
+            if ((bool)zSlideComputer.ActionPermissions.ValueAt("Drop" + itemName))
+                color = dropEnabledColor;
+            else
+                color = sMenuManager.defaultDisabledColor;
+            string ColoredDropText = AutomaticActionMenuClass.ApplyTextEffect("Drop", AutomaticActionMenuClass.textEffect.Color, true, color);
+            node.SetTitle($"<color=#CC840066>[ </color>{ColoredDropText}<color=#CC840066> ]</color>");
         }
         public static Color GetPriorityColor(float value)
         {
@@ -245,18 +277,6 @@ namespace BotControl.Menus
             if (value <= 50f)
                 return Color.Lerp(yellow, green, (value - 25f) / 25f);
             return Color.Lerp(green, blue, (value - 50f) / 50f);
-        }
-        public static void ChangePrioBasedOnMouseWheel(string itemName, sMenu.sMenuNode node, int increment = 10)
-        {
-            if (node == null || !node.gameObject.activeInHierarchy)
-                return;
-            float scroll = Input.GetAxis("Mouse ScrollWheel");
-            int normalizedScroll = (int)Mathf.Sign(scroll);
-            if (scroll == 0f)
-                return;
-            float currentPrio = (float)zSlideComputer.ActionPriorities.ValueAt("Pickup" + itemName);
-            zSlideComputer.ActionPriorities.SetValue("Pickup" + itemName, Mathf.Clamp(currentPrio + normalizedScroll * increment, 0, 100));
-            updateNodePriorityDisplay(itemName, node);
         }
     }
 }

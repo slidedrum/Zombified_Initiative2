@@ -109,8 +109,10 @@ namespace BotControl.Menus
             zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("Ping", true, menu: pingMenu, node: pingMenu.GetNode(), ActionTypeToCull: typeof(PlayerBotActionHighlight), defaultPriority: 4.3f);
             zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("Follow", true, menu: followMenu, node: followMenu.GetNode(), ActionTypeToCull: typeof(PlayerBotActionFollow), defaultPriority: 14f);
             zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("Pickup", true, menu: pickupMenu, node: pickupMenu.GetNode(), ActionTypeToCull: typeof(PlayerBotActionCollectItem), defaultPriority: 4.2f);
+            zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("Drop", true, null, ActionTypeToCull: typeof(PlayerBotActionCollectItem));
             zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("Unlock", true, menu: unlockMenu, node: unlockMenu.GetNode(), ActionTypeToCull: typeof(PlayerBotActionUnlock), defaultPriority: 4.1f);
             zSlideComputer.PermissionDefinitions.CreatePermissionDeffinition("Move", true, null, ActionTypeToCull: typeof(PlayerBotActionWalk));
+
 
             foreach (sMenu menu in autoActionMenus)
             {
@@ -188,9 +190,9 @@ namespace BotControl.Menus
                 node.SetColor((Color)onColor);
             else
                 node.SetColor((Color)offColor);
-            ApplyTextEffects(node, actionKey);
+            ApplyTextEffectsToNode(node, actionKey); //TODO this probably should not be bunlded inside this method.
         }
-        public static void ApplyTextEffects(sMenu.sMenuNode node, string actionKey = null, List<IOverrideTree> extraTrees = null)
+        public static void ApplyTextEffectsToNode(sMenu.sMenuNode node, string actionKey = null, List<IOverrideTree> extraTrees = null)
         {
             if (actionKey == null)
                 actionKey = node.text;
@@ -215,7 +217,7 @@ namespace BotControl.Menus
             float normalizedScroll = (int)Mathf.Sign(scroll) * 0.1f;
             string actionKey = node.text;
             zSlideComputer.ActionPriorities.SetValue(actionKey, Math.Clamp(Mathf.Round(((float)zSlideComputer.ActionPriorities.ValueAt(actionKey) + normalizedScroll) * 10f) / 10f,1f,15f));
-            ApplyTextEffects(node);
+            ApplyTextEffectsToNode(node);
             //GenericUpdateNodePrioDisplay(node);
         }
 
@@ -225,6 +227,7 @@ namespace BotControl.Menus
             Bold,
             Italic,
             Underline,
+            Color,
         }
         public static Dictionary<textEffect, (string prefix, string suffix)> textEffectDict = new()
         {
@@ -232,6 +235,7 @@ namespace BotControl.Menus
             { textEffect.Bold, ("<b>", "</b>") },
             { textEffect.Italic, ("<i>", "</i>") },
             { textEffect.Underline, ("<u>", "</u>") },
+            { textEffect.Color, ("<color=#{0}>", "</color>") },
         };
         //public static void GenericUpdateNodeDefaultDisplay(sMenu.sMenuNode node, string key)
         //{
@@ -328,6 +332,34 @@ namespace BotControl.Menus
                     return false;
             return true;
         }
+        public static string ApplyTextEffect(string text, textEffect effect, bool enabled = true, Color? color = null)
+        {
+            string ret = text;
+
+            string prefix = textEffectDict[effect].prefix;
+            string suffix = textEffectDict[effect].suffix;
+
+            if (effect == textEffect.Color)
+            {
+                string colorHex = ColorUtility.ToHtmlStringRGB(color ?? Color.white);
+                prefix = string.Format(prefix, colorHex);
+            }
+
+            if (enabled)
+            {
+                if (!ret.Contains(prefix))
+                    ret = prefix + ret;
+                if (!ret.Contains(suffix))
+                    ret += suffix;
+            }
+            else
+            {
+                ret = ret.Replace(prefix, "");
+                ret = ret.Replace(suffix, "");
+            }
+
+            return ret;
+        }
         public static void ApplyTextEffectToNode(sMenu.sMenuNode node, textEffect effect, bool enabled = true)
         {
             if (enabled)
@@ -348,7 +380,7 @@ namespace BotControl.Menus
             if (key == null)
                 key = node.text;
             node.SetTitle($"Prio <color=#CC840066>[</color>{zSlideComputer.ActionPriorities.ValueAt(key)}<color=#CC840066>]</color>");
-            ApplyTextEffects(node, key);
+            ApplyTextEffectsToNode(node, key);
         }
         public static void GenericResetSettings(sMenu.sMenuNode node, bool allowDissabled = false, string? actionKey = null)
         {

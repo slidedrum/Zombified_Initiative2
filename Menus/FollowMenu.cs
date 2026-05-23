@@ -325,7 +325,7 @@ namespace BotControl.Menus
             //AutomaticActionMenuClass.ApplyTextEffectToNode(node, AutomaticActionMenuClass.textEffect.Italic, italic);
             AutomaticActionMenuClass.GenericUpdateNodePrioDisplay(node);
             AutomaticActionMenuClass.GenericUpdateNodeAllowedDisplay(actionKey, node);
-            AutomaticActionMenuClass.ApplyTextEffects(node, actionKey, extraTrees);
+            AutomaticActionMenuClass.ApplyTextEffectsToNode(node, actionKey, extraTrees);
             //node.SetTitle($"Prio <color=#CC840066>[</color>{zSlideComputer.ActionPriorities.ValueAt(text)}<color=#CC840066>]</color>");
             node.SetSubtitle($"Range <color=#CC840066>[</color>{followRadius.ValueAt(actionKey)}/{maxDistance.ValueAt(actionKey)}<color=#CC840066>]</color>");
         }

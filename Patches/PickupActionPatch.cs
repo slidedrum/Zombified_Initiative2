@@ -349,11 +349,11 @@ namespace BotControl.Patches
                 if (collectItemActionDescriptor.Prio <= bestAction.Prio)
                     return false;
             }
-
+            var backpack = __instance.m_backpack;
             // If we have a backpack, and it already has slot 8 occupied -> don't pick up anything.
-            if (__instance.m_backpack != null)
+            if (backpack != null)
             {
-                if (__instance.m_backpack.HasBackpackItem(InventorySlot.InLevelCarry))
+                if (backpack.HasBackpackItem(InventorySlot.InLevelCarry))
                     return false;
             }
 
@@ -557,6 +557,14 @@ namespace BotControl.Patches
                             BackpackItem existing;
                             if (__instance.m_backpack.TryGetBackpackItem(dataBlock.inventorySlot, out existing))
                             {
+                                var itemID = existing.ItemID;
+                                var block = ItemDataBlock.GetBlock(itemID);
+                                var itemInternalName = block.name;
+                                var actionKey = "Drop" + itemInternalName;
+                                if (!(bool)zSlideComputer.ActionPermissions.ValueAt(actionKey))
+                                { // are we allowed to drop the item we already have?
+                                    continue;
+                                }
                                 // If the existing backpack item has equal-or-better priority, skip this item
                                 float existingPrio = __instance.GetItemPrio(dataBlock.inventorySlot, existing.ItemID);
                                 if (itemPrio <= existingPrio)
