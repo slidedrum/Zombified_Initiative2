@@ -2,9 +2,9 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using static ZombieTweak2.SmartSelect.zSmartSelect;
+using static BotControl.SmartSelect.zSmartSelect;
 
-namespace ZombieTweak2.SmartSelect
+namespace BotControl.SmartSelect
 {
     internal static class ssInputHandler
     {

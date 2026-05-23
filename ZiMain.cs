@@ -16,7 +16,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using ZombieTweak2.SmartSelect;
+using BotControl.SmartSelect;
 using static BotControl.Networking.pStructs;
 
 /*

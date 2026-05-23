@@ -4,9 +4,8 @@ using Player;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using BotControl;
 
-namespace ZombieTweak2.SmartSelect
+namespace BotControl.SmartSelect
 {
     public class Selection
     {
