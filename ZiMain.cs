@@ -539,7 +539,7 @@ public class ZiMain : BasePlugin
             Haste = haste,
         };
         PlayerVoiceManager.WantToSay(commander.CharacterID, AK.EVENTS.PLAY_CL_GRABTHEITEM);
-        BotControl.FlexibleMethodDefinition barkback = new BotControl.FlexibleMethodDefinition(PlayerVoiceManager.WantToSay, [aiBot.Agent.CharacterID, AK.EVENTS.PLAY_CL_WILLDO]);
+        FlexibleMethodDefinition barkback = new FlexibleMethodDefinition(PlayerVoiceManager.WantToSay, [aiBot.Agent.CharacterID, AK.EVENTS.PLAY_CL_WILLDO]);
         zUpdater.InvokeStatic(barkback, 1f);
         if ((bool)zSlideComputer.ActionPermissions.ValueAt("Notify confirm action"))
             sendChatMessage($"Picking up {item.PublicName}",aiBot.Agent,commander);
@@ -631,7 +631,7 @@ public class ZiMain : BasePlugin
             }
         }
         var descriptor = SendBotToKillEnemy(aiBot, closestEnemy, commander);
-        BotControl.FlexibleMethodDefinition callback = new(SendBotToClearCurrentRoom,[aiBot,commander, netsender]);
+        FlexibleMethodDefinition callback = new(SendBotToClearCurrentRoom,[aiBot,commander, netsender]);
         zActionSub.addOnTerminated(descriptor, callback);
     }
 } // plugin
