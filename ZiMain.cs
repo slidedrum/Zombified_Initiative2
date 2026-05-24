@@ -138,7 +138,16 @@ public class ZiMain : BasePlugin
     public static bool rootmenusetup = false;
 
     public static System.Random rng = new System.Random();
-    public static bool HasBetterBots { get; private set; }
+    private static bool? _HasBetterBots;
+    public static bool HasBetterBots
+    {
+        get
+        {
+            if (_HasBetterBots == null)
+                _HasBetterBots = IL2CPPChainloader.Instance.Plugins.ContainsKey("com.east.bb");
+            return (bool)_HasBetterBots;
+        }
+    }
 
     public static int approachWakeChance = 5;
     public static int wakeChancePerSecond = 20;
@@ -150,7 +159,7 @@ public class ZiMain : BasePlugin
 
     public override void Load()
     {
-        HasBetterBots = IL2CPPChainloader.Instance.Plugins.ContainsKey("com.east.bb");
+        
         Harmony m_Harmony = new Harmony("ZombieController");
         m_Harmony.PatchAll();
         ClassInjector.RegisterTypeInIl2Cpp<zUpdater>();
