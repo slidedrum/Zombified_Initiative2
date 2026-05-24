@@ -1,10 +1,11 @@
-﻿using System;
+﻿using BotControl;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
-using BotControl;
+using static ZombieTweak2.SmartSelect.zSmartSelect;
 using static SlideMenu.sMenu.TextPart;
 
 namespace SlideMenu
@@ -90,27 +91,43 @@ namespace SlideMenu
             public float lastTapTime = Time.time;
             public sMenu parrentMenu;
 
-            private readonly FlexibleEvent OnPressed = new();
-            private readonly FlexibleEvent WhilePressed = new();
-            private readonly FlexibleEvent OnUnpressed = new();
-            private readonly FlexibleEvent OnUnpressedSelected = new();
-            private readonly FlexibleEvent WhileUnpressed = new();
-            private readonly FlexibleEvent OnSelected = new();
-            private readonly FlexibleEvent WhileSelected = new();
-            private readonly FlexibleEvent OnDeselected = new();
-            private readonly FlexibleEvent WhileDeselected = new();
-            private readonly FlexibleEvent OnDoubleTapped = new();
-            private readonly FlexibleEvent OnTappedExclusive = new();
-            private readonly FlexibleEvent OnTappedThenHeld = new(); //TODO?
-            private readonly FlexibleEvent OnTapped = new();
-            private readonly FlexibleEvent OnHeld = new();
-            private readonly FlexibleEvent WhileHeld = new();
-            private readonly FlexibleEvent OnHeldSelected = new();
-            private readonly FlexibleEvent WhileHeldSelected = new();
-            private readonly FlexibleEvent OnHeldImmediate = new();
-            private readonly FlexibleEvent OnHeldImmediateSelected = new();
+            //private readonly FlexibleEvent OnPressed = new();
+            //private readonly FlexibleEvent WhilePressed = new();
+            //private readonly FlexibleEvent OnUnpressed = new();
+            //private readonly FlexibleEvent OnUnpressedSelected = new();
+            //private readonly FlexibleEvent WhileUnpressed = new();
+            //private readonly FlexibleEvent OnSelected = new();
+            //private readonly FlexibleEvent WhileSelected = new();
+            //private readonly FlexibleEvent OnDeselected = new();
+            //private readonly FlexibleEvent WhileDeselected = new();
+            //private readonly FlexibleEvent OnDoubleTapped = new();
+            //private readonly FlexibleEvent OnTappedExclusive = new();
+            //private readonly FlexibleEvent OnTappedThenHeld = new(); //TODO?
+            //private readonly FlexibleEvent OnTapped = new();
+            //private readonly FlexibleEvent OnHeld = new();
+            //private readonly FlexibleEvent WhileHeld = new();
+            //private readonly FlexibleEvent OnHeldSelected = new();
+            //private readonly FlexibleEvent WhileHeldSelected = new();
+            //private readonly FlexibleEvent OnHeldImmediate = new();
+            //private readonly FlexibleEvent OnHeldImmediateSelected = new();
 
-            private Dictionary<sMenuManager.nodeEvent, FlexibleEvent> eventMap;
+            //private Dictionary<sMenuManager.nodeEvent, FlexibleEvent> eventMap;
+            private Dictionary<sMenuManager.nodeEvent, FlexibleEvent> _eventMap;
+            private Dictionary<sMenuManager.nodeEvent, FlexibleEvent> eventMap
+            {
+                get
+                {
+                    if (_eventMap == null)
+                    {
+                        _eventMap = new();
+                        foreach (sMenuManager.nodeEvent evt in Enum.GetValues<sMenuManager.nodeEvent>())
+                        {
+                            _eventMap[evt] = new FlexibleEvent();
+                        }
+                    }
+                    return _eventMap;
+                }
+            }
             public TextPart fullTextPart;//todo make these private and add setters and getters for font stuff.
             public TextPart titlePart;
             public TextPart subtitlePart;
@@ -156,28 +173,6 @@ namespace SlideMenu
 
             public sMenuNode(string arg_Name, sMenu arg_parrentMenu, FlexibleMethodDefinition arg_Callback)
             {
-
-                eventMap = new Dictionary<sMenuManager.nodeEvent, FlexibleEvent>(){
-                    { sMenuManager.nodeEvent.OnPressed, OnPressed },
-                    { sMenuManager.nodeEvent.WhilePressed, WhilePressed },
-                    { sMenuManager.nodeEvent.OnUnpressed, OnUnpressed },
-                    { sMenuManager.nodeEvent.OnUnpressedSelected, OnUnpressedSelected },
-                    { sMenuManager.nodeEvent.WhileUnpressed, WhileUnpressed },
-                    { sMenuManager.nodeEvent.OnSelected, OnSelected },
-                    { sMenuManager.nodeEvent.WhileSelected, WhileSelected },
-                    { sMenuManager.nodeEvent.OnDeselected, OnDeselected },
-                    { sMenuManager.nodeEvent.WhileDeselected, WhileDeselected },
-                    { sMenuManager.nodeEvent.OnDoubleTapped, OnDoubleTapped },
-                    { sMenuManager.nodeEvent.OnTapped, OnTapped },
-                    { sMenuManager.nodeEvent.OnHeld, OnHeld },
-                    { sMenuManager.nodeEvent.WhileHeld, WhileHeld },
-                    { sMenuManager.nodeEvent.OnHeldSelected, OnHeldSelected },
-                    { sMenuManager.nodeEvent.WhileHeldSelected, WhileHeldSelected },
-                    { sMenuManager.nodeEvent.OnHeldImmediate, OnHeldImmediate },
-                    { sMenuManager.nodeEvent.OnHeldImmediateSelected, OnHeldImmediateSelected },
-                    { sMenuManager.nodeEvent.OnTappedExclusive, OnTappedExclusive },
-                };
-
                 gameObject = new($"sMenuNode {arg_Name}");
                 gameObject.transform.SetParent(arg_parrentMenu.getCanvas().transform, false);
                 backgroundObject = new GameObject("Background");
@@ -197,7 +192,7 @@ namespace SlideMenu
                 //rect.sizeDelta = new Vector2(300, 0);
 
                 parrentMenu = arg_parrentMenu;
-                if (arg_Callback != null) OnUnpressedSelected.Listen(arg_Callback);
+                if (arg_Callback != null) eventMap[sMenuManager.nodeEvent.OnUnpressedSelected].Listen(arg_Callback);
                 color = parrentMenu.getTextColor();
 
                 VerticalLayoutGroup layout = TextPartGameObject.AddComponent<VerticalLayoutGroup>();
@@ -230,13 +225,13 @@ namespace SlideMenu
             {
                 if (selected)
                 {
-                    WhileSelected.Invoke();
+                    eventMap[sMenuManager.nodeEvent.WhileSelected].Invoke();
                     parrentMenu.selectedNode = this;
                 }
                 else
-                    WhileDeselected.Invoke();
+                    eventMap[sMenuManager.nodeEvent.WhileDeselected].Invoke();
                 if (!pressed)
-                    WhileUnpressed.Invoke();
+                    eventMap[sMenuManager.nodeEvent.WhileUnpressed].Invoke();
                 //if (pressed && Time.frameCount - frameLastPressedAt > 2)
                 //    Unpress();
                 //FaceCamera();
@@ -310,7 +305,7 @@ namespace SlideMenu
                 if (selected) return this;
                 selected = true;
                 SetSize(sMenuManager.selectedNodeSizeMultiplier);
-                OnSelected.Invoke();
+                eventMap[sMenuManager.nodeEvent.OnSelected].Invoke();
                 parrentMenu.OnSelected.Invoke();
                 return this;
             }
@@ -319,7 +314,7 @@ namespace SlideMenu
                 if (!selected) return this;
                 selected = false;
                 SetSize(1f);
-                OnDeselected.Invoke();
+                eventMap[sMenuManager.nodeEvent.OnDeselected].Invoke();
                 parrentMenu.OnDeselected.Invoke();
                 return this;
             }
@@ -327,23 +322,23 @@ namespace SlideMenu
             {
                 frameLastPressedAt = Time.frameCount;
                 timeLastPressedAt = Time.time;
-                WhilePressed.Invoke();
+                eventMap[sMenuManager.nodeEvent.WhilePressed].Invoke();
                 float heldTime = Time.time - timeFirstPressedAt;
                 if (heldTime > holdThreshold)
                 {
                     if (held)
                     {
                         if (selected)
-                            WhileHeldSelected.Invoke();
+                            eventMap[sMenuManager.nodeEvent.WhileHeldSelected].Invoke();
                         else
-                            WhileHeld.Invoke();
+                            eventMap[sMenuManager.nodeEvent.WhileHeld].Invoke();
                     }
                     else
                     {
                         held = true;
                         if (selected)
-                            OnHeldImmediateSelected.Invoke();
-                        OnHeldImmediate.Invoke();
+                            eventMap[sMenuManager.nodeEvent.OnHeldImmediateSelected].Invoke();
+                        eventMap[sMenuManager.nodeEvent.OnHeldImmediate].Invoke();
                     }
                 }
                 return this;
@@ -353,7 +348,7 @@ namespace SlideMenu
                 frameFirstPressedAt = Time.frameCount;
                 timeFirstPressedAt = Time.time;
                 pressed = true;
-                OnPressed.Invoke();
+                eventMap[sMenuManager.nodeEvent.OnPressed].Invoke();
                 if (closeOnPress)
                 {
                     sMenuManager.CloseAllMenus();
@@ -366,25 +361,23 @@ namespace SlideMenu
 
                 if (pressed)
                 {
-                    OnUnpressed.Invoke();
+                    eventMap[sMenuManager.nodeEvent.OnUnpressed].Invoke();
                     if (held)
-                        OnHeld.Invoke();
+                        eventMap[sMenuManager.nodeEvent.OnHeld].Invoke();
                     if (selected)
-                        OnUnpressedSelected.Invoke();
+                        eventMap[sMenuManager.nodeEvent.OnUnpressedSelected].Invoke();
                     if (held && selected)
-                        OnHeldSelected.Invoke();
+                        eventMap[sMenuManager.nodeEvent.OnHeldSelected].Invoke();
 
                     // If released quickly enough = tap
                     if (Time.time - timeFirstPressedAt < holdThreshold)
                     {
-                        OnTapped.Invoke();
+                        eventMap[sMenuManager.nodeEvent.OnTapped].Invoke();
                         if (Time.time - lastTapTime <= doubleTapThreshold)
-                        {
-                            OnDoubleTapped.Invoke();
-                        }
+                            eventMap[sMenuManager.nodeEvent.OnDoubleTapped].Invoke();
                         else
                         {
-                            zUpdater.InvokeStatic(new BotControl.FlexibleMethodDefinition(InvokeTappedExclusive), doubleTapThreshold - (Time.deltaTime / 2));
+                            zUpdater.InvokeStatic(new FlexibleMethodDefinition(InvokeTappedExclusive), doubleTapThreshold - (Time.deltaTime / 2));
                         }
                         lastTapTime = Time.time;
                     }
@@ -397,9 +390,7 @@ namespace SlideMenu
             {
                 // If no second tap happened (lastTapTime is still within threshold window)
                 if (Time.time - lastTapTime >= doubleTapThreshold - Time.deltaTime && !pressed)
-                {
-                    OnTappedExclusive.Invoke();
-                }
+                    eventMap[sMenuManager.nodeEvent.OnTappedExclusive].Invoke();
             }
             //public sMenuNode AddListener<T>(sMenuManager.nodeEvent arg_event, Action<T> method, T arg)
             //{

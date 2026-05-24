@@ -6,6 +6,7 @@ using UnityEngine;
 using BotControl.zRootBotPlayerAction;
 using BotControl;
 using static BotControl.ZiMain;
+using SlideMenu;
 
 namespace BotControl.Patches;
 
