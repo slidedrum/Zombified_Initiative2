@@ -1,6 +1,7 @@
 ﻿using Enemies;
 using LevelGeneration;
 using Player;
+using SlideMenu;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -215,7 +216,8 @@ namespace BotControl.SmartSelect
             lookingObject lookingAt = GetFilteredObjectLookingAt();
             if (lookingAt.type == objectType.None && Vector3.Angle(cameraTransform.forward, Vector3.up) < 15f && selection.getBotGobject() != null)
             {
-                ZiMain.sendChatMessage("Nevermind.", selection.getBotGobject().GetComponent<PlayerAgent>(), localPlayer);
+                if ((bool)zSlideComputer.ActionPermissions.ValueAt("Notify smart selected"))
+                    ZiMain.sendChatMessage("Nevermind.", selection.getBotGobject().GetComponent<PlayerAgent>(), localPlayer);
                 selection.setBot(null);
                 return;
             }
@@ -249,7 +251,8 @@ namespace BotControl.SmartSelect
                     return;
                 FlexibleMethodDefinition barkback = new FlexibleMethodDefinition(PlayerVoiceManager.WantToSay,[botId, AK.EVENTS.PLAY_CL_YES]); //yes
                 zUpdater.InvokeStatic(barkback, 1f);
-                ZiMain.sendChatMessage("I'm ready", agent, localPlayer);
+                if ((bool)zSlideComputer.ActionPermissions.ValueAt("Notify smart selected"))
+                    ZiMain.sendChatMessage("I'm ready", agent, localPlayer);
                 selection.setBot(lookingAt.gobject);
             }
         }

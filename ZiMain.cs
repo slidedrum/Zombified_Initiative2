@@ -235,7 +235,8 @@ public class ZiMain : BasePlugin
             //This actually triggers when they drop the item.
             var descriptor = action.DescBase.Cast<PlayerBotActionCarryExpeditionItem.Descriptor>();
             log.LogInfo($"{bot.Agent.PlayerName} completed collect {descriptor.TargetItem._PublicName_k__BackingField} task with status: {action.DescBase.Status}  access layers {descriptor.m_accessLayers}");
-            sendChatMessage($"I put down the {descriptor.TargetItem._PublicName_k__BackingField}.", bot.Agent);
+            if ((bool)zSlideComputer.ActionPermissions.ValueAt("Notify pickup"))
+                sendChatMessage($"I put down the {descriptor.TargetItem._PublicName_k__BackingField}.", bot.Agent);
             //What happens when the temp drop it out of combat?  Does that trigger here?
         }
         else if (typeName == "PlayerBotActionCollectItem")
@@ -260,18 +261,23 @@ public class ZiMain : BasePlugin
                 string ammocount = "";
                 if (ammoLeft > 0)
                     ammocount = " (" + ammoLeft + typeUsesPercent + ")";
-                sendChatMessage($"I {actionName} {article} {publicName}{ammocount}.", bot.Agent);
+                if ((bool)zSlideComputer.ActionPermissions.ValueAt("Notify pickup"))
+                    sendChatMessage($"I {actionName} {article} {publicName}{ammocount}.", bot.Agent);
             }
-            else if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Failed)
-                sendChatMessage($"I couldn't get {article} {publicName}.", bot.Agent);
-            else if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Interrupted)
-                sendChatMessage($"I can't get {article} {publicName} right now.", bot.Agent);
-            else if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Aborted)
-                sendChatMessage($"I can't get {article} {publicName} right now.", bot.Agent);
-            else if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Stopped)
-                sendChatMessage($"I can't get {article} {publicName} right now.", bot.Agent);
-            else if (!(action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Active))
-                sendChatMessage($"I can't get {article} {publicName} status {action.DescBase.Status}.", bot.Agent);
+            else if ((bool)zSlideComputer.ActionPermissions.ValueAt("Notify pickup fail"))
+            {
+                if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Failed)
+                    sendChatMessage($"I couldn't get {article} {publicName}.", bot.Agent);
+                else if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Interrupted)
+                    sendChatMessage($"I can't get {article} {publicName} right now.", bot.Agent);
+                else if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Aborted)
+                    sendChatMessage($"I can't get {article} {publicName} right now.", bot.Agent);
+                else if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Stopped)
+                    sendChatMessage($"I can't get {article} {publicName} right now.", bot.Agent);
+                else if (!(action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Active))
+                    sendChatMessage($"I can't get {article} {publicName} status {action.DescBase.Status}.", bot.Agent);
+            }
+
         }
         else if (typeName == "PlayerBotActionShareResourcePack")
         {
@@ -288,17 +294,23 @@ public class ZiMain : BasePlugin
             string receverOrMyslef = descriptor.Receiver == bot.Agent ? "myself" : descriptor.Receiver.PlayerName;
             log.LogInfo($"Got receiver or myself {receverOrMyslef}");
             if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Successful)
-                sendChatMessage($"I gave {receverOrMyslef} {article} {descriptor.Item.PublicName} ({ammoLeft}%).", bot.Agent);
-            else if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Failed)
-                sendChatMessage($"I coul't give {receverOrMyslef} {article} {descriptor.Item.PublicName} ({ammoLeft}%).", bot.Agent);
-            else if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Interrupted)
-                sendChatMessage($"I can't give {receverOrMyslef} {article} {descriptor.Item.PublicName} ({ammoLeft}%) right now.", bot.Agent);
-            else if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Aborted)
-                sendChatMessage($"I can't give {receverOrMyslef} {article} {descriptor.Item.PublicName} ({ammoLeft}%) right now.", bot.Agent);
-            else if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Stopped)
-                sendChatMessage($"I can't give {receverOrMyslef} {article} {descriptor.Item.PublicName} ({ammoLeft}%) right now.", bot.Agent);
-            else
-                sendChatMessage($"I can't give {receverOrMyslef} {article} {descriptor.Item.PublicName} ({ammoLeft}%) status {action.DescBase.Status}.", bot.Agent);
+                if ((bool)zSlideComputer.ActionPermissions.ValueAt("Notify resource share"))
+                    sendChatMessage($"I gave {receverOrMyslef} {article} {descriptor.Item.PublicName} ({ammoLeft}%).", bot.Agent);
+                else { }
+            else if ((bool)zSlideComputer.ActionPermissions.ValueAt("Notify share fail"))
+            {
+                if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Failed)
+                    sendChatMessage($"I coul't give {receverOrMyslef} {article} {descriptor.Item.PublicName} ({ammoLeft}%).", bot.Agent);
+                else if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Interrupted)
+                    sendChatMessage($"I can't give {receverOrMyslef} {article} {descriptor.Item.PublicName} ({ammoLeft}%) right now.", bot.Agent);
+                else if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Aborted)
+                    sendChatMessage($"I can't give {receverOrMyslef} {article} {descriptor.Item.PublicName} ({ammoLeft}%) right now.", bot.Agent);
+                else if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Stopped)
+                    sendChatMessage($"I can't give {receverOrMyslef} {article} {descriptor.Item.PublicName} ({ammoLeft}%) right now.", bot.Agent);
+                else
+                    sendChatMessage($"I can't give {receverOrMyslef} {article} {descriptor.Item.PublicName} ({ammoLeft}%) status {action.DescBase.Status}.", bot.Agent);
+            }
+
         }
         //else if (typeName == "PlayerBotActionTravel")
         //{
@@ -401,7 +413,8 @@ public class ZiMain : BasePlugin
             info.enemy = pStructs.Get_pStructFromRefrence(enemy);
             info.aiBot = pStructs.Get_pStructFromRefrence(aiBot.Agent);
             info.commander = pStructs.Get_pStructFromRefrence(commander); //This might be a problem in commander is null?  Not sure. TODO look into it.
-            NetworkAPI.InvokeEvent<pAttackEnemyInfo>("RequestToKillEnemy", info);
+            if ((bool)zSlideComputer.ActionPermissions.ValueAt("Notify confirm action"))
+                NetworkAPI.InvokeEvent<pAttackEnemyInfo>("RequestToKillEnemy", info);
             return null;
         }
         var descriptor = new PlayerBotActionAttack.Descriptor(aiBot)
@@ -484,7 +497,8 @@ public class ZiMain : BasePlugin
             TargetItem = item,
             Prio = prio,
         };
-        sendChatMessage($"Carrying {item._PublicName_k__BackingField}", aiBot.Agent, commander);
+        if ((bool) zSlideComputer.ActionPermissions.ValueAt("Notify confirm action"))
+            sendChatMessage($"Carrying {item._PublicName_k__BackingField}", aiBot.Agent, commander);
         PlayerVoiceManager.WantToSay(aiBot.Agent.CharacterID, AK.EVENTS.PLAY_CL_WILLDO); //will do
         zActions.manualActions.Add(desc);
         aiBot.StartAction(desc);
@@ -527,7 +541,8 @@ public class ZiMain : BasePlugin
         PlayerVoiceManager.WantToSay(commander.CharacterID, AK.EVENTS.PLAY_CL_GRABTHEITEM);
         BotControl.FlexibleMethodDefinition barkback = new BotControl.FlexibleMethodDefinition(PlayerVoiceManager.WantToSay, [aiBot.Agent.CharacterID, AK.EVENTS.PLAY_CL_WILLDO]);
         zUpdater.InvokeStatic(barkback, 1f);
-        sendChatMessage($"Picking up {item.PublicName}",aiBot.Agent,commander);
+        if ((bool)zSlideComputer.ActionPermissions.ValueAt("Notify confirm action"))
+            sendChatMessage($"Picking up {item.PublicName}",aiBot.Agent,commander);
         zActions.manualActions.Add(desc);
         aiBot.StartAction(desc);
     }
