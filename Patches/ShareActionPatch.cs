@@ -9,6 +9,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 using BotControl;
+using ZombieTweak2;
 
 namespace BotControl.Patches
 {
@@ -117,7 +118,7 @@ namespace BotControl.Patches
             if (!(bool)zSlideComputer.ActionPermissions.ValueAt(actionKey))
                 return false; //Do we have permission to share this item?
 
-            if (ZiMain.HasBetterBots && CheckBetterBotsDanger(__instance.m_agent.gameObject))
+            if (ZiMain.HasBetterBots && BBCompat.CheckDanger(__instance.m_agent))
                 return false; // skip sharing if bot is in danger
 
             PlayerAmmoStorage ammoStorage = backpack.AmmoStorage;
@@ -237,15 +238,6 @@ namespace BotControl.Patches
             }
             return false;
         }
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        private static bool CheckBetterBotsDanger(GameObject agentGO)
-        {
-            BotRecorder BotRecorder = agentGO.GetComponent<BotRecorder>();
-            if (BotRecorder != null)
-            {
-                return BotRecorder.IsInDangerousSituation();
-            }
-            return false;
-        }
+
     }
 }

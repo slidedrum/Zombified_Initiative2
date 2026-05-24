@@ -138,7 +138,16 @@ public class ZiMain : BasePlugin
     public static bool rootmenusetup = false;
 
     public static System.Random rng = new System.Random();
-    public static bool HasBetterBots { get; private set; }
+    private static bool? _HasBetterBots;
+    public static bool HasBetterBots
+    {
+        get
+        {
+            if (_HasBetterBots == null)
+                _HasBetterBots = IL2CPPChainloader.Instance.Plugins.ContainsKey("com.east.bb");
+            return (bool)_HasBetterBots;
+        }
+    }
 
     public static int approachWakeChance = 5;
     public static int wakeChancePerSecond = 20;
@@ -150,7 +159,7 @@ public class ZiMain : BasePlugin
 
     public override void Load()
     {
-        HasBetterBots = IL2CPPChainloader.Instance.Plugins.ContainsKey("com.east.bb");
+        
         Harmony m_Harmony = new Harmony("ZombieController");
         m_Harmony.PatchAll();
         ClassInjector.RegisterTypeInIl2Cpp<zUpdater>();
@@ -254,14 +263,14 @@ public class ZiMain : BasePlugin
                 sendChatMessage($"I {actionName} {article} {publicName}{ammocount}.", bot.Agent);
             }
             else if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Failed)
-                sendChatMessage($"I coul't get {article} {publicName}.", bot.Agent);
+                sendChatMessage($"I couldn't get {article} {publicName}.", bot.Agent);
             else if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Interrupted)
                 sendChatMessage($"I can't get {article} {publicName} right now.", bot.Agent);
             else if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Aborted)
                 sendChatMessage($"I can't get {article} {publicName} right now.", bot.Agent);
             else if (action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Stopped)
                 sendChatMessage($"I can't get {article} {publicName} right now.", bot.Agent);
-            else
+            else if (!(action.DescBase.Status == PlayerBotActionBase.Descriptor.StatusType.Active))
                 sendChatMessage($"I can't get {article} {publicName} status {action.DescBase.Status}.", bot.Agent);
         }
         else if (typeName == "PlayerBotActionShareResourcePack")
@@ -350,8 +359,14 @@ public class ZiMain : BasePlugin
     {
         
     }
+    private static (string, int, int) previousMessage;
     public static void sendChatMessage(string message,PlayerAgent sender = null, PlayerAgent receiver = null)
     {
+        var thisMessage = (message, sender.PlayerSlotIndex, sender.PlayerSlotIndex);
+        bool same = thisMessage == previousMessage;
+        previousMessage = thisMessage;
+        if (same)
+            return;
         if ((bool)zSlideComputer.ActionPermissions.ValueAt("TalkInChat"))
             PlayerChatManager.WantToSentTextMessage(sender != null ? sender : PlayerManager.GetLocalPlayerAgent(), message, receiver);
     }
