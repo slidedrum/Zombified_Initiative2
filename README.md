@@ -67,10 +67,17 @@ There is A LOT of unused code and extra stuff in this mod.  I got a little bit t
 
 
 ### Changelog
+V1.0.3
+ - Stopped bots from repeatedly spamming chat with failed actions.
+ - Added bots talk in chat sub menu letting you disable indiviual things they say.
+ - Added drop permissions to the pickup submenu. This will let you tell bots to only replace their resource packs once they are gone.
+ - Fixed a compatability bug with Better Bots where bots would't revive you after you go down.
+ - Fixed minor typo.
+
 V1.0.2
  - Fixed disinfect pickup threshold being inverted.
  - Bots no longer use auto disinfect pacs in fog.  
- - Added a (WIP) option to stop bots from dropping their items in the pickup submenu
+ - Added a (WIP) option to stop bots from dropping their items in the pickup submenu.
 
 V1.0.1
- - Updated readme
+ - Updated readme.
