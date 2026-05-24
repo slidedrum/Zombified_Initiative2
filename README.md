@@ -69,7 +69,7 @@ There is A LOT of unused code and extra stuff in this mod.  I got a little bit t
 ### Changelog
 V1.0.3
  - Stopped bots from repeatedly spamming chat with failed actions.
- - Added bots talk in chat sub menu letting you disable indiviual things they say.
+ - Added sub menu for bots talking settings letting you disable indiviual things they say.
  - Added drop permissions to the pickup submenu. This will let you tell bots to only replace their resource packs once they are gone.
  - Fixed a compatability bug with Better Bots where bots would't revive you after you go down.
  - Fixed minor typo.
