@@ -12,25 +12,28 @@ namespace BotControl.SmartSelect
             OnPressed, //*Triggered on the first frame the button is pressed
             WhilePressed, //*Triggered on every frame the button is pressed
             OnUnpressed, //*Triggered the first frame the button goes from pressed to unpressed
-            OnUnpressedExclusive, //*Triggered for one frame when the button has been unpressed for tap threshold
+            OnUnpressedExclusive, //Triggered for one frame when the button has been unpressed for tap threshold
             WhileUnpressed, //*Triggered on every frame the button is not pressed
-            WhileUnpressedExclusive, //*Triggered on every frame the button is not pressed, after tap threshold has expried.
-            OnTapped, //*Triggered when the hold time is less than tap threshold
-            OnTappedExclusive, //*Triggered if tapped, but invoked after double tap window expires to make sure it's not a double tap
-            OnDoubleTapped, //*triggered on the first frame the 2nd tap is released
-            OnDoubleTappedExclusive, //*triggered on the frame where the double tap and hold window expires.
+            WhileUnpressedExclusive, //Triggered on every frame the button is not pressed, after tap threshold has expried.
+            OnTapped, //*Triggered on release when the hold time is less than tap threshold
+            OnTappedExclusive, //Triggered if tapped, but invoked after double tap window expires to make sure it's not a double tap
+            OnDoublePressed, //*triggered on press the first frame the 2nd tap is pressed
+            OnDoubleTapped, //*triggered on relese the first frame the 2nd tap is released, even if the 2nd press is a hold.
+            OnDoubleTappedStrict, //*triggered on the first frame the 2nd tap is released. if both are within tap threshold
+            OnDoubleTappedStrictExclusive, //triggered on the frame where the double tap and hold window expires if released at that time.
+            OnDoubleTappedExclusive, //triggered on the frame where the double tap and hold window expires if held, or when the tap and hold triggers.
             OnHeld, //*Triggered the first frame the button is released if the tap threshold is exceeded
             WhileHeld, //*triggered every frame the button is held starting after the tap threshold is exceeded.
             WhileHeldExclusive, //triggered every frame the button is held starting after the tap threshold is exceeded, but only when not a tapandhold and not doubletapandhold
-            OnHeldImmediate, //*Triggered the first frame when the tap threshold is exceeded.
+            OnHeldImmediate, //Triggered the first frame when the tap threshold is exceeded.
             OnHeldImmediateExclusive, //Triggered the first frame when the tap threshold is exceeded, but only the first hold, not on tapandhold and not on doubletapandhold
-            OnTapAndHold, //Triggered after a single tap is triggered and then the tap threshold is exceded on what would be a double tap.  This is triggered on one frame, after the hold is released. (2 total presses)
+            OnTapAndHold, //*Triggered on release after a single tap is triggered and then the tap threshold is exceded on what would be a double tap.  This is triggered on one frame, after the hold is released. (2 total presses)
             OnTapAndHoldExclusive, //Triggered after a single tap is triggered and then the tap threshold is exceded on what would be a double tap.  This is triggered on one frame, after the hold is released. (2 total presses) but not on doubletap and hold
             WhileTapAndHold, //Triggered after a single tap is triggered and then the tap threshold is exceded on what would be a double tap.  This is triggered every frame until the key is released. (2 total presses)
             WhileTapAndHoldExclusive, //Triggered after a single tap is triggered and then the tap threshold is exceded on what would be a double tap.  This is triggered every frame until the key is released. (2 total presses) but not while doubletap and hold
             OnTapAndHoldImmediate, //Triggered after a single tap is triggered and then the tap threshold is exceded on what would be a double tap.  This is triggered on the single frame when the tap threshold is passed. (2 total presses)
             OnTapAndHoldImmediateExclusive, //Triggered after a single tap is triggered and then the tap threshold is exceded on what would be a double tap.  This is triggered on the single frame when the tap threshold is passed. (2 total presses) but not on the double tap and hold
-            OnDoubleTapAndHold, //Triggered after a double tap is triggered and then the tap threshold is exceded on what would be a tripple tap. This is triggered on one frame, after the hold is released. (3 total presses)
+            OnDoubleTapAndHold, //*Triggered after a double tap is triggered and then the tap threshold is exceded on what would be a tripple tap. This is triggered on one frame, after the hold is released. (3 total presses)
             WhileDoubleTapAndHold, //Triggered after a double tap is triggered and then the tap threshold is exceded on what would be a tripple tap.  This is triggered every frame until the key is released. (3 total presses)
             OnTapDoubleAndHoldImmediate, //Triggered after a double tap is triggered and then the tap threshold is exceded on what would be a tripple tap.  This is triggered on the single frame when the tap threshold is passed. (3 total presses)
         }
@@ -74,7 +77,61 @@ namespace BotControl.SmartSelect
         private static RollingBuffer<InputEvent> pressHistory = new(2 * maxTapCount + 1);
         private static Dictionary<interactEvent, bool> interactEventReadyState = new();
         private static bool previousFramekeyHeld;
+        //private static bool WasTap(int pressCount = 0)
+        //{
+        //    //how long from when it was last released, to when it was last pressed
+        //    int offset = pressCount * 2;
+        //    bool currentlyDown = pressHistory.Get(offset).edge == InputEdge.Down;
+        //    int lastReleaseIndex = offset;
+        //    if (currentlyDown)
+        //        lastReleaseIndex = offset + 1;
+        //    int lastPressedindex = lastReleaseIndex + 1;
+        //    InputEvent lastReleased = pressHistory.Get(lastReleaseIndex);
+        //    InputEvent lastPressed = pressHistory.Get(lastPressedindex);
+        //    bool tap = lastReleased.time - lastPressed.time < tapThreshold;
+        //    return tap;
+        //}
+        private static bool IsTap(int historyOffset = 0)
+        {
+            //if history offset is 0, and we are currently pressing, we need to check against current time.
+            //otherwise we can know for sure how long the hold was
+            InputEvent lastPressed;
+            InputEvent lastReleased;
+            bool tap;
+            int offset = historyOffset * 2;
+            bool currentlyReleased = pressHistory.Get(offset).edge == InputEdge.Down;
+            if (currentlyReleased)
+            {
 
+                if (offset == 0)
+                {
+                    lastPressed = pressHistory.Get(offset);
+                    tap = Time.time - lastPressed.time < tapThreshold;
+                    return tap;
+                }
+                else
+                {
+                    lastPressed = pressHistory.Get(offset);
+                    lastReleased = pressHistory.Get(offset - 1);
+                    tap = lastReleased.time - lastPressed.time < tapThreshold;
+                    return tap;
+                }
+            }
+            else
+            {
+                lastPressed = pressHistory.Get(offset + 1);
+                lastReleased = pressHistory.Get(offset);
+                tap = lastReleased.time - lastPressed.time < tapThreshold;
+                return tap;
+            }
+        }
+        private static InputEvent GetHistory(InputEdge edge, int offset = 0)
+        {
+            var ret = pressHistory.Get(offset);
+            if (ret.edge == edge)
+                return ret;
+            else return pressHistory.Get(offset + 1);
+        }
         public static void Update()
         {
             bool ready =
@@ -85,91 +142,82 @@ namespace BotControl.SmartSelect
                 return;
 
             float time = Time.time;
-            bool keyHeld = Input.GetKey(key);
-            bool keyDown = keyHeld && !previousFramekeyHeld; // the button was not pressed last frame but is now
-            bool keyUp = !keyHeld && previousFramekeyHeld; // the button was pressed last frame but is not now
-            previousFramekeyHeld = keyHeld;
+            bool keyPressed = Input.GetKey(key);
+            bool keyDown = keyPressed && !previousFramekeyHeld; // the button was not pressed last frame but is now
+            bool keyUp = !keyPressed && previousFramekeyHeld; // the button was pressed last frame but is not now
+            previousFramekeyHeld = keyPressed;
+            InputEvent lastDown = GetHistory(InputEdge.Down);
+            InputEvent lastUp = GetHistory(InputEdge.Up);
+            InputEvent previousDown = GetHistory(InputEdge.Down, 2);
+            InputEvent previousUp = GetHistory(InputEdge.Up, 2);
+            float lastDownTime = lastDown.time;
+            float lastUpTime = lastUp.time;
+            float unpressedTime = lastDownTime - lastUpTime;
+            float previousDownTime = previousDown.time;
+            float previousUpTime = previousUp.time;
+            float previousUnpressedTime = previousDownTime - previousUpTime;
+            bool unpressedTimeWithinDoubleTapThreshold = unpressedTime < tapThreshold;
+            bool previousUnpressedTimeWithinDoubleTapThreshold = previousUnpressedTime < tapThreshold;
+            bool ThisIsATap = IsTap();
+            bool PreviousIsATap = IsTap(1);
+            bool oldestIsATap = IsTap(2);
+            bool ThisIsADoubleTap = unpressedTimeWithinDoubleTapThreshold && PreviousIsATap;
+            bool PreviousIsADoubleTap = previousUnpressedTimeWithinDoubleTapThreshold && oldestIsATap;
 
             if (keyDown) // first frame the key is pressed
             {
                 pressHistory.Add(new InputEvent(time, InputEdge.Down)); // log the press
-                interactEventReadyState[interactEvent.OnUnpressedExclusive] = true; // ready for OnUnpressedExclusive event to be triggered again
                 TriggerEvent(interactEvent.OnPressed); // trigger on pressed event
+                interactEventReadyState[interactEvent.OnUnpressedExclusive] = true; // ready for OnUnpressedExclusive event to be triggered again
+                if (ThisIsADoubleTap)
+                {
+                    TriggerEvent(interactEvent.OnDoublePressed);
+                }
             }
             if (keyUp) // first frame the key was unpressed
             {
                 pressHistory.Add(new InputEvent(time, InputEdge.Up)); // log the unpress
-                interactEventReadyState[interactEvent.OnHeldImmediate] = true; // ready for OnHeld event to be triggered again.
                 TriggerEvent(interactEvent.OnUnpressed); // trigger onUnpressed
-                if (pressHistory.Get(1).time > time - tapThreshold) // was this unpress a tap? 1 is the time the button went down
+                interactEventReadyState[interactEvent.OnHeldImmediate] = true; // ready for OnHeld event to be triggered again.
+
+                if (ThisIsATap) // was this unpress a tap? 1 is the time the button went down
                 {
                     TriggerEvent(interactEvent.OnTapped); // trigger tap event
                     interactEventReadyState[interactEvent.OnTappedExclusive] = true; // we are ready for this to be an exclusive tap
-                    if (pressHistory.Get(1).time - pressHistory.Get(2).time < tapThreshold) // has too much time passed since the last tap for it to be a double tap candidate?
-                    { // okay it's recent enough, but was it actually a tap?
-                        if (pressHistory.Get(2).time - pressHistory.Get(3).time < tapThreshold) // was the previous press a tap?
-                        { 
-                            TriggerEvent(interactEvent.OnDoubleTapped); // trigger double tap event
-                            interactEventReadyState[interactEvent.OnDoubleTappedExclusive] = true; // ready the double tap exclusive event
-                        }
+                    if (ThisIsADoubleTap)
+                    {
+                        TriggerEvent(interactEvent.OnDoubleTappedStrict); // trigger double tap strict event, both presses are taps
+                        interactEventReadyState[interactEvent.OnDoubleTappedStrictExclusive] = true; // ready the double tap exclusive event
                     }
                 }
-                // 0 current up
-                // 1 current down
-                // 2 previous up
-                // 3 previous down
                 else // Was this unpress a hold?
                 {
                     TriggerEvent(interactEvent.OnHeld); // triggerOnHeld
+                    if (ThisIsADoubleTap)
+                    {
+                        TriggerEvent(interactEvent.OnTapAndHold);
+                        interactEventReadyState[interactEvent.OnTapAndHoldExclusive] = true;
+                    }
+                    if (PreviousIsADoubleTap)
+                    {
+                        TriggerEvent(interactEvent.OnDoubleTapAndHold);
+                    }
                 }
-            }
-            if (keyHeld) // is the key currently down
-            {
-                TriggerEvent(interactEvent.WhilePressed); // trigger whilePressed
-                if (pressHistory.Get(0).time < time - tapThreshold) // Is this a hold?  Has the tap threshold passed?
+                if (ThisIsADoubleTap)
                 {
-                    TriggerEvent(interactEvent.WhileHeld); // trigger while held
-                    if (interactEventReadyState[interactEvent.OnHeldImmediate]) // has onheldimmediate been triggered?
-                    {
-                        TriggerEvent(interactEvent.OnHeldImmediate); // trigger on held immediate
-                        interactEventReadyState[interactEvent.OnHeldImmediate] = false; // make sure on held does not get triggered again
-                    } // (interactEventReadyState[interactEvent.OnHeld])
-                } // (pressHistory.Get(0).time < time - tapThreshold)
-            } // (keyHeld)
-            else // is the key currently up
-            { 
-                TriggerEvent(interactEvent.WhileUnpressed); // trigger while unpressed
-                if (pressHistory.Get(0).time < time - tapThreshold) // has it been unpressed long enough that it's not part of a double tap?
-                { // get when it was unpressed
-                    TriggerEvent(interactEvent.WhileUnpressedExclusive); // trigger while unpressed exclusive
-                    if (interactEventReadyState[interactEvent.OnUnpressedExclusive]) // has on unpressed exclusvie been triggered?
-                    {
-                        TriggerEvent(interactEvent.OnUnpressedExclusive); // trigger on unpressed exclusive
-                        interactEventReadyState[interactEvent.OnUnpressedExclusive] = false; //make sure it doesn't get triggered again.
-                    } // (interactEventReadyState[interactEvent.OnUnpressedExclusive])
+                    TriggerEvent(interactEvent.OnDoubleTapped);
+                }
 
-                    if (pressHistory.Get(0).time - pressHistory.Get(1).time < tapThreshold) //was the most recent press a tap
-                    { // get when it was pressed - when it was unpressed
-                        if (pressHistory.Get(1).time - pressHistory.Get(2).time < tapThreshold) // has too much time passed since the last tap for it to be a double tap candidate?
-                        { // okay it's recent enough, but was it actually a tap?
-                            if (pressHistory.Get(2).time - pressHistory.Get(3).time < tapThreshold) // was the previous press a tap?
-                            {
-                                if (interactEventReadyState[interactEvent.OnDoubleTappedExclusive]) // is double tap exclusive ready?
-                                {
-                                    TriggerEvent(interactEvent.OnDoubleTappedExclusive); // trigger double tap exclusive event
-                                    interactEventReadyState[interactEvent.OnDoubleTappedExclusive] = false; // make sure it doesn't trigger again
-                                }
-                            }
-                        }
-                        else if (interactEventReadyState[interactEvent.OnTappedExclusive]) // it wasn't a double tap, is on tap exclusive ready to be triggered?
-                        {
-                            TriggerEvent(interactEvent.OnTappedExclusive); // trigger the event.
-                            interactEventReadyState[interactEvent.OnTappedExclusive] = false; // make sure it does not get triggered again.
-                        } // (interactEventReadyState[interactEvent.OnTappedExclusive])
-                    } // (pressHistory.Get(1).time - pressHistory.Get(0).time < tapThreshold)
-                } // (pressHistory.Get(0).time < time - tapThreshold)
-            } // (!keyHeld)
-        } // update method
+            }
+            if (keyPressed) // is the key currently down
+            {
+                TriggerEvent(interactEvent.WhilePressed);
+            }
+            else
+            { 
+                TriggerEvent(interactEvent.WhileUnpressed);
+            } 
+        }
         private static void TriggerEvent(interactEvent evnt)
         {
             if (!evnt.ToString().ToLower().Contains("while"))
