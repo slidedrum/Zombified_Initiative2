@@ -5,6 +5,8 @@ VisualStudioVersion = 17.14.36429.23
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BotControl", "BotControl.csproj", "{217CAE0B-88AA-461B-A4C5-8817104DC666}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BetterBots", "..\..\BB\BetterBots\BetterBots\BetterBots.csproj", "{645AAA37-6FA4-B839-C7AF-8C7190AF1AD3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -15,6 +17,10 @@ Global
 		{217CAE0B-88AA-461B-A4C5-8817104DC666}.Debug|x64.Build.0 = Debug|x64
 		{217CAE0B-88AA-461B-A4C5-8817104DC666}.Release|x64.ActiveCfg = Release|x64
 		{217CAE0B-88AA-461B-A4C5-8817104DC666}.Release|x64.Build.0 = Release|x64
+		{645AAA37-6FA4-B839-C7AF-8C7190AF1AD3}.Debug|x64.ActiveCfg = Debug|x64
+		{645AAA37-6FA4-B839-C7AF-8C7190AF1AD3}.Debug|x64.Build.0 = Debug|x64
+		{645AAA37-6FA4-B839-C7AF-8C7190AF1AD3}.Release|x64.ActiveCfg = Release|x64
+		{645AAA37-6FA4-B839-C7AF-8C7190AF1AD3}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

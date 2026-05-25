@@ -1,14 +1,12 @@
-﻿using BotControl;
-using Enemies;
+﻿using Enemies;
 using LevelGeneration;
 using Player;
 using SlideMenu;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace ZombieTweak2.SmartSelect
+namespace BotControl.SmartSelect
 {
     public class Selection
     {
@@ -54,7 +52,6 @@ namespace ZombieTweak2.SmartSelect
         public static Selection selection = new();
         const float holdThreshold = 0.1f;
         private const float vertHeadOffset = 1.75f;
-
         public struct lookingObject
         {
             public objectType type;
@@ -68,24 +65,22 @@ namespace ZombieTweak2.SmartSelect
             Item,
             Other,
         }
-        public enum interactEvent
-        {
-            OnPressed,
-            WhilePressed,
-            OnUnpressed,
-            OnTapped,
-            OnTappedExclusive,
-            OnDoubleTapped,
-            OnHeld,
-            WhileHeld,
-            OnHeldImmediate,
-            OnDoubleTapAndHold,
-            WhileDoubleTapAndHold,
-        }
-
         internal static void Update()
         {
-
+            bool ready = FocusStateManager.CurrentState == eFocusState.FPS || FocusStateManager.CurrentState == eFocusState.Dead;
+            if (!ready) return;
+            if (Input.GetKeyDown(key))
+            {
+                onKeyDown();
+            }
+            if (Input.GetKeyUp(key))
+            {
+                onKeyUp();
+            }
+            if (Input.GetKey(key))
+            {
+                onKey();
+            }
         }
         public static void onKeyDown()
         {
@@ -221,7 +216,8 @@ namespace ZombieTweak2.SmartSelect
             lookingObject lookingAt = GetFilteredObjectLookingAt();
             if (lookingAt.type == objectType.None && Vector3.Angle(cameraTransform.forward, Vector3.up) < 15f && selection.getBotGobject() != null)
             {
-                ZiMain.sendChatMessage("Nevermind.", selection.getBotGobject().GetComponent<PlayerAgent>(), localPlayer);
+                if ((bool)zSlideComputer.ActionPermissions.ValueAt("Notify smart selected"))
+                    ZiMain.sendChatMessage("Nevermind.", selection.getBotGobject().GetComponent<PlayerAgent>(), localPlayer);
                 selection.setBot(null);
                 return;
             }
@@ -255,13 +251,10 @@ namespace ZombieTweak2.SmartSelect
                     return;
                 FlexibleMethodDefinition barkback = new FlexibleMethodDefinition(PlayerVoiceManager.WantToSay,[botId, AK.EVENTS.PLAY_CL_YES]); //yes
                 zUpdater.InvokeStatic(barkback, 1f);
-                ZiMain.sendChatMessage("I'm ready", agent, localPlayer);
+                if ((bool)zSlideComputer.ActionPermissions.ValueAt("Notify smart selected"))
+                    ZiMain.sendChatMessage("I'm ready", agent, localPlayer);
                 selection.setBot(lookingAt.gobject);
             }
-        }
-        public static void onKeyDoubleTap()
-        {
-
         }
     }
 }

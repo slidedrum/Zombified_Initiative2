@@ -5,7 +5,6 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
-using static ZombieTweak2.SmartSelect.zSmartSelect;
 using static SlideMenu.sMenu.TextPart;
 
 namespace SlideMenu

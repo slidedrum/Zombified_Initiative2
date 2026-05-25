@@ -1,9 +1,8 @@
 ﻿using Player;
+using SlideMenu;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using BotControl;
-using SlideMenu;
 
 namespace BotControl
 {
@@ -17,7 +16,6 @@ namespace BotControl
         public static Dictionary<IntPtr, FlexibleEvent> actionCallbacks = new Dictionary<IntPtr, FlexibleEvent>();
         public static void Update()
         {
-            //there's got to be a better way to get all bots.
             List<PlayerAIBot> playerAiBots = ZiMain.GetBotList();
             var comparer = new Il2CppActionComparer();
             foreach (var bot in playerAiBots)

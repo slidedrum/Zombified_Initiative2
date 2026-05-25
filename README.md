@@ -47,7 +47,7 @@ One of the major features of this mod is letting you change the priority of diff
  - Optionally replace the Q menu entirely with my menu with all of it's features.
  
 ## Known issues:
- - Chaning attack means mid combat can cause some jank.  TODO look into what's actually goin on.
+ - Changing attack means mid combat can cause some jank.  TODO look into what's actually going on.
 
 ## Features I'd like to add:
  - Option to dynamically ignore specific lockers, or lockers in a specific room, or prioritize/deprioritize lockers near a point.
@@ -64,3 +64,20 @@ https://www.youtube.com/watch?v=X5RWMQyUgTY
 https://www.youtube.com/watch?v=lrDWroqC-R0
 
 There is A LOT of unused code and extra stuff in this mod.  I got a little bit too ambitious with some features. I may or may not return to some of them later.
+
+
+### Changelog
+V1.0.3
+ - Stopped bots from repeatedly spamming chat with failed actions.
+ - Added submenu for 'bots talking settings', letting you disable individual things they say.
+ - Added drop permissions to the pickup submenu. This will let you tell bots to only replace their resource packs once they are gone.
+ - Fixed a compatibility bug with Better Bots where bots would't revive you after you go down.
+ - Fixed minor typo.
+
+V1.0.2
+ - Fixed disinfect pickup threshold being inverted.
+ - Bots no longer use auto disinfect pacs in fog.  
+ - Added a (WIP) option to stop bots from dropping their items in the pickup submenu.
+
+V1.0.1
+ - Updated readme.
