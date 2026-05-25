@@ -185,11 +185,11 @@ public class ZiMain : BasePlugin
         {
             zUpdater.CreateInstance();
             zUpdater.onUpdate.Listen(sMenuManager.Update);
-            zUpdater.onUpdate.Listen(zSmartSelect.Update);
             zUpdater.onUpdate.Listen(zActionSub.Update);
             zUpdater.onUpdate.Listen(zSearch.Update);
             zUpdater.onUpdate.Listen(zDebug.debugUpdate);
             //zUpdater.onUpdate.Listen(zVisitedManager.Update);
+            zUpdater.onUpdate.Listen(ssInputHandler.Update);
             zUpdater.onLateUpdate.Listen(sMenuManager.LateUpdate);
         };
         LG_Factory.add_OnFactoryBuildDone((Action)zSlideComputer.Init);
