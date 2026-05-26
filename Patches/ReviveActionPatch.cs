@@ -2,7 +2,7 @@
 using HarmonyLib;
 using Player;
 using System.Collections.Generic;
-using ZombieTweak2;
+using BotControl;
 
 namespace BotControl.Patches
 {

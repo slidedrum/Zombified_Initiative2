@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
-namespace ZombieTweak2
+namespace BotControl
 {
     public static class BBCompat
     {
