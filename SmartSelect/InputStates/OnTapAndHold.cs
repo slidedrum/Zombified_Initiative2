@@ -5,7 +5,7 @@
         public static void OnTapAndHold()
         {
             TriggerEvent(interactEvent.OnTapAndHold);
-            if (PreviousPressExists && KeyPress.lastPress.previousKeyPress.isDoublePress)
+            if (PreviousPressExists && KeyPress.lastPress.PreviousKeyPress.IsDoublePress)
             {
                 OnDoubleTapAndHold();
             }

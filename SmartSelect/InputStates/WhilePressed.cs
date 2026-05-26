@@ -5,7 +5,7 @@
         public static void WhilePressed()
         {
             TriggerEvent(interactEvent.WhilePressed);
-            if (LastPressExists && !KeyPress.lastPress.isTap)
+            if (LastPressExists && !KeyPress.lastPress.IsTap)
             {
                 WhileHold();
             }

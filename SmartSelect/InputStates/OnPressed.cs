@@ -6,7 +6,7 @@
         {
             TriggerEvent(interactEvent.OnPressed);
             interactEventReadyState[interactEvent.OnUnpressedExclusive] = true;
-            if (LastPressExists && KeyPress.lastPress.isDoublePress)
+            if (LastPressExists && KeyPress.lastPress.IsDoublePress)
             {
                 OnDoublePressed();
             }

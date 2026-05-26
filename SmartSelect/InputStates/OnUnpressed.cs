@@ -7,7 +7,7 @@
             TriggerEvent(interactEvent.OnUnpressed);
             if (LastPressExists)
             {
-                if (KeyPress.lastPress.isTap)
+                if (KeyPress.lastPress.IsTap)
                 {
                     OnTapped();
                 }
@@ -15,7 +15,7 @@
                 {
                     OnHold();
                 }
-                if (KeyPress.lastPress.isDoublePress)
+                if (KeyPress.lastPress.IsDoublePress)
                 {
                     OnDoubleTapped();
                 }

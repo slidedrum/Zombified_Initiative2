@@ -9,10 +9,6 @@ namespace BotControl.SmartSelect
         {
             TriggerEvent(interactEvent.OnUnpressedExclusive);
             interactEventReadyState[interactEvent.OnUnpressedExclusive] = false;
-            if (LastPressExists && KeyPress.lastPress.isTap && !KeyPress.lastPress.isDoublePress)
-            {
-                OnTappedExclusive();
-            }
             ResetinteractEventReadyStates(interactOnPressedExclusions);
         }
     }

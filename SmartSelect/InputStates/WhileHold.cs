@@ -9,7 +9,7 @@
             {
                 OnHoldImmediate();
             }
-            if (PreviousPressExists && KeyPress.lastPress.previousKeyPress.isTap && KeyPress.lastPress.isDoublePress)
+            if (PreviousPressExists && KeyPress.lastPress.PreviousKeyPress.IsTap && KeyPress.lastPress.IsDoublePress)
             {
                 WhileTapAndHold();
             }

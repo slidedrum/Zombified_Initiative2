@@ -6,7 +6,7 @@
         {
             TriggerEvent(interactEvent.OnHold);
             interactEventReadyState[interactEvent.OnHold] = false;
-            if (PreviousPressExists && KeyPress.lastPress.previousKeyPress.isTap && KeyPress.lastPress.isDoublePress)
+            if (PreviousPressExists && KeyPress.lastPress.PreviousKeyPress.IsTap && KeyPress.lastPress.IsDoublePress)
             {
                 OnTapAndHold();
             }

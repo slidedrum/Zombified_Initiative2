@@ -5,8 +5,8 @@
         public static void WhileTapAndHold()
         {
             TriggerEvent(interactEvent.WhileTapAndHold);
-            float timebetweenPresses = TimeSince(KeyPress.lastPress.previousKeyPress.previousKeyPress.upTime, KeyPress.lastPress.previousKeyPress.downTime);
-            if (LastPressExists && KeyPress.lastPress.isDoublePress && timebetweenPresses < tapThreshold)
+            float timebetweenPresses = TimeSince(KeyPress.lastPress.PreviousKeyPress.PreviousKeyPress.UpTimestamp, KeyPress.lastPress.PreviousKeyPress.DownTimestamp);
+            if (LastPressExists && KeyPress.lastPress.IsDoublePress && timebetweenPresses < tapThreshold)
             {
                 WhileDoubleTapAndHold();
             }

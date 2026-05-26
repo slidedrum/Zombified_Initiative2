@@ -5,7 +5,7 @@
         public static void OnTapped()
         {
             TriggerEvent(interactEvent.OnTapped);
-            if (LastPressExists && KeyPress.lastPress.isDoublePress)
+            if (LastPressExists && KeyPress.lastPress.IsDoublePress)
             {
                 OnDoubleTappedStrict();
             }
