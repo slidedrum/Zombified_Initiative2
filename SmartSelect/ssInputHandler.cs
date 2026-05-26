@@ -29,17 +29,16 @@ namespace BotControl.SmartSelect
             OnTapAndHold, //*Triggered on release after a single tap is triggered and then the tap threshold is exceded on what would be a double tap.  This is triggered on one frame, after the hold is released. (2 total presses)
             OnTapAndHoldImmediate, //*Triggered after a single tap is triggered and then the tap threshold is exceded on what would be a double tap.  This is triggered on the single frame when the tap threshold is passed. (2 total presses)
             WhileTapAndHold, //*Triggered after a single tap is triggered and then the tap threshold is exceded on what would be a double tap.  This is triggered every frame until the key is released. (2 total presses)
+            OnTapDoubleAndHoldImmediate, //*Triggered after a double tap is triggered and then the tap threshold is exceded on what would be a tripple tap.  This is triggered on the single frame when the tap threshold is passed. (3 total presses)
+            WhileDoubleTapAndHold, //*Triggered after a double tap is triggered and then the tap threshold is exceded on what would be a tripple tap.  This is triggered every frame until the key is released. (3 total presses)
+            OnDoubleTapAndHold, //*Triggered after a double tap is triggered and then the tap threshold is exceded on what would be a tripple tap. This is triggered on one frame, after the hold is released. (3 total presses)
             
-            WhileDoubleTapAndHold, //Triggered after a double tap is triggered and then the tap threshold is exceded on what would be a tripple tap.  This is triggered every frame until the key is released. (3 total presses)
-
             WhileHeldExclusive, //triggered every frame the button is held starting after the tap threshold is exceeded, but only when not a tapandhold and not doubletapandhold
             OnHeldImmediateExclusive, //Triggered the first frame when the tap threshold is exceeded, but only the first hold, not on tapandhold and not on doubletapandhold
-
-            OnDoubleTapAndHold, //Triggered after a double tap is triggered and then the tap threshold is exceded on what would be a tripple tap. This is triggered on one frame, after the hold is released. (3 total presses)
             OnTapAndHoldExclusive, //Triggered after a single tap is triggered and then the tap threshold is exceded on what would be a double tap.  This is triggered on one frame, after the hold is released. (2 total presses) but not on doubletap and hold
             WhileTapAndHoldExclusive, //Triggered after a single tap is triggered and then the tap threshold is exceded on what would be a double tap.  This is triggered every frame until the key is released. (2 total presses) but not while doubletap and hold
             OnTapAndHoldImmediateExclusive, //Triggered after a single tap is triggered and then the tap threshold is exceded on what would be a double tap.  This is triggered on the single frame when the tap threshold is passed. (2 total presses) but not on the double tap and hold
-            OnTapDoubleAndHoldImmediate, //Triggered after a double tap is triggered and then the tap threshold is exceded on what would be a tripple tap.  This is triggered on the single frame when the tap threshold is passed. (3 total presses)
+            
         }
         private static Dictionary<interactEvent, FlexibleEvent> _eventMap;
         public static Dictionary<interactEvent, FlexibleEvent> eventMap
@@ -157,6 +156,8 @@ namespace BotControl.SmartSelect
                         {
                             TriggerEvent(interactEvent.OnTapAndHold);
                             interactEventReadyState[interactEvent.OnTapAndHoldExclusive] = true;
+                            interactEventReadyState[interactEvent.OnTapAndHoldImmediate] = true;
+                            interactEventReadyState[interactEvent.OnTapAndHoldImmediateExclusive] = true;
                         }
                     }
                 }
@@ -164,6 +165,11 @@ namespace BotControl.SmartSelect
                 {
                     TriggerEvent(interactEvent.OnDoubleTapped);
                     interactEventReadyState[interactEvent.OnDoubleTappedExclusive] = true;
+                    if (KeyPress.lastPress.previousKeyPress.isDoublePress)
+                    {
+                        TriggerEvent(interactEvent.OnDoubleTapAndHold);
+                        interactEventReadyState[interactEvent.OnTapDoubleAndHoldImmediate] = true;
+                    }
                 }
                 if (KeyPress.lastPress.isDoublePress && KeyPress.lastPress.isTap)
                 {
@@ -181,7 +187,7 @@ namespace BotControl.SmartSelect
                     {
                         TriggerEvent(interactEvent.OnHeldImmediate);
                         interactEventReadyState[interactEvent.OnHeldImmediate] = false;
-                        if (KeyPress.lastPress.previousKeyPress.isTap) 
+                        if (KeyPress.lastPress.previousKeyPress.isTap)
                         {
                             if (KeyPress.lastPress.isDoublePress)
                             {
@@ -191,156 +197,58 @@ namespace BotControl.SmartSelect
                                     interactEventReadyState[interactEvent.OnTapAndHoldImmediate] = false;
                                 }
                                 TriggerEvent(interactEvent.WhileTapAndHold);
+                                if (KeyPress.lastPress.previousKeyPress.isDoublePress)
+                                {
+                                    TriggerEvent(interactEvent.WhileDoubleTapAndHold);
+                                    if (interactEventReadyState[interactEvent.OnTapDoubleAndHoldImmediate])
+                                    {
+                                        TriggerEvent(interactEvent.OnTapDoubleAndHoldImmediate);
+                                        interactEventReadyState[interactEvent.OnTapDoubleAndHoldImmediate] = false;
+                                    }
+                                }
                             }
                         }
                     }
                 }
-            }
-            else // key unpressed
-            {
-                TriggerEvent(interactEvent.WhileUnpressed);
-                if (TimeSince(KeyPress.lastPress.upTime) > tapThreshold)
+                else // key unpressed
                 {
-                    TriggerEvent(interactEvent.WhileUnpressedExclusive);
-                    if (interactEventReadyState[interactEvent.OnUnpressedExclusive])
+                    TriggerEvent(interactEvent.WhileUnpressed);
+                    if (TimeSince(KeyPress.lastPress.upTime) > tapThreshold)
                     {
-                        TriggerEvent(interactEvent.OnUnpressedExclusive);
-                        interactEventReadyState[interactEvent.OnUnpressedExclusive] = false;
-                    }
-                    if (KeyPress.lastPress.isTap)
-                    {
-                        if (interactEventReadyState[interactEvent.OnTappedExclusive])
+                        TriggerEvent(interactEvent.WhileUnpressedExclusive);
+                        if (interactEventReadyState[interactEvent.OnUnpressedExclusive])
                         {
-                            TriggerEvent(interactEvent.OnTappedExclusive);
-                            interactEventReadyState[interactEvent.OnTappedExclusive] = false;
+                            TriggerEvent(interactEvent.OnUnpressedExclusive);
+                            interactEventReadyState[interactEvent.OnUnpressedExclusive] = false;
                         }
-                        if (KeyPress.lastPress.isDoublePress)
+                        if (KeyPress.lastPress.isTap)
                         {
-                            if (interactEventReadyState[interactEvent.OnDoubleTappedStrictExclusive])
+                            if (interactEventReadyState[interactEvent.OnTappedExclusive])
                             {
-                                TriggerEvent(interactEvent.OnDoubleTappedStrictExclusive);
-                                interactEventReadyState[interactEvent.OnDoubleTappedStrictExclusive] = false;
+                                TriggerEvent(interactEvent.OnTappedExclusive);
+                                interactEventReadyState[interactEvent.OnTappedExclusive] = false;
                             }
-                            
+                            if (KeyPress.lastPress.isDoublePress)
+                            {
+                                if (interactEventReadyState[interactEvent.OnDoubleTappedStrictExclusive])
+                                {
+                                    TriggerEvent(interactEvent.OnDoubleTappedStrictExclusive);
+                                    interactEventReadyState[interactEvent.OnDoubleTappedStrictExclusive] = false;
+                                }
+
+                            }
                         }
-                    }
-                    else // last press was a hold
-                    {
-                        if (interactEventReadyState[interactEvent.onHeldExclusive])
+                        else // last press was a hold
                         {
-                            TriggerEvent(interactEvent.onHeldExclusive);
-                            interactEventReadyState[interactEvent.onHeldExclusive] = false;
+                            if (interactEventReadyState[interactEvent.onHeldExclusive])
+                            {
+                                TriggerEvent(interactEvent.onHeldExclusive);
+                                interactEventReadyState[interactEvent.onHeldExclusive] = false;
+                            }
                         }
                     }
                 }
             }
-
-
-            //InputEvent lastDown = GetHistory(InputEdge.Down);
-            //InputEvent lastUp = GetHistory(InputEdge.Up);
-            //InputEvent previousDown = GetHistory(InputEdge.Down, 2);
-            //InputEvent previousUp = GetHistory(InputEdge.Up, 2);
-            //float lastDownTime = lastDown.time;
-            //float lastUpTime = lastUp.time;
-            //float lastPressedTime = lastUpTime - lastDownTime;
-            //float lastUnpressedTime = lastDownTime - lastUpTime;
-            //float previousDownTime = previousDown.time;
-            //float previousUpTime = previousUp.time;
-            //float previousUnpressedTime = previousDownTime - previousUpTime;
-            //float unpressedTime = keyPressed ? 0 : Time.time - lastUpTime;
-            //float pressedTime = keyPressed ? Time.time - lastDownTime : 0;
-            //bool pressedTimeWithinDoubleTapThreshold = pressedTime < tapThreshold;
-            //bool unpressedTimeWithinDoubleTapThreshold = unpressedTime < tapThreshold;
-            //bool lastUnpressedTimeWithinDoubleTapThreshold = lastUnpressedTime < tapThreshold;
-            //bool previousUnpressedTimeWithinDoubleTapThreshold = previousUnpressedTime < tapThreshold;
-            //bool ThisIsADoubleTap = lastUnpressedTimeWithinDoubleTapThreshold && IsTap(1);
-            //bool PreviousIsADoubleTap = previousUnpressedTimeWithinDoubleTapThreshold && IsTap(2);
-
-            //if (keyDown) // first frame the key is pressed
-            //{
-            //    TriggerEvent(interactEvent.OnPressed); // trigger on pressed event
-            //    interactEventReadyState[interactEvent.OnUnpressedExclusive] = true; // ready for OnUnpressedExclusive event to be triggered again
-            //    if (ThisIsADoubleTap)
-            //    {
-            //        TriggerEvent(interactEvent.OnDoublePressed);
-            //    }
-            //}
-            //if (keyUp) // first frame the key was unpressed
-            //{
-            //    TriggerEvent(interactEvent.OnUnpressed); // trigger onUnpressed
-            //    interactEventReadyState[interactEvent.OnHeldImmediate] = true; // ready for OnHeld event to be triggered again.
-
-            //    if (IsTap(0)) // was this unpress a tap? 1 is the time the button went down
-            //    {
-            //        TriggerEvent(interactEvent.OnTapped); // trigger tap event
-            //        interactEventReadyState[interactEvent.OnTappedExclusive] = true; // we are ready for this to be an exclusive tap
-            //        if (ThisIsADoubleTap)
-            //        {
-            //            TriggerEvent(interactEvent.OnDoubleTappedStrict); // trigger double tap strict event, both presses are taps
-            //            interactEventReadyState[interactEvent.OnDoubleTappedStrictExclusive] = true; // ready the double tap exclusive event
-            //        }
-            //    }
-            //    else // Was this unpress a hold?
-            //    {
-            //        TriggerEvent(interactEvent.OnHeld); // triggerOnHeld
-            //        if (ThisIsADoubleTap)
-            //        {
-            //            TriggerEvent(interactEvent.OnTapAndHold);
-            //            interactEventReadyState[interactEvent.OnTapAndHoldExclusive] = true;
-            //        }
-            //        if (PreviousIsADoubleTap)
-            //        {
-            //            TriggerEvent(interactEvent.OnDoubleTapAndHold);
-            //        }
-            //    }
-            //    if (ThisIsADoubleTap)
-            //    {
-            //        TriggerEvent(interactEvent.OnDoubleTapped);
-            //    }
-
-            //}
-            //if (keyPressed) // is the key currently down
-            //{
-            //    TriggerEvent(interactEvent.WhilePressed);
-            //    if (!IsTap(1))
-            //    {
-            //        TriggerEvent(interactEvent.WhileHeld);
-            //        if (interactEventReadyState[interactEvent.OnHeldImmediate])
-            //        {
-            //            TriggerEvent(interactEvent.OnHeldImmediate);
-            //            interactEventReadyState[interactEvent.OnHeldImmediate] = false;
-            //        }
-            //    }
-            //}
-            //else // key unpressed
-            //{ 
-            //    TriggerEvent(interactEvent.WhileUnpressed);
-            //    if (!unpressedTimeWithinDoubleTapThreshold)
-            //    {
-            //        TriggerEvent(interactEvent.WhileUnpressedExclusive);
-            //        if (interactEventReadyState[interactEvent.OnUnpressedExclusive])
-            //        {
-            //            TriggerEvent(interactEvent.OnUnpressedExclusive);
-            //            interactEventReadyState[interactEvent.OnUnpressedExclusive] = false;
-            //        }
-            //        if (IsTap(1))
-            //        {
-            //            if (interactEventReadyState[interactEvent.OnTappedExclusive])
-            //            {
-            //                TriggerEvent(interactEvent.OnTappedExclusive);
-            //                interactEventReadyState[interactEvent.OnTappedExclusive] = false;
-            //            }
-            //            if (IsTap(2))
-            //            {
-            //                if (interactEventReadyState[interactEvent.OnDoubleTappedStrictExclusive])
-            //                {
-            //                    TriggerEvent(interactEvent.OnDoubleTappedStrictExclusive);
-            //                    interactEventReadyState[interactEvent.OnDoubleTappedStrictExclusive] = false;
-            //                }
-            //            }
-            //        }
-            //    }
-            //} 
         }
         private static float TimeSince(float startTime, float? endTime = null)
         {
@@ -359,16 +267,13 @@ namespace BotControl.SmartSelect
         private readonly T[] buffer;
         private int index = 0;
         private int count = 0;
-
         public int Count => count;
         public int Capacity => buffer.Length;
         public bool full => count == Capacity;
-
         public RollingBuffer(int capacity)
         {
             buffer = new T[capacity];
         }
-
         public void Add(T item)
         {
             buffer[index] = item;
@@ -390,10 +295,6 @@ namespace BotControl.SmartSelect
             int item = (this.index - 1 - index + buffer.Length) % buffer.Length;
 
             return buffer[item];
-        }
-        public T Last()
-        {
-            return Get(Count - 1);
         }
     }
 }
