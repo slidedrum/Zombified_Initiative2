@@ -76,7 +76,7 @@ namespace BotControl.SmartSelect
         }
         private static void SetUp()
         {
-            inputSystem = new(key);
+            inputSystem = new();
             inputSystem.AddListener(sInputSystemDefaults.OnTap, new FlexibleMethodDefinition(DebugTrigger, args: ["OnTap"]), key);
             inputSystem.AddListener(sInputSystemDefaults.OnHold, new FlexibleMethodDefinition(DebugTrigger, args: ["OnHold"]), key);
             inputSystem.AddListener(sInputSystemDefaults.OnHoldImmediate, new FlexibleMethodDefinition(DebugTrigger, args: ["OnHoldImmediate"]), key);

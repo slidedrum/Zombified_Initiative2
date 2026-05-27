@@ -1,7 +1,6 @@
 ﻿using BotControl;
-using InControl;
 using SlideMenu;
-using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace SlideDrum.sInputSystem
@@ -41,6 +40,16 @@ namespace SlideDrum.sInputSystem
                 Sequence[i] = keyPress;
             }
         }
+
+        internal HashSet<KeyCode> GetKeyCodes()
+        {
+            HashSet<KeyCode> ret = new();
+            foreach (var keyPress in Sequence)
+                if (keyPress.Key != null)
+                    ret.Add((KeyCode)keyPress.Key);
+            return ret;
+        }
+
         public sKeySequenceDefinition(sKeyPressDefinition[] Sequence, TriggerPoint Trigger, FlexibleMethodDefinition callback, bool strict = false, bool RisingEdgeOnly = true, KeyCode? Key = null)
         {
             this.Sequence = Sequence;

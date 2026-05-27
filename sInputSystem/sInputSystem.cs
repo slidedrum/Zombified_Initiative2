@@ -1,4 +1,5 @@
 ﻿using BotControl;
+using InControl;
 using SlideMenu;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,19 +8,49 @@ namespace SlideDrum.sInputSystem
 {
     public class sInputSystem
     {
-        internal float TapThreshold;
-        private KeyCode Key;
-        private bool WasKeyHeldOnThePreviousFrame;
-        private sKeyPress RecetPress;
-        private bool CurrentSequenceExists => RecetPress != null;
-        private sKeySequence CurrentSequence => RecetPress.Sequence;
-        private Dictionary<sKeySequenceDefinition.TriggerPoint, bool> StatesResetStatus = new();
-
-        private List<sKeySequenceDefinition> SequenceDefinitions = new();
-        private Dictionary<uint, bool> definitionStates = new();
-        public sInputSystem(KeyCode Key, float TapThreshold = sInputSystemDefaults.TapThreshold)
+        public class KeyState
         {
-            this.Key = Key;
+            public bool WasKeyHeldOnThePreviousFrame = false;
+            public sKeyPress RecentPress;
+            public Dictionary<sKeySequenceDefinition.TriggerPoint, bool> StatesResetStatus = new();
+            public Dictionary<uint, bool> definitionStates = new();
+            public bool TryGetSequence(out sKeySequence sequence)
+            {
+                if (RecentPress == null)
+                {
+                    sequence = default;
+                    return false;
+                }
+
+                sequence = RecentPress.Sequence;
+                return true;
+            }
+        }
+        private static Dictionary<KeyCode, KeyState> KeyStates = new();
+        public KeyState this[KeyCode key]
+        {
+            get
+            {
+                if (!KeyStates.TryGetValue(key, out var state))
+                {
+                    state = new KeyState();
+                    KeyStates[key] = state;
+                }
+
+                return state;
+            }
+            set
+            {
+                KeyStates[key] = value;
+            }
+        }
+        
+        internal float TapThreshold; 
+        private HashSet<KeyCode> KeyCodes => GetKeyCodes();
+        private List<sKeySequenceDefinition> SequenceDefinitions = new();
+
+        public sInputSystem(float TapThreshold = sInputSystemDefaults.TapThreshold)
+        {
             this.TapThreshold = TapThreshold;
         }
         public void AddListener(sKeySequenceDefinition newSequenceDefinition, FlexibleMethodDefinition callback = null, KeyCode? Key = null)
@@ -32,63 +63,77 @@ namespace SlideDrum.sInputSystem
             if (newSequenceDefinition.callback == null)
                 ZiMain.log.LogWarning($"Created a keypress sequence listener with no callback! \"{newSequenceDefinition.Key}\" Nothing will happen!");
         }
+        private HashSet<KeyCode> GetKeyCodes()
+        {
+            HashSet<KeyCode> ret = new();
+            foreach (var sequence in SequenceDefinitions)
+                ret.UnionWith(sequence.GetKeyCodes());
+            return ret;
+        }
         public void Update()
         {
             float time = Time.time;
-            bool keyPressed = Input.GetKey(Key);
-            bool keyDown = keyPressed && !WasKeyHeldOnThePreviousFrame; // the button was not pressed last frame but is now
-            bool keyUp = !keyPressed && WasKeyHeldOnThePreviousFrame; // the button was pressed last frame but is not now
-
-            WasKeyHeldOnThePreviousFrame = keyPressed;
-            if (keyDown)
+            foreach (KeyCode Key in KeyCodes)
             {
-                RecetPress = new sKeyPress(Key, this);
-            }
-            else if (keyUp)
-            {
-                RecetPress.SetUp();
-            }
-            if (keyPressed)
-            {
-                Trigger(sKeySequenceDefinition.TriggerPoint.Pressed);
-                StatesResetStatus[sKeySequenceDefinition.TriggerPoint.Pressed] = false;
-                Reset(sKeySequenceDefinition.TriggerPoint.Unpressed);
-            }
-            else
-            {
-                Trigger(sKeySequenceDefinition.TriggerPoint.Unpressed);
-                StatesResetStatus[sKeySequenceDefinition.TriggerPoint.Unpressed] = false;
-                Reset(sKeySequenceDefinition.TriggerPoint.Pressed);
-            }
-            if (CurrentSequenceExists)
-            {
-                if (CurrentSequence.IsSequenceOngoing)
-                    Reset(sKeySequenceDefinition.TriggerPoint.SequenceComplete);
+                var KeyState = this[Key];
+                bool keyPressed = Input.GetKey(Key);
+                bool keyDown = keyPressed && !KeyState.WasKeyHeldOnThePreviousFrame; // the button was not pressed last frame but is now
+                bool keyUp = !keyPressed && KeyState.WasKeyHeldOnThePreviousFrame; // the button was pressed last frame but is not now
+                KeyState.WasKeyHeldOnThePreviousFrame = keyPressed;
+                if (keyDown)
+                {
+                    KeyState.RecentPress = new sKeyPress(Key, this);
+                }
+                else if (keyUp)
+                {
+                    if (KeyState.RecentPress == null)
+                        throw new System.InvalidOperationException("RecetPress was null on key up");
+                    KeyState.RecentPress.SetUp();
+                }
+                if (keyPressed)
+                {
+                    Trigger(KeyState, sKeySequenceDefinition.TriggerPoint.Pressed);
+                    KeyState.StatesResetStatus[sKeySequenceDefinition.TriggerPoint.Pressed] = false;
+                    Reset(KeyState, sKeySequenceDefinition.TriggerPoint.Unpressed);
+                }
                 else
                 {
-                    Trigger(sKeySequenceDefinition.TriggerPoint.SequenceComplete);
-                    StatesResetStatus[sKeySequenceDefinition.TriggerPoint.SequenceComplete] = false;
+                    Trigger(KeyState, sKeySequenceDefinition.TriggerPoint.Unpressed);
+                    KeyState.StatesResetStatus[sKeySequenceDefinition.TriggerPoint.Unpressed] = false;
+                    Reset(KeyState, sKeySequenceDefinition.TriggerPoint.Pressed);
+                }
+                sKeySequence sequence;
+                if (KeyState.TryGetSequence(out sequence))
+                {
+                    if (sequence.IsSequenceOngoing)
+                        Reset(KeyState, sKeySequenceDefinition.TriggerPoint.SequenceComplete);
+                    else
+                    {
+                        Trigger(KeyState, sKeySequenceDefinition.TriggerPoint.SequenceComplete);
+                        KeyState.StatesResetStatus[sKeySequenceDefinition.TriggerPoint.SequenceComplete] = false;
+                    }
                 }
             }
         }
-        private void Reset(sKeySequenceDefinition.TriggerPoint trigger)
+        private void Reset(KeyState KeyState, sKeySequenceDefinition.TriggerPoint trigger)
         {
-            if (!StatesResetStatus.ContainsKey(trigger) || !StatesResetStatus[trigger])
+            if (!KeyState.StatesResetStatus.TryGetValue(trigger, out var reset) || !reset)
             {
                 for (int i = 0; i < SequenceDefinitions.Count; i++)
                 {
                     var definition = SequenceDefinitions[i];
                     if (definition.Trigger == trigger)
                     {
-                        definitionStates[definition.Id] = false;
+                        KeyState.definitionStates[definition.Id] = false;
                     }
                 }
-                StatesResetStatus[trigger] = true;
+                KeyState.StatesResetStatus[trigger] = true;
             }
         }
-        private void Trigger(sKeySequenceDefinition.TriggerPoint trigger)
+        private void Trigger(KeyState KeyState, sKeySequenceDefinition.TriggerPoint trigger)
         {
-            if (!CurrentSequenceExists)
+            sKeySequence sequence;
+            if (!KeyState.TryGetSequence(out sequence))
                 return;
             for (int i = 0; i < SequenceDefinitions.Count; i++)
             {
@@ -96,10 +141,10 @@ namespace SlideDrum.sInputSystem
 
                 if (definition.Trigger != trigger)
                     continue;
-                bool state = CurrentSequence.MatchesSequence(definition);
-                if (state && (!definition.RisingEdgeOnly || !definitionStates.ContainsKey(definition.Id) || !definitionStates[definition.Id]))
+                bool state = sequence.MatchesSequence(definition);
+                if (state && (!definition.RisingEdgeOnly || !KeyState.definitionStates.ContainsKey(definition.Id) || !KeyState.definitionStates[definition.Id]))
                     definition.callback.Invoke();
-                definitionStates[definition.Id] = state;
+                KeyState.definitionStates[definition.Id] = state;
             }
         }
     }
