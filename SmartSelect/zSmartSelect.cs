@@ -5,6 +5,7 @@ using SlideMenu;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using SlideDrum.sInputSystem;
 
 namespace BotControl.SmartSelect
 {
@@ -50,8 +51,10 @@ namespace BotControl.SmartSelect
         public static float heldDuration = 0f;
         public static KeyCode key = KeyCode.V;
         public static Selection selection = new();
-        const float holdThreshold = 0.1f;
+        const float holdThreshold = 0.25f;
         private const float vertHeadOffset = 1.75f;
+        private static bool IsSetUp = false;
+        private static sInputSystem inputSystem;
         public struct lookingObject
         {
             public objectType type;
@@ -69,18 +72,62 @@ namespace BotControl.SmartSelect
         {
             bool ready = FocusStateManager.CurrentState == eFocusState.FPS || FocusStateManager.CurrentState == eFocusState.Dead;
             if (!ready) return;
-            if (Input.GetKeyDown(key))
-            {
-                onKeyDown();
-            }
-            if (Input.GetKeyUp(key))
-            {
-                onKeyUp();
-            }
-            if (Input.GetKey(key))
-            {
-                onKey();
-            }
+            if (!IsSetUp) SetUp();
+            inputSystem.Update();
+        }
+        private static void SetUp()
+        {
+            inputSystem = new(key, holdThreshold);
+            inputSystem.AddListener(
+                new sKeySequenceDefinition(
+                    new[] { sKeyPress.PressType.tap, sKeyPress.PressType.tap },
+                    sKeySequenceDefinition.TriggerPoint.Unpressed,
+                    new FlexibleMethodDefinition(DebugTrigger, args: ["OnDoubleTap"]),
+                    strict: false,
+                    RisingEdgeOnly: true
+                )
+            );
+            inputSystem.AddListener(
+                new sKeySequenceDefinition(
+                    new[] { sKeyPress.PressType.hold },
+                    sKeySequenceDefinition.TriggerPoint.Pressed,
+                    new FlexibleMethodDefinition(DebugTrigger, args: ["OnHoldImideate"]),
+                    strict: false,
+                    RisingEdgeOnly: true
+                )
+            );
+            inputSystem.AddListener(
+                new sKeySequenceDefinition(
+                    new[] { sKeyPress.PressType.tap },
+                    sKeySequenceDefinition.TriggerPoint.SequenceComplete,
+                    new FlexibleMethodDefinition(DebugTrigger, args: ["OnTappedExclusiveStrict"]),
+                    strict: true,
+                    RisingEdgeOnly: true
+                )
+            );
+            inputSystem.AddListener(
+                new sKeySequenceDefinition(
+                    new[] { sKeyPress.PressType.tap },
+                    sKeySequenceDefinition.TriggerPoint.Unpressed,
+                    new FlexibleMethodDefinition(DebugTrigger, args: ["OnTappedStrict"]),
+                    strict: true,
+                    RisingEdgeOnly: true
+                )
+            );
+            inputSystem.AddListener(
+                new sKeySequenceDefinition(
+                    new[] { sKeyPress.PressType.tap, sKeyPress.PressType.tap, sKeyPress.PressType.hold },
+                    sKeySequenceDefinition.TriggerPoint.Pressed,
+                    new FlexibleMethodDefinition(DebugTrigger, args: ["DoubleTapAndHoldImmediate"]),
+                    strict: false,
+                    RisingEdgeOnly: true
+                )
+            );
+            IsSetUp = true;
+        }
+        public static void DebugTrigger(string messge)
+        {
+            ZiMain.log.LogDebug(messge);
         }
         public static void onKeyDown()
         {
