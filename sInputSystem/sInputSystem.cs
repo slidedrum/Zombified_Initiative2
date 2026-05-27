@@ -8,10 +8,13 @@ namespace SlideDrum.sInputSystem
 {
     public class sInputSystem
     {
+        //TODO remove tap threshold, causes bugs tied to when should a new sequence start.
+        //TODO handle overlapping key sequences from multiple buttons.
         public class KeyState
         {
             public bool WasKeyHeldOnThePreviousFrame = false;
             public sKeyPress RecentPress;
+            public KeyCode Key;
             public Dictionary<sKeySequenceDefinition.TriggerPoint, bool> StatesResetStatus = new();
             public Dictionary<uint, bool> definitionStates = new();
             public bool TryGetSequence(out sKeySequence sequence)
@@ -21,34 +24,34 @@ namespace SlideDrum.sInputSystem
                     sequence = default;
                     return false;
                 }
-
                 sequence = RecentPress.Sequence;
                 return true;
             }
+            public KeyState(KeyCode Key)
+            {
+                this.Key = Key;
+            }
         }
         private static Dictionary<KeyCode, KeyState> KeyStates = new();
-        public KeyState this[KeyCode key]
+        public KeyState this[KeyCode Key]
         {
             get
             {
-                if (!KeyStates.TryGetValue(key, out var state))
+                if (!KeyStates.TryGetValue(Key, out var state))
                 {
-                    state = new KeyState();
-                    KeyStates[key] = state;
+                    state = new KeyState(Key);
+                    KeyStates[Key] = state;
                 }
-
                 return state;
             }
             set
             {
-                KeyStates[key] = value;
+                KeyStates[Key] = value;
             }
         }
-        
-        internal float TapThreshold; 
+        internal float TapThreshold;  // TODO remove.  Tied to starting new sequences, might need rolling buffer after all?
         private HashSet<KeyCode> KeyCodes => GetKeyCodes();
         private List<sKeySequenceDefinition> SequenceDefinitions = new();
-
         public sInputSystem(float TapThreshold = sInputSystemDefaults.TapThreshold)
         {
             this.TapThreshold = TapThreshold;
@@ -56,11 +59,11 @@ namespace SlideDrum.sInputSystem
         public void AddListener(sKeySequenceDefinition newSequenceDefinition, FlexibleMethodDefinition callback = null, KeyCode? Key = null)
         {
             if (callback != null)
-                newSequenceDefinition.callback = callback;
+                newSequenceDefinition.Callback = callback;
             if (Key != null)
                 newSequenceDefinition.SetKeyCode((KeyCode)Key);
             SequenceDefinitions.Add(newSequenceDefinition);
-            if (newSequenceDefinition.callback == null)
+            if (newSequenceDefinition.Callback == null)
                 ZiMain.log.LogWarning($"Created a keypress sequence listener with no callback! \"{newSequenceDefinition.Key}\" Nothing will happen!");
         }
         private HashSet<KeyCode> GetKeyCodes()
@@ -143,7 +146,7 @@ namespace SlideDrum.sInputSystem
                     continue;
                 bool state = sequence.MatchesSequence(definition);
                 if (state && (!definition.RisingEdgeOnly || !KeyState.definitionStates.ContainsKey(definition.Id) || !KeyState.definitionStates[definition.Id]))
-                    definition.callback.Invoke();
+                    definition.Callback.Invoke();
                 KeyState.definitionStates[definition.Id] = state;
             }
         }

@@ -78,9 +78,15 @@ namespace BotControl.SmartSelect
         {
             inputSystem = new();
             inputSystem.AddListener(sInputSystemDefaults.OnTap, new FlexibleMethodDefinition(DebugTrigger, args: ["OnTap"]), key);
+            inputSystem.AddListener(sInputSystemDefaults.OnTap, new FlexibleMethodDefinition(DebugTrigger, args: ["OnBTap"]), KeyCode.B);
             inputSystem.AddListener(sInputSystemDefaults.OnHold, new FlexibleMethodDefinition(DebugTrigger, args: ["OnHold"]), key);
             inputSystem.AddListener(sInputSystemDefaults.OnHoldImmediate, new FlexibleMethodDefinition(DebugTrigger, args: ["OnHoldImmediate"]), key);
             inputSystem.AddListener(sInputSystemDefaults.OnDoubleTap, new FlexibleMethodDefinition(DebugTrigger, args: ["OnDoubleTap"]), key);
+            inputSystem.AddListener(sInputSystemDefaults.OnPressed, new FlexibleMethodDefinition(DebugTrigger, args: ["OnPressed"]), key);
+            //inputSystem.AddListener(sInputSystemDefaults.WhilePressed, new FlexibleMethodDefinition(DebugTrigger, args: ["WhilePressed"]), key);
+            inputSystem.AddListener(sInputSystemDefaults.WhileUnpressed, new FlexibleMethodDefinition(DebugTrigger, args: ["WhileUnpressed"]), key);
+            inputSystem.AddListener(sInputSystemDefaults.WhileUnpressed, new FlexibleMethodDefinition(DebugTrigger, args: ["WhileBUnpressed"]), KeyCode.B);
+            inputSystem.AddListener(sInputSystemDefaults.OnUnpressed, new FlexibleMethodDefinition(DebugTrigger, args: ["OnUnpressed"]), key);
             IsSetUp = true;
         }
         public static void DebugTrigger(string messge)

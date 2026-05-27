@@ -86,5 +86,35 @@ namespace SlideDrum.sInputSystem
 
             return true;
         }
+        //public bool Matches(sKeyPressDefinition definition)
+        //{
+        //    bool ret = true;
+        //    if (this.Key != definition.Key)
+        //        ret = false;
+
+        //    if (definition.InvertedInput)
+        //    {
+        //        if (this.IsPressedDown)
+        //            ret = false;
+        //    }
+        //    else
+        //    {
+        //        if (!this.IsPressedDown)
+        //            ret = false;
+        //    }
+
+        //    if (this.UnheldDurration < definition.MinUnheldDurration ||
+        //        this.UnheldDurration > definition.MaxUnheldDurration)
+        //        ret = false;
+
+        //    if (this.HeldDurration < definition.MinHoldDurration ||
+        //        this.HeldDurration > definition.MaxHoldDurration)
+        //        ret = false;
+
+        //    if (definition.InvertedOutput)
+        //        ret = !ret;
+
+        //    return ret;
+        //}
     }
 }

@@ -27,9 +27,9 @@ namespace SlideDrum.sInputSystem
             if (sequenceDefinition.Sequence.Length > Count)
                 return false;
 
-            int start = sequenceDefinition.strict ? 0 : Count - sequenceDefinition.Sequence.Length;
+            int start = sequenceDefinition.Strict ? 0 : Count - sequenceDefinition.Sequence.Length;
 
-            if (sequenceDefinition.strict && Count != sequenceDefinition.Sequence.Length)
+            if (sequenceDefinition.Strict && Count != sequenceDefinition.Sequence.Length)
                 return false;
 
             for (int i = 0; i < sequenceDefinition.Sequence.Length; i++)

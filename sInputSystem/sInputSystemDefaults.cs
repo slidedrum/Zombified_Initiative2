@@ -23,7 +23,7 @@ namespace SlideDrum.sInputSystem
                         MaxHoldDurration: TapThreshold
                         );
                 }
-                return (sKeyPressDefinition)_Tap;
+                return new sKeyPressDefinition(_Tap);
             }
         }
         private static sKeyPressDefinition? _Hold;
@@ -37,7 +37,92 @@ namespace SlideDrum.sInputSystem
                         MinHoldDurration: TapThreshold
                         );
                 }
-                return (sKeyPressDefinition)_Hold;
+                return new sKeyPressDefinition(_Hold);
+            }
+        }
+        private static sKeyPressDefinition? _Press;
+        public static sKeyPressDefinition Press
+        {
+            get
+            {
+                if (_Press == null)
+                {
+                    _Press = new(
+                        );
+                }
+                return new sKeyPressDefinition(_Press);
+            }
+        }
+        private static sKeySequenceDefinition? _OnPressed;
+        public static sKeySequenceDefinition OnPressed
+        {
+            get
+            {
+                if (_OnPressed == null)
+                {
+                    _OnPressed = new sKeySequenceDefinition(
+                        [Press],
+                        sKeySequenceDefinition.TriggerPoint.Pressed,
+                        null,
+                        Strict: false,
+                        RisingEdgeOnly: true
+                    );
+                }
+                return (sKeySequenceDefinition)_OnPressed;
+            }
+        }
+        private static sKeySequenceDefinition? _WhilePressed;
+        public static sKeySequenceDefinition WhilePressed
+        {
+            get
+            {
+                if (_WhilePressed == null)
+                {
+                    _WhilePressed = new sKeySequenceDefinition(
+                        [Press],
+                        sKeySequenceDefinition.TriggerPoint.Pressed,
+                        null,
+                        Strict: false,
+                        RisingEdgeOnly: false
+                    );
+                }
+                return (sKeySequenceDefinition)_WhilePressed;
+            }
+        }
+        private static sKeySequenceDefinition? _WhileUnpressed;
+        public static sKeySequenceDefinition WhileUnpressed
+        {
+            get
+            {
+                if (_WhileUnpressed == null)
+                {
+                    _WhileUnpressed = new sKeySequenceDefinition(
+                        [Press],
+                        sKeySequenceDefinition.TriggerPoint.Unpressed,
+                        null,
+                        Strict: false,
+                        RisingEdgeOnly: false
+                    );
+                }
+                return (sKeySequenceDefinition)_WhileUnpressed;
+            }
+        }
+        private static sKeySequenceDefinition? _OnUnpressed;
+        public static sKeySequenceDefinition OnUnpressed
+        {
+            get
+            {
+                if (_OnUnpressed == null)
+                {
+                    _OnUnpressed = new sKeySequenceDefinition(
+                        [Press],
+                        sKeySequenceDefinition.TriggerPoint.Unpressed,
+                        null,
+                        Strict: false,
+                        RisingEdgeOnly: true
+                    );
+                }
+                return (sKeySequenceDefinition)_OnUnpressed;
             }
         }
         private static sKeySequenceDefinition? _OnTap;
@@ -51,7 +136,7 @@ namespace SlideDrum.sInputSystem
                         [Tap],
                         sKeySequenceDefinition.TriggerPoint.Unpressed,
                         null,
-                        strict: false,
+                        Strict: false,
                         RisingEdgeOnly: true
                     );
                 }
@@ -69,7 +154,7 @@ namespace SlideDrum.sInputSystem
                         [Hold],
                         sKeySequenceDefinition.TriggerPoint.Unpressed,
                         null,
-                        strict: false,
+                        Strict: false,
                         RisingEdgeOnly: true
                     );
                 }
@@ -87,7 +172,7 @@ namespace SlideDrum.sInputSystem
                         [Hold],
                         sKeySequenceDefinition.TriggerPoint.Pressed,
                         null,
-                        strict: false,
+                        Strict: false,
                         RisingEdgeOnly: true
                     );
                 }
@@ -102,15 +187,17 @@ namespace SlideDrum.sInputSystem
                 if (_OnDoubleTap == null)
                 {
                     _OnDoubleTap = new sKeySequenceDefinition(
-                        [Tap,Tap],
+                        [Tap, Tap],
                         sKeySequenceDefinition.TriggerPoint.Unpressed,
                         null,
-                        strict: false,
+                        Strict: false,
                         RisingEdgeOnly: true
                     );
                 }
                 return (sKeySequenceDefinition)_OnDoubleTap;
             }
         }
+
+
     }
 }
