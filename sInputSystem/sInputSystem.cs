@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using BotControl;
+using SlideMenu;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace SlideDrum.sInputSystem
@@ -15,16 +17,21 @@ namespace SlideDrum.sInputSystem
 
         private List<sKeySequenceDefinition> SequenceDefinitions = new();
         private Dictionary<uint, bool> definitionStates = new();
-        public sInputSystem(KeyCode Key, float TapThreshold)
+        public sInputSystem(KeyCode Key, float TapThreshold = sInputSystemDefaults.TapThreshold)
         {
             this.Key = Key;
             this.TapThreshold = TapThreshold;
         }
-        public void AddListener(sKeySequenceDefinition newSequenceDefinition)
+        public void AddListener(sKeySequenceDefinition newSequenceDefinition, FlexibleMethodDefinition callback = null, KeyCode? Key = null)
         {
+            if (callback != null)
+                newSequenceDefinition.callback = callback;
+            if (Key != null)
+                newSequenceDefinition.SetKeyCode((KeyCode)Key);
             SequenceDefinitions.Add(newSequenceDefinition);
+            if (newSequenceDefinition.callback == null)
+                ZiMain.log.LogWarning($"Created a keypress sequence listener with no callback! \"{newSequenceDefinition.Key}\" Nothing will happen!");
         }
-
         public void Update()
         {
             float time = Time.time;
@@ -35,7 +42,7 @@ namespace SlideDrum.sInputSystem
             WasKeyHeldOnThePreviousFrame = keyPressed;
             if (keyDown)
             {
-                RecetPress = new sKeyPress(this);
+                RecetPress = new sKeyPress(Key, this);
             }
             else if (keyUp)
             {

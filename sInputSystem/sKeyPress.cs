@@ -12,11 +12,6 @@ namespace SlideDrum.sInputSystem
             Down,
             Up
         }
-        public enum PressType
-        {
-            tap,
-            hold,
-        }
         public class InputEvent
         {
             public float time;
@@ -33,17 +28,16 @@ namespace SlideDrum.sInputSystem
         private float tapThreshold => inputSystem.TapThreshold;
         private readonly InputEvent KeyDown;
         private InputEvent KeyUp;
+        public readonly KeyCode Key;
         public sKeyPress PreviousKeyPress;
         public bool IsPressedDown => KeyUp == null;
         public float DownTimestamp => KeyDown.time;
         public float UpTimestamp => KeyUp?.time ?? Time.time;
-        public float HeldTime => UpTimestamp - DownTimestamp;
-        public float UnheldTime => PreviousKeyPress == null ? float.MaxValue : DownTimestamp - PreviousKeyPress.UpTimestamp;
-        public float TimeSinceReleased => TimeSince(UpTimestamp);
-        private bool StartNewSequence => UnheldTime > tapThreshold;
-        private bool IsTap => HeldTime < tapThreshold;
-        public PressType pressType => IsTap ? PressType.tap : PressType.hold;
-        public sKeyPress(sInputSystem inputSystem)
+        public float HeldDurration => UpTimestamp - DownTimestamp;
+        public float UnheldDurration => PreviousKeyPress == null ? float.MaxValue : DownTimestamp - PreviousKeyPress.UpTimestamp;
+        public float UnheldFor => TimeSince(UpTimestamp);
+        private bool StartNewSequence => UnheldDurration > tapThreshold;
+        public sKeyPress(KeyCode key, sInputSystem inputSystem)
         {
             if (lastPress != null && lastPress.KeyUp == null)
             {
@@ -51,6 +45,7 @@ namespace SlideDrum.sInputSystem
                 lastPress.SetUp();
             }
             this.inputSystem = inputSystem;
+            this.Key = key;
             KeyDown = new InputEvent(Time.time, InputEdge.Down);
             if (lastPress != null)
                 PreviousKeyPress = lastPress;
@@ -75,6 +70,21 @@ namespace SlideDrum.sInputSystem
         {
             if (endTime == null) endTime = Time.time;
             return (float)endTime - startTime;
+        }
+        public bool Matches(sKeyPressDefinition definition)
+        {
+            if (this.Key != definition.Key)
+                return false;
+
+            if (this.UnheldDurration < definition.MinUnheldDurration ||
+                this.UnheldDurration > definition.MaxUnheldDurration)
+                return false;
+
+            if (this.HeldDurration < definition.MinHoldDurration ||
+                this.HeldDurration > definition.MaxHoldDurration)
+                return false;
+
+            return true;
         }
     }
 }

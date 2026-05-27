@@ -1,6 +1,8 @@
 ﻿using BotControl;
 using InControl;
 using SlideMenu;
+using System;
+using UnityEngine;
 
 namespace SlideDrum.sInputSystem
 {
@@ -12,17 +14,12 @@ namespace SlideDrum.sInputSystem
             Pressed,
             Unpressed,
         }
-        public enum EdgeType
-        {
-            Rising,
-            Falling,
-        }
-        public sKeyPress.PressType[] Sequence;
+        public sKeyPressDefinition[] Sequence;
         public TriggerPoint Trigger;
         public FlexibleMethodDefinition callback;
         public bool strict;
         public bool RisingEdgeOnly;
-        private string Key => $"{string.Join(",", Sequence)}_{Trigger}_{strict}_{RisingEdgeOnly}";
+        public string Key => $"{string.Join(",", Sequence)}_{Trigger}_{strict}_{RisingEdgeOnly}";
         private uint _id;
         public uint Id
         {
@@ -35,13 +32,34 @@ namespace SlideDrum.sInputSystem
                 return _id;
             }
         }
-        public sKeySequenceDefinition(sKeyPress.PressType[] Sequence, TriggerPoint Trigger, FlexibleMethodDefinition callback, bool strict = false, bool RisingEdgeOnly = true)
+        public void SetKeyCode(KeyCode key)
+        {
+            for (int i = 0; i < Sequence.Length; i++)
+            {
+                var keyPress = Sequence[i];
+                keyPress.Key = key;
+                Sequence[i] = keyPress;
+            }
+        }
+        public sKeySequenceDefinition(sKeyPressDefinition[] Sequence, TriggerPoint Trigger, FlexibleMethodDefinition callback, bool strict = false, bool RisingEdgeOnly = true, KeyCode? Key = null)
         {
             this.Sequence = Sequence;
             this.Trigger = Trigger;
             this.callback = callback;
             this.strict = strict;
             this.RisingEdgeOnly = RisingEdgeOnly;
+            for (int i = 0; i < Sequence.Length; i++)
+            {
+                var keyPress = Sequence[i];
+                if (Key != null)
+                {
+                    keyPress.Key = Key;
+                    Sequence[i] = keyPress;
+                    continue;
+                }
+                //if (keyPress.Key == null)
+                //    throw new ArgumentException("All key presses must have a key defined either in the sequence or in the constructor override.");
+            }
         }
     }
 }

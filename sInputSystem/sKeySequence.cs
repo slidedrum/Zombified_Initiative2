@@ -8,7 +8,7 @@ namespace SlideDrum.sInputSystem
     {
         private List<sKeyPress> _sequence;
         public bool IsNewSequence => _sequence.Count == 1;
-        public bool IsSequenceOngoing => Recent.TimeSinceReleased < First.inputSystem.TapThreshold;
+        public bool IsSequenceOngoing => Recent.UnheldFor < First.inputSystem.TapThreshold;
         public int Count => _sequence.Count;
         public sKeyPress First => _sequence[0];
         public sKeyPress Recent => _sequence[_sequence.Count - 1];
@@ -34,7 +34,7 @@ namespace SlideDrum.sInputSystem
 
             for (int i = 0; i < sequenceDefinition.Sequence.Length; i++)
             {
-                if (_sequence[i + start].pressType != sequenceDefinition.Sequence[i])
+                if (!_sequence[i + start].Matches(sequenceDefinition.Sequence[i]))
                     return false;
             }
             return true;

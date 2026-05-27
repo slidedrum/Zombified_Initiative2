@@ -51,7 +51,6 @@ namespace BotControl.SmartSelect
         public static float heldDuration = 0f;
         public static KeyCode key = KeyCode.V;
         public static Selection selection = new();
-        const float holdThreshold = 0.25f;
         private const float vertHeadOffset = 1.75f;
         private static bool IsSetUp = false;
         private static sInputSystem inputSystem;
@@ -77,74 +76,16 @@ namespace BotControl.SmartSelect
         }
         private static void SetUp()
         {
-            inputSystem = new(key, holdThreshold);
-            inputSystem.AddListener(
-                new sKeySequenceDefinition(
-                    new[] { sKeyPress.PressType.tap, sKeyPress.PressType.tap },
-                    sKeySequenceDefinition.TriggerPoint.Unpressed,
-                    new FlexibleMethodDefinition(DebugTrigger, args: ["OnDoubleTap"]),
-                    strict: false,
-                    RisingEdgeOnly: true
-                )
-            );
-            inputSystem.AddListener(
-                new sKeySequenceDefinition(
-                    new[] { sKeyPress.PressType.hold },
-                    sKeySequenceDefinition.TriggerPoint.Pressed,
-                    new FlexibleMethodDefinition(DebugTrigger, args: ["OnHoldImideate"]),
-                    strict: false,
-                    RisingEdgeOnly: true
-                )
-            );
-            inputSystem.AddListener(
-                new sKeySequenceDefinition(
-                    new[] { sKeyPress.PressType.tap },
-                    sKeySequenceDefinition.TriggerPoint.SequenceComplete,
-                    new FlexibleMethodDefinition(DebugTrigger, args: ["OnTappedExclusiveStrict"]),
-                    strict: true,
-                    RisingEdgeOnly: true
-                )
-            );
-            inputSystem.AddListener(
-                new sKeySequenceDefinition(
-                    new[] { sKeyPress.PressType.tap },
-                    sKeySequenceDefinition.TriggerPoint.Unpressed,
-                    new FlexibleMethodDefinition(DebugTrigger, args: ["OnTappedStrict"]),
-                    strict: true,
-                    RisingEdgeOnly: true
-                )
-            );
-            inputSystem.AddListener(
-                new sKeySequenceDefinition(
-                    new[] { sKeyPress.PressType.tap, sKeyPress.PressType.tap, sKeyPress.PressType.hold },
-                    sKeySequenceDefinition.TriggerPoint.Pressed,
-                    new FlexibleMethodDefinition(DebugTrigger, args: ["DoubleTapAndHoldImmediate"]),
-                    strict: false,
-                    RisingEdgeOnly: true
-                )
-            );
+            inputSystem = new(key);
+            inputSystem.AddListener(sInputSystemDefaults.OnTap, new FlexibleMethodDefinition(DebugTrigger, args: ["OnTap"]), key);
+            inputSystem.AddListener(sInputSystemDefaults.OnHold, new FlexibleMethodDefinition(DebugTrigger, args: ["OnHold"]), key);
+            inputSystem.AddListener(sInputSystemDefaults.OnHoldImmediate, new FlexibleMethodDefinition(DebugTrigger, args: ["OnHoldImmediate"]), key);
+            inputSystem.AddListener(sInputSystemDefaults.OnDoubleTap, new FlexibleMethodDefinition(DebugTrigger, args: ["OnDoubleTap"]), key);
             IsSetUp = true;
         }
         public static void DebugTrigger(string messge)
         {
             ZiMain.log.LogDebug(messge);
-        }
-        public static void onKeyDown()
-        {
-            interactionHeldStart = Time.time;
-            interactionHeld = true;
-        }
-        public static void onKeyUp()
-        {
-            if (heldDuration < holdThreshold)
-                onKeyTap();
-            interactionHeld = false;
-        }
-        public static void onKey()
-        {
-            heldDuration = Time.time - interactionHeldStart;
-            if (heldDuration > holdThreshold && heldDuration - Time.deltaTime <= holdThreshold)
-                onKeyHeld();
         }
         public static lookingObject GetFilteredObjectLookingAt()
         {
