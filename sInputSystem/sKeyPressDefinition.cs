@@ -16,7 +16,7 @@ namespace SlideDrum.sInputSystem
         public List<sKeyPressAnchor> Anchors { get; private set; } = new(); // What is this key press anchored to, what time windows must it be pressed in relation to other key presses in the sequence definition.
         public bool HasAnchors => Anchors.Count > 0;
         public HashSet<sKeyPressRefrence> MatchCandidates = new();
-        public bool Matched => MatchCandidates.Count > 0;
+        public bool AnyMatches => MatchCandidates.Count > 0;
         public sKeyPressRefrence FirstMatchCandidate             
         { 
             get 
@@ -103,7 +103,7 @@ namespace SlideDrum.sInputSystem
                 bool AnyAnchorDefinitonsMatched = false;
                 foreach (var anchor in Anchors)
                 {
-                    if (anchor.PressDefinition.Matched)
+                    if (anchor.PressDefinition.AnyMatches)
                     {
                         AnyAnchorDefinitonsMatched = true;
                         break;

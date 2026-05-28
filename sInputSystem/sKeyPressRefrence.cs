@@ -46,5 +46,18 @@ namespace SlideDrum.sInputSystem
             this.End = EndTime;
             this.Pressed = Start.Pressed;
         }
+        public bool ContainsEvent(InputEvent evnt)
+        {
+            if (evnt.Key != Key)
+                return false;
+
+            if (evnt.Time == Start)
+                return evnt.Pressed == Pressed;
+
+            if (evnt.Time == End)
+                return evnt.Pressed != Pressed;
+
+            return false;
+        }
     }
 }

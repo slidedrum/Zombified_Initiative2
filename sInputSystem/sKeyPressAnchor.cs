@@ -1,4 +1,6 @@
-﻿namespace SlideDrum.sInputSystem
+﻿using System;
+
+namespace SlideDrum.sInputSystem
 {
     public class sKeyPressAnchor
     {
@@ -32,47 +34,53 @@
 
         internal bool Matches(sKeyPressRefrence timelineEvent)
         {
-            if (!PressDefinition.Matched) // If we don't have anything to anchor to, then it's not a match.
+            if (!PressDefinition.AnyMatches) // If we don't have anything to anchor to, then it's not a match.
                 return false;
             foreach (var candidate in PressDefinition.MatchCandidates)
             {
-                float WindowStartTime = 0; //these will always be overidden because there are only 3 possible Anchorpoints.  but need to tell compiler that it'll never be undefined.
-                float WindowEndTime = 0;
-                switch (OtherPoint)
-                {
-                    case (Anchorpoint.Start):
-                        WindowStartTime = candidate.Start + WindowStart;
-                        WindowEndTime = candidate.Start + WindowEnd;
-                        break;
-                    case (Anchorpoint.End):
-                        WindowStartTime = candidate.End + WindowStart;
-                        WindowEndTime = candidate.End + WindowEnd;
-                        break;
-                    case (Anchorpoint.Inside):
-                        WindowStartTime = candidate.Start + WindowStart;
-                        WindowEndTime = candidate.End + WindowEnd;
-                        break;
-                }
-                float AnchorStartTime = 0;
-                float AnchorEndTime = 0;
-                switch (ThisPoint)
-                {
-                    case (Anchorpoint.Start):
-                        AnchorStartTime = timelineEvent.Start;
-                        AnchorEndTime = timelineEvent.Start;
-                        break;
-                    case (Anchorpoint.End):
-                        AnchorStartTime = timelineEvent.End;
-                        AnchorEndTime = timelineEvent.End;
-                        break;
-                    case (Anchorpoint.Inside):
-                        AnchorStartTime = timelineEvent.Start;
-                        AnchorEndTime = timelineEvent.End;
-                        break;
-                }
-                if (AnchorEndTime >= WindowStartTime && AnchorStartTime <= WindowEndTime)
+                if (CandidateMataches(timelineEvent, candidate))
                     return true;
             }
+            return false;
+        }
+        internal bool CandidateMataches(sKeyPressRefrence PressA, sKeyPressRefrence PressB)
+        {
+            float WindowStartTime = 0; //these will always be overidden because there are only 3 possible Anchorpoints.  but need to tell compiler that it'll never be undefined.
+            float WindowEndTime = 0;
+            float AnchorStartTime = 0;
+            float AnchorEndTime = 0;
+            switch (ThisPoint)
+            {
+                case (Anchorpoint.Start):
+                    AnchorStartTime = PressA.Start;
+                    AnchorEndTime = PressA.Start;
+                    break;
+                case (Anchorpoint.End):
+                    AnchorStartTime = PressA.End;
+                    AnchorEndTime = PressA.End;
+                    break;
+                case (Anchorpoint.Inside):
+                    AnchorStartTime = PressA.Start;
+                    AnchorEndTime = PressA.End;
+                    break;
+            }
+            switch (OtherPoint)
+            {
+                case (Anchorpoint.Start):
+                    WindowStartTime = PressB.Start + WindowStart;
+                    WindowEndTime = PressB.Start + WindowEnd;
+                    break;
+                case (Anchorpoint.End):
+                    WindowStartTime = PressB.End + WindowStart;
+                    WindowEndTime = PressB.End + WindowEnd;
+                    break;
+                case (Anchorpoint.Inside):
+                    WindowStartTime = PressB.Start + WindowStart;
+                    WindowEndTime = PressB.End + WindowEnd;
+                    break;
+            }
+            if (AnchorEndTime >= WindowStartTime && AnchorStartTime <= WindowEndTime)
+                return true;
             return false;
         }
     }

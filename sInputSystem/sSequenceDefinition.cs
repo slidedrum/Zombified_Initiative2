@@ -1,4 +1,5 @@
 ﻿using SlideMenu;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -17,8 +18,9 @@ namespace SlideDrum.sInputSystem
         public readonly HashSet<KeyCode> ExclusiveSelfExcept = new(); // Should any KeyCodes in this sequence NOT break it?
         private bool PreviouslyMatched = false; // used for rising edge only, to prevent multiple triggers from the same sequence match
         private bool Matched = false; // used for rising edge only, to prevent multiple triggers from the same sequence match
-        private int CurrentMatchCount => Presses.Count(press => press.Matched);
-        private bool MatchedAll => CurrentMatchCount == Presses.Length;
+        private int CurrentMatchCount => Presses.Count(press => press.AnyMatches);
+        private bool _AllMatched = false; // This is unreliable and must be phased out.  Must check if the sequence is complete instead.
+        public Dictionary<sKeyPressDefinition, sKeyPressRefrence> SolvedSolution { get; private set; }
         private HashSet<KeyCode> _BreakList;
         public HashSet<KeyCode> BreakList 
         { 
@@ -42,7 +44,7 @@ namespace SlideDrum.sInputSystem
                 sKeyPressDefinition _FirstMatch = null;
                 foreach (var Press in Presses)
                 {
-                    if (Press.Matched)
+                    if (Press.AnyMatches)
                     {
                         var FirstMatchCandidate = Press.FirstMatchCandidate;
                         if (FirstMatchTime > FirstMatchCandidate.Start)
@@ -63,7 +65,7 @@ namespace SlideDrum.sInputSystem
                 sKeyPressDefinition _LastMatch = null;
                 foreach (var Press in Presses)
                 {
-                    if (Press.Matched)
+                    if (Press.AnyMatches)
                     {
                         var LastMatchCandidate = Press.LastMatchCandidate;
                         if (LastMatchTime < LastMatchCandidate.End)
@@ -154,6 +156,80 @@ namespace SlideDrum.sInputSystem
             foreach (sKeyPressDefinition Press in Presses)
                 Press.ResetMatchCandidates();
         }
+        private bool CheckSequenceComplete(
+            int Index = 0,
+            Dictionary<sKeyPressDefinition, sKeyPressRefrence> Solution = null
+        )
+        {
+            if (Solution == null)
+                Solution = new();
+            // all presses assigned successfully
+            if (Index >= Presses.Length)
+            {
+                SolvedSolution = Solution;
+                return true;
+            }
+
+            sKeyPressDefinition press = Presses[Index];
+
+            foreach (sKeyPressRefrence candidate in press.MatchCandidates)
+            {
+                // optional:
+                // prevent same timeline event from satisfying multiple presses
+                if (Solution.Values.Contains(candidate))
+                    continue;
+
+                if (!CandidateFits(press, candidate, Solution))
+                    continue;
+
+                // choose
+                Solution.Add(press, candidate);
+
+                // recurse
+                if (CheckSequenceComplete(Index + 1, Solution))
+                    return true;
+
+                // backtrack
+                Solution.Remove(press);
+            }
+            return false;
+        }
+        public bool MatchedAll(bool recheck = true)
+        {
+            if (recheck)
+                _AllMatched = CheckSequenceComplete();
+            return _AllMatched;
+        }
+        private bool CandidateFits(
+            sKeyPressDefinition press,
+            sKeyPressRefrence candidate,
+            Dictionary<sKeyPressDefinition, sKeyPressRefrence> solution
+        )
+        {
+            foreach (var anchor in press.Anchors)
+            {
+                // anchor target not solved yet
+                // can't validate yet
+                if (!solution.TryGetValue(anchor.PressDefinition, out var other))
+                    continue;
+
+                // validate THIS specific pair
+                if (!anchor.CandidateMataches(candidate, other))
+                    return false;
+            }
+            return true;
+        }
+        private bool ContainsInputEvent(InputEvent Evnt)
+        {
+            foreach (var KeyPress in SolvedSolution.Values)
+            {
+                if (KeyPress.ContainsEvent(Evnt))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
         public bool Matches()
         {
             // Loop through all KeyPresses in the timeline
@@ -180,14 +256,14 @@ namespace SlideDrum.sInputSystem
                         {
                             return MatchedTail(false);
                         }
-                        if (MatchedAll)
+                        if (MatchedAll(true))
                             break;
                     }
-                    if (MatchedAll)
+                    if (MatchedAll())
                         break;
                 }
-            } while (!MatchedAll && PreviousMatchCount < CurrentMatchCount);
-            if (MatchedAll)
+            } while (!MatchedAll() && PreviousMatchCount < CurrentMatchCount);
+            if (MatchedAll())
             {
                 if (MatchEndTimestamp + ExclusivityWindow < Time.time)
                 {
@@ -198,15 +274,15 @@ namespace SlideDrum.sInputSystem
                     var TimelineEvent = sTimeline.Sequence[i];
                     if (TimelineEvent.Time < (Strict ? MatchStartTimestamp : MatchEndTimestamp))
                         break;
-                    // TODO CRITICAL Need to check if TimelineEvent is part of the matched sequence
+                    if (ContainsInputEvent(TimelineEvent))
+                        continue;
                     if (BreakList.Contains(TimelineEvent.Key))
                         return MatchedTail(false);
                 }
 
                 if (RisingEdgeOnly) // handle differently when we're in rising edge only mode.
                 {
-                    bool RisingEdge = Matched && !PreviouslyMatched; // is this a rising edge?
-                    if (RisingEdge)
+                    if (!PreviouslyMatched)// is this a rising edge?
                     {
                         return MatchedTail(true);  // continue as normal.
                     }
