@@ -78,8 +78,8 @@ namespace BotControl.SmartSelect
 
             sInputSystem.AddListener(sInputSystemDefaults.OnTapped, new FlexibleMethodDefinition(DebugTrigger, args: ["OnVTapped"]), KeyCode.V);
             sInputSystem.AddListener(sInputSystemDefaults.OnTapped, new FlexibleMethodDefinition(DebugTrigger, args: ["OnBTapped"]), KeyCode.B);
-            //sInputSystem.AddListener(sInputSystemDefaults.OnUnpressed, new FlexibleMethodDefinition(DebugTrigger, args: ["OnBUnressed"]), KeyCode.B);
-            //sInputSystem.AddListener(sInputSystemDefaults.OnUnpressed, new FlexibleMethodDefinition(DebugTrigger, args: ["OnVUnressed"]), KeyCode.V);
+            sInputSystem.AddListener(sInputSystemDefaults.OnHold, new FlexibleMethodDefinition(DebugTrigger, args: ["OnBHold"]), KeyCode.B);
+            sInputSystem.AddListener(sInputSystemDefaults.OnHold, new FlexibleMethodDefinition(DebugTrigger, args: ["OnVHold"]), KeyCode.V);
 
             IsSetUp = true;
         }

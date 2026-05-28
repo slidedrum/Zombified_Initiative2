@@ -43,10 +43,10 @@ namespace SlideDrum.sInputSystem
                 bool keyUp = !keyPressed && wasHeld;
 
                 if (keyDown)
-                    sTimeline.Add(new InputEvent(Key, Time.time, true));
+                    sTimeline.Add(new InputEvent(Key, time, true));
 
                 if (keyUp)
-                    sTimeline.Add(new InputEvent(Key, Time.time, false));
+                    sTimeline.Add(new InputEvent(Key, time, false));
 
                 WasKeyHeldOnThePreviousFrame[Key] = keyPressed;
             }

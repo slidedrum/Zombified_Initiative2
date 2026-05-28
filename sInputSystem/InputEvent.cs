@@ -13,5 +13,10 @@ namespace SlideDrum.sInputSystem
             this.Time = Time;
             this.Pressed = Pressed;
         }
+        public override string ToString()
+        {
+            string pressedString = Pressed ? "Pressed" : "Unpressed";
+            return $"{Key} {pressedString} at {Time}";
+        }
     }
 }

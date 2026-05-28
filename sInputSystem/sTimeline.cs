@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using BotControl;
+using System.Collections.Generic;
+using System.Reflection.Metadata;
 using UnityEngine;
 
 namespace SlideDrum.sInputSystem
@@ -20,7 +22,9 @@ namespace SlideDrum.sInputSystem
                     {
                         if (pairedEvent.Pressed != SequenceEvent.Pressed)
                         {
-                            _KeyPressRefrences.Add(new sKeyPressRefrence(SequenceEvent, pairedEvent));
+                            var newEvent = new sKeyPressRefrence(SequenceEvent, pairedEvent);
+                            _KeyPressRefrences.Add(newEvent);
+                            PreviousEvent[SequenceEvent.Key] = SequenceEvent;
                         }
                         else
                         {
@@ -30,7 +34,9 @@ namespace SlideDrum.sInputSystem
                     }
                     else
                     {
-                        _KeyPressRefrences.Add(new sKeyPressRefrence(SequenceEvent, Time.time)); // if there is no previous event to match it to, we pair it with the current time.
+                        var newEvent = new sKeyPressRefrence(SequenceEvent, Time.time);
+                        _KeyPressRefrences.Add(newEvent); // if there is no previous event to match it to, we pair it with the current time.
+                        PreviousEvent[SequenceEvent.Key] = SequenceEvent;
                     }
                 }
                 return _KeyPressRefrences;
@@ -40,6 +46,15 @@ namespace SlideDrum.sInputSystem
         public static void Add(InputEvent Evnt)
         {
             Sequence.Add(Evnt);
+        }
+        private static void DebugPrint()
+        {
+            string output = "Buffer: ";
+            for (int i = 0; i < Sequence.Count; i++)
+            {
+                output += Sequence[i].Time + ",";
+            }
+            ZiMain.log.LogDebug(output);
         }
     }
 }

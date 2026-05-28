@@ -3,28 +3,42 @@
     public static class sInputSystemDefaults
     {
         public const float TapThreshold = 0.25f;
-        private static sKeyPressDefinition? _ShortPress;
         public static sKeyPressDefinition ShortPress 
         {
             get
             {
-                sKeyPressDefinition _ShortPress = new(
+                sKeyPressDefinition ShortPress = new(
                         Key: null,
                         Pressed: true,
-                        MaxDuration: TapThreshold
+                        MaxDuration: TapThreshold,
+                        Identifier: "ShortPress"
                         );
-                return _ShortPress;
+                return ShortPress;
+            }
+        }
+        public static sKeyPressDefinition LongPress
+        {
+            get
+            {
+                sKeyPressDefinition LongPress = new(
+                        Key: null,
+                        Pressed: true,
+                        MinDuration: TapThreshold,
+                        Identifier: "LongPress"
+                        );
+                return LongPress;
             }
         }
         public static sKeyPressDefinition Unpressed
         {
             get
             {
-                sKeyPressDefinition _Unpressed = new(
+                sKeyPressDefinition Unpressed = new(
                         Key: null,
-                        Pressed: false
+                        Pressed: false,
+                        Identifier: "Unpressed"
                         );
-                return _Unpressed;
+                return Unpressed;
             }
         }
         public static sSequenceDefinition OnTapped
@@ -35,11 +49,28 @@
                 var unpressed = Unpressed;
                 sKeyPressDefinition[] Presses = [shortPress, unpressed];
                 unpressed.AddAnchor(shortPress);
-                sSequenceDefinition _OnTapped = new(
+                sSequenceDefinition OnTapped = new(
                     Presses: Presses,
-                    Callback: null
+                    Callback: null,
+                    Identifier: "OnTapped"
                     );
-                return _OnTapped;
+                return OnTapped;
+            }
+        }
+        public static sSequenceDefinition OnHold
+        {
+            get
+            {
+                var longPress = LongPress;
+                var unpressed = Unpressed;
+                sKeyPressDefinition[] Presses = [longPress, unpressed];
+                unpressed.AddAnchor(longPress);
+                sSequenceDefinition OnHold = new(
+                    Presses: Presses,
+                    Callback: null,
+                    Identifier: "OnHold"
+                    );
+                return OnHold;
             }
         }
     }

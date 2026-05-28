@@ -20,11 +20,12 @@ namespace SlideDrum.sInputSystem
         private bool Matched = false; // used for rising edge only, to prevent multiple triggers from the same sequence match
         private int CurrentMatchCount => Presses.Count(press => press.AnyMatches);
         private bool _AllMatched = false; // This is unreliable and must be phased out.  Must check if the sequence is complete instead.
+        private string? Identifier = null;
         public Dictionary<sKeyPressDefinition, sKeyPressRefrence> SolvedSolution { get; private set; }
         private HashSet<KeyCode> _BreakList;
-        public HashSet<KeyCode> BreakList 
-        { 
-            get 
+        public HashSet<KeyCode> BreakList
+        {
+            get
             {
                 if (_BreakList == null)
                 {
@@ -34,68 +35,20 @@ namespace SlideDrum.sInputSystem
                         _BreakList.Remove(element);
                 }
                 return _BreakList;
-            } 
-        }
-        public sKeyPressDefinition FirstMatch 
-        { 
-            get 
-            { // Could optimize this with caching, probably not needed?
-                float FirstMatchTime = float.MaxValue;
-                sKeyPressDefinition _FirstMatch = null;
-                foreach (var Press in Presses)
-                {
-                    if (Press.AnyMatches)
-                    {
-                        var FirstMatchCandidate = Press.FirstMatchCandidate;
-                        if (FirstMatchTime > FirstMatchCandidate.Start)
-                        {
-                            FirstMatchTime = FirstMatchCandidate.Start;
-                            _FirstMatch = Press;
-                        }
-                    }
-                }
-                return _FirstMatch;
-            } 
-        }
-        public sKeyPressDefinition LastMatch
-        {
-            get
-            { // Could optimize this with caching, probably not needed?
-                float LastMatchTime = 0f;
-                sKeyPressDefinition _LastMatch = null;
-                foreach (var Press in Presses)
-                {
-                    if (Press.AnyMatches)
-                    {
-                        var LastMatchCandidate = Press.LastMatchCandidate;
-                        if (LastMatchTime < LastMatchCandidate.End)
-                        {
-                            LastMatchTime = LastMatchCandidate.End;
-                            _LastMatch = Press;
-                        }
-                    }
-                }
-                return _LastMatch;
             }
         }
-        float? MatchStartTimestamp 
-        { 
-            get 
+        float? MatchStartTimestamp
+        {
+            get
             {
-                sKeyPressDefinition _FirstMatch = FirstMatch;
-                if (_FirstMatch == null)
-                    return null;
-                return _FirstMatch.FirstMatchCandidate.Start;
-            } 
+                return SolvedSolution?[Presses[0]]?.Start;
+            }
         }
         float? MatchEndTimestamp
         {
             get
-            {
-                sKeyPressDefinition _LastMatch = LastMatch;
-                if (_LastMatch == null)
-                    return null;
-                return _LastMatch.LastMatchCandidate.End;
+            { 
+                return SolvedSolution?[Presses[Presses.Length-1]]?.End;
             }
         }
         private HashSet<KeyCode> _KeyCodes;
@@ -119,6 +72,7 @@ namespace SlideDrum.sInputSystem
                                       bool RisingEdgeOnly = true,
                                       float ExclusivityWindow = 0f,
                                       bool ExclusiveSelf = true,
+                                      string Identifier = null,
                                       HashSet<KeyCode> ExclusiveOther = null,
                                       HashSet<KeyCode> ExclusiveSelfExcept = null)
         {
@@ -128,6 +82,7 @@ namespace SlideDrum.sInputSystem
             this.RisingEdgeOnly = RisingEdgeOnly;
             this.ExclusivityWindow = ExclusivityWindow;
             this.ExclusiveSelf = ExclusiveSelf;
+            this.Identifier = Identifier;
             this.ExclusiveOther = ExclusiveOther ?? new();
             this.ExclusiveSelfExcept = ExclusiveSelfExcept ?? new();
         }
@@ -137,6 +92,7 @@ namespace SlideDrum.sInputSystem
                                         bool RisingEdgeOnly = true,
                                         float ExclusivityWindow = 0f,
                                         bool ExclusiveSelf = true,
+                                        string Identifier = null,
                                         HashSet<KeyCode> ExclusiveOther = null,
                                         HashSet<KeyCode> ExclusiveSelfExcept = null)
                                         : this(
@@ -146,6 +102,7 @@ namespace SlideDrum.sInputSystem
                                             RisingEdgeOnly,
                                             ExclusivityWindow,
                                             ExclusiveSelf,
+                                            Identifier,
                                             ExclusiveOther,
                                             ExclusiveSelfExcept)
         {
@@ -230,6 +187,13 @@ namespace SlideDrum.sInputSystem
             }
             return false;
         }
+        public void DebugPrintRefrences(List<sKeyPressRefrence> Refrences)
+        {
+            foreach (var refrence in Refrences)
+            {
+
+            }
+        }
         public bool Matches()
         {
             // Loop through all KeyPresses in the timeline
@@ -242,10 +206,10 @@ namespace SlideDrum.sInputSystem
             ResetPressMatches();
             List<sKeyPressRefrence> Refrences = new(sTimeline.KeyPressRefrences); // we want to make our own clone so we don't rebuild the list every time we check it.
             int PreviousMatchCount;
-            
+
             do
             { // Keep going untill we don't find any new matches.
-                PreviousMatchCount = CurrentMatchCount;
+                PreviousMatchCount = CurrentMatchCount; // This might be bad, we should track new matches instead?
                 for (int i = 0; i < Refrences.Count; i++)
                 {
                     sKeyPressRefrence TimelineEvent = Refrences[i];
@@ -306,6 +270,17 @@ namespace SlideDrum.sInputSystem
             {
                 Press.Key = Key;
             }
+        }
+        public override string ToString()
+        {
+            if (Identifier != "")
+                return Identifier;
+            string ret = "";
+            foreach (var Press in Presses)
+            {
+                ret += $"-{Press}";
+            }
+            return ret;
         }
     }
 }

@@ -1,4 +1,6 @@
-﻿namespace SlideDrum.sInputSystem
+﻿using BotControl;
+
+namespace SlideDrum.sInputSystem
 {
     public class sRollingBuffer<T>
     {
@@ -39,7 +41,7 @@
         {
             if (count == 0)
                 return default;
-            int item = index % buffer.Length;
+            int item = index % buffer.Length - 1;
             return buffer[item];
         }
         public T Newest()
@@ -48,5 +50,6 @@
                 return default;
             return buffer[0];
         }
+
     }
 }

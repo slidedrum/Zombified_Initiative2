@@ -59,5 +59,10 @@ namespace SlideDrum.sInputSystem
 
             return false;
         }
+        public override string ToString()
+        {
+            string pressedString = Pressed ? "Pressed" : "Unpressed";
+            return $"{Key} {pressedString} for {Durration} at {Start}";
+        }
     }
 }

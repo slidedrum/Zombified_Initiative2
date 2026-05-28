@@ -138,5 +138,12 @@ namespace SlideDrum.sInputSystem
                 MatchCandidates.Add(timelineEvent);
             return AnyAnchorsMatched && Breaking;
         }
+        public override string ToString()
+        {
+            if (Identifier != null)
+                return Identifier;
+            string pressedString = Pressed ? "P" : "U";
+            return $"[{Key.Value.ToString()}:{pressedString}]:[{MinDuration},{MaxDuration}]:[{Strict},{Breaking}]";
+        }
     }
 }
