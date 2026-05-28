@@ -53,7 +53,6 @@ namespace BotControl.SmartSelect
         public static Selection selection = new();
         private const float vertHeadOffset = 1.75f;
         private static bool IsSetUp = false;
-        private static sInputSystem inputSystem;
         public struct lookingObject
         {
             public objectType type;
@@ -72,21 +71,16 @@ namespace BotControl.SmartSelect
             bool ready = FocusStateManager.CurrentState == eFocusState.FPS || FocusStateManager.CurrentState == eFocusState.Dead;
             if (!ready) return;
             if (!IsSetUp) SetUp();
-            inputSystem.Update();
+            sInputSystem.Update();
         }
         private static void SetUp()
         {
-            inputSystem = new();
-            inputSystem.AddListener(sInputSystemDefaults.OnTap, new FlexibleMethodDefinition(DebugTrigger, args: ["OnTap"]), key);
-            inputSystem.AddListener(sInputSystemDefaults.OnTap, new FlexibleMethodDefinition(DebugTrigger, args: ["OnBTap"]), KeyCode.B);
-            inputSystem.AddListener(sInputSystemDefaults.OnHold, new FlexibleMethodDefinition(DebugTrigger, args: ["OnHold"]), key);
-            inputSystem.AddListener(sInputSystemDefaults.OnHoldImmediate, new FlexibleMethodDefinition(DebugTrigger, args: ["OnHoldImmediate"]), key);
-            inputSystem.AddListener(sInputSystemDefaults.OnDoubleTap, new FlexibleMethodDefinition(DebugTrigger, args: ["OnDoubleTap"]), key);
-            inputSystem.AddListener(sInputSystemDefaults.OnPressed, new FlexibleMethodDefinition(DebugTrigger, args: ["OnPressed"]), key);
-            //inputSystem.AddListener(sInputSystemDefaults.WhilePressed, new FlexibleMethodDefinition(DebugTrigger, args: ["WhilePressed"]), key);
-            inputSystem.AddListener(sInputSystemDefaults.WhileUnpressed, new FlexibleMethodDefinition(DebugTrigger, args: ["WhileUnpressed"]), key);
-            inputSystem.AddListener(sInputSystemDefaults.WhileUnpressed, new FlexibleMethodDefinition(DebugTrigger, args: ["WhileBUnpressed"]), KeyCode.B);
-            inputSystem.AddListener(sInputSystemDefaults.OnUnpressed, new FlexibleMethodDefinition(DebugTrigger, args: ["OnUnpressed"]), key);
+
+            sInputSystem.AddListener(sInputSystemDefaults.OnTapped, new FlexibleMethodDefinition(DebugTrigger, args: ["OnVTapped"]), KeyCode.V);
+            sInputSystem.AddListener(sInputSystemDefaults.OnTapped, new FlexibleMethodDefinition(DebugTrigger, args: ["OnBTapped"]), KeyCode.B);
+            //sInputSystem.AddListener(sInputSystemDefaults.OnUnpressed, new FlexibleMethodDefinition(DebugTrigger, args: ["OnBUnressed"]), KeyCode.B);
+            //sInputSystem.AddListener(sInputSystemDefaults.OnUnpressed, new FlexibleMethodDefinition(DebugTrigger, args: ["OnVUnressed"]), KeyCode.V);
+
             IsSetUp = true;
         }
         public static void DebugTrigger(string messge)

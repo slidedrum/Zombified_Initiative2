@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 //using ZombieTweak2.zRootBotPlayerAction.CustomActions;
-using BotControl;
 
 namespace BotControl.Menus
 {

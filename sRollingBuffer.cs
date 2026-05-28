@@ -8,6 +8,7 @@
         public int Count => count;
         public int Capacity => buffer.Length;
         public bool full => count == Capacity;
+        public T this[int i] => Get(i);
         public sRollingBuffer(int capacity)
         {
             buffer = new T[capacity];
@@ -33,6 +34,19 @@
             int item = (this.index - 1 - index + buffer.Length) % buffer.Length;
 
             return buffer[item];
+        }
+        public T Oldest()
+        {
+            if (count == 0)
+                return default;
+            int item = index % buffer.Length;
+            return buffer[item];
+        }
+        public T Newest()
+        {
+            if (count == 0)
+                return default;
+            return buffer[0];
         }
     }
 }
