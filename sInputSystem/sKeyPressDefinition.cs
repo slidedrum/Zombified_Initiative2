@@ -45,16 +45,6 @@ namespace SlideDrum.sInputSystem
         {
             return AddAnchor(new sKeyPressAnchor(Anchor, Anchorpoint.Start, Anchorpoint.End, 0, sInputSystemDefaults.TapThreshold));
         }
-        public sKeyPressDefinition AddAnchor(sKeyPressDefinition Anchor, Anchorpoint ThisPoint, Anchorpoint OtherPoint, float start, float end)
-        {
-            return AddAnchor(new sKeyPressAnchor(Anchor, ThisPoint, OtherPoint, start, end));
-        }
-        public sKeyPressDefinition AddAnchors(List<sKeyPressAnchor> Anchors)
-        {
-            foreach (var Anchor in Anchors)
-                AddAnchor(Anchor);
-            return this;
-        }
         public sKeyPressDefinition ResetMatchCandidates()
         {
             MatchCandidates.Clear();

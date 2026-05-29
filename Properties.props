@@ -7,7 +7,7 @@
 
 	<!--Plugin Metadata-->
 	<PropertyGroup>
-		<PluginName>ZombieTweak2</PluginName>
+		<PluginName>BotControl</PluginName>
 		<RootNamespace>$(PluginName)</RootNamespace>
 		<AssemblyName>$(PluginName)</AssemblyName>
 		<Version>1.0.0</Version>
