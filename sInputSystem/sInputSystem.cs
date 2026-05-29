@@ -45,17 +45,16 @@ namespace SlideDrum.sInputSystem
             foreach (KeyCode Key in KeyCodes)
             {
                 bool keyPressed = Input.GetKey(Key);
-
                 bool NeverPressed = !WasKeyHeldOnThePreviousFrame.TryGetValue(Key, out bool wasHeld);
 
                 bool keyDown = keyPressed && (!wasHeld || NeverPressed);
                 bool keyUp = !keyPressed && (wasHeld || NeverPressed);
 
                 if (keyDown)
-                    sTimeline.Add(new InputEvent(Key, time, true));
+                    sTimeline.Add(new sInputEvent(Key, time, true));
 
                 if (keyUp)
-                    sTimeline.Add(new InputEvent(Key, time, false));
+                    sTimeline.Add(new sInputEvent(Key, time, false));
 
                 WasKeyHeldOnThePreviousFrame[Key] = keyPressed;
             }

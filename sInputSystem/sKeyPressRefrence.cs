@@ -28,7 +28,7 @@ namespace SlideDrum.sInputSystem
             this._End = End;
             this.Pressed = Pressed;
         }
-        public sKeyPressRefrence(InputEvent Start, InputEvent End)
+        public sKeyPressRefrence(sInputEvent Start, sInputEvent End)
         {
             if (Start.Key != End.Key)
                 throw new System.ArgumentException("Start and end events must have the same key.");
@@ -39,14 +39,14 @@ namespace SlideDrum.sInputSystem
             this.End = End.Time;
             this.Pressed = Start.Pressed;
         }
-        public sKeyPressRefrence(InputEvent Start, float EndTime)
+        public sKeyPressRefrence(sInputEvent Start, float EndTime)
         {
             this.Key = Start.Key;
             this.Start = Start.Time;
             this.End = EndTime;
             this.Pressed = Start.Pressed;
         }
-        public bool ContainsEvent(InputEvent evnt)
+        public bool ContainsEvent(sInputEvent evnt)
         {
             if (evnt.Key != Key)
                 return false;

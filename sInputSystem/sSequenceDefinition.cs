@@ -157,7 +157,7 @@ namespace SlideDrum.sInputSystem
             }
             return true;
         }
-        private bool ContainsInputEvent(InputEvent Evnt)
+        private bool ContainsInputEvent(sInputEvent Evnt)
         {
             foreach (var KeyPress in SolvedSolution.Values)
             {
