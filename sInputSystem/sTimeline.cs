@@ -47,14 +47,5 @@ namespace SlideDrum.sInputSystem
         {
             Sequence.Add(Evnt);
         }
-        private static void DebugPrint()
-        {
-            string output = "Buffer: ";
-            for (int i = 0; i < Sequence.Count; i++)
-            {
-                output += Sequence[i].Time + ",";
-            }
-            ZiMain.log.LogDebug(output);
-        }
     }
 }

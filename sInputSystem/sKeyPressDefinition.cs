@@ -17,42 +17,6 @@ namespace SlideDrum.sInputSystem
         public bool HasAnchors => Anchors.Count > 0;
         public HashSet<sKeyPressRefrence> MatchCandidates = new();
         public bool AnyMatches => MatchCandidates.Count > 0;
-        public sKeyPressRefrence FirstMatchCandidate
-        {
-            get
-            { // Could optimize this with caching, probably not needed?
-                float MatchTime = float.MaxValue;
-                sKeyPressRefrence FirstMatch = null;
-                foreach (var Match in MatchCandidates)
-                {
-                    if (MatchTime > Match.Start)
-                    {
-                        MatchTime = Match.Start;
-                        FirstMatch = Match;
-                    }
-                }
-                return FirstMatch;
-            }
-
-        }
-        public sKeyPressRefrence LastMatchCandidate
-        {
-            get
-            { // Could optimize this with caching, probably not needed?
-                float MatchTime = 0f;
-                sKeyPressRefrence LastMatch = null;
-                foreach (var Match in MatchCandidates)
-                {
-                    if (MatchTime < Match.End)
-                    {
-                        MatchTime = Match.End;
-                        LastMatch = Match;
-                    }
-                }
-                return LastMatch;
-            }
-
-        }
         public sKeyPressDefinition(
             KeyCode? Key,
             bool Pressed,
@@ -93,11 +57,12 @@ namespace SlideDrum.sInputSystem
         }
         public sKeyPressDefinition ResetMatchCandidates()
         {
-            MatchCandidates = new();
+            MatchCandidates.Clear();
             return this;
         }
-        public bool CheckMatch(sKeyPressRefrence timelineEvent)
+        public bool CheckMatch(sKeyPressRefrence timelineEvent, out bool Matched)
         {
+            Matched = false;
             if (HasAnchors)
             {
                 bool AnyAnchorDefinitonsMatched = false;
@@ -135,7 +100,9 @@ namespace SlideDrum.sInputSystem
                 }
             }
             if (AnyAnchorsMatched)
-                MatchCandidates.Add(timelineEvent);
+            {
+                Matched = MatchCandidates.Add(timelineEvent);
+            }
             return AnyAnchorsMatched && Breaking;
         }
         public override string ToString()

@@ -18,7 +18,7 @@ namespace SlideDrum.sInputSystem
         public readonly HashSet<KeyCode> ExclusiveSelfExcept = new(); // Should any KeyCodes in this sequence NOT break it?
         private bool PreviouslyMatched = false; // used for rising edge only, to prevent multiple triggers from the same sequence match
         private bool Matched = false; // used for rising edge only, to prevent multiple triggers from the same sequence match
-        private int CurrentMatchCount => Presses.Count(press => press.AnyMatches);
+        //private int CurrentMatchCount => Presses.Count(press => press.AnyMatches);
         private bool _AllMatched = false; // This is unreliable and must be phased out.  Must check if the sequence is complete instead.
         private string? Identifier = null;
         public Dictionary<sKeyPressDefinition, sKeyPressRefrence> SolvedSolution { get; private set; }
@@ -168,7 +168,7 @@ namespace SlideDrum.sInputSystem
             }
             return false;
         }
-        public bool Matches()
+        public bool Matches(List<sKeyPressRefrence> Refrences)
         {
             // Loop through all KeyPresses in the timeline
             // Loop through all presses in the sequence definition, and check if they match the timeline event.
@@ -178,9 +178,8 @@ namespace SlideDrum.sInputSystem
             // Only if all of that passes do we return true.
 
             ResetPressMatches();
-            List<sKeyPressRefrence> Refrences = new(sTimeline.KeyPressRefrences); // we want to make our own clone so we don't rebuild the list every time we check it.
-            int PreviousMatchCount;
-
+            int PreviousMatchCount = 0;
+            int CurrentMatchCount = 0;
             do
             { // Keep going untill we don't find any new matches.
                 PreviousMatchCount = CurrentMatchCount; // This might be bad, we should track new matches instead?
@@ -190,12 +189,16 @@ namespace SlideDrum.sInputSystem
                     for (int j = Presses.Length - 1; j >= 0; j--)
                     {
                         sKeyPressDefinition Press = Presses[j];
-                        if (Press.CheckMatch(TimelineEvent))// returns true if should break the match.  Automatically adds any candiates to it's own list to update Press.Matched
+                        if (Press.CheckMatch(TimelineEvent, out bool MatchFound))// returns true if should break the match.  Automatically adds any candiates to it's own list to update Press.Matched
                         {
                             return MatchedTail(false);
                         }
-                        if (MatchedAll(true))
-                            break;
+                        if (MatchFound)
+                        {
+                            CurrentMatchCount++;
+                            if (MatchedAll(true))
+                                break;
+                        }
                     }
                     if (MatchedAll())
                         break;

@@ -31,7 +31,6 @@ namespace SlideDrum.sInputSystem
             this.WindowStart = Other.WindowStart;
             this.WindowEnd = Other.WindowEnd;
         }
-
         internal bool Matches(sKeyPressRefrence timelineEvent)
         {
             if (!PressDefinition.AnyMatches) // If we don't have anything to anchor to, then it's not a match.

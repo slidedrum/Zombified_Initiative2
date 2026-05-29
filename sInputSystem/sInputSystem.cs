@@ -8,14 +8,23 @@ namespace SlideDrum.sInputSystem
     public static class sInputSystem
     {
         private static Dictionary<KeyCode, bool> WasKeyHeldOnThePreviousFrame = new();
+        private static int LenthOfSequenceDefinitionsWhenKeyCodesWasLastUpdates = 0;
+        private static HashSet<KeyCode> _KeyCodes;
         private static HashSet<KeyCode> KeyCodes
         {
             get
             {
-                HashSet<KeyCode> ret = new();
-                foreach (sSequenceDefinition sequence in SequenceDefinitions)
-                    ret.UnionWith(sequence.KeyCodes);
-                return ret;
+                if (_KeyCodes == null || LenthOfSequenceDefinitionsWhenKeyCodesWasLastUpdates != SequenceDefinitions.Count)
+                {
+                    if (_KeyCodes == null)
+                        _KeyCodes = new();
+                    else
+                        _KeyCodes.Clear();
+                    foreach (sSequenceDefinition sequence in SequenceDefinitions)
+                        _KeyCodes.UnionWith(sequence.KeyCodes);
+                    LenthOfSequenceDefinitionsWhenKeyCodesWasLastUpdates = SequenceDefinitions.Count;
+                }
+                return _KeyCodes;
             }
         }
         private static List<sSequenceDefinition> SequenceDefinitions = new();
@@ -50,16 +59,16 @@ namespace SlideDrum.sInputSystem
 
                 WasKeyHeldOnThePreviousFrame[Key] = keyPressed;
             }
-
-            EvaluateDefinitions();
+            List<sKeyPressRefrence> Refrences = new(sTimeline.KeyPressRefrences); // we want to make our own clone so we don't rebuild the list every time we check it.
+            EvaluateDefinitions(Refrences);
         }
-        private static void EvaluateDefinitions()
+        private static void EvaluateDefinitions(List<sKeyPressRefrence> Refrences)
         {
             for (int i = 0; i < SequenceDefinitions.Count; i++)
             {
                 sSequenceDefinition definition = SequenceDefinitions[i];
 
-                if (definition.Matches())
+                if (definition.Matches(Refrences))
                     definition.Callback.Invoke();
             }
         }
