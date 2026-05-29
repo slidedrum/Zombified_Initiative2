@@ -9,14 +9,14 @@ namespace SlideDrum.sInputSystem
         public float Start;
         private float? _End = null;
         public float End
-        { 
-            get 
-            { 
-                return _End != null ? (float)_End : Time.time; 
+        {
+            get
+            {
+                return _End != null ? (float)_End : Time.time;
             }
-            set 
-            { 
-                _End = value; 
+            set
+            {
+                _End = value;
             }
         }
         public bool Completed => _End != null;

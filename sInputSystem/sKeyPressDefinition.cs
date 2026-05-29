@@ -17,9 +17,9 @@ namespace SlideDrum.sInputSystem
         public bool HasAnchors => Anchors.Count > 0;
         public HashSet<sKeyPressRefrence> MatchCandidates = new();
         public bool AnyMatches => MatchCandidates.Count > 0;
-        public sKeyPressRefrence FirstMatchCandidate             
-        { 
-            get 
+        public sKeyPressRefrence FirstMatchCandidate
+        {
+            get
             { // Could optimize this with caching, probably not needed?
                 float MatchTime = float.MaxValue;
                 sKeyPressRefrence FirstMatch = null;
@@ -119,22 +119,22 @@ namespace SlideDrum.sInputSystem
             if (timelineEvent.Pressed != Pressed)
                 return false;
             if (timelineEvent.Key != Key)
-                if(Strict)
+                if (Strict)
                     return true;
                 else
                     return false;
             bool AnyAnchorsMatched = !HasAnchors;
-            if (!AnyAnchorsMatched) 
-            { 
+            if (!AnyAnchorsMatched)
+            {
                 foreach (var Anchor in Anchors)
                 {
                     if (Anchor.Matches(timelineEvent))
                     {
                         AnyAnchorsMatched = true; // We can't break early here because we might have multiple candidates.
                     }
-                } 
+                }
             }
-            if(AnyAnchorsMatched)
+            if (AnyAnchorsMatched)
                 MatchCandidates.Add(timelineEvent);
             return AnyAnchorsMatched && Breaking;
         }

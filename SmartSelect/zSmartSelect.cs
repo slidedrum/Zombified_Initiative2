@@ -80,6 +80,18 @@ namespace BotControl.SmartSelect
             sInputSystem.AddListener(sInputSystemDefaults.OnTapped, new FlexibleMethodDefinition(DebugTrigger, args: ["OnBTapped"]), KeyCode.B);
             sInputSystem.AddListener(sInputSystemDefaults.OnHold, new FlexibleMethodDefinition(DebugTrigger, args: ["OnBHold"]), KeyCode.B);
             sInputSystem.AddListener(sInputSystemDefaults.OnHold, new FlexibleMethodDefinition(DebugTrigger, args: ["OnVHold"]), KeyCode.V);
+            sInputSystem.AddListener(sInputSystemDefaults.OnHoldImmediate, new FlexibleMethodDefinition(DebugTrigger, args: ["OnVHoldImmediate"]), KeyCode.V);
+            sInputSystem.AddListener(sInputSystemDefaults.OnHoldImmediate, new FlexibleMethodDefinition(DebugTrigger, args: ["OnBHoldImmediate"]), KeyCode.B);
+            sInputSystem.AddListener(sInputSystemDefaults.OnDoubleTapped, new FlexibleMethodDefinition(DebugTrigger, args: ["OnBDoubleTapped"]), KeyCode.B);
+            sInputSystem.AddListener(sInputSystemDefaults.OnDoubleTapped, new FlexibleMethodDefinition(DebugTrigger, args: ["OnVDoubleTapped"]), KeyCode.V);
+            sInputSystem.AddListener(sInputSystemDefaults.OnTapAndHold, new FlexibleMethodDefinition(DebugTrigger, args: ["OnVTapAndHold"]), KeyCode.V);
+            sInputSystem.AddListener(sInputSystemDefaults.OnTapAndHold, new FlexibleMethodDefinition(DebugTrigger, args: ["OnBTapAndHold"]), KeyCode.B);
+            sInputSystem.AddListener(sInputSystemDefaults.OnTapAndHoldExclusive, new FlexibleMethodDefinition(DebugTrigger, args: ["OnBTapAndHoldExclusive"]), KeyCode.B);
+            sInputSystem.AddListener(sInputSystemDefaults.OnTapAndHoldExclusive, new FlexibleMethodDefinition(DebugTrigger, args: ["OnVTapAndHoldExclusive"]), KeyCode.V);
+            sInputSystem.AddListener(sInputSystemDefaults.OnTapAndHoldImmediateExclusive, new FlexibleMethodDefinition(DebugTrigger, args: ["OnVTapAndHoldImmediateExclusive"]), KeyCode.V);
+            sInputSystem.AddListener(sInputSystemDefaults.OnTapAndHoldImmediateExclusive, new FlexibleMethodDefinition(DebugTrigger, args: ["OnBTapAndHoldImmediateExclusive"]), KeyCode.B);
+            sInputSystem.AddListener(sInputSystemDefaults.WhileHeld, new FlexibleMethodDefinition(DebugTrigger, args: ["WhileBHeld"]), KeyCode.B);
+            sInputSystem.AddListener(sInputSystemDefaults.WhileHeld, new FlexibleMethodDefinition(DebugTrigger, args: ["WhileVHeld"]), KeyCode.V);
 
             IsSetUp = true;
         }

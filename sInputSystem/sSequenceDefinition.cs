@@ -47,8 +47,8 @@ namespace SlideDrum.sInputSystem
         float? MatchEndTimestamp
         {
             get
-            { 
-                return SolvedSolution?[Presses[Presses.Length-1]]?.End;
+            {
+                return SolvedSolution?[Presses[Presses.Length - 1]]?.End;
             }
         }
         private HashSet<KeyCode> _KeyCodes;
@@ -74,7 +74,8 @@ namespace SlideDrum.sInputSystem
                                       bool ExclusiveSelf = true,
                                       string Identifier = null,
                                       HashSet<KeyCode> ExclusiveOther = null,
-                                      HashSet<KeyCode> ExclusiveSelfExcept = null)
+                                      HashSet<KeyCode> ExclusiveSelfExcept = null,
+                                      bool autoAnchor = true)
         {
             this.Presses = Presses;
             this.Callback = Callback;
@@ -85,28 +86,8 @@ namespace SlideDrum.sInputSystem
             this.Identifier = Identifier;
             this.ExclusiveOther = ExclusiveOther ?? new();
             this.ExclusiveSelfExcept = ExclusiveSelfExcept ?? new();
-        }
-        public sSequenceDefinition(sKeyPressDefinition Press,
-                                        FlexibleMethodDefinition Callback,
-                                        bool Strict = false,
-                                        bool RisingEdgeOnly = true,
-                                        float ExclusivityWindow = 0f,
-                                        bool ExclusiveSelf = true,
-                                        string Identifier = null,
-                                        HashSet<KeyCode> ExclusiveOther = null,
-                                        HashSet<KeyCode> ExclusiveSelfExcept = null)
-                                        : this(
-                                            new[] { Press },
-                                            Callback,
-                                            Strict,
-                                            RisingEdgeOnly,
-                                            ExclusivityWindow,
-                                            ExclusiveSelf,
-                                            Identifier,
-                                            ExclusiveOther,
-                                            ExclusiveSelfExcept)
-        {
-
+            if (autoAnchor)
+                AutoAnchor();
         }
         private void ResetPressMatches()
         {
@@ -187,13 +168,6 @@ namespace SlideDrum.sInputSystem
             }
             return false;
         }
-        public void DebugPrintRefrences(List<sKeyPressRefrence> Refrences)
-        {
-            foreach (var refrence in Refrences)
-            {
-
-            }
-        }
         public bool Matches()
         {
             // Loop through all KeyPresses in the timeline
@@ -269,6 +243,16 @@ namespace SlideDrum.sInputSystem
             foreach (var Press in Presses)
             {
                 Press.Key = Key;
+            }
+        }
+        public void AutoAnchor()
+        {
+            if (Presses.Length > 1)
+            {
+                for (int i = 1; i < Presses.Length; i++)
+                {
+                    Presses[i].AddAnchor(Presses[i - 1]);
+                }
             }
         }
         public override string ToString()

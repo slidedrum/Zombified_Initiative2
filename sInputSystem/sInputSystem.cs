@@ -8,15 +8,15 @@ namespace SlideDrum.sInputSystem
     public static class sInputSystem
     {
         private static Dictionary<KeyCode, bool> WasKeyHeldOnThePreviousFrame = new();
-        private static HashSet<KeyCode> KeyCodes 
-        { 
-            get 
+        private static HashSet<KeyCode> KeyCodes
+        {
+            get
             {
                 HashSet<KeyCode> ret = new();
                 foreach (sSequenceDefinition sequence in SequenceDefinitions)
                     ret.UnionWith(sequence.KeyCodes);
                 return ret;
-            } 
+            }
         }
         private static List<sSequenceDefinition> SequenceDefinitions = new();
         public static void AddListener(sSequenceDefinition newSequenceDefinition, FlexibleMethodDefinition callback = null, KeyCode? Key = null)
@@ -37,10 +37,10 @@ namespace SlideDrum.sInputSystem
             {
                 bool keyPressed = Input.GetKey(Key);
 
-                WasKeyHeldOnThePreviousFrame.TryGetValue(Key, out bool wasHeld);
+                bool NeverPressed = !WasKeyHeldOnThePreviousFrame.TryGetValue(Key, out bool wasHeld);
 
-                bool keyDown = keyPressed && !wasHeld;
-                bool keyUp = !keyPressed && wasHeld;
+                bool keyDown = keyPressed && (!wasHeld || NeverPressed);
+                bool keyUp = !keyPressed && (wasHeld || NeverPressed);
 
                 if (keyDown)
                     sTimeline.Add(new InputEvent(Key, time, true));
