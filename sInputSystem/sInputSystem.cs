@@ -7,6 +7,9 @@ namespace SlideDrum.sInputSystem
 {
     public static class sInputSystem
     {
+        //TODO move away from KeyCodes, and use arbitrary events that could be anything.  could use strings as keys.
+        //Still support KeyCodes with integrated support
+
         private static Dictionary<KeyCode, bool> WasKeyHeldOnThePreviousFrame = new();
         private static int LenthOfSequenceDefinitionsWhenKeyCodesWasLastUpdates = 0;
         private static HashSet<KeyCode> _KeyCodes;

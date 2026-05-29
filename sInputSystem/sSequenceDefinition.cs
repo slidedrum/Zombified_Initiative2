@@ -41,14 +41,14 @@ namespace SlideDrum.sInputSystem
         {
             get
             {
-                return SolvedSolution?[Presses[0]]?.Start;
+                return SolvedSolution?[Presses[0]].Start;
             }
         }
         float? MatchEndTimestamp
         {
             get
             {
-                return SolvedSolution?[Presses[Presses.Length - 1]]?.End;
+                return SolvedSolution?[Presses[Presses.Length - 1]].End;
             }
         }
         private HashSet<KeyCode> _KeyCodes;
@@ -206,7 +206,7 @@ namespace SlideDrum.sInputSystem
             } while (!MatchedAll() && PreviousMatchCount < CurrentMatchCount);
             if (MatchedAll())
             {
-                if (MatchEndTimestamp + ExclusivityWindow < Time.time)
+                if (MatchEndTimestamp + ExclusivityWindow > Time.time)
                 {
                     return MatchedTail(false);
                 }

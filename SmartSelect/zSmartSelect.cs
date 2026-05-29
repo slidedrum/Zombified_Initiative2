@@ -9,10 +9,14 @@ using SlideDrum.sInputSystem;
 
 namespace BotControl.SmartSelect
 {
+    //PUI_CommunicationMenu.ExecuteCmdCall(PlayerAgent, PlayerAgent) 
+    // to call a bot to follow you.
+    // Don't know if that's synced.
     public class Selection
     {
         //This class handles a selection instance
         
+
         private GameObject item = null;
         private GameObject bot = null;
         private GameObject enemy = null;
@@ -44,6 +48,27 @@ namespace BotControl.SmartSelect
     public static class zSmartSelect
     {
         //This class handles everything with the smart select button (V)
+        public static PUI_CommunicationMenu _CommsMenu = null;
+        public static PUI_CommunicationMenu CommsMenu { 
+            get 
+            { 
+                if (_CommsMenu == null)
+                {
+                    _CommsMenu = GameObject.Find("GUI/CellUI_Camera(Clone)/PlayerLayer/MovementRoot/PUI_CommunicationMenu(Clone)").GetComponent<PUI_CommunicationMenu>();
+                }
+                return _CommsMenu;
+            } 
+        }
+        public static PUI_Subtitles _Subtitles = null;
+        public static PUI_Subtitles Subtitles
+        {
+            get
+            {
+                if (_Subtitles == null)
+                    _Subtitles = GameObject.Find("GUI/CellUI_Camera(Clone)/PlayerLayer/MovementRoot/PUI_Subtitles_CellUI(Clone)").GetComponent<PUI_Subtitles>();
+                return _Subtitles;
+            }
+        }
 
         public static float interactionHeldStart = Time.time;
         public static bool interactionHeld = false;
@@ -75,24 +100,9 @@ namespace BotControl.SmartSelect
         }
         private static void SetUp()
         {
-
-            sInputSystem.AddListener(sInputSystemDefaults.OnTapped, new FlexibleMethodDefinition(DebugTrigger, args: ["OnVTapped"]), KeyCode.V);
-            sInputSystem.AddListener(sInputSystemDefaults.OnTapped, new FlexibleMethodDefinition(DebugTrigger, args: ["OnBTapped"]), KeyCode.B);
-            sInputSystem.AddListener(sInputSystemDefaults.OnHold, new FlexibleMethodDefinition(DebugTrigger, args: ["OnBHold"]), KeyCode.B);
-            sInputSystem.AddListener(sInputSystemDefaults.OnHold, new FlexibleMethodDefinition(DebugTrigger, args: ["OnVHold"]), KeyCode.V);
-            sInputSystem.AddListener(sInputSystemDefaults.OnHoldImmediate, new FlexibleMethodDefinition(DebugTrigger, args: ["OnVHoldImmediate"]), KeyCode.V);
-            sInputSystem.AddListener(sInputSystemDefaults.OnHoldImmediate, new FlexibleMethodDefinition(DebugTrigger, args: ["OnBHoldImmediate"]), KeyCode.B);
-            sInputSystem.AddListener(sInputSystemDefaults.OnDoubleTapped, new FlexibleMethodDefinition(DebugTrigger, args: ["OnBDoubleTapped"]), KeyCode.B);
-            sInputSystem.AddListener(sInputSystemDefaults.OnDoubleTapped, new FlexibleMethodDefinition(DebugTrigger, args: ["OnVDoubleTapped"]), KeyCode.V);
-            sInputSystem.AddListener(sInputSystemDefaults.OnTapAndHold, new FlexibleMethodDefinition(DebugTrigger, args: ["OnVTapAndHold"]), KeyCode.V);
-            sInputSystem.AddListener(sInputSystemDefaults.OnTapAndHold, new FlexibleMethodDefinition(DebugTrigger, args: ["OnBTapAndHold"]), KeyCode.B);
-            sInputSystem.AddListener(sInputSystemDefaults.OnTapAndHoldExclusive, new FlexibleMethodDefinition(DebugTrigger, args: ["OnBTapAndHoldExclusive"]), KeyCode.B);
-            sInputSystem.AddListener(sInputSystemDefaults.OnTapAndHoldExclusive, new FlexibleMethodDefinition(DebugTrigger, args: ["OnVTapAndHoldExclusive"]), KeyCode.V);
-            sInputSystem.AddListener(sInputSystemDefaults.OnTapAndHoldImmediateExclusive, new FlexibleMethodDefinition(DebugTrigger, args: ["OnVTapAndHoldImmediateExclusive"]), KeyCode.V);
-            sInputSystem.AddListener(sInputSystemDefaults.OnTapAndHoldImmediateExclusive, new FlexibleMethodDefinition(DebugTrigger, args: ["OnBTapAndHoldImmediateExclusive"]), KeyCode.B);
-            sInputSystem.AddListener(sInputSystemDefaults.WhileHeld, new FlexibleMethodDefinition(DebugTrigger, args: ["WhileBHeld"]), KeyCode.B);
-            sInputSystem.AddListener(sInputSystemDefaults.WhileHeld, new FlexibleMethodDefinition(DebugTrigger, args: ["WhileVHeld"]), KeyCode.V);
-
+            sInputSystem.AddListener(sInputSystemDefaults.OnTappedExclusive, new FlexibleMethodDefinition(onKeyTap), KeyCode.V);
+            sInputSystem.AddListener(sInputSystemDefaults.OnHoldImmediate, new FlexibleMethodDefinition(onKeyHeld), KeyCode.V);
+            sInputSystem.AddListener(sInputSystemDefaults.OnDoubleTapped, new FlexibleMethodDefinition(onKeyDoubleTap), KeyCode.V);
             IsSetUp = true;
         }
         public static void DebugTrigger(string messge)
@@ -209,6 +219,16 @@ namespace BotControl.SmartSelect
                     }
             }
         }
+        public static void onKeyDoubleTap()
+        {
+            var Bot = selection.getBotGobject();
+            if (Bot == null)
+                return;
+            var localPlayer = PlayerManager.GetLocalPlayerAgent();
+            PlayerVoiceManager.WantToSay(localPlayer.CharacterID, AK.EVENTS.PLAY_CL_FOLLOWME);
+            Subtitles.ShowSingleLineSubtitle($"Follow me!", 1);
+            CommsMenu.ExecuteCmdCall(localPlayer, Bot.GetComponent<PlayerAgent>());
+        }
         public static void onKeyTap()
         {
             var localPlayer = PlayerManager.GetLocalPlayerAgent();
@@ -247,14 +267,20 @@ namespace BotControl.SmartSelect
                     voiceID = AK.EVENTS.PLAY_ADDRESSWOODSIRRITATED01;
                 }
                 PlayerVoiceManager.WantToSay(localPlayer.CharacterID, voiceID);
+                Subtitles.ShowSingleLineSubtitle($"Hey {botName}!", 1);
                 if (!agent.Owner.IsBot)
                     return;
-                FlexibleMethodDefinition barkback = new FlexibleMethodDefinition(PlayerVoiceManager.WantToSay,[botId, AK.EVENTS.PLAY_CL_YES]); //yes
+                FlexibleMethodDefinition barkback = new FlexibleMethodDefinition(BotBarkBack, [botId]); //yes
                 zUpdater.InvokeStatic(barkback, 1f);
                 if ((bool)zSlideComputer.ActionPermissions.ValueAt("Notify smart selected"))
                     ZiMain.sendChatMessage("I'm ready", agent, localPlayer);
                 selection.setBot(lookingAt.gobject);
             }
+        }
+        public static void BotBarkBack(int botId)
+        {
+            PlayerVoiceManager.WantToSay(botId, AK.EVENTS.PLAY_CL_YES);
+            Subtitles.ShowSingleLineSubtitle($"Yes?", 1);
         }
     }
 }

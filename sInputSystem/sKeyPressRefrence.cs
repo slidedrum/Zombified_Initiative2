@@ -2,7 +2,7 @@
 
 namespace SlideDrum.sInputSystem
 {
-    public class sKeyPressRefrence
+    public struct sKeyPressRefrence
     {
         public readonly KeyCode Key;
         public bool Pressed;

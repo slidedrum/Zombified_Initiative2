@@ -66,6 +66,19 @@
                 return press;
             }
         }
+        public static sKeyPressDefinition ShortUnpressed
+        {
+            get
+            {
+                sKeyPressDefinition press = new(
+                        Key: null,
+                        Pressed: false,
+                        MaxDuration: TapThreshold,
+                        Identifier: "ShortUnpressed"
+                        );
+                return press;
+            }
+        }
         public static sSequenceDefinition OnTapped
         {
             get
@@ -75,6 +88,21 @@
                     Presses: Presses,
                     Callback: null,
                     Identifier: "OnTapped"
+                    );
+                return sequence;
+            }
+        }
+        public static sSequenceDefinition OnTappedExclusive
+        {
+            get
+            {
+                sKeyPressDefinition[] Presses = [LongUnpressed, ShortPress];
+                sSequenceDefinition sequence = new(
+                    Presses: Presses,
+                    Callback: null,
+                    Strict: true,
+                    ExclusivityWindow: TapThreshold,
+                    Identifier: "OnTappedExclusive"
                     );
                 return sequence;
             }
