@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace SlideDrum.sInputSystem
+﻿namespace SlideDrum.sInputSystem
 {
     public class sKeyPressAnchor
     {

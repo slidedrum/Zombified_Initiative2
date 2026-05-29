@@ -1,6 +1,4 @@
-﻿using BotControl;
-using System.Collections.Generic;
-using System.Reflection.Metadata;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace SlideDrum.sInputSystem
@@ -42,7 +40,6 @@ namespace SlideDrum.sInputSystem
                 return _KeyPressRefrences;
             }
         }
-
         public static void Add(InputEvent Evnt)
         {
             Sequence.Add(Evnt);
