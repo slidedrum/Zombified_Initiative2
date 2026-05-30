@@ -1,8 +1,10 @@
 ﻿using BepInEx.Unity.IL2CPP;
 using BetterBots.Components;
+using HarmonyLib;
 using Player;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 
 namespace BotControl
@@ -11,6 +13,11 @@ namespace BotControl
     {
 
         private static Dictionary<int, BotRecorder> botRecorders = new();
+        public static void OnInit()
+        {
+            var original = AccessTools.Method(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.UpdateActionCollectItem));
+            ZiMain.m_Harmony.Unpatch(original, HarmonyPatchType.Prefix,"com.east.bb");
+        }
         public static BotRecorder GetBotRecorder(PlayerAIBot bot)
         {
             return GetBotRecorder(bot.Agent);

@@ -156,11 +156,12 @@ public class ZiMain : BasePlugin
     internal const bool customActions = false;
     internal static bool VoiceMenu = false;
     internal static bool extraActionMenus =false;
+    public static Harmony m_Harmony;
 
     public override void Load()
     {
         
-        Harmony m_Harmony = new Harmony("ZombieController");
+        m_Harmony = new Harmony("BotControl");
         m_Harmony.PatchAll();
         ClassInjector.RegisterTypeInIl2Cpp<zUpdater>();
         ClassInjector.RegisterTypeInIl2Cpp<zCameraEvents>();
@@ -193,11 +194,18 @@ public class ZiMain : BasePlugin
             //zUpdater.onUpdate.Listen(zVisitedManager.Update);
             zUpdater.onUpdate.Listen(zSmartSelect.Update);
             zUpdater.onLateUpdate.Listen(sMenuManager.LateUpdate);
+            OnLateLoad();
         };
         LG_Factory.add_OnFactoryBuildDone((Action)zSlideComputer.Init);
         //LG_Factory.add_OnFactoryBuildDone((Action)sMenuManager.SetupCamera);
         //LG_Factory.add_OnFactoryBuildDone((Action)zMenus.CreateMenus);
-
+    }
+    public static void OnLateLoad()
+    {
+        if (HasBetterBots)
+        {
+            BBCompat.OnInit();
+        }
     }
 
 

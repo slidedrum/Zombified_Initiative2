@@ -306,6 +306,7 @@ namespace BotControl.Patches
         }
         [HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.UpdateActionCollectItem))]
         [HarmonyPrefix]
+        [HarmonyPriority(Priority.Last)]
         public static bool UpdateActionCollectItemReCreation(RootPlayerBotAction __instance, ref PlayerBotActionBase.Descriptor bestAction)
         {
             if (!useUpdateActionCollectItem)
