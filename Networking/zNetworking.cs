@@ -1,4 +1,6 @@
-﻿using Enemies;
+﻿using BotControl.Menus;
+using Dissonance.Networking.Client;
+using Enemies;
 using LevelGeneration;
 using Player;
 using SlideMenu;
@@ -7,7 +9,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using BotControl.Menus;
 
 namespace BotControl.Networking
 {
@@ -236,7 +237,7 @@ namespace BotControl.Networking
                 return;
             }
             PlayerAIBot aiBot = agent.gameObject.GetComponent<PlayerAIBot>();
-            ZiMain.SendBotToPickupItem(aiBot, item, commander, sender);
+            zBotActions.SendBotToPickupItem(aiBot, item, commander, sender);
         }
         internal static void ReciveRequestToShareResource(ulong netSender, pStructs.pShareResourceInfo info) 
         {
@@ -259,7 +260,7 @@ namespace BotControl.Networking
                 return;
             }
             PlayerAIBot aiBot = sender.gameObject.GetComponent<PlayerAIBot>();
-            ZiMain.SendBotToShareResourcePack(aiBot, receiver, commander, netSender);
+            zBotActions.SendBotToShareResourcePack(aiBot, receiver, commander, netSender);
         }
         internal static void ReciveRequestToKillEnemy(ulong netSender, pStructs.pAttackEnemyInfo info)
         {
@@ -282,14 +283,7 @@ namespace BotControl.Networking
                 return;
             }
             PlayerAIBot aiBot = aiBotAgent.gameObject.GetComponent<PlayerAIBot>();
-            ZiMain.SendBotToKillEnemy(aiBot, enemy, commander, netSender);
-        }
-        internal static void ReciveRequestToChangeFollowAction(ulong netSender, pStructs.pFollowActionInfo info)
-        {
-            ZiMain.log.LogInfo("Recived request to update follow action settings!");
-            if (!SNet.IsMaster)
-                return;
-            
+            zBotActions.SendBotToKillEnemy(aiBot, enemy, commander, netSender);
         }
         internal static void ReciveSetBoolOverideTree(ulong netSender, pStructs.pBoolOverideTreeInfo info)
         {
@@ -335,6 +329,55 @@ namespace BotControl.Networking
                 value = info.value;
             OverrideTree<float?> tree = OverrideTree<float?>.GetTreeFromID(info.treeID);
             tree.SetValue(keyId, value, netSender);
+        }
+
+        internal static void ReciveRequestToPickupSentry(ulong netSender, pStructs.pPickupSentryInfo info)
+        {
+            ZiMain.log.LogInfo("Recived request to pick up sentry!");
+            if (!SNet.IsMaster)
+                return;
+            PlayerAgent agent = pStructs.Get_RefFrom_pStruct(info.playerAgent);
+            PlayerAgent commander = pStructs.Get_RefFrom_pStruct(info.commander);
+
+            if (agent == null || commander == null)
+            {
+                ZiMain.log.LogError("Invalid request to pick up sentry: agent or commander is null.");
+                return;
+            }
+            ZiMain.log.LogInfo($"{commander.PlayerName} wants to tell {agent.PlayerName} to pick up their turret!");
+            if (!agent.Owner.IsBot)
+            {
+                ZiMain.log.LogWarning("Invalid request to pickup sentry, You can't tell a player what to do.");
+                return;
+            }
+            PlayerAIBot aiBot = agent.gameObject.GetComponent<PlayerAIBot>();
+            zBotActions.SendBotToPickUpSentry(aiBot, commander, netSender);
+        }
+
+        internal static void ReciveRequestToPlaceSentry(ulong netSender, pStructs.pPlaceSentryInfo info)
+        {
+            ZiMain.log.LogInfo("Recived request to place a sentry!");
+            if (!SNet.IsMaster)
+                return;
+            PlayerAgent agent = pStructs.Get_RefFrom_pStruct(info.playerAgent);
+            PlayerAgent commander = pStructs.Get_RefFrom_pStruct(info.commander);
+            Pose pose = info.Pose;
+
+            if (agent == null || commander == null || pose == null)
+            {
+                ZiMain.log.LogError("Invalid request to place turret: agent, commander or pose is null.");
+                return;
+            }
+
+            ZiMain.log.LogInfo($"{commander.PlayerName} wants to tell {agent.PlayerName} to place their turret!");
+            if (!agent.Owner.IsBot)
+            {
+                ZiMain.log.LogWarning("Invalid request to place turret, You can't tell a player what to do.");
+                return;
+            }
+
+            PlayerAIBot aiBot = agent.gameObject.GetComponent<PlayerAIBot>();
+            zBotActions.SendBotToPlaceSentry(aiBot, pose, commander, netSender);
         }
     }
 }

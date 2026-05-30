@@ -66,6 +66,19 @@
                 return press;
             }
         }
+        public static sKeyPressDefinition VeryLongUnpressed
+        {
+            get
+            {
+                sKeyPressDefinition press = new(
+                        Key: null,
+                        Pressed: false,
+                        MinDuration: TapThreshold * 4,
+                        Identifier: "VeryLongUnpressed"
+                        );
+                return press;
+            }
+        }
         public static sKeyPressDefinition ShortUnpressed
         {
             get
@@ -96,7 +109,7 @@
         {
             get
             {
-                sKeyPressDefinition[] Presses = [LongUnpressed, ShortPress];
+                sKeyPressDefinition[] Presses = [VeryLongUnpressed, ShortPress];
                 sSequenceDefinition sequence = new(
                     Presses: Presses,
                     Callback: null,
@@ -129,6 +142,22 @@
                     Presses: Presses,
                     Callback: null,
                     Identifier: "OnHoldImmediate"
+                    );
+                return sequence;
+            }
+        }
+        public static sSequenceDefinition OnHoldImmediateExclusive
+        {
+            get
+            {
+                sKeyPressDefinition[] Presses = [VeryLongUnpressed, LongPress];
+                //sKeyPressAnchor anchor = new(Presses[0], sKeyPressAnchor.Anchorpoint.Start, sKeyPressAnchor.Anchorpoint.End, 0f, 0f);
+                //Presses[1].AddAnchor(anchor);
+                sSequenceDefinition sequence = new(
+                    Presses: Presses,
+                    Callback: null,
+                    Identifier: "OnHoldImmediateExclusive",
+                    Strict: true
                     );
                 return sequence;
             }

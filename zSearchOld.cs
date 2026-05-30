@@ -644,10 +644,10 @@ namespace BotControl
                 AIG_CourseNode.TryGetCourseNode(dimension, box.Center,1, out _courseNode);
                 if (_courseNode == null)
                     return null;
-                if (!zSearchOl.courseNodeFindableObjectCache.ContainsKey(_courseNode.Name))
-                    zSearchOl.courseNodeFindableObjectCache[_courseNode.Name] = new();
-                if (!zSearchOl.courseNodeFindableObjectCache[_courseNode.Name].Contains(this))
-                    zSearchOl.courseNodeFindableObjectCache[_courseNode.Name].Add(this);
+                if (!zSearchOld.courseNodeFindableObjectCache.ContainsKey(_courseNode.Name))
+                    zSearchOld.courseNodeFindableObjectCache[_courseNode.Name] = new();
+                if (!zSearchOld.courseNodeFindableObjectCache[_courseNode.Name].Contains(this))
+                    zSearchOld.courseNodeFindableObjectCache[_courseNode.Name].Add(this);
                 return _courseNode;
             }
             set

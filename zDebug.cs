@@ -394,7 +394,7 @@ namespace BotControl
             PlayerAgent agent = PlayerManager.PlayerAgentsInLevel[playerIndex];
             visObserver = agent.GetHeadCamTransform().parent.gameObject;//PlayerManager.GetLocalPlayerAgent().FPSCamera.gameObject;
             Transform menuTransform = sMenuManager.mainMenu.gameObject.transform;
-            visTarget = zSearchOl.ResolveObjectInLookDirection(menuTransform, zSearchOl.GetGameObjectsWithLookDirection<EnemyAgent>(menuTransform), 180f);
+            visTarget = zSearchOld.ResolveObjectInLookDirection(menuTransform, zSearchOld.GetGameObjectsWithLookDirection<EnemyAgent>(menuTransform), 180f);
         }
         internal static void debugCheckViz()
         {
@@ -483,7 +483,7 @@ namespace BotControl
             List<GameObject> candidates = nearbyNodes.Select(n => n.DebugObject ?? new GameObject()).ToList();
 
             // Use the helper to find the closest object in the look direction
-            GameObject closestObj = zSearchOl.ResolveObjectInLookDirection(
+            GameObject closestObj = zSearchOld.ResolveObjectInLookDirection(
                 lookTransform,
                 candidates,
                 maxAngle: 180f
@@ -533,7 +533,7 @@ namespace BotControl
                 new PlayerAgent().GetIl2CppType(),
             };
             Transform menuTransform = sMenuManager.mainMenu.gameObject.transform;
-            var target = zSearchOl.ResolveObjectInLookDirection(menuTransform, zSearchOl.GetGameObjectsWithLookDirection(menuTransform, types));
+            var target = zSearchOld.ResolveObjectInLookDirection(menuTransform, zSearchOld.GetGameObjectsWithLookDirection(menuTransform, types));
             if (target == null)
             {
                 ZiMain.log.LogWarning("Could not find target for corners");

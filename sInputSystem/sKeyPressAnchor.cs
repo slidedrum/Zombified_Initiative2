@@ -8,11 +8,11 @@
             Inside,
             End
         }
-        public sKeyPressDefinition PressDefinition; // The other key press instance that this is anchored to
-        public Anchorpoint OtherPoint; // What point of the other key press is it anchored to
-        public Anchorpoint ThisPoint; // What point of the this key press is it anchored to
-        public float WindowStart; // What offset of the anchor point does the window start? (can be negative)
-        public float WindowEnd; // what offset of the anchor point does the window end? (can be negative)
+        public readonly sKeyPressDefinition PressDefinition; // The other key press instance that this is anchored to
+        public readonly Anchorpoint OtherPoint; // What point of the other key press is it anchored to
+        public readonly Anchorpoint ThisPoint; // What point of the this key press is it anchored to
+        public readonly float WindowStart; // What offset of the anchor point does the window start? (can be negative)
+        public readonly float WindowEnd; // what offset of the anchor point does the window end? (can be negative)
         public sKeyPressAnchor(sKeyPressDefinition PressDefinition, Anchorpoint ThisPoint, Anchorpoint OtherPoint, float WindowStart, float WindowEnd)
         {
             this.PressDefinition = PressDefinition;

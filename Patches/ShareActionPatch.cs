@@ -81,12 +81,13 @@ namespace BotControl.Patches
             }
         }
         private static List<string> _resourcePackItemNames;
-        private enum ResourceIDs : uint
+        internal enum ResourceIDs : uint
         {
             MediPack = 102,
             ToolPack = 127,
             AmmoPack = 101,
             DisinfectPack = 132,
+            None = 0,
         }
         [HarmonyPatch(typeof(RootPlayerBotAction), nameof(RootPlayerBotAction.UpdateActionShareResoursePack))]
         [HarmonyPrefix]

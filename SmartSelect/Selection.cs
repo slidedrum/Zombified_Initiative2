@@ -1,30 +1,45 @@
-﻿using UnityEngine;
+﻿using Player;
+using System.Collections.Generic;
+using UnityEngine;
 
 namespace BotControl.SmartSelect
 {
     public class Selection
     {
-        //This class handles a selection instance
-        private GameObject item = null;
-        private GameObject bot = null;
-        private GameObject enemy = null;
-        public void setItem(GameObject newItem) { item = newItem; }
-        public GameObject getItem()
+        private HashSet<Component> SelectedObjects = new();
+        public Selection() { }
+        public void Select(Component component, bool oneBot = true)
         {
-            if (item != null && !item.activeInHierarchy)
-            {
-                item = null;
-            }
-            return item;
+            if (oneBot && component is PlayerAIBot) // only able to select one bot at a time.
+                Deselect<PlayerAIBot>();
+            SelectedObjects.Add(component);
         }
-        public void setBot(GameObject newBot) { bot = newBot; }
-        public GameObject getBotGobject()
+        public bool Deselect<T>() where T : Component
         {
-            if (bot != null && !bot.activeInHierarchy)
+            return SelectedObjects.RemoveWhere(obj => obj is T) > 0;
+        }
+        public bool Deselect(Component component)
+        {
+            return SelectedObjects.Remove(component);
+        }
+        public bool Selected<T>() where T : Component
+        {
+            foreach (Component obj in SelectedObjects)
             {
-                bot = null;
+                if (obj is T)
+                    return true;
             }
-            return bot;
+            return false;
+        }
+        public HashSet<T> GetSelected<T>() where T : Component
+        {
+            HashSet<T> ret = new();
+            foreach (Component obj in SelectedObjects)
+            {
+                if (obj is T tObj)
+                    ret.Add(tObj);
+            }
+            return ret;
         }
     }
 }
