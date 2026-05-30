@@ -1,26 +1,22 @@
-﻿using Agents;
+﻿using BepInEx.Unity.IL2CPP.Utils;
 using BotControl.Patches;
 using Enemies;
 using Il2CppInterop.Runtime;
 using LevelGeneration;
 using Player;
-using PlayFab.AdminModels;
 using SlideDrum.sInputSystem;
 using SlideMenu;
+using System.Collections;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.UIElements;
-using static UnityEngine.UI.GridLayoutGroup;
 
 namespace BotControl.SmartSelect
 {
     public static class zSmartSelect
     {
         //This class handles everything with the smart select button (V)
-        private static Selection MainSelection = new();
+        public static Selection MainSelection = new();
         private static bool IsSetUp = false;
         internal static void Update()
         {
@@ -56,6 +52,23 @@ namespace BotControl.SmartSelect
             }
             MainSelection.Deselect<PlayerAIBot>();
         }
+        private static uint GetVoiceId(PlayerAIBot bot)
+        {
+            var Agent = bot.Agent;
+            var botName = Agent.PlayerName;
+            var botId = Agent.CharacterID;
+            uint voiceID = 0u;
+
+            if (botName.ToUpper().Contains("BISHOP"))
+                voiceID = AK.EVENTS.PLAY_ADDRESSBISHOPIRRITATED01;
+            if (botName.ToUpper().Contains("DAUDA"))
+                voiceID = AK.EVENTS.PLAY_ADDRESSDAUDAIRRITATED01;
+            if (botName.ToUpper().Contains("HACKET"))
+                voiceID = AK.EVENTS.PLAY_ADDRESSHACKETTIRRITATED01;
+            if (botName.ToUpper().Contains("WOODS"))
+                voiceID = AK.EVENTS.PLAY_ADDRESSWOODSIRRITATED01;
+            return voiceID;
+        }
         private static bool SelectBotInView()
         {
             bool facingUp = Vector3.Angle(zStaticRefrences.CameraTransform.forward, Vector3.up) < 15f;
@@ -72,22 +85,7 @@ namespace BotControl.SmartSelect
             var Agent = bot.Agent;
             var botName = Agent.PlayerName;
             var botId = Agent.CharacterID;
-            uint GetVoiceId(string botName)
-            {
-
-                uint voiceID = 0u;
-
-                if (botName.ToUpper().Contains("BISHOP"))
-                    voiceID = AK.EVENTS.PLAY_ADDRESSBISHOPIRRITATED01;
-                if (botName.ToUpper().Contains("DAUDA"))
-                    voiceID = AK.EVENTS.PLAY_ADDRESSDAUDAIRRITATED01;
-                if (botName.ToUpper().Contains("HACKET"))
-                    voiceID = AK.EVENTS.PLAY_ADDRESSHACKETTIRRITATED01;
-                if (botName.ToUpper().Contains("WOODS"))
-                    voiceID = AK.EVENTS.PLAY_ADDRESSWOODSIRRITATED01;
-                return voiceID;
-            }
-            var voiceID = GetVoiceId(botName);
+            var voiceID = GetVoiceId(bot);
 
             PlayerVoiceManager.WantToSay(zStaticRefrences.LocalPlayer.CharacterID, voiceID);
             zStaticRefrences.Subtitles.ShowSingleLineSubtitle($"Hey {botName}!", 1);
@@ -151,80 +149,13 @@ namespace BotControl.SmartSelect
                 SelectBotInView();
             }
         }
-        private static Vector3 FlatForward(Transform transform)
-        {
-            Vector3 dir = transform.forward;
-            dir.y = 0f;
-            if (dir.sqrMagnitude < 0.0001f)
-                return Vector3.forward;
-            return dir.normalized;
-        }
+
         private static void OnTapAndHold()
         {
-            var selection = MainSelection.GetSelected<PlayerAIBot>();
-            foreach (var bot in selection)
-            {
-                var backpack = bot.Backpack;
-                if (!backpack.TryGetBackpackItem(InventorySlot.GearClass, out BackpackItem backpackItem))
-                    continue;
-                bool isSentry = backpackItem.Instance.ArchetypeName == "Sentry Gun";
-                bool isDeployed = backpackItem.Status == eInventoryItemStatus.Deployed;
-                if (!isSentry || isDeployed)
-                    continue;
-  
-                //raycast from camera to find hit position and normal,
-                //place sentry at hit position, oriented based on normal.
-                Vector3 origin = zStaticRefrences.CameraTransform.position;
-                Vector3 direction = zStaticRefrences.CameraTransform.forward;
-                if (!Physics.Raycast(origin, direction, out RaycastHit hit, 100f))
-                    continue;
-                Vector3 placePosition = hit.point;
-                Quaternion placeRotation = Quaternion.LookRotation(FlatForward(zStaticRefrences.CameraTransform));
-                Pose sentryPose = new Pose(placePosition, placeRotation);
-                if (!CanPlaceTurret(sentryPose))
-                    continue;
-                zBotActions.SendBotToPlaceSentry(bot, sentryPose, zStaticRefrences.LocalPlayer);
-                PlayerVoiceManager.WantToSay(zStaticRefrences.LocalPlayer.CharacterID, AK.EVENTS.PLAY_CL_PUTASENTRYGUNHERE);
-                zStaticRefrences.Subtitles.ShowSingleLineSubtitle($"Put a sentry here.", 1);
-                BotBarkBack(bot.Agent.CharacterID, AK.EVENTS.PLAY_CL_WILLDO, "Will Do.", 2f);
-                break;
-            }
-        }
-        public static bool CanPlaceTurret(Pose pose)
-        {
-            bool hasRayHit = false;
-            Vector3 origin = pose.position + Vector3.up * 0.1f;
-            if (Physics.Raycast(origin, Vector3.down, out RaycastHit hit, 3f, LayerManager.MASK_SENTRYGUN_CAMERARAY_MOVERHELPER))
-            {
-                float angle = Vector3.Dot(hit.normal, Vector3.up);
-                if (angle > 0.9f)
-                {
-                    hasRayHit = true;
-                }
-                else if (angle > 0.7f && Physics.Raycast(origin, Vector3.down, out RaycastHit hit2, 3f, LayerManager.MASK_SENTRYGUN_CAMERARAY))
-                {
-                    hasRayHit = true;
-                }
-            }
-            if (!hasRayHit)
-                return false;
-            Bounds localBounds = new Bounds();
+            if (TurretHandler.TryPlaceTurret())
+                return;
 
-            for (int i = 0; i < zStaticRefrences.SentryRaycastCorners.Length; i++)
-            {
-                Vector3 local = zStaticRefrences.SentryRaycastCorners[i].localPosition;
-                localBounds.Encapsulate(local);
-            }
-            Vector3 halfExtents = localBounds.size * 0.5f;
-
-            Collider[] hits = Physics.OverlapBox(
-                pose.position,
-                halfExtents,
-                pose.rotation,
-                LayerManager.MASK_SENTRYGUN_CAMERARAY_MOVERHELPER
-            );
-
-            return hits.Length == 0;
+            ZiMain.PlayUiSound(AK.EVENTS.MENU_HOST_EXPEDITION_BUTTON_RELEASE);
         }
         private static void onKeyHeld()
         {
@@ -242,7 +173,11 @@ namespace BotControl.SmartSelect
             //              use voiceline PLAY_CL_THREETWOONEGO
             // Generator    (Place cell)            LG_PowerGenerator_Core 
             if (!MainSelection.Selected<PlayerAIBot>())
+            {
                 return;
+                ZiMain.PlayUiSound(AK.EVENTS.MENU_HOST_EXPEDITION_BUTTON_RELEASE);
+            }
+                
 
             HashSet<Il2CppSystem.Type> InteractableTypes = new()
             {
@@ -259,59 +194,92 @@ namespace BotControl.SmartSelect
             if (type == null)
             {
                 InteractWithNothing(zStaticRefrences.CameraTransform);
+                return;
             }
             else if (IsOfType<PlayerAgent>(type))
             {
                 PlayerAgent agent = BestComponent.Cast<PlayerAgent>();
                 InteractWithPlayerAgent(agent);
+                return;
             }
             else if (IsOfType<ItemInLevel>(type))
             {
                 ItemInLevel item = BestComponent.Cast<ItemInLevel>();
                 InteractWithItemInLevel(item);
+                return;
             }
             else if (IsOfType<SentryGunInstance>(type))
             {
                 SentryGunInstance sentry = BestComponent.Cast<SentryGunInstance>();
                 RefillSentryGrun(sentry);
+                return;
             }
             else if (IsOfType<LG_WeakResourceContainer>(type))
             {
                 LG_WeakResourceContainer container = BestComponent.Cast<LG_WeakResourceContainer>();
                 InteractWithContainer(container);
+                return;
             }
             else if (IsOfType<LG_WeakDoor>(type))
             {
                 LG_WeakDoor door = BestComponent.Cast<LG_WeakDoor>();
                 InteractWithDoor(door);
+                return;
             }
             else if (IsOfType<EnemyAgent>(type))
             {
                 EnemyAgent enemy = BestComponent.Cast<EnemyAgent>();
                 InteractWithEnemy(enemy);
+                return;
             }
             else if (IsOfType<LG_PowerGenerator_Core>(type))
             {
                 LG_PowerGenerator_Core generator = BestComponent.Cast<LG_PowerGenerator_Core>();
                 InteractWithGenerator(generator);
+                return;
             }
+            ZiMain.PlayUiSound(AK.EVENTS.MENU_HOST_EXPEDITION_BUTTON_RELEASE);
         }
         public static void InteractWithNothing(Transform transform)
         {
             if (Vector3.Angle(transform.forward, Vector3.down) < 15f) // are we looking down?  if so, consider us interacting with our player agent.
             {
                 InteractWithPlayerAgent(zStaticRefrences.LocalPlayer);
+                return;
             }
+            ZiMain.PlayUiSound(AK.EVENTS.MENU_HOST_EXPEDITION_BUTTON_RELEASE);
         }
-        public static void InteractWithPlayerAgent(PlayerAgent Agent)
+        public static bool InteractWithPlayerAgent(PlayerAgent Agent)
         {
+            bool sucsess = false;
             if (Agent.Alive)
             {
-                PlayerVoiceManager.WantToSay(zStaticRefrences.LocalPlayer.CharacterID, AK.EVENTS.PLAY_CL_PLEASE);
-                zStaticRefrences.Subtitles.ShowSingleLineSubtitle($"Please", 1);
+
                 float offset = 0;
+                
+
                 foreach (PlayerAIBot selectedBot in MainSelection.GetSelected<PlayerAIBot>())
                 {
+                    uint resourcePackID = GetAgentResoucePack(zStaticRefrences.LocalPlayer);
+                    bool needsResourceIhave = false;
+                    switch (resourcePackID)
+                    {
+                        case (uint)ShareActionPatch.ResourceIDs.MediPack:
+                            needsResourceIhave = Agent.NeedHealth();
+                            continue;
+                        case (uint)ShareActionPatch.ResourceIDs.AmmoPack:
+                            needsResourceIhave = Agent.NeedWeaponAmmo();
+                            continue;
+                        case (uint)ShareActionPatch.ResourceIDs.ToolPack:
+                            needsResourceIhave = Agent.NeedToolAmmo();
+                            continue;
+                        case (uint)ShareActionPatch.ResourceIDs.DisinfectPack:
+                            needsResourceIhave = Agent.NeedDisinfection();
+                            continue;
+                    }
+                    if (!needsResourceIhave)
+                        continue;
+                    sucsess = true;
                     zBotActions.SendBotToShareResourcePack(selectedBot, Agent, zStaticRefrences.LocalPlayer);
                     BotBarkBack(selectedBot.Agent.CharacterID, AK.EVENTS.PLAY_CL_WILLDO, "Will Do.", 1f + offset);
                     offset += 0.25f;
@@ -322,6 +290,17 @@ namespace BotControl.SmartSelect
                 PlayerAIBot BestBot = MainSelection.GetSelected<PlayerAIBot>().First();
                 ZiMain.sendChatMessage($"I would have revived {Agent.PlayerName}, but I'm stupid.", BestBot.Agent, zStaticRefrences.LocalPlayer);
             }
+            if (sucsess)
+            {
+                PlayerVoiceManager.WantToSay(zStaticRefrences.LocalPlayer.CharacterID, AK.EVENTS.PLAY_CL_PLEASE);
+                zStaticRefrences.Subtitles.ShowSingleLineSubtitle($"Please", 1);
+            }
+            else
+            {
+                ZiMain.PlayUiSound(AK.EVENTS.MENU_HOST_EXPEDITION_BUTTON_RELEASE);
+            }
+                
+            return sucsess;
         }
         public static void InteractWithItemInLevel(ItemInLevel item)
         {
@@ -339,7 +318,7 @@ namespace BotControl.SmartSelect
                 // do you have tool resources to share?
                 // are you the owner of the sentry?
                 bool owned = sentry.Owner == bot.Agent;
-                bool haveTool = (GetAgentResoucePack(bot) == (uint)ShareActionPatch.ResourceIDs.ToolPack);
+                bool haveTool = (GetAgentResoucePack(bot.Agent) == (uint)ShareActionPatch.ResourceIDs.ToolPack);
                 if (haveTool)
                 {
                     ZiMain.sendChatMessage($"I would have refilled the sentry, but I'm stupid.", bot.Agent, zStaticRefrences.LocalPlayer);
@@ -372,23 +351,37 @@ namespace BotControl.SmartSelect
         {
 
         }
-        public static uint GetAgentResoucePack(PlayerAIBot bot)
+        public static uint GetAgentResoucePack(PlayerAgent agent)
         {
-            PlayerBackpack backpack = PlayerBackpackManager.GetBackpack(bot.Agent.Owner);
+            PlayerBackpack backpack = PlayerBackpackManager.GetBackpack(agent.Owner);
             if (backpack.TryGetBackpackItem(InventorySlot.ResourcePack, out BackpackItem backpackItem))
                 return backpackItem.ItemID;
             return 0;
         }
         public static void onKeyDoubleTap()
         {
-            //var Bot = selection.getBotGobject();
-            //if (Bot == null)
-            //    return;
-            //var localPlayer = PlayerManager.GetLocalPlayerAgent();
-            //PlayerVoiceManager.WantToSay(localPlayer.CharacterID, AK.EVENTS.PLAY_CL_FOLLOWME);
-            //zStaticRefrences.Subtitles.ShowSingleLineSubtitle($"Follow me!", 1);
-            //zStaticRefrences.CommsMenu.ExecuteCmdCall(localPlayer, Bot.GetComponent<PlayerAgent>());
+            var Bot = GetBotLookingAt();
+            if (Bot == null)
+                return;
+            
+            zUpdater.Instance.StartCoroutine(CallBotToFollow(Bot));
+            ZiMain.sendChatMessage($"On the way.", Bot.Agent, zStaticRefrences.LocalPlayer);
         }
 
+        public static IEnumerator CallBotToFollow(PlayerAIBot Bot)
+        {
+            uint voidID = GetVoiceId(Bot);
+            string botname = Bot.Agent.PlayerName;
+            zStaticRefrences.Subtitles.ShowSingleLineSubtitle($"Hey {botname}, Follow me!", 2);
+            PlayerVoiceManager.WantToSay(zStaticRefrences.LocalPlayer.CharacterID, voidID);
+            yield return new WaitForSeconds(1f);
+            zStaticRefrences.CommsMenu.ExecuteCmdCall(zStaticRefrences.LocalPlayer, Bot.GetComponent<PlayerAgent>());
+            PlayerVoiceManager.WantToSay(zStaticRefrences.LocalPlayer.CharacterID, AK.EVENTS.PLAY_CL_FOLLOWME);
+
+            //yield return new WaitForSeconds(1f);
+
+            //PlayerVoiceManager.WantToSay(Bot.Agent.CharacterID, AK.EVENTS.PLAY_CL_IMONMYWAY);
+            
+        }
     }
 }

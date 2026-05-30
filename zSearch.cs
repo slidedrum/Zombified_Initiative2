@@ -5,11 +5,6 @@ namespace BotControl
 {
     public class zSearch
     {
-        public static Component FindBestAligned(Transform Look, HashSet<Il2CppSystem.Type> Types, float MaxDistance = 1000f, float Radius = 3, float MaxAngle = 180f)
-        {
-            HashSet<Component> candidates = FindAllInView(Look, Types, MaxDistance, Radius);
-            return FindBestAligned(Look, candidates, MaxAngle);
-        }
         public static GameObject FindBestAligned(Transform Look, HashSet<GameObject> Candidates, float MaxAngle = 180f)
         {
             return FindBestAligned(Look, Candidates, x => x.transform, MaxAngle);

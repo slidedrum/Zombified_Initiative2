@@ -1,5 +1,5 @@
-﻿using Player;
-using System;
+﻿using Il2CppInterop.Runtime;
+using Player;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -86,34 +86,12 @@ namespace BotControl
         }
         private static Transform[] LoadSentryCorners()
         {
-            var go = GameObject.Find("SentryGunPlacementIndicator");
-
-            if (go == null)
-            {
-                ZiMain.log.LogError("SentryGunPlacementIndicator not found.");
-                return Array.Empty<Transform>();
-            }
-
-            var indicator = go.GetComponent<SentryGunPlacementIndicator>();
-
-            if (indicator == null || indicator.m_raycastCorners == null)
-            {
-                ZiMain.log.LogError("SentryGunPlacementIndicator or m_raycastCorners missing.");
-                return Array.Empty<Transform>();
-            }
-
-            var source = indicator.m_raycastCorners;
-
-            var cloned = new Transform[source.Length];
-
-            for (int i = 0; i < source.Length; i++)
-            {
-                cloned[i] = source[i];
-            }
-
-            ZiMain.log.LogInfo($"Cached {cloned.Length} sentry raycast corners.");
-
-            return cloned;
+            return Resources.FindObjectsOfTypeAll(Il2CppType.Of<SentryGunFirstPerson>())
+                ?.FirstOrDefault(x => x.name == "SentryGunFirstPerson")
+                ?.TryCast<SentryGunFirstPerson>()
+                ?.m_placementIndicatorPrefab
+                ?.GetComponent<SentryGunPlacementIndicator>()
+                ?.m_raycastCorners;
         }
     }
 }
