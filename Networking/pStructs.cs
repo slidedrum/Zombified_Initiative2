@@ -5,14 +5,10 @@ using SNetwork;
 using UnityEngine;
 
 namespace BotControl.Networking
-
 {
     public class pStructs
     {
         //This handles encoding and decoding objects for network transfer.
-
-        //TODO this conversion shit needs a better naming scheme, I have no idea wtf I did here.
-
         public static PlayerAgent Get_RefFrom_pStruct(pPlayerAgent pStruct)
         {
             if (!pStruct.TryGet(out PlayerAgent refrence))
@@ -31,7 +27,6 @@ namespace BotControl.Networking
                 return null;
             return refrence;
         }
-
         public static PlayerAgent Get_RefFrom_pStruct(SNetStructs.pPlayer pStruct)
         {
             if (!pStruct.TryGetPlayer(out SNet_Player refrence))
@@ -74,47 +69,6 @@ namespace BotControl.Networking
             pItemData pStruct = refrence.Get_pItemData();
             return pStruct;
         }
-        public static Item TryGetItemInLevelFromItemData(pItemData itemData)
-        {
-            //Do we need this? This should probably move to pStructss
-            Item item;
-            PlayerBackpackManager.TryGetItemInLevelFromItemData(itemData, out item);
-            return item;
-        }
-        public static PlayerAgent GetAgentFrom_pStruct(SNetStructs.pPlayer player_struct)
-        {
-            //Do we need this? This should probably move to pStructs
-            if (!player_struct.TryGetPlayer(out SNet_Player player))
-                return null;
-            return player.PlayerAgent.TryCast<PlayerAgent>();
-        }
-        public static SNetStructs.pPlayer Get_pStructFromAgent(PlayerAgent agent)
-        {
-            //Do we need this?
-            SNetStructs.pPlayer player = new();
-            player.SetPlayer(agent.Owner);
-            return player;
-        }
-        public static PlayerAgent GetAgentFrom_pPlayer(SNetStructs.pPlayer player_struct)
-        {
-            //Do we need this? This should probably move to pStructs
-            if (!player_struct.TryGetPlayer(out SNet_Player player))
-                return null;
-            return player.PlayerAgent.TryCast<PlayerAgent>();
-        }
-        public static SNetStructs.pPlayer Get_pPlayerFromAgent(PlayerAgent agent)
-        {
-            //Do we need this? This should probably move to pStructs
-            SNetStructs.pPlayer player = new();
-            player.SetPlayer(agent.Owner);
-            return player;
-        }
-
-        //TODO consolidate these?
-        public struct pBotSelections
-        {
-            public long data;
-        }
         public struct pGenericPermission
         {
             public int playerID;
@@ -149,12 +103,6 @@ namespace BotControl.Networking
             public pPlayerAgent sender;
             public pPlayerAgent receiver;
             public pPlayerAgent commander;
-        }
-        internal struct pFollowActionInfo
-        {
-            public float prio;
-            public float radius;
-            public float maxRadius;
         }
         internal struct pBoolOverideTreeInfo
         {

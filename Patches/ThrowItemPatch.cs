@@ -46,26 +46,6 @@ namespace BotControl.Patches
             }
             return MovePosition;
         }
-        public static Vector3 GetTargetPosition(PlayerBotActionThrowItem __instance)
-        {
-            Vector3 targetPosition = __instance.m_bot.transform.position;
-            switch (__instance.m_desc.TargetType)
-            {
-                case PlayerBotActionThrowItem.TargetTypeEnum.None:
-                    break;
-
-                case PlayerBotActionThrowItem.TargetTypeEnum.Position:
-                    targetPosition = __instance.m_desc.TargetPosition;
-                    break;
-
-                case PlayerBotActionThrowItem.TargetTypeEnum.Object:
-                    if (__instance.m_desc.TargetObject == null)
-                        throw new NullReferenceException();
-                    targetPosition = __instance.m_desc.TargetObject.position;
-                    break;
-            }
-            return targetPosition;
-        }
         [HarmonyPatch(typeof(PlayerBotActionThrowItem), nameof(PlayerBotActionThrowItem.VerifyCurrentPosition))]
         [HarmonyPrefix]
         public static bool PreVerifyCurrentPosition(PlayerBotActionThrowItem __instance, ref bool __result)
@@ -80,13 +60,6 @@ namespace BotControl.Patches
                 }
             }
             //__result = __instance.CheckPositionHasView(__instance.m_agent.Position, __instance.GetTargetPosition(), 0.7225f);
-            return true;
-        }
-
-        [HarmonyPatch(typeof(PlayerBotActionThrowItem), nameof(PlayerBotActionThrowItem.MoveOut))]
-        [HarmonyPrefix]
-        public static bool PreMoveOut(PlayerBotActionThrowItem __instance, Vector3 travelPosition)
-        {
             return true;
         }
         [HarmonyPatch(typeof(PlayerBotActionThrowItem), nameof(PlayerBotActionThrowItem.FindPositionWithView))]
@@ -106,26 +79,6 @@ namespace BotControl.Patches
             // move position does not have a view, fall back to original method.
             return true;
         }
-        [HarmonyPatch(typeof(PlayerBotActionThrowItem), nameof(PlayerBotActionThrowItem.FindPositionWithView))]
-        [HarmonyPostfix]
-        public static void PostFindPositionWithView(PlayerBotActionThrowItem __instance, Vector3 currentPosition, Vector3 targetPosition, ref Vector3 resultPosition, ref bool __result)
-        {
-            ZiMain.log.LogDebug($"{resultPosition}");
-            ZiMain.log.LogDebug($"{__result}");
-        }
-
-        [HarmonyPatch(typeof(PlayerBotActionThrowItem), nameof(PlayerBotActionThrowItem.UpdateStateTravel))]
-        [HarmonyPrefix]
-        public static bool PreUpdateStateTravel(PlayerBotActionThrowItem __instance)
-        {// this method is still in the game, but it never actually triggers.  Fucking why (╯°□°)╯( ┻━┻
-            __instance.UpdateEquipAction();
-            Vector3 MovePosition = GetMovePosition(__instance);
-            if (__instance.CheckPositionHasView(MovePosition, __instance.GetTargetPosition(), 0.9f)) // if the move positon can see the target, then let the bot move to the move position.
-                if (!__instance.m_travelAction.IsTerminated()) // if the bot has made it to the move position, start the throw.
-                    return false;
-            return true;
-        }
-
         [HarmonyPatch(typeof(PlayerAIBot), nameof(PlayerAIBot.StartAction))]
         [HarmonyPrefix]
         public static bool PreStartAction(PlayerAIBot __instance, PlayerBotActionBase.Descriptor desc)
@@ -152,51 +105,12 @@ namespace BotControl.Patches
             }
             return true;
         }
-        private static void DebugSimulateNetworkThrow()
-        {
-            var botlist = ZiMain.GetBotList();
-            pThrowType throwType = 0;
-            PlayerAgent targetAgent = null;
-            Vector3 targetPosition;
-            foreach (var bot in botlist)
-            {
-                var backpack = bot.Backpack;
-                backpack.TryGetBackpackItem(InventorySlot.Consumable, out BackpackItem item);
-                if (item == null)
-                    continue;
-                if (ThrowMappings.ContainsValue(item.Name))
-                {
-                    foreach(var type in ThrowMappings.Keys)
-                    {
-                        if (ThrowMappings[type] == item.Name)
-                        {
-                            throwType = type;
-                            break;
-                        }
-                    }
-                    targetAgent = bot.Agent;
-                    break;
-                }
-            }
-            if (targetAgent == null)
-                return;
-            targetPosition = zStaticRefrences.LocalPlayer.FPSCamera.CameraRayPos;
-            pStructs.pThrowDataInfo info = new()
-            {
-                Commander = pStructs.Get_pStructFromRefrence(zStaticRefrences.LocalPlayer),
-                Agent = pStructs.Get_pStructFromRefrence(targetAgent),
-                ThrowType = throwType,
-                MovePosition = zStaticRefrences.LocalPlayer.transform.position,
-                TargetPosition = targetPosition,
-            };
-            zNetworking.ReciveRequestToThrowItem(0, info);
-        }
         private static void OnButtonThrowItem(pThrowType throwType, PlayerAgent targetAgent)
         {
             Vector3 targetPosition = zStaticRefrences.LocalPlayer.FPSCamera.CameraRayPos;
             if (SNet.IsMaster)
             {
-                SendBotToThrowItem(zStaticRefrences.LocalPlayer, targetAgent, throwType, zStaticRefrences.LocalPlayer.transform.position, targetPosition, 0);
+                zBotActions.SendBotToThrowItem(zStaticRefrences.LocalPlayer, targetAgent, throwType, zStaticRefrences.LocalPlayer.transform.position, targetPosition, 0);
             }
             pStructs.pThrowDataInfo info = new()
             {
@@ -229,40 +143,47 @@ namespace BotControl.Patches
             OnButtonThrowItem(pThrowType.Glowstick, targetAgent);
             return false;
         }
-        public static bool SendBotToThrowItem(PlayerAgent Commander, PlayerAgent botAgent, pStructs.pThrowType ThrowType, Vector3 MovePosition, Vector3 TargetPosition, ulong netSender = 0)
+        private static void DebugSimulateNetworkThrow()
         {
-            if (!SNet.Master)
-                return false;
-
-            PlayerAIBot aiBot = botAgent.GetComponent<PlayerAIBot>();
-            var backpack = aiBot.Backpack;
-            backpack.TryGetBackpackItem(InventorySlot.Consumable, out var item);
-            if (item == null)
+            var botlist = ZiMain.GetBotList();
+            pThrowType throwType = 0;
+            PlayerAgent targetAgent = null;
+            Vector3 targetPosition;
+            foreach (var bot in botlist)
             {
-                ZiMain.log.LogWarning($"Wanted to throw {ThrowType} but found nothing.");
-                return false;
+                var backpack = bot.Backpack;
+                backpack.TryGetBackpackItem(InventorySlot.Consumable, out BackpackItem item);
+                if (item == null)
+                    continue;
+                if (ThrowMappings.ContainsValue(item.Name))
+                {
+                    foreach (var type in ThrowMappings.Keys)
+                    {
+                        if (ThrowMappings[type] == item.Name)
+                        {
+                            throwType = type;
+                            break;
+                        }
+                    }
+                    targetAgent = bot.Agent;
+                    break;
+                }
             }
-            if (item.Name != ThrowMappings[ThrowType])
+            if (targetAgent == null)
+                return;
+            targetPosition = zStaticRefrences.LocalPlayer.FPSCamera.CameraRayPos;
+            pStructs.pThrowDataInfo info = new()
             {
-                ZiMain.log.LogWarning($"Invalid throw item to throw.  Wanted to throw {ThrowType} but found {item.Name}");
-                return false;
-            }
-
-            PlayerBotActionThrowItem.Descriptor desc = new(aiBot)
-            {
-                Prio = 15f,
-                Haste = 0.8f,
-                TargetPosition = TargetPosition,
-                TargetObject = Commander.transform,
-                TargetType = PlayerBotActionThrowItem.TargetTypeEnum.Position,
-                Item = item.Instance.Cast<ItemEquippable>(),
-                MovementAllowed = true
+                Commander = pStructs.Get_pStructFromRefrence(zStaticRefrences.LocalPlayer),
+                Agent = pStructs.Get_pStructFromRefrence(targetAgent),
+                ThrowType = throwType,
+                MovePosition = zStaticRefrences.LocalPlayer.transform.position,
+                TargetPosition = targetPosition,
             };
-            aiBot.StartAction(desc);
-            return false;
+            zNetworking.ReciveRequestToThrowItem(0, info);
         }
         public static Vector3 _GetAimDirection(PlayerBotActionThrowItem __instance, Vector3 fromPos, ref float forceRel, bool straightShot, out float range)
-        {
+        { // This is unused and not needed.  But I spent a lot of time making this re-creation so I'm not going to delete it!
             if (__instance.m_desc == null)
                 throw new NullReferenceException();
 
@@ -364,14 +285,5 @@ namespace BotControl.Patches
                 chosenArc * invDirectionLen,
                 horizontalDir.y * invDirectionLen);
         }
-
-        //[HarmonyPatch(typeof(PlayerBotActionThrowItem), nameof(PlayerBotActionThrowItem.GetAimDirection))]
-        //[HarmonyPrefix]
-        //public static bool PreGetAimDirection()
-        //public static bool PreGetAimDirection(PlayerBotActionThrowItem __instance,Vector3 fromPos, ref float forceRel, bool straightShot, ref float range, ref Vector3 __result)
-        //{
-        //    __result = _GetAimDirection(__instance, fromPos, ref forceRel, straightShot, out range);
-        //    return false;
-        //}
     }
 }

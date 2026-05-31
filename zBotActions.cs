@@ -1,4 +1,5 @@
 ﻿using BotControl.Networking;
+using BotControl.Patches;
 using BotControl.zRootBotPlayerAction;
 using Dissonance.Networking.Client;
 using Enemies;
@@ -36,7 +37,7 @@ namespace BotControl
             zActions.manualActions.Add(desc);
             aiBot.StartAction(desc);
         }
-        internal static void SendBotToPlaceSentry(PlayerAIBot aiBot, Pose sentryPose, PlayerAgent commander = null, ulong netsender = 0)
+        public static void SendBotToPlaceSentry(PlayerAIBot aiBot, Pose sentryPose, PlayerAgent commander = null, ulong netsender = 0)
         {
             if (!SNet.IsMaster) //Are we a client?
             {
@@ -254,7 +255,37 @@ namespace BotControl
             aiBot.StartAction(descriptor);
             return descriptor;
         }
+        public static bool SendBotToThrowItem(PlayerAgent Commander, PlayerAgent botAgent, pStructs.pThrowType ThrowType, Vector3 MovePosition, Vector3 TargetPosition, ulong netSender = 0)
+        {
+            if (!SNet.Master)
+                return false;
 
+            PlayerAIBot aiBot = botAgent.GetComponent<PlayerAIBot>();
+            var backpack = aiBot.Backpack;
+            backpack.TryGetBackpackItem(InventorySlot.Consumable, out var item);
+            if (item == null)
+            {
+                ZiMain.log.LogWarning($"Wanted to throw {ThrowType} but found nothing.");
+                return false;
+            }
+            if (item.Name != ThrowItemPatch.ThrowMappings[ThrowType])
+            {
+                ZiMain.log.LogWarning($"Invalid throw item to throw.  Wanted to throw {ThrowType} but found {item.Name}");
+                return false;
+            }
 
+            PlayerBotActionThrowItem.Descriptor desc = new(aiBot)
+            {
+                Prio = 15f,
+                Haste = 0.8f,
+                TargetPosition = TargetPosition,
+                TargetObject = Commander.transform,
+                TargetType = PlayerBotActionThrowItem.TargetTypeEnum.Position,
+                Item = item.Instance.Cast<ItemEquippable>(),
+                MovementAllowed = true
+            };
+            aiBot.StartAction(desc);
+            return false;
+        }
     }
 }

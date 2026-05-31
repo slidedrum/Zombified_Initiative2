@@ -14,204 +14,53 @@ namespace BotControl.Networking
 {
     public class zNetworking
     { //This class will handle all incoming and outgoing network requests.
-        //todo only Update values every 100ms.  
-        //if not host ask for host's value after change
-        internal static Dictionary<int, bool> botSelections = new Dictionary<int, bool>();
-        internal static long EncodeBotSelectionForNetwork(Dictionary<int, bool> botSelection)
+      //todo only Update values every 100ms.  
+      //if not host ask for host's value after change
+        internal static void ReciveSetBoolOverideTree(ulong netSender, pStructs.pBoolOverideTreeInfo info)
         {
-            //this method is AI generated, but I fully understand what it's doing.  I just didn't know how to do bitwise ops.
-            const int MaxBots = 21; // 64 bits / 3 bits per bot
-            long result = 0;
-            int bitPos = 0;
-
-            if (botSelection.Keys.Any(k => k < 0 || k >= MaxBots))
-                throw new ArgumentOutOfRangeException(nameof(botSelection), $"All bot keys must be between 0 and {MaxBots - 1}.");
-
-            var keys = botSelection.Keys.OrderBy(k => k).ToList();
-            int lastKey = keys.Last();
-
-            for (int i = 0; i < MaxBots; i++)
-            {
-                bool hasData = botSelection.ContainsKey(i);
-                bool data = hasData && botSelection[i];
-                bool end = i == lastKey;
-                if (hasData) result |= (1L << bitPos);
-                bitPos++;
-                if (data) result |= (1L << bitPos);
-                bitPos++;
-                if (end) result |= (1L << bitPos);
-                bitPos++;
-            }
-
-            return result;
-        }
-        internal static Dictionary<int, bool> DecodeBotSelectionFromNetwork(long encoded)
-        {
-            const int MaxBots = 21;
-            var botSelection = new Dictionary<int, bool>();
-            int bitPos = 0;
-
-            for (int i = 0; i < MaxBots; i++)
-            {
-                bool hasData = (encoded & (1L << bitPos)) != 0;
-                bitPos++;
-                bool data = (encoded & (1L << bitPos)) != 0;
-                bitPos++;
-                bool end = (encoded & (1L << bitPos)) != 0;
-                bitPos++;
-
-                if (hasData)
-                {
-                    botSelection[i] = data;
-                }
-
-                if (end)
-                {
-                    break;
-                }
-            }
-            return botSelection;
-        }
-        //internal static void ReciveSetItemPrioDisable(ulong sender, pStructs.pItemPrioDisable info)
-        //{
-        //    ZiMain.log.LogInfo($"Recived set item prio disabled from network!");
-        //    uint id = info.id;
-        //    bool allowed = info.allowed;
-        //    ZiMain.log.LogInfo($"id:{id}, allowed:{allowed}");
-        //    if (!PickupMenuClass.prioNodesByID.ContainsKey(id))
-        //    {
-        //        ZiMain.log.LogError("Unknown id recived!");
-        //        return;
-        //    }
-        //    zSlideComputer.SetItemPrioDisabled(id, allowed, sender);
-        //    PickupMenuClass.updateNodePriorityDisplay(id, PickupMenuClass.prioNodesByID[id]);
-        //}
-        //internal static void ReciveSetItemPrio(ulong sender, pStructs.pItemPrio info)
-        //{
-        //    ZiMain.log.LogInfo($"Recived set item prio value from network!");
-        //    uint id = info.id;
-        //    float prio = info.prio;
-        //    ZiMain.log.LogInfo($"id:{id}, prio:{prio}");
-        //    if (!PickupMenuClass.prioNodesByID.ContainsKey(id))
-        //    {
-        //        ZiMain.log.LogError("Unknown id recived!");
-        //        return;
-        //    }
-        //    zSlideComputer.SetBotItemPriority(id, prio, sender);
-        //    PickupMenuClass.updateNodePriorityDisplay(id, PickupMenuClass.prioNodesByID[id]);
-        //}
-        //internal static void reciveSetResourceThreshold(ulong sender, pStructs.pResourceThreshold info)
-        //{
-        //    ZiMain.log.LogInfo($"Recived set resource threshold value from network!");
-        //    uint id = info.id;
-        //    int threshold = info.threshold;
-        //    ZiMain.log.LogInfo($"id:{id}, threshold:{threshold}");
-        //    if (!ShareMenuClass.packNodesByItemName.ContainsKey(id))
-        //    {
-        //        ZiMain.log.LogError("Unknown id recived!");
-        //        return;
-        //    }
-        //    zSlideComputer.SetResourceThreshold(id, threshold, sender);
-        //    ShareMenuClass.updateNodeThresholdDisplay(ShareMenuClass.packNodesByItemName[id], id);
-        //}
-        //internal static void ReciveSetResourceThresholdDisable(ulong sender, pStructs.pResourceThresholdDisable info)
-        //{
-        //    ZiMain.log.LogInfo($"Recived set resource disable value from network!");
-        //    uint id = info.id;
-        //    bool allowed = info.allowed;
-        //    ZiMain.log.LogInfo($"id:{id}, allowed:{allowed}");
-        //    if (!ShareMenuClass.packNodesByItemName.ContainsKey(id))
-        //    {
-        //        ZiMain.log.LogError("Unknown id recived!");
-        //        return;
-        //    }
-        //    zSlideComputer.SetResourceSharePermission(id, allowed, sender);
-        //    ShareMenuClass.updateNodeThresholdDisplay(ShareMenuClass.packNodesByItemName[id], id);
-        //}
-
-        internal static void ReciveSetActionPermission(ulong sender, pStructs.pGenericPermission info)
-        {
-
-            int playerID = info.playerID;
-            int actionID = info.actionID;
-            bool allowed = info.allowed;
-            sMenu menu = AutomaticActionMenuClass.autoActionMenus[actionID];
-            sMenu.sMenuNode node = menu.centerNode;
-            string key = node.text;
-            ZiMain.log.LogInfo($"Recived set {key} permision value from network!");
-            ZiMain.log.LogInfo($"id:{playerID}, allowed:{allowed}");
-            //if (!zSlideComputer.PermissionDefinitions.GetAllowed(key,playerID))
-            //{
-            //    ZiMain.log.LogError($"Unknown id {playerID} recived!");
-            //    return;
-            //}
-            zSlideComputer.ActionPermissions.SetValue(key, allowed, sender);
-            //zMenus.UpdateIndicatorForNode(zMenus.permissionMenu.GetNode("Pickups"), zSlideComputer.PickUpPerms);
-            if (allowed)
-            {
-                node.SetColor(sMenuManager.defaultColor);
-                menu.centerNode.SetColor(sMenuManager.defaultColor);
-            }
+            ZiMain.log.LogDebug("Recived request to update bool override tree!");
+            ZiMain.log.LogDebug($"treeID:{info.treeID}, keyId:{info.keyId}, isNull:{info.isNull}, value:{info.value}");
+            uint treeID = info.treeID;
+            uint keyId = info.keyId;
+            bool isNull = info.isNull;
+            bool? value;
+            if (isNull)
+                value = null;
             else
-            {
-                node.SetColor(new Color(0.25f, 0f, 0f));
-                menu.centerNode.SetColor(new Color(0.25f, 0f, 0f));
-
-            }
+                value = info.value;
+            OverrideTree<bool?> tree = OverrideTree<bool?>.GetTreeFromID(info.treeID);
+            tree.SetValue(keyId, value, netSender);
         }
-
-        //internal static void ReciveSetPickupPermission(ulong sender, pStructs.pPickupPermission info)
-        //{
-        //    ZiMain.log.LogInfo($"Recived set pickup permision value from network!");
-        //    int playerID = info.playerID;
-        //    bool allowed = info.allowed;
-        //    ZiMain.log.LogInfo($"id:{playerID}, allowed:{allowed}");
-        //    if (!zSlideComputer.PickUpPerms.ContainsKey(playerID))
-        //    {
-        //        ZiMain.log.LogError("Unknown id recived!");
-        //        return;
-        //    }
-        //    zSlideComputer.SetPickupPermission(playerID, allowed, sender);
-        //    //zMenus.UpdateIndicatorForNode(zMenus.permissionMenu.GetNode("Pickups"), zSlideComputer.PickUpPerms);
-        //    var node = AutomaticActionMenuClass.PickupMenuClass.pickupNode;
-        //    var menu = AutomaticActionMenuClass.PickupMenuClass.pickupMenu;
-        //    if (allowed)
-        //    {
-        //        node.SetColor(sMenuManager.defaultColor);
-        //        menu.centerNode.SetColor(sMenuManager.defaultColor);
-        //    }
-        //    else
-        //    {
-        //        node.SetColor(new Color(0.25f, 0f, 0f));
-        //        menu.centerNode.SetColor(new Color(0.25f, 0f, 0f));
-        //    }
-        //}
-        //internal static void ReciveSetSharePermission(ulong sender, pStructs.pSharePermission info)
-        //{
-        //    ZiMain.log.LogInfo($"Recived set share permision value from network!");
-        //    int playerID = info.playerID;
-        //    bool allowed = info.allowed;
-        //    ZiMain.log.LogInfo($"id:{playerID}, allowed:{allowed}");
-        //    if (!zSlideComputer.SharePerms.ContainsKey(playerID))
-        //    {
-        //        ZiMain.log.LogError("Unknown id recived!");
-        //        return;
-        //    }
-        //    zSlideComputer.SetSharePermission(playerID, allowed, sender);
-        //    //zMenus.UpdateIndicatorForNode(zMenus.permissionMenu.GetNode("Share"), zSlideComputer.SharePerms);
-        //    var node = AutomaticActionMenuClass.ShareMenuClass.shareNode;
-        //    var menu = AutomaticActionMenuClass.ShareMenuClass.shareMenu;
-        //    if (allowed)
-        //    {
-        //        node.SetColor(sMenuManager.defaultColor);
-        //        menu.centerNode.SetColor(sMenuManager.defaultColor);
-        //    }
-        //    else
-        //    {
-        //        node.SetColor(new Color(0.25f, 0f, 0f));
-        //        menu.centerNode.SetColor(new Color(0.25f, 0f, 0f));
-        //    }
-        //}
+        internal static void ReciveSetIntOverideTree(ulong netSender, pStructs.pIntOverideTreeInfo info)
+        {
+            ZiMain.log.LogDebug("Recived request to update int override tree!");
+            ZiMain.log.LogDebug($"treeID:{info.treeID}, keyId:{info.keyId}, isNull:{info.isNull}, value:{info.value}");
+            uint treeID = info.treeID;
+            uint keyId = info.keyId;
+            bool isNull = info.isNull;
+            int? value;
+            if (isNull)
+                value = null;
+            else
+                value = info.value;
+            OverrideTree<int?> tree = OverrideTree<int?>.GetTreeFromID(info.treeID);
+            tree.SetValue(keyId, value, netSender);
+        }
+        internal static void ReciveSetFloatOverideTree(ulong netSender, pStructs.pFloatOverideTreeInfo info)
+        {
+            ZiMain.log.LogDebug("Recived request to update float override tree!");
+            ZiMain.log.LogDebug($"treeID:{info.treeID}, keyId:{info.keyId}, isNull:{info.isNull}, value:{info.value}");
+            uint treeID = info.treeID;
+            uint keyId = info.keyId;
+            bool isNull = info.isNull;
+            float? value;
+            if (isNull)
+                value = null;
+            else
+                value = info.value;
+            OverrideTree<float?> tree = OverrideTree<float?>.GetTreeFromID(info.treeID);
+            tree.SetValue(keyId, value, netSender);
+        }
         internal static void ReciveRequestToPickupItem(ulong sender, pStructs.pPickupItemInfo info)
         {
             ZiMain.log.LogInfo("Recived request to pickup item!");
@@ -285,52 +134,6 @@ namespace BotControl.Networking
             PlayerAIBot aiBot = aiBotAgent.gameObject.GetComponent<PlayerAIBot>();
             zBotActions.SendBotToKillEnemy(aiBot, enemy, commander, netSender);
         }
-        internal static void ReciveSetBoolOverideTree(ulong netSender, pStructs.pBoolOverideTreeInfo info)
-        {
-            ZiMain.log.LogDebug("Recived request to update bool override tree!");
-            ZiMain.log.LogDebug($"treeID:{info.treeID}, keyId:{info.keyId}, isNull:{info.isNull}, value:{info.value}");
-            uint treeID = info.treeID;
-            uint keyId = info.keyId;
-            bool isNull = info.isNull;
-            bool? value;
-            if (isNull)
-                value = null;
-            else
-                value = info.value;
-            OverrideTree<bool?> tree = OverrideTree<bool?>.GetTreeFromID(info.treeID);
-            tree.SetValue(keyId, value, netSender);
-        }
-        internal static void ReciveSetIntOverideTree(ulong netSender, pStructs.pIntOverideTreeInfo info)
-        {
-            ZiMain.log.LogDebug("Recived request to update int override tree!");
-            ZiMain.log.LogDebug($"treeID:{info.treeID}, keyId:{info.keyId}, isNull:{info.isNull}, value:{info.value}");
-            uint treeID = info.treeID;
-            uint keyId = info.keyId;
-            bool isNull = info.isNull;
-            int? value;
-            if (isNull)
-                value = null;
-            else
-                value = info.value;
-            OverrideTree<int?> tree = OverrideTree<int?>.GetTreeFromID(info.treeID);
-            tree.SetValue(keyId, value, netSender);
-        }
-        internal static void ReciveSetFloatOverideTree(ulong netSender, pStructs.pFloatOverideTreeInfo info)
-        {
-            ZiMain.log.LogDebug("Recived request to update float override tree!");
-            ZiMain.log.LogDebug($"treeID:{info.treeID}, keyId:{info.keyId}, isNull:{info.isNull}, value:{info.value}");
-            uint treeID = info.treeID;
-            uint keyId = info.keyId;
-            bool isNull = info.isNull;
-            float? value;
-            if (isNull)
-                value = null;
-            else
-                value = info.value;
-            OverrideTree<float?> tree = OverrideTree<float?>.GetTreeFromID(info.treeID);
-            tree.SetValue(keyId, value, netSender);
-        }
-
         internal static void ReciveRequestToPickupSentry(ulong netSender, pStructs.pPickupSentryInfo info)
         {
             ZiMain.log.LogInfo("Recived request to pick up sentry!");
@@ -353,7 +156,6 @@ namespace BotControl.Networking
             PlayerAIBot aiBot = agent.gameObject.GetComponent<PlayerAIBot>();
             zBotActions.SendBotToPickUpSentry(aiBot, commander, netSender);
         }
-
         internal static void ReciveRequestToPlaceSentry(ulong netSender, pStructs.pPlaceSentryInfo info)
         {
             ZiMain.log.LogInfo("Recived request to place a sentry!");
@@ -379,7 +181,6 @@ namespace BotControl.Networking
             PlayerAIBot aiBot = agent.gameObject.GetComponent<PlayerAIBot>();
             zBotActions.SendBotToPlaceSentry(aiBot, pose, commander, netSender);
         }
-
         internal static void ReciveRequestToThrowItem(ulong netSender, pStructs.pThrowDataInfo info)
         {
             ZiMain.log.LogInfo("Recived request to throw item!");
@@ -396,7 +197,7 @@ namespace BotControl.Networking
                 ZiMain.log.LogWarning("Invalid request to throw item, You can't tell a player what to do.");
                 return;
             }
-            ThrowItemPatch.SendBotToThrowItem(Commander, BotAgent, ThrowType, MovePostion, TargetPosition, netSender);
+            zBotActions.SendBotToThrowItem(Commander, BotAgent, ThrowType, MovePostion, TargetPosition, netSender);
         }
     }
 }

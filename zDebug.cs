@@ -189,11 +189,6 @@ namespace BotControl
             }
             return null;
         }
-        private static pStructs.pBotSelections testSend = new pStructs.pBotSelections();
-        private static void setuppBotSelectionsForTest()
-        {
-            testSend.data = Networking.zNetworking.EncodeBotSelectionForNetwork(SelectionMenuClass.botSelection);
-        }
         private static void TestReciveSetGenericAction(string actionKey, int playerID, bool allowed)
         {
             pStructs.pGenericPermission info = new pStructs.pGenericPermission();
