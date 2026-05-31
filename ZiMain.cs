@@ -361,7 +361,18 @@ public class ZiMain : BasePlugin
             }
         }
     }
-    
+    public static void BotBarkBack(int botId, uint voiceID, string subtitle, float delay = 1f)
+    {
+        FlexibleMethodDefinition barkback = new FlexibleMethodDefinition(BotBark, [botId, voiceID, subtitle]);
+        zUpdater.InvokeStatic(barkback, delay);
+
+    }
+    internal static void BotBark(int botId, uint voiceID, string subtitle = "")
+    {
+        PlayerVoiceManager.WantToSay(botId, voiceID);
+        if (subtitle != "")
+            zStaticRefrences.Subtitles.ShowSingleLineSubtitle(subtitle, 1);
+    }
     public static void CheckForWakeChance(PlayerAIBot aiBot, GameObject enemyGo, PlayerBotActionBase.Descriptor descriptor)
     {
         if (enemyGo == null)

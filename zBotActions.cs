@@ -10,6 +10,7 @@ using SlideMenu;
 using SNetwork;
 using System;
 using UnityEngine;
+using UnityEngine.UIElements;
 using static BotControl.Networking.pStructs;
 
 namespace BotControl
@@ -18,6 +19,8 @@ namespace BotControl
     {
         public static void SendBotToPickUpSentry(PlayerAIBot aiBot, PlayerAgent commander = null, ulong netsender = 0)
         {
+
+            ZiMain.BotBarkBack(aiBot.Agent.CharacterID, AK.EVENTS.PLAY_CL_WILLDO, "Will Do.", 2f);
             if (!SNet.IsMaster) //Are we a client?
             {
                 if (netsender != 0) //Is this request coming from a different client?
@@ -95,6 +98,7 @@ namespace BotControl
                 Haste = haste,
             };
             PlayerVoiceManager.WantToSay(commander.CharacterID, AK.EVENTS.PLAY_CL_GRABTHEITEM);
+            zStaticRefrences.Subtitles.ShowSingleLineSubtitle($"Grab the item.", 1);
             FlexibleMethodDefinition barkback = new FlexibleMethodDefinition(PlayerVoiceManager.WantToSay, [aiBot.Agent.CharacterID, AK.EVENTS.PLAY_CL_WILLDO]);
             zUpdater.InvokeStatic(barkback, 1f);
             if ((bool)zSlideComputer.ActionPermissions.ValueAt("Notify confirm action"))

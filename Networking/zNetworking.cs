@@ -154,6 +154,8 @@ namespace BotControl.Networking
                 return;
             }
             PlayerAIBot aiBot = agent.gameObject.GetComponent<PlayerAIBot>();
+            PlayerVoiceManager.WantToSay(commander.CharacterID, AK.EVENTS.PLAY_CL_PICKUPYOURDEPLOYABLES);
+            zStaticRefrences.Subtitles.ShowSingleLineSubtitle($"Pick up your deployables.", 1);
             zBotActions.SendBotToPickUpSentry(aiBot, commander, netSender);
         }
         internal static void ReciveRequestToPlaceSentry(ulong netSender, pStructs.pPlaceSentryInfo info)
