@@ -12,6 +12,7 @@ namespace BotControl.Networking
         //This handles encoding and decoding objects for network transfer.
 
         //TODO this conversion shit needs a better naming scheme, I have no idea wtf I did here.
+
         public static PlayerAgent Get_RefFrom_pStruct(pPlayerAgent pStruct)
         {
             if (!pStruct.TryGet(out PlayerAgent refrence))
@@ -175,6 +176,20 @@ namespace BotControl.Networking
             public uint keyId;
             public float value;
             public bool isNull;
+        }
+        public enum pThrowType : uint
+        {
+            FogRepeller,
+            Glowstick,
+            cFoam,
+        }
+        public struct pThrowDataInfo
+        {
+            public pPlayerAgent Commander;
+            public pPlayerAgent Agent;
+            public pThrowType ThrowType;
+            public Vector3 MovePosition;
+            public Vector3 TargetPosition;
         }
     }
 }

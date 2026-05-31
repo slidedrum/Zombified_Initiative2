@@ -30,7 +30,7 @@ namespace BotControl
                 return _Subtitles;
             }
         }
-        public static PlayerAgent _LocalPlayer;
+        private static PlayerAgent _LocalPlayer;
         public static PlayerAgent LocalPlayer
         {
             get

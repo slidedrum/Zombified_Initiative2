@@ -1,5 +1,5 @@
 ﻿using BotControl.Menus;
-using Dissonance.Networking.Client;
+using BotControl.Patches;
 using Enemies;
 using LevelGeneration;
 using Player;
@@ -378,6 +378,25 @@ namespace BotControl.Networking
 
             PlayerAIBot aiBot = agent.gameObject.GetComponent<PlayerAIBot>();
             zBotActions.SendBotToPlaceSentry(aiBot, pose, commander, netSender);
+        }
+
+        internal static void ReciveRequestToThrowItem(ulong netSender, pStructs.pThrowDataInfo info)
+        {
+            ZiMain.log.LogInfo("Recived request to throw item!");
+            if (!SNet.IsMaster)
+                return;
+            PlayerAgent Commander = pStructs.Get_RefFrom_pStruct(info.Commander);
+            PlayerAgent BotAgent = pStructs.Get_RefFrom_pStruct(info.Agent);
+            pStructs.pThrowType ThrowType = info.ThrowType;
+            Vector3 MovePostion = info.MovePosition;
+            Vector3 TargetPosition = info.TargetPosition;
+            ZiMain.log.LogInfo($"{Commander.PlayerName} wants to tell {BotAgent.PlayerName} to throw a {ThrowType} from {MovePostion} to {TargetPosition}");
+            if (!BotAgent.Owner.IsBot)
+            {
+                ZiMain.log.LogWarning("Invalid request to throw item, You can't tell a player what to do.");
+                return;
+            }
+            ThrowItemPatch.SendBotToThrowItem(Commander, BotAgent, ThrowType, MovePostion, TargetPosition, netSender);
         }
     }
 }

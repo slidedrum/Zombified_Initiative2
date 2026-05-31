@@ -332,7 +332,7 @@ namespace BotControl.SmartSelect
         {
             PlayerVoiceManager.WantToSay(zStaticRefrences.LocalPlayer.CharacterID, AK.EVENTS.PLAY_CL_PICKUPYOURDEPLOYABLES);
             zStaticRefrences.Subtitles.ShowSingleLineSubtitle($"Pick up your deployables.", 1);
-            zBotActions.SendBotToPickUpSentry(bot);
+            zBotActions.SendBotToPickUpSentry(bot, zStaticRefrences.LocalPlayer);
             BotBarkBack(bot.Agent.CharacterID, AK.EVENTS.PLAY_CL_WILLDO, "Will Do.", 2f);
         }
         public static void InteractWithContainer(LG_WeakResourceContainer container)

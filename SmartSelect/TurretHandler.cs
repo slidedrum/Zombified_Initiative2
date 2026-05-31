@@ -6,7 +6,7 @@ namespace BotControl.SmartSelect
     public class TurretHandler
     {
         public static bool TryPlaceTurret()
-        {
+        { // This logic should not be done on client, send to host over network.
             var selection = zSmartSelect.MainSelection.GetSelected<PlayerAIBot>();
             foreach (var bot in selection)
             {
