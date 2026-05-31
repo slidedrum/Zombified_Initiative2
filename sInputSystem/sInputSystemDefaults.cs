@@ -109,7 +109,7 @@
         {
             get
             {
-                sKeyPressDefinition[] Presses = [VeryLongUnpressed, ShortPress];
+                sKeyPressDefinition[] Presses = [LongUnpressed, ShortPress];
                 sSequenceDefinition sequence = new(
                     Presses: Presses,
                     Callback: null,
@@ -150,7 +150,7 @@
         {
             get
             {
-                sKeyPressDefinition[] Presses = [VeryLongUnpressed, LongPress];
+                sKeyPressDefinition[] Presses = [LongUnpressed, LongPress];
                 //sKeyPressAnchor anchor = new(Presses[0], sKeyPressAnchor.Anchorpoint.Start, sKeyPressAnchor.Anchorpoint.End, 0f, 0f);
                 //Presses[1].AddAnchor(anchor);
                 sSequenceDefinition sequence = new(
@@ -162,14 +162,16 @@
                 return sequence;
             }
         }
-        public static sSequenceDefinition OnDoubleTapped
+        public static sSequenceDefinition OnDoubleTappedExclusive
         {
             get
             {
-                sKeyPressDefinition[] Presses = [ShortPress, ShortPress, Unpressed];
+                sKeyPressDefinition[] Presses = [LongUnpressed, ShortPress, ShortUnpressed, ShortPress];
                 sSequenceDefinition sequence = new(
                     Presses: Presses,
                     Callback: null,
+                    ExclusivityWindow: TapThreshold,
+                    Strict: true,
                     Identifier: "OnDoubleTapped"
                     );
                 return sequence;

@@ -1,8 +1,11 @@
-﻿using System;
+﻿using Il2CppInterop.Runtime;
+using Player;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
+using UnityEngine.AI;
 #nullable enable
 namespace BotControl
 {
@@ -28,8 +31,32 @@ namespace BotControl
                 return hash;
             }
         }
+        public static bool IsOfType<T>(Il2CppSystem.Type type)
+        {
+            Il2CppSystem.Type target = Il2CppType.Of<T>();
+            return type == target || type.IsSubclassOf(target);
+        }
+        public static uint GetAgentResoucePack(PlayerAgent agent)
+        {
+            PlayerBackpack backpack = PlayerBackpackManager.GetBackpack(agent.Owner);
+            if (backpack.TryGetBackpackItem(InventorySlot.ResourcePack, out BackpackItem backpackItem))
+                return backpackItem.ItemID;
+            return 0;
+        }
+        public static bool PositionIsValidForAgent(PlayerAgent Agent, ref Vector3 Position)
+        {
+            NavMeshHit navMeshHit;
+            if (!NavMesh.SamplePosition(Position, out navMeshHit, 0.2f, -1))
+                return false;
+            Position = navMeshHit.position;
+            NavMeshPath navMeshPath = new NavMeshPath();
+            if (!NavMesh.CalculatePath(Agent.GoodPosition, Position, 17, navMeshPath))
+                return false;
+            if (navMeshPath.status != NavMeshPathStatus.PathComplete)
+                return false;
+            return true;
+        }
     }
-    
     public class OrderedSet<T> : IEnumerable<T>, IEnumerable
     {
         //This didn't exist for some reason, so I had an AI make it.  I mostly understand it.  
@@ -126,6 +153,4 @@ namespace BotControl
         //but I don't understand it enough to get rid of it (yet).
         public static readonly object Value = new object();
     }
-
-    
 }
