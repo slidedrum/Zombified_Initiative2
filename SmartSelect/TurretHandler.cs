@@ -33,7 +33,6 @@ namespace BotControl.SmartSelect
                 {
                     continue;
                 }
-                    
                 zBotActions.SendBotToPlaceSentry(bot, sentryPose, zStaticRefrences.LocalPlayer);
                 PlayerVoiceManager.WantToSay(zStaticRefrences.LocalPlayer.CharacterID, AK.EVENTS.PLAY_CL_PUTASENTRYGUNHERE);
                 zStaticRefrences.Subtitles.ShowSingleLineSubtitle($"Put a sentry here.", 1);

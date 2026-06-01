@@ -1,11 +1,13 @@
 ﻿using BepInEx.Unity.IL2CPP.Utils;
 using BotControl.Patches;
+using BotControl.SmartSelect.PressTypes;
 using Enemies;
 using Il2CppInterop.Runtime;
 using LevelGeneration;
 using Player;
 using SlideDrum.sInputSystem;
 using SlideMenu;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -36,6 +38,8 @@ namespace BotControl.SmartSelect
         public static uint InvalidSound = AK.EVENTS.MENU_HOST_EXPEDITION_BUTTON_RELEASE;
         public static uint CorrectSound = AK.EVENTS.MENU_HOST_EXPEDITION_BUTTON_FULL;
         private static float lastSlowUpdateTime = 0;
+        private static float SelectionAngle = 30f;
+        public static bool FallbackToClosest = true;
         private static float now => Time.time;
         private static float roundedTime => now - (now % slowupdateinterval);
         private const float slowupdateinterval = 0.25f;
@@ -57,7 +61,12 @@ namespace BotControl.SmartSelect
             Enemy,
             Generator,
         }
-        public static Dictionary<PressTypes, HashSet<Il2CppSystem.Type>> ActionTypeMap = new();
+        public static Dictionary<PressTypes, HashSet<Il2CppSystem.Type>> PressTypeMap = new();
+        public static Dictionary<PressTypes, Component> CurrentActionComponenet = new();
+        public static pTypeTapPress TapPress = new();
+        public static pTypeHoldPress HoldPress = new();
+        public static pTypeDoublePress DoubleTapPress = new();
+        public static pTypeTapAndHoldPress TapAndHoldPress = new();
         public static void Update()
         {
             bool ready = FocusStateManager.CurrentState == eFocusState.FPS || FocusStateManager.CurrentState == eFocusState.Dead;
@@ -69,48 +78,20 @@ namespace BotControl.SmartSelect
         }
         public static void SlowUpdate()
         {
+            TapPress.Update();
+            HoldPress.Update();
+            DoubleTapPress.Update();
+            TapAndHoldPress.Update();
             lastSlowUpdateTime = roundedTime;
         }
         private static void SetUp()
         {
             sInputSystem.AddListener(sInputSystemDefaults.OnTappedExclusive, new FlexibleMethodDefinition(OnKeyTap), KeyCode.V);
-            sInputSystem.AddListener(sInputSystemDefaults.OnHoldImmediateExclusive, new FlexibleMethodDefinition(OnKeyHeld), KeyCode.V);
+            sInputSystem.AddListener(sInputSystemDefaults.OnHoldImmediateExclusive, new FlexibleMethodDefinition(OnKeyHold), KeyCode.V);
             sInputSystem.AddListener(sInputSystemDefaults.OnDoubleTappedExclusive, new FlexibleMethodDefinition(OnKeyDoubleTap), KeyCode.V);
             sInputSystem.AddListener(sInputSystemDefaults.OnTapAndHoldImmediateExclusive, new FlexibleMethodDefinition(OnTapAndHold), KeyCode.V);
-            ActionTypeMap[PressTypes.Tap] = new();
-            ActionTypeMap[PressTypes.Hold] = new();
-            ActionTypeMap[PressTypes.DoubleTap] = new();
-            ActionTypeMap[PressTypes.TapAndHold] = new();
-            ActionTypeMap[PressTypes.Tap].Add(Il2CppType.Of<PlayerAIBot>());
-            ActionTypeMap[PressTypes.Tap].Add(Il2CppType.Of<SentryGunInstance>());
-            ActionTypeMap[PressTypes.Tap].Add(Il2CppType.Of<LG_WeakDoor>());
-            ActionTypeMap[PressTypes.Hold].Add(Il2CppType.Of<PlayerAgent>());
-            ActionTypeMap[PressTypes.Hold].Add(Il2CppType.Of<ItemInLevel>());
-            ActionTypeMap[PressTypes.Hold].Add(Il2CppType.Of<SentryGunInstance>());
-            ActionTypeMap[PressTypes.Hold].Add(Il2CppType.Of<LG_WeakResourceContainer>());
-            ActionTypeMap[PressTypes.Hold].Add(Il2CppType.Of<LG_WeakDoor>());
-            ActionTypeMap[PressTypes.Hold].Add(Il2CppType.Of<EnemyAgent>());
-            ActionTypeMap[PressTypes.Hold].Add(Il2CppType.Of<LG_PowerGenerator_Core>());
-            ActionTypeMap[PressTypes.DoubleTap].Add(Il2CppType.Of<PlayerAgent>());
-            ActionTypeMap[PressTypes.DoubleTap].Add(Il2CppType.Of<SentryGunInstance>());
-            ActionTypeMap[PressTypes.DoubleTap].Add(Il2CppType.Of<LG_WeakResourceContainer>());
-            ActionTypeMap[PressTypes.DoubleTap].Add(Il2CppType.Of<LG_WeakDoor>());
-            ActionTypeMap[PressTypes.DoubleTap].Add(Il2CppType.Of<EnemyAgent>());
+
             IsSetUp = true;
-        }
-        public static void DeselectAllBots()
-        {
-            PlayerVoiceManager.WantToSay(zStaticRefrences.LocalPlayer.CharacterID, AK.EVENTS.PLAY_CL_CANCELTHAT);
-            zStaticRefrences.Subtitles.ShowSingleLineSubtitle("Cancel that.", 1);
-            if ((bool)zSlideComputer.ActionPermissions.ValueAt("Notify smart selected"))
-            {
-                HashSet<PlayerAIBot> selectedBots = MainSelection.GetSelected<PlayerAIBot>();
-                foreach (PlayerAIBot selectedBot in selectedBots)
-                {
-                    ZiMain.sendChatMessage("Nevermind.", selectedBot.Agent, zStaticRefrences.LocalPlayer);
-                }
-            }
-            MainSelection.Deselect<PlayerAIBot>();
         }
         public static uint GetVoiceId(PlayerAIBot bot)
         {
@@ -129,16 +110,8 @@ namespace BotControl.SmartSelect
                 voiceID = AK.EVENTS.PLAY_ADDRESSWOODSIRRITATED01;
             return voiceID;
         }
-        public static bool SelectBotInView()
+        public static bool SelectBot(PlayerAIBot bot)
         {
-            bool facingUp = Vector3.Angle(zStaticRefrences.CameraTransform.forward, Vector3.up) < 15f;
-            if (facingUp && MainSelection.Selected<PlayerAIBot>())
-            {
-                DeselectAllBots();
-                return true;
-            }
-
-            PlayerAIBot bot = GetBotLookingAt();
             if (bot == null)
                 return false;
             MainSelection.Select(bot);
@@ -154,86 +127,78 @@ namespace BotControl.SmartSelect
                 ZiMain.sendChatMessage("I'm ready", Agent, zStaticRefrences.LocalPlayer);
             return true;
         }
+        public static bool SelectBotInView()
+        {
+            PlayerAIBot bot = GetBotLookingAt();
+            return SelectBot(bot);
+        }
         public static PlayerAIBot GetBotLookingAt()
         {
-            PlayerAIBot bot = zSearch.FindBestAligned(zStaticRefrences.CameraTransform, zStaticRefrences.AllBotObjects, 30f)?.GetComponent<PlayerAIBot>();
+            PlayerAIBot bot = zSearch.FindBestAligned(zStaticRefrences.CameraTransform, zStaticRefrences.AllBotObjects, SelectionAngle)?.GetComponent<PlayerAIBot>();
             return bot;
         }
         public static void OnKeyTap()
         {
-            if (_OnKeyTap())
+            if (TapPress.Invoke())
                 ZiMain.PlayUiSound(CorrectSound);
             else
                 ZiMain.PlayUiSound(InvalidSound);
         }
-        public static bool _OnKeyTap()
+        //public static bool _OnKeyTap() // TODO make this a thing that returns the action that you would do if you tapped.  and have another method to actually do that.
+        //{
+        //    Component BestComponent = CurrentActionComponenet[PressTypes.Tap];
+        //    Il2CppSystem.Type type = BestComponent?.GetIl2CppType();
+        //    PlayerAIBot bot;
+        //    if (type == null)
+        //    {
+        //        bool facingUp = Vector3.Angle(zStaticRefrences.CameraTransform.forward, Vector3.up) < 15f;
+        //        if (facingUp && MainSelection.Selected<PlayerAIBot>())
+        //        {
+        //            DeselectAllBots();
+        //            return true;
+        //        }
+        //    }
+        //    else if (zHelpers.IsOfType<PlayerAIBot>(type))
+        //    {
+        //        bot = BestComponent.Cast<PlayerAIBot>();
+        //        if (SelectBot(bot))
+        //            return true;
+        //    }
+        //    else if (zHelpers.IsOfType<SentryGunInstance>(type))
+        //    {
+        //        SentryGunInstance sentry = BestComponent.Cast<SentryGunInstance>();
+        //        if (TapPressSentry(sentry))
+        //            return true;
+        //    }
+        //    else if (zHelpers.IsOfType<LG_WeakDoor>(type))
+        //    {
+        //        LG_WeakDoor Door = BestComponent.Cast<LG_WeakDoor>();
+        //        if (TapPressDoor(Door))
+        //            return true;
+        //    }
+        //    bot = GetBotLookingAt();
+        //    if (bot != null)
+        //    {
+        //        SelectBot(bot);
+        //        return true;
+        //    }
+        //    return false;
+        //}
+        public static void OnKeyHold()
         {
-            HashSet<Il2CppSystem.Type> InteractableTypes = new()
-            {
-                Il2CppType.Of<PlayerAIBot>(),
-                //Il2CppType.Of<ItemInLevel>(),
-                Il2CppType.Of<SentryGunInstance>(),
-                //Il2CppType.Of<LG_WeakResourceContainer>(),
-                Il2CppType.Of<LG_WeakDoor>(),
-                //Il2CppType.Of<EnemyAgent>(),
-                //Il2CppType.Of<LG_PowerGenerator_Core>(),
-            };
-            Component BestComponent = zSearch.FindBestInView(zStaticRefrences.CameraTransform, InteractableTypes, MaxAngle: 30f);
-            Il2CppSystem.Type type = BestComponent?.GetIl2CppType();
-            if (type == null)
-            {
-                if (SelectBotInView())
-                    return true;
-            }
-            else if (zHelpers.IsOfType<PlayerAIBot>(type))
-            {
-                if (SelectBotInView())
-                    return true;
-            }
-            else if (zHelpers.IsOfType<SentryGunInstance>(type))
-            {
-                SentryGunInstance sentry = BestComponent.Cast<SentryGunInstance>();
-                if (TapPressSentry(sentry))
-                    return true;
-            }
-            else if (zHelpers.IsOfType<LG_WeakDoor>(type))
-            {
-                LG_WeakDoor Door = BestComponent.Cast<LG_WeakDoor>();
-                if (TapPressDoor(Door))
-                    return true;
-            }
-            else
-            {
-                if (SelectBotInView())
-                    return true;
-            }
-            return false;
-        }
-        public static void OnKeyHeld()
-        {
-            if (_OnKeyHeld())
+            if (HoldPress.Invoke())
                 ZiMain.PlayUiSound(CorrectSound);
             else
                 ZiMain.PlayUiSound(InvalidSound);
         }
-        public static bool _OnKeyHeld()
+        public static bool _OnKeyHold()
         {
             if (!MainSelection.Selected<PlayerAIBot>())
             {
                 ZiMain.PlayUiSound(InvalidSound);
                 return false;
             }
-            HashSet<Il2CppSystem.Type> InteractableTypes = new()
-            {
-                Il2CppType.Of<PlayerAgent>(),
-                Il2CppType.Of<ItemInLevel>(),
-                Il2CppType.Of<SentryGunInstance>(),
-                Il2CppType.Of<LG_WeakResourceContainer>(),
-                Il2CppType.Of<LG_WeakDoor>(),
-                Il2CppType.Of<EnemyAgent>(),
-                Il2CppType.Of<LG_PowerGenerator_Core>(),
-            };
-            Component BestComponent = zSearch.FindBestInView(zStaticRefrences.CameraTransform, InteractableTypes, MaxAngle: 30f);
+            Component BestComponent = CurrentActionComponenet[PressTypes.Hold];
             Il2CppSystem.Type type = BestComponent?.GetIl2CppType();
             if (type == null)
             {
@@ -286,28 +251,20 @@ namespace BotControl.SmartSelect
         }
         public static void OnKeyDoubleTap()
         {
-            if (_OnKeyDoubleTap())
+            if (DoubleTapPress.Invoke())
                 ZiMain.PlayUiSound(CorrectSound);
             else
                 ZiMain.PlayUiSound(InvalidSound);
         }
         public static bool _OnKeyDoubleTap()
         {
-            HashSet<Il2CppSystem.Type> InteractableTypes = new()
-            {
-                Il2CppType.Of<PlayerAgent>(),
-                //Il2CppType.Of<ItemInLevel>(),
-                Il2CppType.Of<SentryGunInstance>(),
-                Il2CppType.Of<LG_WeakResourceContainer>(),
-                Il2CppType.Of<LG_WeakDoor>(),
-                Il2CppType.Of<EnemyAgent>(),
-                //Il2CppType.Of<LG_PowerGenerator_Core>(),
-            };
-            Component BestComponent = zSearch.FindBestInView(zStaticRefrences.CameraTransform, InteractableTypes, MaxAngle: 30f);
+            bool hasSelectedBot = MainSelection.Selected<PlayerAIBot>();
+            Component BestComponent = CurrentActionComponenet[PressTypes.DoubleTap];
             Il2CppSystem.Type type = BestComponent?.GetIl2CppType();
-            PlayerAIBot bestbot = MainSelection.GetSelected<PlayerAIBot>().FirstOrDefault();
             if (type == null)
             {
+                if (!hasSelectedBot)
+                    return false;
                 if (TurretHandler.TryPlaceTurret())
                     return true;
             }
@@ -325,33 +282,56 @@ namespace BotControl.SmartSelect
             }
             else if (zHelpers.IsOfType<LG_WeakResourceContainer>(type))
             {
+                if (!hasSelectedBot)
+                    return false;
                 LG_WeakResourceContainer Container = BestComponent.Cast<LG_WeakResourceContainer>();
                 if (DoublePressContainer(Container))
                     return true;
             }
             else if (zHelpers.IsOfType<LG_WeakDoor>(type))
             {
+                if (!hasSelectedBot)
+                    return false;
                 LG_WeakDoor Door = BestComponent.Cast<LG_WeakDoor>();
                 if (DoublePressDoor(Door))
                     return true;
             }
             else if (zHelpers.IsOfType<EnemyAgent>(type))
             {
+                if (!hasSelectedBot)
+                    return false;
                 EnemyAgent Enemy = BestComponent.Cast<EnemyAgent>();
                 if (DoublePressEnemy(Enemy))
                     return true;
             }
-            var Bot = GetBotLookingAt();
-            if (Bot != null && DoublePressAgent(Bot.Agent))
+            var bot = GetBotLookingAt();
+            if (bot != null)
+            {
+                zUpdater.Instance.StartCoroutine(CallBotToFollow(bot));
                 return true;
-            return false;
+            }
+                return false;
         }
         public static void OnTapAndHold()
         {
-            if (_OnTapAndHold())
+            if (TapAndHoldPress.Invoke())
                 ZiMain.PlayUiSound(CorrectSound);
             else
                 ZiMain.PlayUiSound(InvalidSound);
+        }
+        public static string WhatHappensIfYouTapAndHold()
+        {
+            PlayerAIBot BestBot = MainSelection.GetSelected<PlayerAIBot>().FirstOrDefault();
+            if (BestBot == null)
+            {
+                return " - ";
+            }
+            var destinationPosition = zStaticRefrences.LocalPlayer.FPSCamera.CameraRayPos;
+            if (zHelpers.PositionIsValidForAgent(BestBot.Agent, ref destinationPosition))
+            {
+                return "Move";
+            }
+            return " - ";
         }
         public static bool _OnTapAndHold()
         {
@@ -396,6 +376,40 @@ namespace BotControl.SmartSelect
             return false;
             // try to have them throw/place their consumable!
         }
+        public static string GetHoldPressPlayerAgentAction(PlayerAgent Agent)
+        {
+            bool sucsess = false;
+            if (Agent.Alive)
+            {
+                float offset = 0;
+                foreach (PlayerAIBot selectedBot in MainSelection.GetSelected<PlayerAIBot>())
+                {
+                    uint resourcePackID = zHelpers.GetAgentBackpackItemId(selectedBot.Agent, InventorySlot.ResourcePack);
+                    bool needsResourceIhave = false;
+                    switch (resourcePackID)
+                    {
+                        case (uint)ShareActionPatch.ResourceIDs.MediPack:
+                            needsResourceIhave = Agent.NeedHealth();
+                            break;
+                        case (uint)ShareActionPatch.ResourceIDs.AmmoPack:
+                            needsResourceIhave = Agent.NeedWeaponAmmo();
+                            break;
+                        case (uint)ShareActionPatch.ResourceIDs.ToolPack:
+                            needsResourceIhave = Agent.NeedToolAmmo();
+                            break;
+                        case (uint)ShareActionPatch.ResourceIDs.DisinfectPack:
+                            needsResourceIhave = Agent.NeedDisinfection();
+                            break;
+                    }
+                    if (!needsResourceIhave)
+                        continue;
+                    return "Share";
+                }
+            }
+            else // Agent is dead
+                return "Revive";
+            return " - ";
+        }
         public static bool HoldPressPlayerAgent(PlayerAgent Agent)
         {
             bool sucsess = false;
@@ -404,7 +418,7 @@ namespace BotControl.SmartSelect
                 float offset = 0;
                 foreach (PlayerAIBot selectedBot in MainSelection.GetSelected<PlayerAIBot>())
                 {
-                    uint resourcePackID = zHelpers.GetAgentResoucePack(selectedBot.Agent);
+                    uint resourcePackID = zHelpers.GetAgentBackpackItemId(selectedBot.Agent, InventorySlot.ResourcePack);
                     bool needsResourceIhave = false;
                     switch (resourcePackID)
                     {
@@ -448,6 +462,20 @@ namespace BotControl.SmartSelect
             zBotActions.SendBotToPickupItem(BestBot, item, zStaticRefrences.LocalPlayer);
             return true;
         }
+        public static string GetHoldPressSentryGunAction(SentryGunInstance sentry)
+        {
+            HashSet<PlayerAIBot> selection = MainSelection.GetSelected<PlayerAIBot>();
+            foreach (PlayerAIBot bot in selection)
+            {
+                bool owned = sentry.Owner == bot.Agent;
+                bool haveTool = (zHelpers.GetAgentBackpackItemId(bot.Agent, InventorySlot.ResourcePack) == (uint)ShareActionPatch.ResourceIDs.ToolPack);
+                if (haveTool)
+                {
+                    return "Refill";
+                }
+            }
+            return " - ";
+        }
         public static bool HoldPressSentryGrun(SentryGunInstance sentry)
         {
             HashSet<PlayerAIBot> selection = MainSelection.GetSelected<PlayerAIBot>();
@@ -457,7 +485,7 @@ namespace BotControl.SmartSelect
                 // do you have tool resources to share?
                 // are you the owner of the sentry?
                 bool owned = sentry.Owner == bot.Agent;
-                bool haveTool = (zHelpers.GetAgentResoucePack(bot.Agent) == (uint)ShareActionPatch.ResourceIDs.ToolPack);
+                bool haveTool = (zHelpers.GetAgentBackpackItemId(bot.Agent, InventorySlot.ResourcePack) == (uint)ShareActionPatch.ResourceIDs.ToolPack);
                 if (haveTool)
                 {
                     ZiMain.sendChatMessage($"I would have refilled the sentry, but I'm stupid.", bot.Agent, zStaticRefrences.LocalPlayer);

@@ -36,12 +36,16 @@ namespace BotControl
             Il2CppSystem.Type target = Il2CppType.Of<T>();
             return type == target || type.IsSubclassOf(target);
         }
-        public static uint GetAgentResoucePack(PlayerAgent agent)
+        public static uint GetAgentBackpackItemId(PlayerAgent agent, InventorySlot slot)
+        {
+            return GetAgentBackpackItem(agent, slot)?.ItemID ?? 0;
+        }
+        public static BackpackItem GetAgentBackpackItem(PlayerAgent agent, InventorySlot slot)
         {
             PlayerBackpack backpack = PlayerBackpackManager.GetBackpack(agent.Owner);
-            if (backpack.TryGetBackpackItem(InventorySlot.ResourcePack, out BackpackItem backpackItem))
-                return backpackItem.ItemID;
-            return 0;
+            if (backpack.TryGetBackpackItem(slot, out BackpackItem backpackItem))
+                return backpackItem;
+            return null;
         }
         public static bool PositionIsValidForAgent(PlayerAgent Agent, ref Vector3 Position)
         {
