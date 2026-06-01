@@ -7,7 +7,7 @@ namespace BotControl.SmartSelect.PressActions
 {
     public class pActionPlaceItem : PressAction
     {
-        public override string FriendlyName => "Place Item";
+        public override string FriendlyName => "Place Item InContainer";
         public override string FriendlyNameShort => "Place";
         public override bool Invoke(Component BestComponent)
         {

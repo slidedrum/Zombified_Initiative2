@@ -8,7 +8,10 @@ namespace BotControl.SmartSelect.PressActions
     public class pActionFollow : PressAction
     {
         public override string FriendlyName => "Follow Me";
-        public override string FriendlyNameShort => "Follow";
+        private string _FriendlyNameShort = "Follow";
+        private Color Color = new Color(1f, 1f, 1f, 0.25f);
+        private string ColorHex => ColorUtility.ToHtmlStringRGB(Color);
+        public override string FriendlyNameShort => $"<color=#{ColorHex}>{_FriendlyNameShort}</color>";
         public override bool Invoke(Component BestComponent)
         {
             PlayerAgent Agent = BestComponent.Cast<PlayerAgent>();

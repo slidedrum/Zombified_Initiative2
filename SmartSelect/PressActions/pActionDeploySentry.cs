@@ -90,7 +90,7 @@ namespace BotControl.SmartSelect.PressActions
 
             return hits.Length == 0;
         }
-        private static Vector3 FlatForward(Transform transform)
+        public static Vector3 FlatForward(Transform transform)
         {
             Vector3 dir = transform.forward;
             dir.y = 0f;

@@ -1,7 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using BotControl.SmartSelect.PressActions;
+using System.Collections.Generic;
 using UnityEngine;
 
-namespace BotControl.SmartSelect
+namespace BotControl.SmartSelect.PressTypes
 {
     public abstract class PressType
     {

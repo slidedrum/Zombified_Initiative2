@@ -1,4 +1,5 @@
-﻿using Enemies;
+﻿using BotControl.SmartSelect.PressActions;
+using Enemies;
 using Il2CppInterop.Runtime;
 using LevelGeneration;
 using Player;
@@ -45,13 +46,28 @@ namespace BotControl.SmartSelect.PressTypes
                     return false;
                 }
                 bool isDeployed = item.Status == eInventoryItemStatus.Deployed;
-                if (!isDeployed)
+                Vector3 origin = zStaticRefrences.CameraTransform.position;
+                Vector3 direction = zStaticRefrences.CameraTransform.forward;
+                if (!Physics.Raycast(origin, direction, out RaycastHit hit, 100f, LayerManager.MASK_SENTRYGUN_CAMERARAY_MOVERHELPER))
                 {
-                    _CurrentAction = PressAction.GetAction("Deploy Sentry");
-                    return true;
+                    _CurrentAction = null;
+                    return false;
                 }
-                _CurrentAction = null;
-                return false;
+                Vector3 placePosition = hit.point;
+                Quaternion placeRotation = Quaternion.LookRotation(pActionDeploySentry.FlatForward(zStaticRefrences.CameraTransform));
+                Pose sentryPose = new Pose(placePosition, placeRotation);
+                if (!pActionDeploySentry.CanPlaceTurret(ref sentryPose))
+                {
+                    _CurrentAction = null;
+                    return false;
+                }
+                if (isDeployed)
+                {
+                    _CurrentAction = null;
+                    return false;
+                }
+                _CurrentAction = PressAction.GetAction("Deploy Sentry");
+                return true; // TODO fallback to Follow Me
             }
             else if (zHelpers.IsOfType<PlayerAgent>(type))
             {

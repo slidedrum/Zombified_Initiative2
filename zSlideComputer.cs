@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using BotControl.Menus;
 using BotControl;
+using BotControl.SmartSelect;
 
 namespace BotControl
 {
@@ -132,7 +133,7 @@ namespace BotControl
 
         public static void Init()
         {
-
+            zSmartSelectHud.Setup();
         }
         public static void FirstTimeSetup()
         {

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
-namespace BotControl.SmartSelect
+namespace BotControl.SmartSelect.PressActions
 {
     public abstract class PressAction
     {
