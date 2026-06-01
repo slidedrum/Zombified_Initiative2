@@ -3,15 +3,15 @@ using UnityEngine;
 
 namespace BotControl.SmartSelect.PressActions
 {
-    public class pActionCloseDoor : PressAction
+    public class pActionSecureDoor : PressAction
     {
-        public override string FriendlyName => "Close Door";
-        public override string FriendlyNameShort => "Close";
+        public override string FriendlyName => "Secure Door";
+        public override string FriendlyNameShort => "Secure";
         public override bool Invoke(Component BestComponent)
         {
             LG_WeakDoor Door = BestComponent.Cast<LG_WeakDoor>();
             //TODO
-            // Make sure the bot always ends up on the players side of the door.
+            // Throw cFoam at the door if they have it.
             return false;
         }
     }

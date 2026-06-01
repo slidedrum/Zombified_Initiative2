@@ -113,7 +113,7 @@ namespace BotControl.SmartSelect.PressTypes
                     return false;
                 }
                 EnemyAgent Enemy = _CurrentComponent.Cast<EnemyAgent>();
-                _CurrentAction = PressAction.GetAction("Countdown Attack Enemy");
+                _CurrentAction = PressAction.GetAction("Attack Countdown Enemy");
                 return true;
             }
             var bot = zSmartSelect.GetBotLookingAt();

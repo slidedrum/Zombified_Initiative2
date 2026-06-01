@@ -148,7 +148,7 @@ namespace BotControl.SmartSelect.PressTypes
                 bool haveTool = (zHelpers.GetAgentBackpackItemId(bot.Agent, InventorySlot.ResourcePack) == (uint)ShareActionPatch.ResourceIDs.ToolPack);
                 if (haveTool)
                 {
-                    _CurrentAction = PressAction.GetAction("Refill Turret");
+                    _CurrentAction = PressAction.GetAction("Refill Sentry");
                     return true;
                 }
             }

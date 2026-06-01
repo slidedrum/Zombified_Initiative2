@@ -265,8 +265,8 @@ namespace BotControl.SmartSelect
             {
                 if (!hasSelectedBot)
                     return false;
-                if (TurretHandler.TryPlaceTurret())
-                    return true;
+                //if (TurretHandler.TryPlaceTurret())
+                //    return true;
             }
             else if (zHelpers.IsOfType<PlayerAgent>(type))
             {
@@ -307,7 +307,7 @@ namespace BotControl.SmartSelect
             var bot = GetBotLookingAt();
             if (bot != null)
             {
-                zUpdater.Instance.StartCoroutine(CallBotToFollow(bot));
+                //zUpdater.Instance.StartCoroutine(CallBotToFollow(bot));
                 return true;
             }
                 return false;
@@ -534,7 +534,7 @@ namespace BotControl.SmartSelect
             PlayerAIBot bot = Agent?.GetComponent<PlayerAIBot>();
             if (bot == null)
                 return false;
-            zUpdater.Instance.StartCoroutine(CallBotToFollow(bot));
+            //zUpdater.Instance.StartCoroutine(CallBotToFollow(bot));
             return true;
         }
         public static bool DoublePressSentry(SentryGunInstance Sentry)
@@ -551,7 +551,7 @@ namespace BotControl.SmartSelect
             {
                 PlayerVoiceManager.WantToSay(zStaticRefrences.LocalPlayer.CharacterID, AK.EVENTS.PLAY_CL_PICKUPYOURDEPLOYABLES);
                 zStaticRefrences.Subtitles.ShowSingleLineSubtitle($"Pick up your deployables.", 1);
-                zUpdater.Instance.StartCoroutine(BotsPickupTurrets(BotsWithTurretsOut));
+                //zUpdater.Instance.StartCoroutine(BotsPickupTurrets(BotsWithTurretsOut));
                 return true;
             }
             return false;
@@ -582,24 +582,7 @@ namespace BotControl.SmartSelect
             ZiMain.sendChatMessage("I would have attacked the enemy at the end of the countdown, but I'm stupid!", BestBot.Agent, zStaticRefrences.LocalPlayer);
             return true;
         }
-        public static IEnumerator CallBotToFollow(PlayerAIBot Bot)
-        {
-            ZiMain.sendChatMessage($"On the way.", Bot.Agent, zStaticRefrences.LocalPlayer);
-            uint voidID = GetVoiceId(Bot);
-            string botname = Bot.Agent.PlayerName;
-            zStaticRefrences.Subtitles.ShowSingleLineSubtitle($"Hey {botname}, Follow me!", 2);
-            PlayerVoiceManager.WantToSay(zStaticRefrences.LocalPlayer.CharacterID, voidID);
-            yield return new WaitForSeconds(1f);
-            PlayerVoiceManager.WantToSay(zStaticRefrences.LocalPlayer.CharacterID, AK.EVENTS.PLAY_CL_FOLLOWME);
-            zStaticRefrences.CommsMenu.OnButtonPressedCall(null, Bot.Agent);            
-        }
-        public static IEnumerator BotsPickupTurrets(List<PlayerAIBot> Bots)
-        {
-            foreach (var bot in Bots)
-            {
-                zBotActions.SendBotToPickUpSentry(bot, zStaticRefrences.LocalPlayer);
-                yield return new WaitForSeconds(0.25f);
-            }
-        }
+
+
     }
 }
